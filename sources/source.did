@@ -1,1 +1,6 @@
-service : { __get_candid_interface_tmp_hack : () -> (text) query }
+service : {
+  __get_candid_interface_tmp_hack : () -> (text) query;
+  cycles_balance : () -> (nat) query;
+  cycles_receive : () -> (nat);
+  tokens : () -> (vec text) query;
+}

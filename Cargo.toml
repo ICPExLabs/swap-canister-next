@@ -13,11 +13,11 @@ opt-level = 3
 codegen-units = 1
 
 [dependencies]
-candid = "0.10.12"
+candid = "0.10.13"
 ic-cdk = "0.17.1"
 
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.135"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 
-strum = "0.26.3"
-strum_macros = "0.26.4"
+strum = "0.27.1"
+strum_macros = "0.27.1"
