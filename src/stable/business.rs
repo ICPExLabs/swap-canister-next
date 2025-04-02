@@ -19,6 +19,10 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        panic!("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
     }
@@ -70,6 +74,10 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        self.get().business_tokens_query()
+    }
+
     fn business_example_query(&self) -> String {
         self.get().business_example_query()
     }

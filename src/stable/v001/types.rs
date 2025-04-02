@@ -18,16 +18,27 @@ pub use super::permission::*;
 #[allow(unused)]
 pub use super::schedule::schedule_task;
 
+mod balance;
+mod token;
+
+#[allow(unused)]
+pub use balance::*;
+#[allow(unused)]
+pub use token::*;
+
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, EnumIter, EnumString, strum_macros::Display)]
 pub enum RecordTopics {
     // ! 新的权限类型从 0 开始
-    Example = 0,              // 模版样例
-    ExampleCell = 1,          // 模版样例
-    ExampleVec = 2,           // 模版样例
-    ExampleMap = 3,           // 模版样例
-    ExampleLog = 4,           // 模版样例
-    ExamplePriorityQueue = 5, // 模版样例
+    TokenBalance = 0, // 用户持有的某 Token 的余额
+
+    // example
+    Example = 100,              // 模版样例
+    ExampleCell = 101,          // 模版样例
+    ExampleVec = 102,           // 模版样例
+    ExampleMap = 103,           // 模版样例
+    ExampleLog = 104,           // 模版样例
+    ExamplePriorityQueue = 105, // 模版样例
 
     // ! 系统倒序排列
     CyclesCharge = 249, // 充值
@@ -60,6 +71,11 @@ pub struct CanisterKit {
     pub schedule: Schedule,       // 记录定时任务 // ? 堆内存 序列化
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct BusinessData {
+    token_balance_locks: TokenBalanceLocks,
+}
+
 // 能序列化的和不能序列化的放在一起
 // 其中不能序列化的采用如下注解
 // #[serde(skip)] 默认初始化方式
@@ -70,6 +86,11 @@ pub struct InnerState {
     pub canister_kit: CanisterKit, // 框架需要的数据 // ? 堆内存 序列化
 
     // 业务数据
+    business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
+
+    #[serde(skip, default = "init_token_balances")]
+    token_balances: TokenBalances, // 业务数据 // ? 稳定内存
+
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
     #[serde(skip, default = "init_example_cell_data")]
@@ -91,6 +112,9 @@ impl Default for InnerState {
             canister_kit: Default::default(),
 
             // 业务数据
+            business_data: Default::default(),
+            token_balances: init_token_balances(),
+
             example_data: Default::default(),
 
             example_cell: init_example_cell_data(),
@@ -105,12 +129,20 @@ impl Default for InnerState {
 use candid::CandidType;
 use ic_canister_kit::stable;
 
-const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(0); // 测试 Cell
-const MEMORY_ID_EXAMPLE_VEC: MemoryId = MemoryId::new(1); // 测试 Vec
-const MEMORY_ID_EXAMPLE_MAP: MemoryId = MemoryId::new(2); // 测试 Map
-const MEMORY_ID_EXAMPLE_LOG_ID: MemoryId = MemoryId::new(3); // 测试 Log
-const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(4); // 测试 Log
-const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(5); // 测试 PriorityQueue
+// Token
+const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
+
+// example
+const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
+const MEMORY_ID_EXAMPLE_VEC: MemoryId = MemoryId::new(101); // 测试 Vec
+const MEMORY_ID_EXAMPLE_MAP: MemoryId = MemoryId::new(102); // 测试 Map
+const MEMORY_ID_EXAMPLE_LOG_ID: MemoryId = MemoryId::new(103); // 测试 Log
+const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(104); // 测试 Log
+const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试 PriorityQueue
+
+fn init_token_balances() -> TokenBalances {
+    stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
+}
 
 fn init_example_cell_data() -> StableCell<ExampleCell> {
     stable::init_cell_data(MEMORY_ID_EXAMPLE_CELL, ExampleCell::default())

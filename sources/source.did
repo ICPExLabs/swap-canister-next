@@ -65,6 +65,13 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
+type TokenInfo = record {
+  fee : nat;
+  decimals : nat8;
+  name : text;
+  canister_id : principal;
+  symbol : text;
+};
 service : (opt CanisterInitialArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   business_example_cell_query : () -> (text) query;
@@ -100,6 +107,7 @@ service : (opt CanisterInitialArg) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
+  tokens_query : () -> (vec TokenInfo) query;
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
   wallet_receive : () -> (nat);

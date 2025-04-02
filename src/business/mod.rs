@@ -8,6 +8,8 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
+pub mod token;
+
 // 查询
 #[ic_cdk::query(guard = "has_business_example_query")]
 fn business_example_query() -> String {

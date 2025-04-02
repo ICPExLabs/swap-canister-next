@@ -2,4 +2,3 @@
 target/
 .dfx/
 source_opt.wasm
-test.sh

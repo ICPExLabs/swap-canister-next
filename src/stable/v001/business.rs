@@ -2,6 +2,10 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        &TOKENS
+    }
+
     fn business_example_query(&self) -> String {
         self.example_data.clone()
     }
