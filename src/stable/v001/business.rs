@@ -6,6 +6,10 @@ impl Business for InnerState {
         &TOKENS
     }
 
+    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+        self.token_balances.token_balance_of(canister_id, account)
+    }
+
     fn business_example_query(&self) -> String {
         self.example_data.clone()
     }

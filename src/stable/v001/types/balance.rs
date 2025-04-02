@@ -101,8 +101,20 @@ impl Storable for TokenBalance {
     const BOUND: Bound = Bound::Unbounded;
 }
 
-pub type TokenBalances = StableBTreeMap<TokenAccount, TokenBalance>;
-pub type TokenBalanceLocks = HashMap<TokenAccount, bool>;
+pub struct TokenBalances(StableBTreeMap<TokenAccount, TokenBalance>);
+#[derive(Serialize, Deserialize, Default)]
+pub struct TokenBalanceLocks(HashMap<TokenAccount, bool>);
+
+impl TokenBalances {
+    pub fn new(inner: StableBTreeMap<TokenAccount, TokenBalance>) -> Self {
+        Self(inner)
+    }
+
+    pub fn token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+        let token_account = TokenAccount::new(canister_id, account);
+        self.0.get(&token_account).map(|b| b.0).unwrap_or_default()
+    }
+}
 
 #[cfg(test)]
 mod tests {

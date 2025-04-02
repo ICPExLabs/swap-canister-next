@@ -146,6 +146,12 @@ sleep 2
 test "schedule_trigger" "$(dfx --identity alice canister call swap schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
 test "schedule_trigger" "$(dfx canister call swap schedule_trigger 2>&1)" "()"
 
+blue "5 business tokens"
+test "tokens_query" "$(dfx --identity alice canister call swap tokens_query 2>&1)" '"ICP"' '"ckUSDT'
+test "token_query" "$(dfx --identity alice canister call swap token_query "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\")" 2>&1)" '"Internet Computer"'
+test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'
+test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 0 : nat;}'
+
 blue "5 example business"
 test "business_example_query" "$(dfx --identity alice canister call swap business_example_query 2>&1)" "\"\""
 test "business_example_query" "$(dfx canister call swap business_example_query 2>&1)" "\"\""

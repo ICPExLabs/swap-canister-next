@@ -18,6 +18,9 @@ pub use super::permission::*;
 #[allow(unused)]
 pub use super::schedule::schedule_task;
 
+#[allow(unused)]
+pub use crate::types::*;
+
 mod balance;
 mod token;
 
@@ -89,7 +92,7 @@ pub struct InnerState {
     business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
 
     #[serde(skip, default = "init_token_balances")]
-    token_balances: TokenBalances, // 业务数据 // ? 稳定内存
+    pub token_balances: TokenBalances, // 业务数据 // ? 稳定内存
 
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
@@ -113,6 +116,7 @@ impl Default for InnerState {
 
             // 业务数据
             business_data: Default::default(),
+
             token_balances: init_token_balances(),
 
             example_data: Default::default(),
@@ -141,7 +145,7 @@ const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(104); // 测试 Log
 const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试 PriorityQueue
 
 fn init_token_balances() -> TokenBalances {
-    stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
+    TokenBalances::new(stable::init_map_data(MEMORY_ID_TOKEN_BALANCES))
 }
 
 fn init_example_cell_data() -> StableCell<ExampleCell> {

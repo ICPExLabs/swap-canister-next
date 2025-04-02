@@ -23,6 +23,10 @@ pub trait Business:
         panic!("Not supported operation by this version.")
     }
 
+    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+        panic!("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
     }
@@ -76,6 +80,10 @@ pub trait Business:
 impl Business for State {
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()
+    }
+
+    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+        self.get().business_token_balance_of(canister_id, account)
     }
 
     fn business_example_query(&self) -> String {
