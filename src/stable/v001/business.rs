@@ -2,12 +2,35 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
+    // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         &TOKENS
     }
-
     fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
         self.token_balances.token_balance_of(canister_id, account)
+    }
+
+    // token balance lock
+    fn business_token_balance_lock<'a>(
+        &mut self,
+        token_accounts: &'a [TokenAccount],
+    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        self.business_data.token_balance_locks.lock(token_accounts)
+    }
+    fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
+        self.business_data
+            .token_balance_locks
+            .unlock(token_accounts)
+    }
+
+    // token deposit and withdraw
+    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        self.token_balances
+            .token_deposit(canister_id, account, amount)
+    }
+    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        self.token_balances
+            .token_withdraw(canister_id, account, amount)
     }
 
     fn business_example_query(&self) -> String {

@@ -15,12 +15,16 @@ pub use super::super::v000::types::{
 };
 
 // 业务权限
+// token
+pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
+pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // 提取代币权限
+// example
 pub const ACTION_BUSINESS_EXAMPLE_QUERY: &str = "BusinessExampleQuery"; // 业务查询权限
 pub const ACTION_BUSINESS_EXAMPLE_SET: &str = "BusinessExampleSet"; // 业务更新权限
 
 // 所有权限列表
 #[allow(unused)]
-pub const ACTIONS: [&str; 12] = [
+pub const ACTIONS: [&str; 14] = [
     // 通用权限
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -33,6 +37,10 @@ pub const ACTIONS: [&str; 12] = [
     ACTION_SCHEDULE_REPLACE,
     ACTION_SCHEDULE_TRIGGER,
     // 业务权限
+    // token
+    ACTION_BUSINESS_TOKEN_DEPOSIT,
+    ACTION_BUSINESS_TOKEN_WITHDRAW,
+    // example
     ACTION_BUSINESS_EXAMPLE_QUERY,
     ACTION_BUSINESS_EXAMPLE_SET,
 ];
@@ -53,6 +61,10 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_REPLACE => Permission::by_permit(name),
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
             // 业务权限
+            // token
+            ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name),
+            ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name),
+            // example
             ACTION_BUSINESS_EXAMPLE_QUERY => Permission::by_forbid(name),
             ACTION_BUSINESS_EXAMPLE_SET => Permission::by_permit(name),
             // 其他错误
@@ -71,11 +83,21 @@ pub use super::super::v000::types::{
 
 // 业务权限
 
+// token
+#[allow(unused)]
+pub fn has_business_token_deposit() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_DEPOSIT, false)
+}
+#[allow(unused)]
+pub fn has_business_token_withdraw() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_WITHDRAW, false)
+}
+
+// example
 #[allow(unused)]
 pub fn has_business_example_query() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_EXAMPLE_QUERY, false)
 }
-
 #[allow(unused)]
 pub fn has_business_example_set() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_EXAMPLE_SET, true)

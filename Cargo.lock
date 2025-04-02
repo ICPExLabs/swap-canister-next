@@ -781,11 +781,13 @@ name = "swap"
 version = "0.0.1"
 dependencies = [
  "candid",
+ "hex",
  "ic-canister-kit",
  "ic-cdk",
  "icrc-ledger-types",
  "once_cell",
  "serde",
+ "serde_bytes",
  "serde_json",
  "strum 0.27.1",
  "strum_macros 0.27.1",

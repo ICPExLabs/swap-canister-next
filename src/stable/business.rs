@@ -19,11 +19,30 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         panic!("Not supported operation by this version.")
     }
-
     fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+        panic!("Not supported operation by this version.")
+    }
+
+    // token balance lock
+    fn business_token_balance_lock<'a>(
+        &mut self,
+        token_accounts: &'a [TokenAccount],
+    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
+        panic!("Not supported operation by this version.")
+    }
+
+    // token deposit and withdraw
+    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
         panic!("Not supported operation by this version.")
     }
 
@@ -78,12 +97,33 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()
     }
-
     fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
         self.get().business_token_balance_of(canister_id, account)
+    }
+
+    // token balance lock
+    fn business_token_balance_lock<'a>(
+        &mut self,
+        token_accounts: &'a [TokenAccount],
+    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        self.get_mut().business_token_balance_lock(token_accounts)
+    }
+    fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
+        self.get_mut().business_token_balance_unlock(token_accounts)
+    }
+
+    // token deposit and withdraw
+    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        self.get_mut()
+            .business_token_deposit(canister_id, account, amount)
+    }
+    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        self.get_mut()
+            .business_token_withdraw(canister_id, account, amount)
     }
 
     fn business_example_query(&self) -> String {

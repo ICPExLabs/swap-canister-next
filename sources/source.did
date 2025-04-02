@@ -1,4 +1,13 @@
 type Account = record { owner : principal; subaccount : opt blob };
+type BusinessError = variant {
+  TransferError : TransferError;
+  NotSupportedToken : principal;
+  InsufficientBalance : nat;
+  Locked : vec TokenAccount;
+  TransferFromError : TransferFromError;
+  NotOwner : principal;
+  CallCanisterError : record { RejectionCode; text };
+};
 type CanisterInitialArg = record { schedule : opt nat };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
@@ -66,12 +75,55 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type TokenAccount = record { canister_id : principal; account : Account };
+type TokenDepositArgs = record {
+  from : Account;
+  canister_id : principal;
+  amount : nat;
+};
 type TokenInfo = record {
   fee : nat;
   decimals : nat8;
   name : text;
   canister_id : principal;
   symbol : text;
+};
+type TokenTransferResut = variant { Ok : nat; Err : BusinessError };
+type TokenWithdrawArgs = record {
+  to : Account;
+  from : Account;
+  canister_id : principal;
+  amount : nat;
+};
+type TransferError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type TransferFromError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  InsufficientAllowance : record { allowance : nat };
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
 };
 service : (opt CanisterInitialArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
@@ -109,7 +161,9 @@ service : (opt CanisterInitialArg) -> {
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
   token_balance_of : (principal, Account) -> (nat) query;
+  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResut);
   token_query : (principal) -> (opt TokenInfo) query;
+  token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenTransferResut);
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
   version : () -> (nat32) query;

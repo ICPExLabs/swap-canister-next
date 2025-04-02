@@ -10,6 +10,43 @@ use crate::types::*;
 
 pub mod token;
 
+#[allow(unused)]
+#[inline(always)]
+async fn with_token_balance_lock<T, R1, F, R2, A, E>(
+    token_accounts: &[TokenAccount],
+    retries: u8,
+    execute: F, // do execute
+    call: A,    // async call
+    error: E,   // error handle
+) -> T
+where
+    R1: Future<Output = T> + Send,
+    F: FnOnce() -> R1 + Send,
+    R2: Future<Output = T> + Send,
+    A: FnOnce(u8) -> R2 + Send,
+    E: FnOnce(Vec<TokenAccount>) -> T,
+{
+    #[allow(clippy::panic)] // ? SAFETY
+    if 5 < retries {
+        panic!("Too many retries");
+    }
+
+    match with_mut_state_without_record(|s| s.business_token_balance_lock(token_accounts)) {
+        Ok(guard) => {
+            let r = execute().await;
+            drop(guard);
+            r
+        }
+        Err(accounts) => {
+            if 0 < retries {
+                call(retries - 1).await
+            } else {
+                error(accounts)
+            }
+        }
+    }
+}
+
 // 查询
 #[ic_cdk::query(guard = "has_business_example_query")]
 fn business_example_query() -> String {

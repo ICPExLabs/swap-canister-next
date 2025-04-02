@@ -1,4 +1,8 @@
 {
+    "material-icon-theme.folders.associations": {
+        "business": "interface",
+        "stable": "store",
+    },
     "cSpell.words": [
         "2vxsx-fae",
         "cdylib",

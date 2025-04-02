@@ -44,3 +44,168 @@ fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
             .collect()
     })
 }
+
+// ========================== deposit and withdraw ==========================
+
+// deposit
+impl CheckArgs for TokenDepositArgs {
+    type Result = (CanisterId, UserId);
+    fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // check supported token
+        if !with_state(|s| s.business_tokens_query().contains_key(&self.canister_id)) {
+            return Err(BusinessError::NotSupportedToken(self.canister_id));
+        }
+
+        // check owner
+        let self_canister_id = self_canister_id();
+        let mut caller = caller();
+        if caller == self_canister_id {
+            caller = self.from.owner; // swap canister 代为调用
+        } else if caller != self.from.owner {
+            return Err(BusinessError::NotOwner(self.from.owner));
+        }
+
+        Ok((self_canister_id, caller))
+    }
+}
+
+// check forbidden
+#[ic_cdk::update(guard = "has_business_token_deposit")]
+async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenTransferResut {
+    inner_token_deposit(args, retries).await.into()
+}
+async fn inner_token_deposit(
+    args: TokenDepositArgs,
+    retries: Option<u8>,
+) -> Result<candid::Nat, BusinessError> {
+    // 1. check args
+    let (self_canister_id, _caller) = args.check_args()?;
+    let args_clone = args.clone();
+
+    // 2. some value
+    let token_account = TokenAccount::new(args.canister_id, args.from);
+    let token_accounts = vec![token_account];
+
+    super::with_token_balance_lock(
+        &token_accounts,
+        retries.unwrap_or_default(),
+        || async {
+            let service_icrc2 = crate::services::icrc2::Service(args.canister_id);
+            let height = service_icrc2
+                .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
+                    from: args.from,
+                    spender_subaccount: None, // approve subaccount
+                    to: Account {
+                        owner: self_canister_id,
+                        subaccount: None,
+                    },
+                    amount: args.amount.clone(),
+                    fee: None,
+                    memo: None,
+                    created_at_time: None,
+                })
+                .await
+                .map_err(BusinessError::CallCanisterError)?
+                .0
+                .map_err(BusinessError::TransferFromError)?;
+
+            with_mut_state_without_record(|s| {
+                s.business_token_deposit(args.canister_id, args.from, args.amount);
+            });
+
+            // ! push log
+
+            Ok(height)
+        },
+        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+        |retries| async move {
+            let service_swap = crate::services::swap::Service(self_canister_id);
+            service_swap.token_deposit(args_clone, Some(retries)).await
+        },
+        |accounts| Err(BusinessError::Locked(accounts)),
+    )
+    .await
+}
+
+// withdraw
+
+impl CheckArgs for TokenWithdrawArgs {
+    type Result = (CanisterId, UserId, TokenInfo);
+    fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        let token = with_state(|s| s.business_tokens_query().get(&self.canister_id).cloned())
+            .ok_or(BusinessError::NotSupportedToken(self.canister_id))?;
+
+        // check owner
+        let self_canister_id = self_canister_id();
+        let mut caller = caller();
+        if caller == self_canister_id {
+            caller = self.from.owner; // swap canister 代为调用
+        } else if caller != self.from.owner {
+            return Err(BusinessError::NotOwner(self.from.owner));
+        }
+
+        // check balance
+        let balance = with_state(|s| s.business_token_balance_of(self.canister_id, self.from));
+        let need = self.amount.clone() + token.fee.clone();
+        if balance < need {
+            return Err(BusinessError::InsufficientBalance(balance));
+        }
+
+        Ok((self_canister_id, caller, token))
+    }
+}
+
+// check forbidden
+#[ic_cdk::update(guard = "has_business_token_withdraw")]
+async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenTransferResut {
+    inner_token_withdraw(args, retries).await.into()
+}
+async fn inner_token_withdraw(
+    args: TokenWithdrawArgs,
+    retries: Option<u8>,
+) -> Result<candid::Nat, BusinessError> {
+    // 1. check args
+    let (self_canister_id, _caller, token) = args.check_args()?;
+    let args_clone = args.clone();
+
+    // 2. some value
+    let token_account = TokenAccount::new(args.canister_id, args.from);
+    let token_accounts = vec![token_account];
+
+    super::with_token_balance_lock(
+        &token_accounts,
+        retries.unwrap_or_default(),
+        || async {
+            let service_icrc2 = crate::services::icrc2::Service(args.canister_id);
+
+            let height = service_icrc2
+                .icrc_1_transfer(crate::services::icrc2::TransferArg {
+                    from_subaccount: None,
+                    to: args.to,
+                    amount: args.amount.clone(),
+                    fee: Some(token.fee.clone()),
+                    memo: None,
+                    created_at_time: None,
+                })
+                .await
+                .map_err(BusinessError::CallCanisterError)?
+                .0
+                .map_err(BusinessError::TransferError)?;
+
+            with_mut_state_without_record(|s| {
+                s.business_token_deposit(args.canister_id, args.from, args.amount + token.fee);
+            });
+
+            // ! push log
+
+            Ok(height)
+        },
+        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+        |retries| async move {
+            let service_swap = crate::services::swap::Service(self_canister_id);
+            service_swap.token_withdraw(args_clone, Some(retries)).await
+        },
+        |accounts| Err(BusinessError::Locked(accounts)),
+    )
+    .await
+}

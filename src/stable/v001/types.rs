@@ -76,7 +76,7 @@ pub struct CanisterKit {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
-    token_balance_locks: TokenBalanceLocks,
+    pub token_balance_locks: TokenBalanceLocks,
 }
 
 // 能序列化的和不能序列化的放在一起
@@ -89,7 +89,7 @@ pub struct InnerState {
     pub canister_kit: CanisterKit, // 框架需要的数据 // ? 堆内存 序列化
 
     // 业务数据
-    business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
+    pub business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
 
     #[serde(skip, default = "init_token_balances")]
     pub token_balances: TokenBalances, // 业务数据 // ? 稳定内存

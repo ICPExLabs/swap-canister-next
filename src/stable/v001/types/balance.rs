@@ -1,11 +1,16 @@
+use core::panic;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, collections::HashMap};
 
-use candid::{Nat, Principal};
+use candid::{CandidType, Nat, Principal};
 use ic_canister_kit::types::{Bound, CanisterId, StableBTreeMap, Storable};
 use icrc_ledger_types::icrc1::account::{Account, DEFAULT_SUBACCOUNT};
 
-#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, PartialOrd, Ord)]
+use super::with_mut_state_without_record;
+
+#[derive(
+    Debug, Serialize, Deserialize, CandidType, Hash, Eq, PartialEq, Clone, PartialOrd, Ord,
+)]
 pub struct TokenAccount {
     pub canister_id: CanisterId,
     pub account: Account,
@@ -82,7 +87,7 @@ impl Storable for TokenAccount {
     };
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Default, PartialEq, PartialOrd)]
 pub struct TokenBalance(Nat);
 
 impl Storable for TokenBalance {
@@ -105,6 +110,13 @@ pub struct TokenBalances(StableBTreeMap<TokenAccount, TokenBalance>);
 #[derive(Serialize, Deserialize, Default)]
 pub struct TokenBalanceLocks(HashMap<TokenAccount, bool>);
 
+pub struct TokenBalanceLockGuard<'a>(&'a [TokenAccount]);
+impl Drop for TokenBalanceLockGuard<'_> {
+    fn drop(&mut self) {
+        with_mut_state_without_record(|s| s.get_mut().business_token_balance_unlock(self.0))
+    }
+}
+
 impl TokenBalances {
     pub fn new(inner: StableBTreeMap<TokenAccount, TokenBalance>) -> Self {
         Self(inner)
@@ -113,6 +125,84 @@ impl TokenBalances {
     pub fn token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
         let token_account = TokenAccount::new(canister_id, account);
         self.0.get(&token_account).map(|b| b.0).unwrap_or_default()
+    }
+
+    // token deposit and withdraw
+    pub fn token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        let token_account = TokenAccount::new(canister_id, account);
+        let balance = self.0.get(&token_account).unwrap_or_default();
+        let new_balance = TokenBalance(balance.0 + amount);
+        self.0.insert(token_account, new_balance);
+    }
+    pub fn token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+        let token_account = TokenAccount::new(canister_id, account);
+        let balance = self.0.get(&token_account).unwrap_or_default();
+        #[allow(clippy::panic)] // ? SAFETY
+        if balance.0 < amount {
+            panic!("Insufficient balance.");
+        }
+        let new_balance = TokenBalance(balance.0 - amount);
+        if new_balance.0 == 0_u64 {
+            self.0.remove(&token_account);
+        } else {
+            self.0.insert(token_account, new_balance);
+        }
+    }
+}
+
+impl TokenBalanceLocks {
+    pub fn lock<'a>(
+        &mut self,
+        token_accounts: &'a [TokenAccount],
+    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        // 1. check first
+        let mut locked: Vec<TokenAccount> = vec![];
+        for token_account in token_accounts {
+            if self.0.get(token_account).is_some_and(|lock| *lock) {
+                locked.push(token_account.clone());
+            }
+        }
+        if !locked.is_empty() {
+            return Err(locked);
+        }
+
+        // 2. do lock
+        for token_account in token_accounts {
+            self.0.insert(token_account.clone(), true);
+        }
+
+        Ok(TokenBalanceLockGuard(token_accounts))
+    }
+
+    pub fn unlock(&mut self, token_accounts: &[TokenAccount]) {
+        // 1. check first
+        for token_account in token_accounts {
+            if self.0.get(token_account).is_some_and(|lock| *lock) {
+                continue; // locked is right
+            }
+            // if not true, panic
+            #[allow(clippy::panic)] // ? SAFETY
+            {
+                panic!(
+                    "Unlock a token account ({}) that is not locked.",
+                    format!(
+                        "{}|{}.{}",
+                        token_account.canister_id.to_text(),
+                        token_account.account.owner.to_text(),
+                        token_account
+                            .account
+                            .subaccount
+                            .map(hex::encode)
+                            .unwrap_or_default()
+                    )
+                )
+            }
+        }
+
+        // then unlock
+        for token_account in token_accounts {
+            self.0.remove(token_account);
+        }
     }
 }
 

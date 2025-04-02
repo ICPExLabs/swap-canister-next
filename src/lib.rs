@@ -8,6 +8,8 @@
 #![deny(clippy::expect_used)] // 不许用 expect
 #![deny(clippy::panic)] // 不许用 panic
 
+mod services; // 罐子接口
+
 mod types; // 所有的类型
 
 mod stable; // 存储模块
