@@ -11,6 +11,26 @@
       "gzip": true,
       "wasm": "sources/source_opt.wasm",
       "candid": "sources/source.did"
+    },
+    "token_ICP": {
+      "type": "custom",
+      "wasm": "sources/ic-icrc1-ledger.wasm",
+      "candid": "sources/ic-icrc1-ledger.did"
+    },
+    "token_ckBTC": {
+      "type": "custom",
+      "wasm": "sources/ic-icrc1-ledger.wasm",
+      "candid": "sources/ic-icrc1-ledger.did"
+    },
+    "token_ckUSDT": {
+      "type": "custom",
+      "wasm": "sources/ic-icrc1-ledger.wasm",
+      "candid": "sources/ic-icrc1-ledger.did"
+    },
+    "token_snsCHAT": {
+      "type": "custom",
+      "wasm": "sources/ic-icrc1-ledger.wasm",
+      "candid": "sources/ic-icrc1-ledger.did"
     }
   }
 }

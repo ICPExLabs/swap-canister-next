@@ -67,9 +67,144 @@ BOB=$(dfx --identity bob identity get-principal)
 cargo clippy
 # cargo audit --no-fetch --quiet
 
+# ! 0. deploy tokens
+dfx canister create token_ICP --specified-id "ryjl3-tyaaa-aaaaa-aaaba-cai"
+dfx deploy token_ICP --argument "(variant {\
+    Init = record {\
+        token_name = \"ICP\";\
+        token_symbol = \"ICP\";\
+        decimals = opt (8 : nat8);\
+        transfer_fee = 10000 : nat;\
+        metadata = vec {};\
+        minting_account = record {\
+            owner = principal \"${BOB}\";\
+            subaccount = null;\
+        };
+        initial_balances = vec {\
+            record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1000000000000:nat }\
+        };\
+        fee_collector_account = null;\
+        archive_options = record {\
+            num_blocks_to_archive = 1000 : nat64;\
+            max_transactions_per_response = null;\
+            trigger_threshold = 1000 : nat64;\
+            more_controller_ids = null;\
+            max_message_size_bytes = null;\
+            cycles_for_archive_creation = null;\
+            node_max_memory_size_bytes = null;\
+            controller_id = principal \"aaaaa-aa\";\
+        };\
+        max_memo_length = null;\
+        feature_flags = opt record { icrc2 = true };\
+    }\
+})"
+dfx canister create token_ckBTC --specified-id "mxzaz-hqaaa-aaaar-qaada-cai"
+dfx deploy token_ckBTC --argument "(variant {\
+    Init = record {\
+        token_name = \"ckBTC\";\
+        token_symbol = \"ckBTC\";\
+        decimals = opt (8 : nat8);\
+        transfer_fee = 10 : nat;\
+        metadata = vec {};\
+        minting_account = record {\
+            owner = principal \"${BOB}\";\
+            subaccount = null;\
+        };
+        initial_balances = vec {\
+            record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100000000:nat }\
+        };\
+        fee_collector_account = null;\
+        archive_options = record {\
+            num_blocks_to_archive = 1000 : nat64;\
+            max_transactions_per_response = null;\
+            trigger_threshold = 1000 : nat64;\
+            more_controller_ids = null;\
+            max_message_size_bytes = null;\
+            cycles_for_archive_creation = null;\
+            node_max_memory_size_bytes = null;\
+            controller_id = principal \"aaaaa-aa\";\
+        };\
+        max_memo_length = null;\
+        feature_flags = opt record { icrc2 = true };\
+    }\
+})"
+dfx canister create token_ckUSDT --specified-id "cngnf-vqaaa-aaaar-qag4q-cai"
+dfx deploy token_ckUSDT --argument "(variant {\
+    Init = record {\
+        token_name = \"ckUSDT\";\
+        token_symbol = \"ckUSDT\";\
+        decimals = opt (6 : nat8);\
+        transfer_fee = 10000 : nat;\
+        metadata = vec {};\
+        minting_account = record {\
+            owner = principal \"${BOB}\";\
+            subaccount = null;\
+        };
+        initial_balances = vec {\
+            record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100000000000000:nat }\
+        };\
+        fee_collector_account = null;\
+        archive_options = record {\
+            num_blocks_to_archive = 1000 : nat64;\
+            max_transactions_per_response = null;\
+            trigger_threshold = 1000 : nat64;\
+            more_controller_ids = null;\
+            max_message_size_bytes = null;\
+            cycles_for_archive_creation = null;\
+            node_max_memory_size_bytes = null;\
+            controller_id = principal \"aaaaa-aa\";\
+        };\
+        max_memo_length = null;\
+        feature_flags = opt record { icrc2 = true };\
+    }\
+})"
+dfx canister create token_snsCHAT --specified-id "2ouva-viaaa-aaaaq-aaamq-cai"
+dfx deploy token_snsCHAT --argument "(variant {\
+    Init = record {\
+        token_name = \"CHAT\";\
+        token_symbol = \"CHAT\";\
+        decimals = opt (8 : nat8);\
+        transfer_fee = 100000 : nat;\
+        metadata = vec {};\
+        minting_account = record {\
+            owner = principal \"${BOB}\";\
+            subaccount = null;\
+        };
+        initial_balances = vec {\
+            record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1000000000000:nat }\
+        };\
+        fee_collector_account = null;\
+        archive_options = record {\
+            num_blocks_to_archive = 1000 : nat64;\
+            max_transactions_per_response = null;\
+            trigger_threshold = 1000 : nat64;\
+            more_controller_ids = null;\
+            max_message_size_bytes = null;\
+            cycles_for_archive_creation = null;\
+            node_max_memory_size_bytes = null;\
+            controller_id = principal \"aaaaa-aa\";\
+        };\
+        max_memo_length = null;\
+        feature_flags = opt record { icrc2 = true };\
+    }\
+})"
+blue "0 query balances"
+test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(1_000_000_000_000 : nat)'
+test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ICP/bob" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckBTC/default" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000 : nat)'
+test "icrc1_balance_of ckBTC/alice" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckBTC/bob" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckUSDT/default" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000_000_000 : nat)'
+test "icrc1_balance_of ckUSDT/alice" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckUSDT/bob" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of snsCHAT/default" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(1_000_000_000_000 : nat)'
+test "icrc1_balance_of snsCHAT/alice" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of snsCHAT/bob" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
+
 # ! 1. 测试 swap
 red "\n=========== 1. swap ===========\n"
-dfx canister create swap # --with-cycles 50T
+dfx canister create swap --specified-id "bkyz2-fmaaa-aaaaa-qaaaq-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(null)" swap
 swap=$(canister_id "swap")
 blue "Swap Canister: $swap"
