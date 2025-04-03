@@ -86,11 +86,11 @@ pub use super::super::v000::types::{
 // token
 #[allow(unused)]
 pub fn has_business_token_deposit() -> Result<(), String> {
-    check_permission(ACTION_BUSINESS_TOKEN_DEPOSIT, false)
+    check_permission(ACTION_BUSINESS_TOKEN_DEPOSIT, true) // ! required running, not paused
 }
 #[allow(unused)]
 pub fn has_business_token_withdraw() -> Result<(), String> {
-    check_permission(ACTION_BUSINESS_TOKEN_WITHDRAW, false)
+    check_permission(ACTION_BUSINESS_TOKEN_WITHDRAW, true) // ! required running, not paused
 }
 
 // example

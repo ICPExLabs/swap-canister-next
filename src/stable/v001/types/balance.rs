@@ -1,6 +1,9 @@
 use core::panic;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 
 use candid::{CandidType, Nat, Principal};
 use ic_canister_kit::types::{Bound, CanisterId, StableBTreeMap, Storable};
@@ -155,9 +158,12 @@ impl TokenBalanceLocks {
         &mut self,
         token_accounts: &'a [TokenAccount],
     ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        // 0. repeat accounts
+        let _token_accounts = token_accounts.iter().collect::<HashSet<_>>();
+
         // 1. check first
         let mut locked: Vec<TokenAccount> = vec![];
-        for token_account in token_accounts {
+        for &token_account in &_token_accounts {
             if self.0.get(token_account).is_some_and(|lock| *lock) {
                 locked.push(token_account.clone());
             }
@@ -167,7 +173,7 @@ impl TokenBalanceLocks {
         }
 
         // 2. do lock
-        for token_account in token_accounts {
+        for token_account in _token_accounts {
             self.0.insert(token_account.clone(), true);
         }
 
@@ -175,8 +181,11 @@ impl TokenBalanceLocks {
     }
 
     pub fn unlock(&mut self, token_accounts: &[TokenAccount]) {
+        // 0. repeat accounts
+        let _token_accounts = token_accounts.iter().collect::<HashSet<_>>();
+
         // 1. check first
-        for token_account in token_accounts {
+        for &token_account in &_token_accounts {
             if self.0.get(token_account).is_some_and(|lock| *lock) {
                 continue; // locked is right
             }
@@ -200,7 +209,7 @@ impl TokenBalanceLocks {
         }
 
         // then unlock
-        for token_account in token_accounts {
+        for token_account in _token_accounts {
             self.0.remove(token_account);
         }
     }

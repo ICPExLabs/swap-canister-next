@@ -68,7 +68,8 @@ cargo clippy
 # cargo audit --no-fetch --quiet
 
 # ! 0. deploy tokens
-dfx canister create token_ICP --specified-id "ryjl3-tyaaa-aaaaa-aaaba-cai"
+token_ICP="ryjl3-tyaaa-aaaaa-aaaba-cai"
+dfx canister create token_ICP --specified-id "$token_ICP"
 dfx deploy token_ICP --argument "(variant {\
     Init = record {\
         token_name = \"ICP\";\
@@ -83,7 +84,7 @@ dfx deploy token_ICP --argument "(variant {\
         initial_balances = vec {\
             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1000000000000:nat }\
         };\
-        fee_collector_account = null;\
+        fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
         archive_options = record {\
             num_blocks_to_archive = 1000 : nat64;\
             max_transactions_per_response = null;\
@@ -98,7 +99,9 @@ dfx deploy token_ICP --argument "(variant {\
         feature_flags = opt record { icrc2 = true };\
     }\
 })"
-dfx canister create token_ckBTC --specified-id "mxzaz-hqaaa-aaaar-qaada-cai"
+
+token_ckBTC="mxzaz-hqaaa-aaaar-qaada-cai"
+dfx canister create token_ckBTC --specified-id "$token_ckBTC"
 dfx deploy token_ckBTC --argument "(variant {\
     Init = record {\
         token_name = \"ckBTC\";\
@@ -113,7 +116,7 @@ dfx deploy token_ckBTC --argument "(variant {\
         initial_balances = vec {\
             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100000000:nat }\
         };\
-        fee_collector_account = null;\
+        fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
         archive_options = record {\
             num_blocks_to_archive = 1000 : nat64;\
             max_transactions_per_response = null;\
@@ -128,7 +131,9 @@ dfx deploy token_ckBTC --argument "(variant {\
         feature_flags = opt record { icrc2 = true };\
     }\
 })"
-dfx canister create token_ckUSDT --specified-id "cngnf-vqaaa-aaaar-qag4q-cai"
+
+token_ckBTC="cngnf-vqaaa-aaaar-qag4q-cai"
+dfx canister create token_ckUSDT --specified-id "$token_ckBTC"
 dfx deploy token_ckUSDT --argument "(variant {\
     Init = record {\
         token_name = \"ckUSDT\";\
@@ -143,7 +148,7 @@ dfx deploy token_ckUSDT --argument "(variant {\
         initial_balances = vec {\
             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100000000000000:nat }\
         };\
-        fee_collector_account = null;\
+        fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
         archive_options = record {\
             num_blocks_to_archive = 1000 : nat64;\
             max_transactions_per_response = null;\
@@ -158,7 +163,9 @@ dfx deploy token_ckUSDT --argument "(variant {\
         feature_flags = opt record { icrc2 = true };\
     }\
 })"
-dfx canister create token_snsCHAT --specified-id "2ouva-viaaa-aaaaq-aaamq-cai"
+
+token_snsCHAT="2ouva-viaaa-aaaaq-aaamq-cai"
+dfx canister create token_snsCHAT --specified-id "$token_snsCHAT"
 dfx deploy token_snsCHAT --argument "(variant {\
     Init = record {\
         token_name = \"CHAT\";\
@@ -173,7 +180,7 @@ dfx deploy token_snsCHAT --argument "(variant {\
         initial_balances = vec {\
             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1000000000000:nat }\
         };\
-        fee_collector_account = null;\
+        fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
         archive_options = record {\
             num_blocks_to_archive = 1000 : nat64;\
             max_transactions_per_response = null;\
@@ -188,6 +195,7 @@ dfx deploy token_snsCHAT --argument "(variant {\
         feature_flags = opt record { icrc2 = true };\
     }\
 })"
+
 blue "0 query balances"
 test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(1_000_000_000_000 : nat)'
 test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
@@ -213,6 +221,35 @@ if [ -z "$swap" ]; then
     say deploy failed
     exit 1
 fi
+
+blue "1 business tokens"
+test "tokens_query" "$(dfx --identity alice canister call swap tokens_query 2>&1)" '"ICP"' '"ckUSDT'
+test "token_query" "$(dfx --identity alice canister call swap token_query "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\")" 2>&1)" '"Internet Computer"'
+test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'
+test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 0 : nat;}'
+
+test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { canister_id=principal \"$token_ICP\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount=100_000_000: nat }, null)" 2>&1)" '( variant { Err = variant { TransferFromError = variant { InsufficientAllowance = record { allowance = 0 : nat } } } }, )'
+test "icrc2_approve ICP/default" "$(dfx --identity default canister call token_ICP icrc2_approve "(record { spender=record{owner=principal \"$swap\";}; amount=100_000_000:nat })" 2>&1)" '(variant { Ok = 1 : nat })'
+test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(999_999_990_000 : nat)'
+test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { canister_id=principal \"$token_ICP\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount=100_000_000: nat }, null)" 2>&1)" '( variant { Err = variant { TransferFromError = variant { InsufficientAllowance = record { allowance = 100_000_000 : nat } } } }, )'
+test "icrc2_approve ICP/default" "$(dfx --identity default canister call token_ICP icrc2_approve "(record { spender=record{owner=principal \"$swap\";}; amount=1000_000_000:nat })" 2>&1)" '(variant { Ok = 2 : nat })'
+test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(999_999_980_000 : nat)'
+test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { canister_id=principal \"$token_ICP\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount=500_000_000: nat }, null)" 2>&1)" '(variant { Ok = 3 : nat })'
+
+test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(999_499_970_000 : nat)'
+test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(10_000 : nat)'
+test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(500_000_000 : nat)'
+test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 500_000_000 : nat;}'
+
+test "token_withdraw" "$(dfx --identity default canister call swap token_withdraw "(record { canister_id=principal \"$token_ICP\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount=1000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Err = variant { InsufficientBalance = 500_000_000 : nat } })'
+test "token_withdraw" "$(dfx --identity default canister call swap token_withdraw "(record { canister_id=principal \"$token_ICP\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount=399_990_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 4 : nat })'
+
+test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(999_899_960_000 : nat)'
+test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(20_000 : nat)'
+test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(100_000_000 : nat)'
+test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 100_000_000 : nat;}'
 
 blue "1.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call swap version 2>&1)" '(1 : nat32)'
@@ -280,12 +317,6 @@ test "schedule_replace" "$(dfx canister call swap schedule_replace "(null)" 2>&1
 sleep 2
 test "schedule_trigger" "$(dfx --identity alice canister call swap schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
 test "schedule_trigger" "$(dfx canister call swap schedule_trigger 2>&1)" "()"
-
-blue "5 business tokens"
-test "tokens_query" "$(dfx --identity alice canister call swap tokens_query 2>&1)" '"ICP"' '"ckUSDT'
-test "token_query" "$(dfx --identity alice canister call swap token_query "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\")" 2>&1)" '"Internet Computer"'
-test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'
-test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 0 : nat;}'
 
 blue "5 example business"
 test "business_example_query" "$(dfx --identity alice canister call swap business_example_query 2>&1)" "\"\""

@@ -193,7 +193,7 @@ async fn inner_token_withdraw(
                 .map_err(BusinessError::TransferError)?;
 
             with_mut_state_without_record(|s| {
-                s.business_token_deposit(args.canister_id, args.from, args.amount + token.fee);
+                s.business_token_withdraw(args.canister_id, args.from, args.amount + token.fee);
             });
 
             // ! push log
