@@ -71,7 +71,7 @@ impl CheckArgs for TokenDepositArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_deposit")]
-async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenTransferResut {
+async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenTransferResult {
     inner_token_deposit(args, retries).await.into()
 }
 async fn inner_token_deposit(
@@ -157,7 +157,7 @@ impl CheckArgs for TokenWithdrawArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_withdraw")]
-async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenTransferResut {
+async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenTransferResult {
     inner_token_withdraw(args, retries).await.into()
 }
 async fn inner_token_withdraw(

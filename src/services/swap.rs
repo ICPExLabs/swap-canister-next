@@ -3,7 +3,7 @@
 #![allow(dead_code, unused_imports)]
 use candid::{self, CandidType, Decode, Deserialize, Encode, Principal};
 
-use crate::types::{BusinessError, TokenDepositArgs, TokenTransferResut, TokenWithdrawArgs};
+use crate::types::{BusinessError, TokenDepositArgs, TokenTransferResult, TokenWithdrawArgs};
 
 pub struct Service(pub Principal);
 impl Service {
@@ -12,7 +12,7 @@ impl Service {
         args: TokenDepositArgs,
         retries: Option<u8>,
     ) -> Result<candid::Nat, BusinessError> {
-        ic_cdk::call::<_, (TokenTransferResut,)>(self.0, "token_deposit", (args, retries))
+        ic_cdk::call::<_, (TokenTransferResult,)>(self.0, "token_deposit", (args, retries))
             .await
             .map_err(BusinessError::CallCanisterError)?
             .0
@@ -23,7 +23,7 @@ impl Service {
         args: TokenWithdrawArgs,
         retries: Option<u8>,
     ) -> Result<candid::Nat, BusinessError> {
-        ic_cdk::call::<_, (TokenTransferResut,)>(self.0, "token_withdraw", (args, retries))
+        ic_cdk::call::<_, (TokenTransferResult,)>(self.0, "token_withdraw", (args, retries))
             .await
             .map_err(BusinessError::CallCanisterError)?
             .0

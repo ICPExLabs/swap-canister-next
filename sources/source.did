@@ -97,7 +97,7 @@ type TokenInfo = record {
   canister_id : principal;
   symbol : text;
 };
-type TokenTransferResut = variant { Ok : nat; Err : BusinessError };
+type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
   to : Account;
   from : Account;
@@ -161,9 +161,9 @@ service : (opt CanisterInitialArg) -> {
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
   token_balance_of : (principal, Account) -> (nat) query;
-  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResut);
+  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResult);
   token_query : (principal) -> (opt TokenInfo) query;
-  token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenTransferResut);
+  token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenTransferResult);
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
   version : () -> (nat32) query;

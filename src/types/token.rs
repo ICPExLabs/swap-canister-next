@@ -8,23 +8,23 @@ use super::BusinessError;
 // common
 
 #[derive(Debug, Deserialize, CandidType)]
-pub enum TokenTransferResut {
+pub enum TokenTransferResult {
     Ok(candid::Nat),
     Err(BusinessError),
 }
-impl From<Result<candid::Nat, BusinessError>> for TokenTransferResut {
+impl From<Result<candid::Nat, BusinessError>> for TokenTransferResult {
     fn from(r: Result<candid::Nat, BusinessError>) -> Self {
         match r {
-            Ok(n) => TokenTransferResut::Ok(n),
-            Err(e) => TokenTransferResut::Err(e),
+            Ok(n) => TokenTransferResult::Ok(n),
+            Err(e) => TokenTransferResult::Err(e),
         }
     }
 }
-impl From<TokenTransferResut> for Result<candid::Nat, BusinessError> {
-    fn from(r: TokenTransferResut) -> Self {
+impl From<TokenTransferResult> for Result<candid::Nat, BusinessError> {
+    fn from(r: TokenTransferResult) -> Self {
         match r {
-            TokenTransferResut::Ok(n) => Ok(n),
-            TokenTransferResut::Err(e) => Err(e),
+            TokenTransferResult::Ok(n) => Ok(n),
+            TokenTransferResult::Err(e) => Err(e),
         }
     }
 }
