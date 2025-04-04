@@ -132,8 +132,40 @@ dfx deploy token_ckBTC --argument "(variant {\
     }\
 })"
 
-token_ckBTC="cngnf-vqaaa-aaaar-qag4q-cai"
-dfx canister create token_ckUSDT --specified-id "$token_ckBTC"
+token_ckETH="ss2fx-dyaaa-aaaar-qacoq-cai"
+dfx canister create token_ckETH --specified-id "$token_ckETH"
+dfx deploy token_ckETH --argument "(variant {\
+    Init = record {\
+        token_name = \"ckETH\";\
+        token_symbol = \"ckETH\";\
+        decimals = opt (18 : nat8);\
+        transfer_fee = 2_000_000_000_000 : nat;\
+        metadata = vec {};\
+        minting_account = record {\
+            owner = principal \"${BOB}\";\
+            subaccount = null;\
+        };
+        initial_balances = vec {\
+            record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 10_000_000_000_000_000_000:nat }\
+        };\
+        fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
+        archive_options = record {\
+            num_blocks_to_archive = 1000 : nat64;\
+            max_transactions_per_response = null;\
+            trigger_threshold = 1000 : nat64;\
+            more_controller_ids = null;\
+            max_message_size_bytes = null;\
+            cycles_for_archive_creation = null;\
+            node_max_memory_size_bytes = null;\
+            controller_id = principal \"aaaaa-aa\";\
+        };\
+        max_memo_length = null;\
+        feature_flags = opt record { icrc2 = true };\
+    }\
+})"
+
+token_ckUSDT="cngnf-vqaaa-aaaar-qag4q-cai"
+dfx canister create token_ckUSDT --specified-id "$token_ckUSDT"
 dfx deploy token_ckUSDT --argument "(variant {\
     Init = record {\
         token_name = \"ckUSDT\";\
@@ -203,6 +235,9 @@ test "icrc1_balance_of ICP/bob" "$(dfx --identity default canister call token_IC
 test "icrc1_balance_of ckBTC/default" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000 : nat)'
 test "icrc1_balance_of ckBTC/alice" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
 test "icrc1_balance_of ckBTC/bob" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(10_000_000_000_000_000_000 : nat)'
+test "icrc1_balance_of ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
+test "icrc1_balance_of ckETH/bob" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
 test "icrc1_balance_of ckUSDT/default" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000_000_000 : nat)'
 test "icrc1_balance_of ckUSDT/alice" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
 test "icrc1_balance_of ckUSDT/bob" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
@@ -250,6 +285,9 @@ test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call toke
 test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(20_000 : nat)'
 test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(100_000_000 : nat)'
 test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 100_000_000 : nat;}'
+
+blue "2 business pairs"
+test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '(vec {})'
 
 blue "1.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call swap version 2>&1)" '(1 : nat32)'

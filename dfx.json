@@ -22,6 +22,11 @@
       "wasm": "sources/ic-icrc1-ledger.wasm",
       "candid": "sources/ic-icrc1-ledger.did"
     },
+    "token_ckETH": {
+      "type": "custom",
+      "wasm": "sources/ic-icrc1-ledger.wasm",
+      "candid": "sources/ic-icrc1-ledger.did"
+    },
     "token_ckUSDT": {
       "type": "custom",
       "wasm": "sources/ic-icrc1-ledger.wasm",

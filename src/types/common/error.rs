@@ -4,7 +4,7 @@ use ic_cdk::api::call::RejectionCode;
 use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::transfer_from::TransferFromError};
 use serde::Deserialize;
 
-use super::super::TokenAccount;
+use super::{super::TokenAccount, AmmText, TokenPair};
 
 #[derive(Debug, Deserialize, CandidType)]
 pub enum BusinessError {
@@ -22,4 +22,8 @@ pub enum BusinessError {
     InsufficientBalance(Nat),
     /// 用户操作涉及到的账户被锁定，无法执行操作
     Locked(Vec<TokenAccount>),
+    /// 无效的 Amm 算法
+    InvalidAmm(AmmText),
+    /// 代币池子已经存在
+    TokenPairAmmExist((TokenPair, AmmText)),
 }
