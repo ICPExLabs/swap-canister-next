@@ -3,7 +3,7 @@ use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use super::BusinessError;
+use super::super::BusinessError;
 
 // common
 
@@ -35,7 +35,7 @@ impl From<TokenTransferResult> for Result<candid::Nat, BusinessError> {
 pub struct TokenDepositArgs {
     pub canister_id: CanisterId,
     pub from: Account,
-    pub amount: candid::Nat,
+    pub amount_without_fee: candid::Nat,
 }
 
 // withdraw
@@ -44,6 +44,6 @@ pub struct TokenDepositArgs {
 pub struct TokenWithdrawArgs {
     pub canister_id: CanisterId,
     pub from: Account,
-    pub amount: candid::Nat,
+    pub amount_without_fee: candid::Nat,
     pub to: Account,
 }

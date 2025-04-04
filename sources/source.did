@@ -87,8 +87,8 @@ type RejectionCode = variant {
 type TokenAccount = record { canister_id : principal; account : Account };
 type TokenDepositArgs = record {
   from : Account;
+  amount_without_fee : nat;
   canister_id : principal;
-  amount : nat;
 };
 type TokenInfo = record {
   fee : nat;
@@ -101,8 +101,8 @@ type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
   to : Account;
   from : Account;
+  amount_without_fee : nat;
   canister_id : principal;
-  amount : nat;
 };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };

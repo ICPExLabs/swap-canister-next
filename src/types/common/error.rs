@@ -4,7 +4,7 @@ use ic_cdk::api::call::RejectionCode;
 use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::transfer_from::TransferFromError};
 use serde::Deserialize;
 
-use super::TokenAccount;
+use super::super::TokenAccount;
 
 #[derive(Debug, Deserialize, CandidType)]
 pub enum BusinessError {

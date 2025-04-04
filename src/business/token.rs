@@ -99,8 +99,8 @@ async fn inner_token_deposit(
                         owner: self_canister_id,
                         subaccount: None,
                     },
-                    amount: args.amount.clone(),
-                    fee: None,
+                    amount: args.amount_without_fee.clone(),
+                    fee: None, // deposit action doesn't care fee
                     memo: None,
                     created_at_time: None,
                 })
@@ -109,8 +109,9 @@ async fn inner_token_deposit(
                 .0
                 .map_err(BusinessError::TransferFromError)?;
 
+            let amount = args.amount_without_fee;
             with_mut_state_without_record(|s| {
-                s.business_token_deposit(args.canister_id, args.from, args.amount);
+                s.business_token_deposit(args.canister_id, args.from, amount);
             });
 
             // ! push log
@@ -146,8 +147,8 @@ impl CheckArgs for TokenWithdrawArgs {
 
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(self.canister_id, self.from));
-        let need = self.amount.clone() + token.fee.clone();
-        if balance < need {
+        let amount = self.amount_without_fee.clone() + token.fee.clone();
+        if balance < amount {
             return Err(BusinessError::InsufficientBalance(balance));
         }
 
@@ -182,8 +183,8 @@ async fn inner_token_withdraw(
                 .icrc_1_transfer(crate::services::icrc2::TransferArg {
                     from_subaccount: None,
                     to: args.to,
-                    amount: args.amount.clone(),
-                    fee: Some(token.fee.clone()),
+                    amount: args.amount_without_fee.clone(),
+                    fee: Some(token.fee.clone()), // withdraw action should care fee
                     memo: None,
                     created_at_time: None,
                 })
@@ -192,8 +193,9 @@ async fn inner_token_withdraw(
                 .0
                 .map_err(BusinessError::TransferError)?;
 
+            let amount = args.amount_without_fee + token.fee;
             with_mut_state_without_record(|s| {
-                s.business_token_withdraw(args.canister_id, args.from, args.amount + token.fee);
+                s.business_token_withdraw(args.canister_id, args.from, amount);
             });
 
             // ! push log

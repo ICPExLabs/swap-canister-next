@@ -13,18 +13,18 @@ pub use crate::stable::*;
 #[allow(unused)]
 pub use icrc_ledger_types::icrc1::account::Account;
 
+// ==================== common types ====================
+
+mod common;
+#[allow(unused)]
+pub use common::*;
+
 // ==================== business ====================
 
-// token
-mod token;
+// business
+mod business;
 #[allow(unused)]
-pub use token::*;
-
-// ==================== types ====================
-
-mod error;
-#[allow(unused)]
-pub use error::*;
+pub use business::*;
 
 pub trait CheckArgs {
     type Result;
