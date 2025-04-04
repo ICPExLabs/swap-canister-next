@@ -85,8 +85,9 @@ pub struct CanisterKit {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
-    pub token_balance_locks: TokenBalanceLocks,
-    pub token_pairs: TokenPairs,
+    pub token_balance_locks: TokenBalanceLocks, // 记录账户锁
+    pub fee_to: Option<Account>, // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
+    pub token_pairs: TokenPairs, // 所有交易对池子
 }
 
 // 能序列化的和不能序列化的放在一起

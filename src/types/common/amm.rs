@@ -11,7 +11,7 @@ impl AsRef<str> for AmmText {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Amm {
     #[serde(rename = "swap_v2_0.05%")]
     SwapV2M500, // fee 0.05%

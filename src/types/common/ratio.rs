@@ -2,12 +2,12 @@ use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
-pub struct SwapFee {
+pub struct SwapRatio {
     pub numerator: u32,
     pub denominator: u32,
 }
 
-impl SwapFee {
+impl SwapRatio {
     pub fn new(numerator: u32, denominator: u32) -> Self {
         #[allow(clippy::panic)] // ? SAFETY
         if denominator == 0 {
@@ -22,15 +22,19 @@ impl SwapFee {
             denominator,
         }
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.numerator == 0
+    }
 }
 
 // ========================== view ==========================
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
-pub struct SwapFeeView(String);
+pub struct SwapRatioView(String);
 
-impl From<SwapFee> for SwapFeeView {
-    fn from(value: SwapFee) -> Self {
+impl From<SwapRatio> for SwapRatioView {
+    fn from(value: SwapRatio) -> Self {
         Self(format!("{}/{}", value.numerator, value.denominator))
     }
 }

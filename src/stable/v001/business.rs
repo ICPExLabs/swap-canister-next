@@ -37,28 +37,42 @@ impl Business for InnerState {
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.business_data.token_pairs.query_token_pair_pools()
     }
-    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
-        self.business_data
-            .token_pairs
-            .is_token_pair_pool_exist(pair, amm)
+    fn business_token_pair_pool_maker_get(&self, pa: &PairAmm) -> Option<&MarketMaker> {
+        self.business_data.token_pairs.get_token_pair_pool_maker(pa)
     }
-    fn business_token_pair_pool_create(
-        &mut self,
-        pair: TokenPair,
-        amm: Amm,
-    ) -> Result<(), BusinessError> {
+    fn business_token_pair_pool_create(&mut self, pa: PairAmm) -> Result<(), BusinessError> {
         let token0 = TOKENS
-            .get(&pair.token0)
-            .ok_or(BusinessError::NotSupportedToken(pair.token0))?;
+            .get(&pa.pair.token0)
+            .ok_or(BusinessError::NotSupportedToken(pa.pair.token0))?;
         let token1 = TOKENS
-            .get(&pair.token1)
-            .ok_or(BusinessError::NotSupportedToken(pair.token1))?;
+            .get(&pa.pair.token1)
+            .ok_or(BusinessError::NotSupportedToken(pa.pair.token1))?;
 
-        let subaccount = pair.get_subaccount(&amm);
+        let (subaccount, dummy_canister_id) = pa.get_subaccount_and_dummy_canister_id();
 
-        self.business_data
-            .token_pairs
-            .create_token_pair_pool(pair, amm, subaccount, token0, token1)
+        self.business_data.token_pairs.create_token_pair_pool(
+            pa,
+            subaccount,
+            dummy_canister_id,
+            token0,
+            token1,
+        )
+    }
+
+    // pair liquidity
+    fn business_token_pair_liquidity_add(
+        &mut self,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityAddArg,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        self.business_data.token_pairs.add_liquidity(
+            self.business_data.fee_to,
+            &mut self.token_balances,
+            self_canister,
+            pa,
+            arg,
+        )
     }
 
     fn business_example_query(&self) -> String {

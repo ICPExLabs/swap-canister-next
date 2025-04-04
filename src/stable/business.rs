@@ -50,14 +50,20 @@ pub trait Business:
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         panic!("Not supported operation by this version.")
     }
-    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
+    fn business_token_pair_pool_maker_get(&self, pa: &PairAmm) -> Option<&MarketMaker> {
         panic!("Not supported operation by this version.")
     }
-    fn business_token_pair_pool_create(
+    fn business_token_pair_pool_create(&mut self, pa: PairAmm) -> Result<(), BusinessError> {
+        panic!("Not supported operation by this version.")
+    }
+
+    // pair liquidity
+    fn business_token_pair_liquidity_add(
         &mut self,
-        pair: TokenPair,
-        amm: Amm,
-    ) -> Result<(), BusinessError> {
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityAddArg,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         panic!("Not supported operation by this version.")
     }
 
@@ -145,15 +151,22 @@ impl Business for State {
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.get().business_token_pair_pools_query()
     }
-    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
-        self.get().business_token_pair_pool_exist(pair, amm)
+    fn business_token_pair_pool_maker_get(&self, pa: &PairAmm) -> Option<&MarketMaker> {
+        self.get().business_token_pair_pool_maker_get(pa)
     }
-    fn business_token_pair_pool_create(
+    fn business_token_pair_pool_create(&mut self, pa: PairAmm) -> Result<(), BusinessError> {
+        self.get_mut().business_token_pair_pool_create(pa)
+    }
+
+    // pair liquidity
+    fn business_token_pair_liquidity_add(
         &mut self,
-        pair: TokenPair,
-        amm: Amm,
-    ) -> Result<(), BusinessError> {
-        self.get_mut().business_token_pair_pool_create(pair, amm)
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityAddArg,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        self.get_mut()
+            .business_token_pair_liquidity_add(self_canister, pa, arg)
     }
 
     fn business_example_query(&self) -> String {

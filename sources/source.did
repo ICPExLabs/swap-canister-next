@@ -2,13 +2,16 @@ type Account = record { owner : principal; subaccount : opt blob };
 type BusinessError = variant {
   TransferError : TransferError;
   NotSupportedToken : principal;
-  InsufficientBalance : nat;
+  TokenPairAmmNotExist : record { TokenPair; text };
+  InsufficientBalance : record { principal; nat };
   TokenPairAmmExist : record { TokenPair; text };
   InvalidAmm : text;
   Locked : vec TokenAccount;
   TransferFromError : TransferFromError;
   NotOwner : principal;
   CallCanisterError : record { RejectionCode; text };
+  Liquidity : text;
+  Expired : nat64;
 };
 type BusinessResult = variant { Ok; Err : BusinessError };
 type CanisterInitialArg = record { schedule : opt nat };
@@ -36,8 +39,9 @@ type ExampleVec = record { vec_data : nat64 };
 type InnerLP = record {
   fee : nat;
   decimals : nat8;
+  dummy_canister_id : principal;
   minimum_liquidity : nat;
-  supply : nat;
+  total_supply : nat;
 };
 type LogVisibility = variant {
   controllers;
@@ -55,7 +59,7 @@ type OuterLP = record {
   decimals : nat8;
   canister_id : principal;
   minimum_liquidity : nat;
-  supply : nat;
+  total_supply : nat;
 };
 type PageData = record {
   total : nat64;
@@ -104,10 +108,16 @@ type RejectionCode = variant {
 };
 type SwapV2MarketMakerView = record {
   lp : PoolLp;
+  block_timestamp_last : nat64;
+  reserve0 : nat;
+  reserve1 : nat;
   subaccount : text;
-  swap_fee : text;
-  protocol_fee : text;
-  lp_fee : text;
+  price1_cumulative_last : nat;
+  fee_rate : text;
+  k_last : nat;
+  protocol_fee : opt text;
+  price0_cumulative_last : nat;
+  price_unit : nat;
 };
 type TokenAccount = record { canister_id : principal; account : Account };
 type TokenDepositArgs = record {
@@ -123,6 +133,22 @@ type TokenInfo = record {
   symbol : text;
 };
 type TokenPair = record { token0 : principal; token1 : principal };
+type TokenPairLiquidityAddArgs = record {
+  to : Account;
+  from : Account;
+  pool : TokenPairPool;
+  deadline : opt nat64;
+  amount_desired : record { nat; nat };
+  amount_min : record { nat; nat };
+};
+type TokenPairLiquidityAddResult = variant {
+  Ok : TokenPairLiquidityAddSuccess;
+  Err : BusinessError;
+};
+type TokenPairLiquidityAddSuccess = record {
+  liquidity : nat;
+  amount : record { nat; nat };
+};
 type TokenPairPool = record {
   amm : text;
   pair : record { principal; principal };
@@ -173,6 +199,9 @@ service : (opt CanisterInitialArg) -> {
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
   pair_create : (TokenPairPool) -> (BusinessResult);
+  pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
+      TokenPairLiquidityAddResult,
+    );
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

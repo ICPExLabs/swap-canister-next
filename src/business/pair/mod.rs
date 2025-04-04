@@ -8,6 +8,26 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
+mod liquidity;
+
+impl CheckArgs for TokenPair {
+    type Result = ();
+
+    fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // check supported token
+        with_state(|s| {
+            let tokens = s.business_tokens_query();
+            if !tokens.contains_key(&self.token0) {
+                return Err(BusinessError::NotSupportedToken(self.token0));
+            }
+            if !tokens.contains_key(&self.token1) {
+                return Err(BusinessError::NotSupportedToken(self.token1));
+            }
+            Ok(())
+        })
+    }
+}
+
 // ========================== query pairs ==========================
 
 // anyone can query
@@ -25,31 +45,24 @@ fn pairs_query() -> Vec<(TokenPairPool, MarketMakerView)> {
 
 // create
 impl CheckArgs for TokenPairCreateArgs {
-    type Result = (TokenPair, Amm);
+    type Result = PairAmm;
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         let TokenPairPool {
-            pair: (token0, token1),
+            pair: (token_a, token_b),
             amm,
         } = &self.0;
-        let pair = TokenPair::new(*token0, *token1);
+        let pair = TokenPair::new(*token_a, *token_b);
+        pair.check_args()?; // check supported token
+        let amm: Amm = amm.try_into()?; // parse amm
 
-        // check supported token
-        if !with_state(|s| s.business_tokens_query().contains_key(&pair.token0)) {
-            return Err(BusinessError::NotSupportedToken(pair.token0));
-        }
-        if !with_state(|s| s.business_tokens_query().contains_key(&pair.token1)) {
-            return Err(BusinessError::NotSupportedToken(pair.token1));
-        }
-
-        // parse amm
-        let amm: Amm = amm.try_into()?;
+        let pa = PairAmm { pair, amm };
 
         // check exist
-        if with_state(|s| s.business_token_pair_pool_exist(&pair, &amm)) {
-            return Err(BusinessError::NotSupportedToken(pair.token1));
+        if with_state(|s| s.business_token_pair_pool_maker_get(&pa).is_some()) {
+            return Err(BusinessError::TokenPairAmmExist((pair, (&amm).into())));
         }
 
-        Ok((pair, amm))
+        Ok(pa)
     }
 }
 
@@ -60,9 +73,9 @@ async fn pair_create(args: TokenPairPool) -> BusinessResult {
 }
 async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<(), BusinessError> {
     // 1. check args
-    let (pair, amm) = args.check_args()?;
+    let pa = args.check_args()?;
 
     // 2. some value
 
-    with_mut_state_without_record(|s| s.business_token_pair_pool_create(pair, amm))
+    with_mut_state_without_record(|s| s.business_token_pair_pool_create(pa))
 }

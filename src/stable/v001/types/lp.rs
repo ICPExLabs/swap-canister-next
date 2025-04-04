@@ -1,8 +1,11 @@
 use candid::{CandidType, Nat};
 use ic_canister_kit::types::CanisterId;
+use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use super::TokenInfo;
+use crate::utils::math::zero;
+
+use super::{DummyCanisterId, TokenBalances, TokenInfo};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -10,13 +13,38 @@ pub enum PoolLp {
     OuterLP(OuterLP),
 }
 
+impl PoolLp {
+    pub fn get_total_supply(&self) -> Nat {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.total_supply.clone(),
+            PoolLp::OuterLP(outer_lp) => outer_lp.total_supply.clone(),
+        }
+    }
+
+    pub fn mint(&mut self, token_balances: &mut TokenBalances, fee_to: Account, amount: Nat) {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint(token_balances, fee_to, amount),
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
+}
+
 // 内部存储 lp
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub struct InnerLP {
-    pub supply: Nat,  // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
-    pub decimals: u8, // 需要记录小数位数，显示需要
-    pub fee: Nat,     // 需要记录手续费，转移时候需要用到
+    pub dummy_canister_id: DummyCanisterId, // 生成一个假的罐子序号用来标记池子 lp
+
+    pub total_supply: Nat, // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
+    pub decimals: u8,      // 需要记录小数位数，显示需要
+    pub fee: Nat,          // 需要记录手续费，转移时候需要用到
     pub minimum_liquidity: Nat, // 需要记录最小流动性，移除流动性时候需要检查是否达到最小流动性
+}
+
+impl InnerLP {
+    pub fn mint(&mut self, token_balances: &mut TokenBalances, fee_to: Account, amount: Nat) {
+        token_balances.token_deposit(self.dummy_canister_id.id(), fee_to, amount.clone());
+        self.total_supply += amount;
+    }
 }
 
 // 外部存储 lp，是一个单独的罐子，有权限对其 mint 和 burn LP 代币，// ! 罐子手续费不应该销毁
@@ -24,14 +52,18 @@ pub struct InnerLP {
 pub struct OuterLP {
     pub canister_id: CanisterId, // 需要记录外部的罐子 id
 
-    pub supply: Nat,  // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
-    pub decimals: u8, // 需要记录小数位数，显示需要
-    pub fee: Nat,     // 需要记录手续费，转移时候需要用到
+    pub total_supply: Nat, // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
+    pub decimals: u8,      // 需要记录小数位数，显示需要
+    pub fee: Nat,          // 需要记录手续费，转移时候需要用到
     pub minimum_liquidity: Nat, // 需要记录最小流动性，移除流动性时候需要检查是否达到最小流动性
 }
 
 impl PoolLp {
-    pub fn new_inner_lp(token0: &TokenInfo, token1: &TokenInfo) -> Self {
+    pub fn new_inner_lp(
+        dummy_canister_id: DummyCanisterId,
+        token0: &TokenInfo,
+        token1: &TokenInfo,
+    ) -> Self {
         let decimals = get_decimals(token0.decimals, token1.decimals);
         let fee = get_fee(&token0.fee, &token1.fee);
 
@@ -39,7 +71,8 @@ impl PoolLp {
         let minimum_liquidity = fee.clone() * Nat::from(1000_u64);
 
         Self::InnerLP(InnerLP {
-            supply: Nat::from(0_u64),
+            dummy_canister_id,
+            total_supply: zero(),
             decimals,
             fee,
             minimum_liquidity,

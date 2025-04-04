@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
-use icrc_ledger_types::icrc1::account::Subaccount;
+use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
-use super::{Amm, BusinessError, MarketMaker, TokenInfo, TokenPair};
+use super::{
+    Amm, BusinessError, DummyCanisterId, MarketMaker, PairAmm, SelfCanister, TokenBalances,
+    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct TokenPairs(HashMap<TokenPair, HashMap<Amm, MarketMaker>>);
@@ -16,29 +19,51 @@ impl TokenPairs {
             .collect()
     }
 
-    pub fn is_token_pair_pool_exist(&self, pool: &TokenPair, amm: &Amm) -> bool {
-        self.0
-            .get(pool)
-            .is_some_and(|makers| makers.contains_key(amm))
+    /// 查询该币对池子涉及的账户
+    pub fn get_token_pair_pool_maker(&self, pa: &PairAmm) -> Option<&MarketMaker> {
+        let PairAmm { pair, amm } = pa;
+        self.0.get(pair).and_then(|makers| makers.get(amm))
     }
 
     pub fn create_token_pair_pool(
         &mut self,
-        pool: TokenPair,
-        amm: Amm,
+        pa: PairAmm,
         subaccount: Subaccount,
+        dummy_canister_id: DummyCanisterId,
         token0: &TokenInfo,
         token1: &TokenInfo,
     ) -> Result<(), BusinessError> {
-        if self.is_token_pair_pool_exist(&pool, &amm) {
-            return Err(BusinessError::TokenPairAmmExist((pool, (&amm).into())));
+        if self.get_token_pair_pool_maker(&pa).is_some() {
+            return Err(BusinessError::TokenPairAmmExist((
+                pa.pair,
+                (&pa.amm).into(),
+            )));
         }
 
-        let maker = MarketMaker::new_by_pair(&amm, subaccount, token0, token1);
+        let PairAmm { pair, amm } = pa;
 
-        let makers = self.0.entry(pool).or_default();
-        makers.insert(amm, maker);
+        let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);
+
+        let makers = self.0.entry(pair).or_default();
+        makers.entry(amm).or_insert(maker);
 
         Ok(())
+    }
+
+    pub fn add_liquidity(
+        &mut self,
+        fee_to: Option<Account>,
+        token_balances: &mut TokenBalances,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityAddArg,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        let maker = self
+            .0
+            .get_mut(&pa.pair)
+            .and_then(|makers| makers.get_mut(&pa.amm))
+            .ok_or_else(|| pa.not_exist())?;
+
+        maker.add_liquidity(fee_to, token_balances, self_canister, pa, arg)
     }
 }

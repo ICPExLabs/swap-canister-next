@@ -151,6 +151,18 @@ impl TokenBalances {
             self.0.insert(token_account, new_balance);
         }
     }
+
+    // transfer
+    pub fn token_transfer(
+        &mut self,
+        canister_id: CanisterId,
+        from: Account,
+        to: Account,
+        amount: Nat,
+    ) {
+        self.token_withdraw(canister_id, from, amount.clone());
+        self.token_deposit(canister_id, to, amount);
+    }
 }
 
 impl TokenBalanceLocks {
