@@ -10,6 +10,8 @@ use crate::types::*;
 
 pub mod token;
 
+pub mod pair;
+
 #[allow(unused)]
 #[inline(always)]
 async fn with_token_balance_lock<T, R1, F, R2, A, E>(

@@ -33,6 +33,11 @@ impl Business for InnerState {
             .token_withdraw(canister_id, account, amount)
     }
 
+    // pair
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        self.business_data.token_pairs.query_token_pair_pools()
+    }
+
     fn business_example_query(&self) -> String {
         self.example_data.clone()
     }

@@ -3,6 +3,8 @@ type BusinessError = variant {
   TransferError : TransferError;
   NotSupportedToken : principal;
   InsufficientBalance : nat;
+  TokenPairAmmExist : record { TokenPair; text };
+  InvalidAmm : text;
   Locked : vec TokenAccount;
   TransferFromError : TransferFromError;
   NotOwner : principal;
@@ -30,15 +32,23 @@ type DefiniteCanisterSettings = record {
   compute_allocation : nat;
 };
 type ExampleVec = record { vec_data : nat64 };
+type InnerLP = record { fee : nat; decimals : nat8; supply : nat };
 type LogVisibility = variant {
   controllers;
   public;
   allowed_viewers : vec principal;
 };
+type MarketMaker = variant { SwapV2 : SwapV2MarketMaker };
 type MigratedRecords = record {
   records : vec Record;
   next_id : nat64;
   removed : nat64;
+};
+type OuterLP = record {
+  fee : nat;
+  decimals : nat8;
+  canister_id : principal;
+  supply : nat;
 };
 type PageData = record {
   total : nat64;
@@ -53,6 +63,7 @@ type PermissionUpdatedArg = variant {
   UpdateUserPermission : record { principal; opt vec text };
   UpdateUserRole : record { principal; opt vec text };
 };
+type PoolLp = variant { InnerLP : InnerLP; OuterLP : OuterLP };
 type QueryPage = record { page : nat64; size : nat32 };
 type QueryStats = record {
   response_payload_bytes_total : nat;
@@ -84,6 +95,14 @@ type RejectionCode = variant {
   SysFatal;
   CanisterReject;
 };
+type SwapFee = record { numerator : nat32; denominator : nat32 };
+type SwapV2MarketMaker = record {
+  lp : PoolLp;
+  subaccount : blob;
+  swap_fee : SwapFee;
+  protocol_fee : SwapFee;
+  lp_fee : SwapFee;
+};
 type TokenAccount = record { canister_id : principal; account : Account };
 type TokenDepositArgs = record {
   from : Account;
@@ -96,6 +115,11 @@ type TokenInfo = record {
   name : text;
   canister_id : principal;
   symbol : text;
+};
+type TokenPair = record { token0 : principal; token1 : principal };
+type TokenPairPool = record {
+  amm : text;
+  pair : record { principal; principal };
 };
 type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
@@ -142,6 +166,7 @@ service : (opt CanisterInitialArg) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
+  pairs_query : () -> (vec record { TokenPairPool; MarketMaker }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();

@@ -21,11 +21,20 @@ pub use super::schedule::schedule_task;
 #[allow(unused)]
 pub use crate::types::*;
 
+mod amm;
 mod balance;
+mod lp;
+mod pair;
 mod token;
 
 #[allow(unused)]
+pub use amm::*;
+#[allow(unused)]
 pub use balance::*;
+#[allow(unused)]
+pub use lp::*;
+#[allow(unused)]
+pub use pair::*;
 #[allow(unused)]
 pub use token::*;
 
@@ -77,6 +86,7 @@ pub struct CanisterKit {
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
     pub token_balance_locks: TokenBalanceLocks,
+    pub token_pairs: TokenPairs,
 }
 
 // 能序列化的和不能序列化的放在一起

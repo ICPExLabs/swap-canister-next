@@ -46,6 +46,11 @@ pub trait Business:
         panic!("Not supported operation by this version.")
     }
 
+    // pair
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        panic!("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
     }
@@ -124,6 +129,11 @@ impl Business for State {
     fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
         self.get_mut()
             .business_token_withdraw(canister_id, account, amount)
+    }
+
+    // pair
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        self.get().business_token_pair_pools_query()
     }
 
     fn business_example_query(&self) -> String {

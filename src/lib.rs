@@ -10,6 +10,8 @@
 
 mod services; // 罐子接口
 
+mod utils; // 工具方法
+
 mod types; // 所有的类型
 
 mod stable; // 存储模块
