@@ -50,6 +50,16 @@ pub trait Business:
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         panic!("Not supported operation by this version.")
     }
+    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_token_pair_pool_create(
+        &mut self,
+        pair: TokenPair,
+        amm: Amm,
+    ) -> Result<(), BusinessError> {
+        panic!("Not supported operation by this version.")
+    }
 
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
@@ -134,6 +144,16 @@ impl Business for State {
     // pair
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.get().business_token_pair_pools_query()
+    }
+    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
+        self.get().business_token_pair_pool_exist(pair, amm)
+    }
+    fn business_token_pair_pool_create(
+        &mut self,
+        pair: TokenPair,
+        amm: Amm,
+    ) -> Result<(), BusinessError> {
+        self.get_mut().business_token_pair_pool_create(pair, amm)
     }
 
     fn business_example_query(&self) -> String {

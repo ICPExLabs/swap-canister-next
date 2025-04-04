@@ -37,6 +37,29 @@ impl Business for InnerState {
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.business_data.token_pairs.query_token_pair_pools()
     }
+    fn business_token_pair_pool_exist(&self, pair: &TokenPair, amm: &Amm) -> bool {
+        self.business_data
+            .token_pairs
+            .is_token_pair_pool_exist(pair, amm)
+    }
+    fn business_token_pair_pool_create(
+        &mut self,
+        pair: TokenPair,
+        amm: Amm,
+    ) -> Result<(), BusinessError> {
+        let token0 = TOKENS
+            .get(&pair.token0)
+            .ok_or(BusinessError::NotSupportedToken(pair.token0))?;
+        let token1 = TOKENS
+            .get(&pair.token1)
+            .ok_or(BusinessError::NotSupportedToken(pair.token1))?;
+
+        let subaccount = pair.get_subaccount(&amm);
+
+        self.business_data
+            .token_pairs
+            .create_token_pair_pool(pair, amm, subaccount, token0, token1)
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

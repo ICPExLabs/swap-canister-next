@@ -18,13 +18,18 @@ pub use super::super::v000::types::{
 // token
 pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
 pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // 提取代币权限
+// pair
+pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE: &str = "BusinessTokenPairCreate"; // 创建代币对池子权限
+pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD: &str = "BusinessTokenPairLiquidityAdd"; // 向代币对池子添加流动性权限
+pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE: &str = "BusinessTokenPairLiquidityRemove"; // 向代币对池子移除流动性权限
+pub const ACTION_BUSINESS_TOKEN_PAIR_SWAP: &str = "BusinessTokenPairSwap"; // 代币对池子交换代币权限
 // example
 pub const ACTION_BUSINESS_EXAMPLE_QUERY: &str = "BusinessExampleQuery"; // 业务查询权限
 pub const ACTION_BUSINESS_EXAMPLE_SET: &str = "BusinessExampleSet"; // 业务更新权限
 
 // 所有权限列表
 #[allow(unused)]
-pub const ACTIONS: [&str; 14] = [
+pub const ACTIONS: [&str; 18] = [
     // 通用权限
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -40,6 +45,11 @@ pub const ACTIONS: [&str; 14] = [
     // token
     ACTION_BUSINESS_TOKEN_DEPOSIT,
     ACTION_BUSINESS_TOKEN_WITHDRAW,
+    // pair
+    ACTION_BUSINESS_TOKEN_PAIR_CREATE,
+    ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD,
+    ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE,
+    ACTION_BUSINESS_TOKEN_PAIR_SWAP,
     // example
     ACTION_BUSINESS_EXAMPLE_QUERY,
     ACTION_BUSINESS_EXAMPLE_SET,
@@ -62,8 +72,13 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
             // 业务权限
             // token
-            ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name),
-            ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name),
+            ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name), // default anyone
+            ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name), // default anyone
+            // pair
+            ACTION_BUSINESS_TOKEN_PAIR_CREATE => Permission::by_permit(name),
+            ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD => Permission::by_forbid(name), // default anyone
+            ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE => Permission::by_forbid(name), // default anyone
+            ACTION_BUSINESS_TOKEN_PAIR_SWAP => Permission::by_forbid(name), // default anyone
             // example
             ACTION_BUSINESS_EXAMPLE_QUERY => Permission::by_forbid(name),
             ACTION_BUSINESS_EXAMPLE_SET => Permission::by_permit(name),
@@ -91,6 +106,24 @@ pub fn has_business_token_deposit() -> Result<(), String> {
 #[allow(unused)]
 pub fn has_business_token_withdraw() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_TOKEN_WITHDRAW, true) // ! required running, not paused
+}
+
+// pair
+#[allow(unused)]
+pub fn has_business_token_pair_create() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_PAIR_CREATE, true) // ! required running, not paused
+}
+#[allow(unused)]
+pub fn has_business_token_pair_liquidity_add() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD, true) // ! required running, not paused
+}
+#[allow(unused)]
+pub fn has_business_token_pair_liquidity_remove() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE, true) // ! required running, not paused
+}
+#[allow(unused)]
+pub fn has_business_token_pair_swap() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_PAIR_SWAP, true) // ! required running, not paused
 }
 
 // example

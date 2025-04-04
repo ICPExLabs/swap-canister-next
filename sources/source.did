@@ -10,6 +10,7 @@ type BusinessError = variant {
   NotOwner : principal;
   CallCanisterError : record { RejectionCode; text };
 };
+type BusinessResult = variant { Ok; Err : BusinessError };
 type CanisterInitialArg = record { schedule : opt nat };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
@@ -32,13 +33,18 @@ type DefiniteCanisterSettings = record {
   compute_allocation : nat;
 };
 type ExampleVec = record { vec_data : nat64 };
-type InnerLP = record { fee : nat; decimals : nat8; supply : nat };
+type InnerLP = record {
+  fee : nat;
+  decimals : nat8;
+  minimum_liquidity : nat;
+  supply : nat;
+};
 type LogVisibility = variant {
   controllers;
   public;
   allowed_viewers : vec principal;
 };
-type MarketMaker = variant { SwapV2 : SwapV2MarketMaker };
+type MarketMakerView = variant { SwapV2 : SwapV2MarketMakerView };
 type MigratedRecords = record {
   records : vec Record;
   next_id : nat64;
@@ -48,6 +54,7 @@ type OuterLP = record {
   fee : nat;
   decimals : nat8;
   canister_id : principal;
+  minimum_liquidity : nat;
   supply : nat;
 };
 type PageData = record {
@@ -95,13 +102,12 @@ type RejectionCode = variant {
   SysFatal;
   CanisterReject;
 };
-type SwapFee = record { numerator : nat32; denominator : nat32 };
-type SwapV2MarketMaker = record {
+type SwapV2MarketMakerView = record {
   lp : PoolLp;
-  subaccount : blob;
-  swap_fee : SwapFee;
-  protocol_fee : SwapFee;
-  lp_fee : SwapFee;
+  subaccount : text;
+  swap_fee : text;
+  protocol_fee : text;
+  lp_fee : text;
 };
 type TokenAccount = record { canister_id : principal; account : Account };
 type TokenDepositArgs = record {
@@ -166,7 +172,8 @@ service : (opt CanisterInitialArg) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
-  pairs_query : () -> (vec record { TokenPairPool; MarketMaker }) query;
+  pair_create : (TokenPairPool) -> (BusinessResult);
+  pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();

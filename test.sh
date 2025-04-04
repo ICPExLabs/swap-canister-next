@@ -257,7 +257,7 @@ if [ -z "$swap" ]; then
     exit 1
 fi
 
-blue "1 business tokens"
+blue "\n1 business tokens"
 test "tokens_query" "$(dfx --identity alice canister call swap tokens_query 2>&1)" '"ICP"' '"ckUSDT'
 test "token_query" "$(dfx --identity alice canister call swap token_query "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\")" 2>&1)" '"Internet Computer"'
 test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'
@@ -286,51 +286,54 @@ test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_
 test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"ryjl3-tyaaa-aaaaa-aaaba-cai\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(100_000_000 : nat)'
 test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 100_000_000 : nat;}'
 
-blue "2 business pairs"
+blue "\n2 business pairs"
 test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '(vec {})'
+test "pair_create" "$(dfx --identity alice canister call swap pair_create "(record { pair=record{ principal \"$token_ICP\"; principal \"$token_ckUSDT\"}; amm=\"swap_v2_0.3%\" })" 2>&1)" "Permission 'BusinessTokenPairCreate'"
+test "pair_create" "$(dfx --identity default canister call swap pair_create "(record { pair=record{ principal \"$token_ICP\"; principal \"$token_ckUSDT\"}; amm=\"swap_v2_0.3%\" })" 2>&1)" '(variant { Ok })'
+test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '( vec { record { record { amm = "swap_v2_0.3%"; pair = record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; principal "cngnf-vqaaa-aaaar-qag4q-cai"; }; }; variant { SwapV2 = record { lp = variant { InnerLP = record { fee = 10_000 : nat; decimals = 7 : nat8; minimum_liquidity = 10_000_000 : nat; supply = 0 : nat; } }; subaccount = "81c09f0abbdbab8ad406107db3d18588b667eb94f3be6a556ce36b8875cb8996"; swap_fee = "3/1000"; protocol_fee = "1/6"; lp_fee = "5/6"; } }; }; }, )'
 
-blue "1.1 permission permission_query"
+blue "\n1.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call swap version 2>&1)" '(1 : nat32)'
 test "permission_all" "$(dfx --identity alice canister call swap permission_all 2>&1)" 'vec { variant { Forbidden = "PauseQuery" }; variant { Permitted = "PauseReplace" }'
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }, )'
-test "permission_query" "$(dfx canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; "BusinessExampleSet";}'
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
+test "permission_query" "$(dfx canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_update" "$(dfx --identity bob canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "'PermissionUpdate' is required"
 test "permission_update" "$(dfx canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "()"
 test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" "'PermissionQuery' is required"
-test "permission_query" "$(dfx canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; "BusinessExampleSet";}'
-test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionUpdate"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }, )'
+test "permission_query" "$(dfx canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
+test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionUpdate"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_update" "$(dfx --identity alice canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }, )'
-test "permission_query" "$(dfx canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; "BusinessExampleSet";}'
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
+test "permission_query" "$(dfx canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 
-blue "1.2 permission permission update"
-test "permission_query" "$(dfx canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; "BusinessExampleSet";}'
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }'
-test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" 'vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; "BusinessExampleSet";}'
-test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" 'vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }'
+blue "\n1.2 permission permission update"
+test "permission_query" "$(dfx canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
+test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
+test "permission_find_by_user" "$(dfx canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_find_by_user" "$(dfx --identity alice canister call swap permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" "'PermissionFind' is required"
 test "permission_find_by_user" "$(dfx --identity alice canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" "'PermissionFind' is required"
 
-blue "1.3 permission roles"
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }'
+blue "\n1.3 permission roles"
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_update" "$(dfx canister call swap permission_update "(vec { variant { UpdateRolePermission=record{\"Admin\"; opt vec {\"PauseReplace\"; \"PauseQuery\"} } } })" 2>&1)" "()"
 test "permission_update" "$(dfx canister call swap permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; opt vec {\"Admin\"} } } })" 2>&1)" "()"
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseReplace"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }, )'
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseReplace"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_update" "$(dfx canister call swap permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
-test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" 'vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessExampleQuery"; }'
+test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 
-blue "2.1 pause permission"
+blue "\n2.1 pause permission"
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(false)"
 test "pause_query_reason" "$(dfx canister call swap pause_query_reason 2>&1)" "(null)"
 test "pause_replace" "$(dfx canister call swap pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(true)"
 test "pause_query_reason" "$(dfx canister call swap pause_query_reason 2>&1)" "message = \"reason\""
 
-blue "2.2 pause permission by alice"
+blue "\n2.2 pause permission by alice"
 test "pause_query" "$(dfx --identity alice canister call swap pause_query 2>&1)" "(true)"
 test "pause_query_reason" "$(dfx --identity alice canister call swap pause_query_reason 2>&1)" "message = \"reason\""
 
-blue "2.3 pause no permission"
+blue "\n2.3 pause no permission"
 test "pause_replace" "$(dfx --identity alice canister call swap pause_replace "(null)" 2>&1)" "'PauseReplace' is required"
 test "permission_update" "$(dfx canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PauseReplace\";\"PauseQuery\" } } } })" 2>&1)" "()"
 test "pause_replace" "$(dfx --identity alice canister call swap pause_replace "(null)" 2>&1)" "()"
@@ -339,13 +342,13 @@ test "pause_query_reason" "$(dfx --identity alice canister call swap pause_query
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(false)"
 test "pause_query_reason" "$(dfx canister call swap pause_query_reason 2>&1)" "(null)"
 
-blue "3 record no permission"
+blue "\n3 record no permission"
 test "record_topics" "$(dfx --identity alice canister call swap record_topics 2>&1)" "'RecordFind' is required"
 test "record_topics" "$(dfx canister call swap record_topics 2>&1)" '"Example"' '"CyclesCharge"'
 test "record_find_by_page" "$(dfx canister call swap record_find_by_page "(record{page=1:nat64;size=1:nat32},opt record{topic=opt vec{\"Pause\"}})" 2>&1)" "record { total = "
 test "record_migrate" "$(dfx canister call swap record_migrate "(1:nat32)" 2>&1)" "removed = 0"
 
-blue "4 schedule"
+blue "\n4 schedule"
 test "schedule_find" "$(dfx --identity alice canister call swap schedule_find 2>&1)" "'ScheduleFind' is required"
 test "schedule_find" "$(dfx canister call swap schedule_find 2>&1)" "(null)"
 test "schedule_replace" "$(dfx --identity alice canister call swap schedule_replace "(opt (1000000000:nat64))" 2>&1)" "'ScheduleReplace' is required"
@@ -356,7 +359,7 @@ sleep 2
 test "schedule_trigger" "$(dfx --identity alice canister call swap schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
 test "schedule_trigger" "$(dfx canister call swap schedule_trigger 2>&1)" "()"
 
-blue "5 example business"
+blue "\n5 example business"
 test "business_example_query" "$(dfx --identity alice canister call swap business_example_query 2>&1)" "\"\""
 test "business_example_query" "$(dfx canister call swap business_example_query 2>&1)" "\"\""
 test "business_example_set" "$(dfx --identity alice canister call swap business_example_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -364,7 +367,7 @@ test "business_example_set" "$(dfx canister call swap business_example_set "(\"t
 test "business_example_query" "$(dfx --identity alice canister call swap business_example_query 2>&1)" "test string"
 test "business_example_query" "$(dfx canister call swap business_example_query 2>&1)" "test string"
 
-blue "6 test swap data"
+blue "\n6 test swap data"
 test "pause_replace" "$(dfx canister call swap pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(true)"
 dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" swap
@@ -372,7 +375,7 @@ test "pause_replace" "$(dfx canister call swap pause_replace "(null)" 2>&1)" "()
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(false)"
 test "business_example_query" "$(dfx canister call swap business_example_query 2>&1)" "test string"
 
-blue "7 test swap cell"
+blue "\n7 test swap cell"
 test "business_example_cell_query" "$(dfx --identity alice canister call swap business_example_cell_query 2>&1)" "\"\""
 test "business_example_cell_query" "$(dfx canister call swap business_example_cell_query 2>&1)" "\"\""
 test "business_example_cell_set" "$(dfx --identity alice canister call swap business_example_cell_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -380,7 +383,7 @@ test "business_example_cell_set" "$(dfx canister call swap business_example_cell
 test "business_example_cell_query" "$(dfx --identity alice canister call swap business_example_cell_query 2>&1)" "test string"
 test "business_example_cell_query" "$(dfx canister call swap business_example_cell_query 2>&1)" "test string"
 
-blue "8 test swap vec"
+blue "\n8 test swap vec"
 test "business_example_vec_query" "$(dfx --identity alice canister call swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_pop" "$(dfx --identity alice canister call swap business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
@@ -394,7 +397,7 @@ test "business_example_vec_pop" "$(dfx canister call swap business_example_vec_p
 test "business_example_vec_query" "$(dfx --identity alice canister call swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call swap business_example_vec_query 2>&1)" "(vec {})"
 
-blue "9 test swap map"
+blue "\n9 test swap map"
 test "business_example_map_query" "$(dfx --identity alice canister call swap business_example_map_query 2>&1)" "(vec {})"
 test "business_example_map_query" "$(dfx canister call swap business_example_map_query 2>&1)" "(vec {})"
 test "business_example_map_update" "$(dfx --identity alice canister call swap business_example_map_update "(1:nat64, opt \"111\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -407,7 +410,7 @@ test "business_example_map_update" "$(dfx canister call swap business_example_ma
 test "business_example_map_query" "$(dfx --identity alice canister call swap business_example_map_query 2>&1)" '(vec { record { 2 : nat64; "222" } })'
 test "business_example_map_query" "$(dfx canister call swap business_example_map_query 2>&1)" '(vec { record { 2 : nat64; "222" } })'
 
-blue "10 test swap log"
+blue "\n10 test swap log"
 test "business_example_log_query" "$(dfx --identity alice canister call swap business_example_log_query 2>&1)" "(vec {})"
 test "business_example_log_query" "$(dfx canister call swap business_example_log_query 2>&1)" "(vec {})"
 test "business_example_log_update" "$(dfx --identity alice canister call swap business_example_log_update "(\"111\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -418,7 +421,7 @@ test "business_example_log_update" "$(dfx canister call swap business_example_lo
 test "business_example_log_query" "$(dfx --identity alice canister call swap business_example_log_query 2>&1)" '(vec { "111"; "123" })'
 test "business_example_log_query" "$(dfx canister call swap business_example_log_query 2>&1)" '(vec { "111"; "123" })'
 
-blue "11 test swap priority queue"
+blue "\n11 test swap priority queue"
 test "business_example_priority_queue_query" "$(dfx --identity alice canister call swap business_example_priority_queue_query 2>&1)" "(vec {})"
 test "business_example_priority_queue_query" "$(dfx canister call swap business_example_priority_queue_query 2>&1)" "(vec {})"
 test "business_example_priority_queue_pop" "$(dfx --identity alice canister call swap business_example_priority_queue_pop "()" 2>&1)" "'BusinessExampleSet' is required"
@@ -434,7 +437,7 @@ test "business_example_priority_queue_pop" "$(dfx canister call swap business_ex
 test "business_example_priority_queue_query" "$(dfx --identity alice canister call swap business_example_priority_queue_query 2>&1)" "(vec { 5 : nat64 })"
 test "business_example_priority_queue_query" "$(dfx canister call swap business_example_priority_queue_query 2>&1)" "(vec { 5 : nat64 })"
 
-blue "12 test swap priority queue"
+blue "\n12 test swap priority queue"
 test "pause_replace" "$(dfx canister call swap pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call swap pause_query 2>&1)" "(true)"
 dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" swap

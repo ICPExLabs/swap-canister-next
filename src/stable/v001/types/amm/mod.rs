@@ -1,5 +1,10 @@
 use candid::CandidType;
+use icrc_ledger_types::icrc1::account::Subaccount;
 use serde::{Deserialize, Serialize};
+
+use crate::types::PoolLp;
+
+use super::{Amm, SwapFee, TokenInfo};
 
 /// Automated Market Maker 自动化做市商
 mod amm_constant_product;
@@ -13,21 +18,64 @@ mod pmm_v1;
 #[allow(unused)]
 pub use pmm_v1::*;
 
-#[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MarketMaker {
     SwapV2(SwapV2MarketMaker),
 }
 
-// impl MarketMaker {
-//     pub fn new(subaccount: Subaccount, amm: &Amm) -> Self {
-//         match amm {
-//             Amm::SwapV2M500 => todo!(),
-//             Amm::SwapV2M3000 => todo!(),
-//             Amm::SwapV2M10000 => todo!(),
-//         }
-//     }
-// }
+impl MarketMaker {
+    pub fn new_by_pair(
+        amm: &Amm,
+        subaccount: Subaccount,
+        token0: &TokenInfo,
+        token1: &TokenInfo,
+    ) -> Self {
+        let lp = PoolLp::new_inner_lp(token0, token1);
+        match amm {
+            Amm::SwapV2M500 => Self::SwapV2(new_swap_v2_market_maker(
+                subaccount,
+                lp,
+                SwapFee::new(5, 10_000), // swap fee 0.05%
+            )),
+            Amm::SwapV2T3 => Self::SwapV2(new_swap_v2_market_maker(
+                subaccount,
+                lp,
+                SwapFee::new(3, 1_000), // swap fee 0.3%
+            )),
+            Amm::SwapV2H1 => Self::SwapV2(new_swap_v2_market_maker(
+                subaccount,
+                lp,
+                SwapFee::new(1, 100), // swap fee 1%
+            )),
+        }
+    }
+}
 
-// fn new_swap_v2_market_maker(subaccount: Subaccount) -> SwapV2MarketMaker {
-//     todo!()
-// }
+fn new_swap_v2_market_maker(
+    subaccount: Subaccount,
+    lp: PoolLp,
+    swap_fee: SwapFee,
+) -> SwapV2MarketMaker {
+    SwapV2MarketMaker::new(
+        subaccount,
+        swap_fee,
+        lp,
+        SwapFee::new(5, 6), // lp fee 5/6
+        SwapFee::new(1, 6), // protocol fee 5/6
+    )
+}
+
+// ========================== view ==========================
+
+#[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
+pub enum MarketMakerView {
+    SwapV2(SwapV2MarketMakerView),
+}
+
+impl From<MarketMaker> for MarketMakerView {
+    fn from(value: MarketMaker) -> Self {
+        match value {
+            MarketMaker::SwapV2(value) => Self::SwapV2(value.into()),
+        }
+    }
+}

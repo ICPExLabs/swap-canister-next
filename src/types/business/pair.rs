@@ -14,7 +14,7 @@ pub struct TokenPairPool {
 }
 
 impl TokenPair {
-    pub fn to_pool(&self, amm: &Amm) -> TokenPairPool {
+    pub fn to_pool(self, amm: &Amm) -> TokenPairPool {
         TokenPairPool {
             pair: (self.token0, self.token1),
             amm: amm.into(),
@@ -22,3 +22,13 @@ impl TokenPair {
     }
 }
 
+// create token pair pool
+
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+pub struct TokenPairCreateArgs(pub TokenPairPool);
+
+impl From<TokenPairPool> for TokenPairCreateArgs {
+    fn from(value: TokenPairPool) -> Self {
+        Self(value)
+    }
+}
