@@ -23,7 +23,7 @@ pub trait Business:
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         panic!("Not supported operation by this version.")
     }
-    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         panic!("Not supported operation by this version.")
     }
 
@@ -39,10 +39,10 @@ pub trait Business:
     }
 
     // token deposit and withdraw
-    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+    fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
         panic!("Not supported operation by this version.")
     }
-    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+    fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
         panic!("Not supported operation by this version.")
     }
 
@@ -122,8 +122,8 @@ impl Business for State {
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()
     }
-    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
-        self.get().business_token_balance_of(canister_id, account)
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        self.get().business_token_balance_of(token, account)
     }
 
     // token balance lock
@@ -138,13 +138,13 @@ impl Business for State {
     }
 
     // token deposit and withdraw
-    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+    fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
         self.get_mut()
-            .business_token_deposit(canister_id, account, amount)
+            .business_token_deposit(token, account, amount)
     }
-    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
+    fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
         self.get_mut()
-            .business_token_withdraw(canister_id, account, amount)
+            .business_token_withdraw(token, account, amount)
     }
 
     // pair

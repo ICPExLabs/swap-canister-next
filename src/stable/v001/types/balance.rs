@@ -15,16 +15,13 @@ use super::with_mut_state_without_record;
     Debug, Serialize, Deserialize, CandidType, Hash, Eq, PartialEq, Clone, PartialOrd, Ord,
 )]
 pub struct TokenAccount {
-    pub canister_id: CanisterId,
+    pub token: CanisterId,
     pub account: Account,
 }
 
 impl TokenAccount {
-    pub fn new(canister_id: CanisterId, account: Account) -> Self {
-        Self {
-            canister_id,
-            account,
-        }
+    pub fn new(token: CanisterId, account: Account) -> Self {
+        Self { token, account }
     }
 }
 
@@ -33,9 +30,9 @@ impl Storable for TokenAccount {
         let mut bytes = vec![];
 
         // push canister_id // 1 + Principal::MAX_LENGTH_IN_BYTES
-        let canister_id_bytes = self.canister_id.as_slice();
-        bytes.push(canister_id_bytes.len() as u8);
-        bytes.extend_from_slice(canister_id_bytes);
+        let token_bytes = self.token.as_slice();
+        bytes.push(token_bytes.len() as u8);
+        bytes.extend_from_slice(token_bytes);
 
         // push owner // Principal::MAX_LENGTH_IN_BYTES
         let owner_bytes = self.account.owner.as_slice();
@@ -56,11 +53,11 @@ impl Storable for TokenAccount {
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
         // read canister_id
-        let canister_id_len = bytes[0] as usize;
-        let canister_id = CanisterId::from_slice(&bytes[1..1 + canister_id_len]);
+        let token_len = bytes[0] as usize;
+        let token = CanisterId::from_slice(&bytes[1..1 + token_len]);
 
         // read owner
-        let offset = 1 + canister_id_len;
+        let offset = 1 + token_len;
         let remain = bytes.len() - offset;
         let owner_len = if 32 < remain { remain - 32 } else { remain };
         let owner = Principal::from_slice(&bytes[offset..offset + owner_len]);
@@ -76,7 +73,7 @@ impl Storable for TokenAccount {
         };
 
         Self {
-            canister_id,
+            token,
             account: Account { owner, subaccount },
         }
     }
@@ -125,20 +122,20 @@ impl TokenBalances {
         Self(inner)
     }
 
-    pub fn token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
-        let token_account = TokenAccount::new(canister_id, account);
+    pub fn token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        let token_account = TokenAccount::new(token, account);
         self.0.get(&token_account).map(|b| b.0).unwrap_or_default()
     }
 
     // token deposit and withdraw
-    pub fn token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
-        let token_account = TokenAccount::new(canister_id, account);
+    pub fn token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
+        let token_account = TokenAccount::new(token, account);
         let balance = self.0.get(&token_account).unwrap_or_default();
         let new_balance = TokenBalance(balance.0 + amount);
         self.0.insert(token_account, new_balance);
     }
-    pub fn token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
-        let token_account = TokenAccount::new(canister_id, account);
+    pub fn token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
+        let token_account = TokenAccount::new(token, account);
         let balance = self.0.get(&token_account).unwrap_or_default();
         #[allow(clippy::panic)] // ? SAFETY
         if balance.0 < amount {
@@ -153,15 +150,9 @@ impl TokenBalances {
     }
 
     // transfer
-    pub fn token_transfer(
-        &mut self,
-        canister_id: CanisterId,
-        from: Account,
-        to: Account,
-        amount: Nat,
-    ) {
-        self.token_withdraw(canister_id, from, amount.clone());
-        self.token_deposit(canister_id, to, amount);
+    pub fn token_transfer(&mut self, token: CanisterId, from: Account, to: Account, amount: Nat) {
+        self.token_withdraw(token, from, amount.clone());
+        self.token_deposit(token, to, amount);
     }
 }
 
@@ -208,7 +199,7 @@ impl TokenBalanceLocks {
                     "Unlock a token account ({}) that is not locked.",
                     format!(
                         "{}|{}.{}",
-                        token_account.canister_id.to_text(),
+                        token_account.token.to_text(),
                         token_account.account.owner.to_text(),
                         token_account
                             .account
@@ -233,16 +224,13 @@ mod tests {
 
     #[test]
     fn test_token_account() {
-        let canister_id = CanisterId::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap();
+        let token = CanisterId::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap();
         let owner = Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap();
         let account = Account {
             owner,
             subaccount: Some([1; 32]),
         };
-        let token_account = TokenAccount {
-            canister_id,
-            account,
-        };
+        let token_account = TokenAccount { token, account };
 
         let bytes = token_account.to_bytes();
         let token_account2 = TokenAccount::from_bytes(bytes);

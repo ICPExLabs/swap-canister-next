@@ -33,7 +33,7 @@ impl From<TokenTransferResult> for Result<candid::Nat, BusinessError> {
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenDepositArgs {
-    pub canister_id: CanisterId,
+    pub token: CanisterId,
     pub from: Account,
     pub amount_without_fee: candid::Nat,
 }
@@ -42,7 +42,7 @@ pub struct TokenDepositArgs {
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenWithdrawArgs {
-    pub canister_id: CanisterId,
+    pub token: CanisterId,
     pub from: Account,
     pub amount_without_fee: candid::Nat,
     pub to: Account,

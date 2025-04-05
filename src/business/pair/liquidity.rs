@@ -10,7 +10,7 @@ use crate::types::*;
 
 // ========================== add ==========================
 
-// create
+// liquidity add
 impl CheckArgs for TokenPairLiquidityAddArgs {
     type Result = (
         Vec<TokenAccount>,

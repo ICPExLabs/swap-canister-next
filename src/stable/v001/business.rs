@@ -6,8 +6,8 @@ impl Business for InnerState {
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         &TOKENS
     }
-    fn business_token_balance_of(&self, canister_id: CanisterId, account: Account) -> candid::Nat {
-        self.token_balances.token_balance_of(canister_id, account)
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        self.token_balances.token_balance_of(token, account)
     }
 
     // token balance lock
@@ -24,13 +24,11 @@ impl Business for InnerState {
     }
 
     // token deposit and withdraw
-    fn business_token_deposit(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
-        self.token_balances
-            .token_deposit(canister_id, account, amount)
+    fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
+        self.token_balances.token_deposit(token, account, amount)
     }
-    fn business_token_withdraw(&mut self, canister_id: CanisterId, account: Account, amount: Nat) {
-        self.token_balances
-            .token_withdraw(canister_id, account, amount)
+    fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
+        self.token_balances.token_withdraw(token, account, amount)
     }
 
     // pair

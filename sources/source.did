@@ -1,5 +1,6 @@
 type Account = record { owner : principal; subaccount : opt blob };
 type BusinessError = variant {
+  InvalidTokenPair : record { principal; principal };
   TransferError : TransferError;
   NotSupportedToken : principal;
   TokenPairAmmNotExist : record { TokenPair; text };
@@ -57,7 +58,7 @@ type MigratedRecords = record {
 type OuterLP = record {
   fee : nat;
   decimals : nat8;
-  canister_id : principal;
+  token_canister_id : principal;
   minimum_liquidity : nat;
   total_supply : nat;
 };
@@ -119,11 +120,11 @@ type SwapV2MarketMakerView = record {
   price0_cumulative_last : nat;
   price_unit : nat;
 };
-type TokenAccount = record { canister_id : principal; account : Account };
+type TokenAccount = record { token : principal; account : Account };
 type TokenDepositArgs = record {
+  token : principal;
   from : Account;
   amount_without_fee : nat;
-  canister_id : principal;
 };
 type TokenInfo = record {
   fee : nat;
@@ -156,9 +157,9 @@ type TokenPairPool = record {
 type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
   to : Account;
+  token : principal;
   from : Account;
   amount_without_fee : nat;
-  canister_id : principal;
 };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };

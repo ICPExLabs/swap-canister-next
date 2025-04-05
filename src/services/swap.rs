@@ -10,6 +10,7 @@ use crate::types::{
 
 pub struct Service(pub Principal);
 impl Service {
+    // token
     pub async fn token_deposit(
         &self,
         args: TokenDepositArgs,
@@ -33,6 +34,7 @@ impl Service {
             .into()
     }
 
+    // pair liquidity
     pub async fn pair_liquidity_add(
         &self,
         args: crate::types::TokenPairLiquidityAddArgs,

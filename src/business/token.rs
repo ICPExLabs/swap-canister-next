@@ -18,14 +18,14 @@ fn tokens_query() -> Vec<TokenInfo> {
 
 // anyone can query
 #[ic_cdk::query]
-fn token_query(canister_id: CanisterId) -> Option<TokenInfo> {
-    with_state(|s| s.business_tokens_query().get(&canister_id).cloned())
+fn token_query(token: CanisterId) -> Option<TokenInfo> {
+    with_state(|s| s.business_tokens_query().get(&token).cloned())
 }
 
 // anyone can query
 #[ic_cdk::query]
-fn token_balance_of(canister_id: CanisterId, account: Account) -> candid::Nat {
-    with_state(|s| s.business_token_balance_of(canister_id, account))
+fn token_balance_of(token: CanisterId, account: Account) -> candid::Nat {
+    with_state(|s| s.business_token_balance_of(token, account))
 }
 
 // anyone can query
@@ -52,8 +52,8 @@ impl CheckArgs for TokenDepositArgs {
     type Result = (SelfCanister, Caller);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check supported token
-        if !with_state(|s| s.business_tokens_query().contains_key(&self.canister_id)) {
-            return Err(BusinessError::NotSupportedToken(self.canister_id));
+        if !with_state(|s| s.business_tokens_query().contains_key(&self.token)) {
+            return Err(BusinessError::NotSupportedToken(self.token));
         }
 
         // check owner
@@ -77,14 +77,14 @@ async fn inner_token_deposit(
     let args_clone = args.clone();
 
     // 2. some value
-    let token_account = TokenAccount::new(args.canister_id, args.from);
+    let token_account = TokenAccount::new(args.token, args.from);
     let token_accounts = vec![token_account];
 
     super::with_token_balance_lock(
         &token_accounts,
         retries.unwrap_or_default(),
         || async {
-            let service_icrc2 = crate::services::icrc2::Service(args.canister_id);
+            let service_icrc2 = crate::services::icrc2::Service(args.token);
             let height = service_icrc2
                 .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
                     from: args.from,
@@ -105,7 +105,7 @@ async fn inner_token_deposit(
 
             let amount = args.amount_without_fee;
             with_mut_state_without_record(|s| {
-                s.business_token_deposit(args.canister_id, args.from, amount);
+                s.business_token_deposit(args.token, args.from, amount);
             });
 
             // ! push log
@@ -127,20 +127,17 @@ async fn inner_token_deposit(
 impl CheckArgs for TokenWithdrawArgs {
     type Result = (SelfCanister, Caller, TokenInfo);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-        let token = with_state(|s| s.business_tokens_query().get(&self.canister_id).cloned())
-            .ok_or(BusinessError::NotSupportedToken(self.canister_id))?;
+        let token = with_state(|s| s.business_tokens_query().get(&self.token).cloned())
+            .ok_or(BusinessError::NotSupportedToken(self.token))?;
 
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check balance
-        let balance = with_state(|s| s.business_token_balance_of(self.canister_id, self.from));
+        let balance = with_state(|s| s.business_token_balance_of(self.token, self.from));
         let amount = self.amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
-            return Err(BusinessError::InsufficientBalance((
-                self.canister_id,
-                balance,
-            )));
+            return Err(BusinessError::InsufficientBalance((self.token, balance)));
         }
 
         Ok((self_canister, caller, token))
@@ -161,14 +158,14 @@ async fn inner_token_withdraw(
     let args_clone = args.clone();
 
     // 2. some value
-    let token_account = TokenAccount::new(args.canister_id, args.from);
+    let token_account = TokenAccount::new(args.token, args.from);
     let token_accounts = vec![token_account];
 
     super::with_token_balance_lock(
         &token_accounts,
         retries.unwrap_or_default(),
         || async {
-            let service_icrc2 = crate::services::icrc2::Service(args.canister_id);
+            let service_icrc2 = crate::services::icrc2::Service(args.token);
 
             let height = service_icrc2
                 .icrc_1_transfer(crate::services::icrc2::TransferArg {
@@ -186,7 +183,7 @@ async fn inner_token_withdraw(
 
             let amount = args.amount_without_fee + token.fee;
             with_mut_state_without_record(|s| {
-                s.business_token_withdraw(args.canister_id, args.from, amount);
+                s.business_token_withdraw(args.token, args.from, amount);
             });
 
             // ! push log
