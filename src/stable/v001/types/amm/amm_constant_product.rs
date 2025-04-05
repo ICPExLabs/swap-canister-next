@@ -161,9 +161,9 @@ impl SwapV2MarketMaker {
 
                         let n = Nat::from(protocol_fee.numerator);
                         let d = Nat::from(protocol_fee.denominator);
-                        let numerator = (root_k.clone() - root_k_last.clone())
-                            * self.lp.get_total_supply()
-                            * n.clone();
+                        let total_supply = self.lp.get_total_supply();
+                        let numerator =
+                            (root_k.clone() - root_k_last.clone()) * total_supply * n.clone();
                         let denominator = (d - n.clone()) * root_k + n * root_k_last;
                         let liquidity = numerator / denominator;
                         if liquidity > *ZERO {
@@ -345,21 +345,56 @@ impl SwapV2MarketMaker {
         self.burn(fee_to, token_balances, pa, &pool_account, arg)
     }
 
+    fn check_k_on_calculate_amount(
+        &self,
+        pa: &PairAmm,
+        token_out: &CanisterId,
+        amount_in: &Nat,
+        amount_out: &Nat,
+    ) -> Result<(), BusinessError> {
+        let n = self.fee_rate.numerator;
+        let d = self.fee_rate.denominator;
+        let (balance0, balance1, amount0_in, amount1_in) = if *token_out == pa.pair.token1 {
+            (
+                self.reserve0.clone() + amount_in.clone(),
+                self.reserve1.clone() - amount_out.clone(),
+                amount_in.clone(),
+                zero(),
+            )
+        } else {
+            (
+                self.reserve0.clone() - amount_out.clone(),
+                self.reserve1.clone() + amount_in.clone(),
+                zero(),
+                amount_in.clone(),
+            )
+        };
+        let balance0_adjusted = balance0.clone() * d - amount0_in * n;
+        let balance1_adjusted = balance1.clone() * d - amount1_in * n;
+        if balance0_adjusted * balance1_adjusted
+            < self.reserve0.clone() * self.reserve1.clone() * d * d
+        {
+            return Err(BusinessError::Swap("K".into()));
+        }
+
+        Ok(())
+    }
+
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
     pub fn get_amount_out(
         &self,
         self_canister: &SelfCanister,
         pa: &PairAmm,
         amount_in: &Nat,
-        token_a: CanisterId,
-        token_b: CanisterId,
+        token_in: CanisterId,
+        token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         let pool_account = Account {
             owner: self_canister.id(),
             subaccount: Some(self.subaccount),
         };
 
-        let (reserve_in, reserve_out) = self.get_reserves(token_a, token_b);
+        let (reserve_in, reserve_out) = self.get_reserves(token_in, token_out);
 
         // check
         if *amount_in == *ZERO {
@@ -382,37 +417,42 @@ impl SwapV2MarketMaker {
         // amount_out = -----------------------------
         //              in * d + amount_in * (d-n)
 
-        let amount_in_with_fee =
-            amount_in.clone() * (self.fee_rate.denominator - self.fee_rate.numerator);
+        let n = Nat::from(self.fee_rate.numerator);
+        let d = Nat::from(self.fee_rate.denominator);
+        let amount_in_with_fee = amount_in.clone() * (d.clone() - n);
         let numerator = reserve_out * amount_in_with_fee.clone();
-        let denominator = reserve_in * self.fee_rate.denominator + amount_in_with_fee;
+        let denominator = reserve_in * d + amount_in_with_fee;
 
-        let amount_out = numerator / denominator;
+        let amount_out = numerator / denominator; // 转出可以少，向下取整
 
-        if (token_b == pa.pair.token0 && self.reserve0 < amount_out)
-            || (token_b == pa.pair.token1 && self.reserve1 < amount_out)
+        // 检查转出余额是否足够
+        if (token_out == pa.pair.token0 && self.reserve0 < amount_out)
+            || (token_out == pa.pair.token1 && self.reserve1 < amount_out)
         {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
         }
 
+        // check K on calculate amount
+        self.check_k_on_calculate_amount(pa, &token_out, amount_in, &amount_out)?;
+
         Ok((pool_account, amount_out))
     }
 
-    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
+    // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
     pub fn get_amount_in(
         &self,
         self_canister: &SelfCanister,
         pa: &PairAmm,
         amount_out: &Nat,
-        token_a: CanisterId,
-        token_b: CanisterId,
+        token_in: CanisterId,
+        token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         let pool_account = Account {
             owner: self_canister.id(),
             subaccount: Some(self.subaccount),
         };
 
-        let (reserve_in, reserve_out) = self.get_reserves(token_a, token_b);
+        let (reserve_in, reserve_out) = self.get_reserves(token_in, token_out);
 
         // check
         if *amount_out == *ZERO {
@@ -434,17 +474,22 @@ impl SwapV2MarketMaker {
         // amount_in = -----------------------------
         //              (out - amount_out) * (d - n)
 
-        let numerator = reserve_in * amount_out.clone() * self.fee_rate.denominator;
-        let denominator = (reserve_out - amount_out.clone())
-            * (self.fee_rate.denominator - self.fee_rate.numerator);
+        let n = Nat::from(self.fee_rate.numerator);
+        let d = Nat::from(self.fee_rate.denominator);
+        let numerator = reserve_in * amount_out.clone() * d.clone();
+        let denominator = (reserve_out - amount_out.clone()) * (d - n);
 
-        let amount_in = numerator / denominator;
+        let amount_in = (numerator / denominator) + 1_u32; // // 转入不可以少，向上取整
 
-        if (token_a == pa.pair.token0 && self.reserve0 < *amount_out)
-            || (token_b == pa.pair.token1 && self.reserve1 < *amount_out)
+        // 检查转出余额是否足够
+        if (token_out == pa.pair.token0 && self.reserve0 < *amount_out)
+            || (token_out == pa.pair.token1 && self.reserve1 < *amount_out)
         {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
         }
+
+        // check K on calculate amount
+        self.check_k_on_calculate_amount(pa, &token_out, &amount_in, amount_out)?;
 
         Ok((pool_account, amount_in))
     }
@@ -472,6 +517,7 @@ impl SwapV2MarketMaker {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
         }
 
+        // do transfer out and fetch balance
         let (balance0, balance1) = {
             let _token0 = pa.pair.token0;
             let _token1 = pa.pair.token1;
@@ -489,34 +535,42 @@ impl SwapV2MarketMaker {
             (balance0, balance1)
         };
 
+        // get in
         let (amount0_in, amount1_in) = {
             let amount0_in = if balance0 > _reserve0.clone() - amount0_out.clone() {
-                balance0.clone() - (_reserve0.clone() - amount0_out)
+                balance0.clone() - (_reserve0.clone() - amount0_out.clone())
             } else {
                 zero()
             };
-            let amount1_int = if balance1 > _reserve1.clone() - amount1_out.clone() {
-                balance1.clone() - (_reserve1.clone() - amount1_out)
+            let amount1_in = if balance1 > _reserve1.clone() - amount1_out.clone() {
+                balance1.clone() - (_reserve1.clone() - amount1_out.clone())
             } else {
                 zero()
             };
-            (amount0_in, amount1_int)
+            (amount0_in, amount1_in)
         };
         if amount0_in == *ZERO && amount1_in == *ZERO {
             return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
         }
 
+        // check after changed
         {
-            let balance0_adjusted =
-                balance0.clone() * self.fee_rate.denominator - amount0_in * self.fee_rate.numerator;
-            let balance1_adjusted =
-                balance1.clone() * self.fee_rate.denominator - amount1_in * self.fee_rate.numerator;
-            if balance0_adjusted * balance1_adjusted
-                < _reserve0.clone()
-                    * _reserve1.clone()
-                    * self.fee_rate.denominator
-                    * self.fee_rate.denominator
+            let n = self.fee_rate.numerator;
+            let d = self.fee_rate.denominator;
+            let balance0_adjusted = balance0.clone() * d - amount0_in * n;
+            let balance1_adjusted = balance1.clone() * d - amount1_in * n;
+            if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d
             {
+                // return back
+                let _token0 = pa.pair.token0;
+                let _token1 = pa.pair.token1;
+                if amount0_out > *ZERO {
+                    token_balances.token_transfer(_token0, to, pool_account, amount0_out.clone());
+                }
+                if amount1_out > *ZERO {
+                    token_balances.token_transfer(_token1, to, pool_account, amount1_out.clone());
+                }
+
                 return Err(BusinessError::Swap("K".into()));
             }
         }

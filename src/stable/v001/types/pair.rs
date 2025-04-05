@@ -199,13 +199,17 @@ impl TokenPairs {
                 pool.pair.0,
                 pool.pair.1,
             )?;
-            amounts.push(amount.clone());
-            last_amount_in = amount;
+            last_amount_in = amount.clone();
+
+            amounts.push(amount);
             pool_accounts.push(pool_account);
         }
 
         if amounts[amounts.len() - 1] < *amount_out_min {
-            return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
+            return Err(BusinessError::Swap(format!(
+                "INSUFFICIENT_OUTPUT_AMOUNT: {}",
+                amounts[amounts.len() - 1]
+            )));
         }
 
         Ok((amounts, pool_accounts))
@@ -243,17 +247,22 @@ impl TokenPairs {
                 pool.pair.0,
                 pool.pair.1,
             )?;
-            amounts.push(amount.clone());
-            last_amount_out = amount;
+            last_amount_out = amount.clone();
+
+            amounts.push(amount);
             pool_accounts.push(pool_account);
         }
 
         // 逆序
         amounts.reverse();
+        pool_accounts.reverse();
 
         // check amount in
         if *amount_in_max < amounts[0] {
-            return Err(BusinessError::Swap("EXCESSIVE_INPUT_AMOUNT".into()));
+            return Err(BusinessError::Swap(format!(
+                "EXCESSIVE_INPUT_AMOUNT: {}",
+                amounts[0]
+            )));
         }
 
         Ok((amounts, pool_accounts))

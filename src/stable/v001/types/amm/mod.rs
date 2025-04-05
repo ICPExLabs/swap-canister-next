@@ -129,12 +129,12 @@ impl MarketMaker {
         self_canister: &SelfCanister,
         pa: &PairAmm,
         amount_in: &Nat,
-        token_a: CanisterId,
-        token_b: CanisterId,
+        token_in: CanisterId,
+        token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.get_amount_out(self_canister, pa, amount_in, token_a, token_b)
+                value.get_amount_out(self_canister, pa, amount_in, token_in, token_out)
             }
         }
     }
@@ -144,12 +144,12 @@ impl MarketMaker {
         self_canister: &SelfCanister,
         pa: &PairAmm,
         amount_out: &Nat,
-        token_a: CanisterId,
-        token_b: CanisterId,
+        token_in: CanisterId,
+        token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.get_amount_in(self_canister, pa, amount_out, token_a, token_b)
+                value.get_amount_in(self_canister, pa, amount_out, token_in, token_out)
             }
         }
     }
