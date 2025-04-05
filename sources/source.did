@@ -202,6 +202,7 @@ service : (opt CanisterInitialArg) -> {
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
     );
+  pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

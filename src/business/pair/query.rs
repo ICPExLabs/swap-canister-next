@@ -20,3 +20,17 @@ fn pairs_query() -> Vec<(TokenPairPool, MarketMakerView)> {
             .collect()
     })
 }
+
+// anyone can query
+#[ic_cdk::query]
+fn pair_query(pool: TokenPairPool) -> Option<MarketMakerView> {
+    let pair = TokenPair::new(pool.pair.0, pool.pair.1);
+    let amm: Amm = (&pool.amm).try_into().ok()?; // parse amm
+
+    with_state(|s| {
+        s.business_token_pair_pools_query()
+            .into_iter()
+            .find(|(p, a, _maker)| **p == pair && **a == amm)
+            .map(|(_p, _a, maker)| maker.clone().into())
+    })
+}

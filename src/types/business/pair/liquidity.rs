@@ -4,40 +4,14 @@ use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::{Amm, BusinessError, CheckArgs, Deadline, TokenPair},
+    types::{BusinessError, CheckArgs, Deadline},
     utils::math::ZERO,
 };
 
-use super::super::AmmText;
+use super::TokenPairPool;
 
-/// (token0, token1, amm)
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
-pub struct TokenPairPool {
-    pub pair: (CanisterId, CanisterId),
-    pub amm: AmmText,
-}
+// ========================= liquidity add =========================
 
-impl TokenPair {
-    pub fn to_pool(self, amm: &Amm) -> TokenPairPool {
-        TokenPairPool {
-            pair: (self.token0, self.token1),
-            amm: amm.into(),
-        }
-    }
-}
-
-// create token pair pool
-
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
-pub struct TokenPairCreateArgs(pub TokenPairPool);
-
-impl From<TokenPairPool> for TokenPairCreateArgs {
-    fn from(value: TokenPairPool) -> Self {
-        Self(value)
-    }
-}
-
-// liquidity add
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairLiquidityAddArgs {
     pub from: Account,
@@ -129,3 +103,4 @@ impl CheckArgs for TokenPairLiquidityAddArg {
         Ok(())
     }
 }
+
