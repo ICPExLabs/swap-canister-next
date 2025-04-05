@@ -111,8 +111,21 @@ impl Business for InnerState {
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
-    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.business_data.token_pairs.swap_exact_tokens_for_tokens(
+            &mut self.token_balances,
+            self_canister,
+            args,
+            pas,
+        )
+    }
+    fn business_token_pair_swap_tokens_for_exact_tokens(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapTokensForExactTokensArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.business_data.token_pairs.swap_tokens_for_exact_tokens(
             &mut self.token_balances,
             self_canister,
             args,

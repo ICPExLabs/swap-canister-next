@@ -389,13 +389,64 @@ impl SwapV2MarketMaker {
 
         let amount_out = numerator / denominator;
 
-        if token_b == pa.pair.token0 && self.reserve0 < amount_out {
+        if (token_b == pa.pair.token0 && self.reserve0 < amount_out)
+            || (token_b == pa.pair.token1 && self.reserve1 < amount_out)
+        {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
-        } else if token_b < pa.pair.token1 && self.reserve1 < amount_out {
-            return Err(BusinessError::Swap("INSUFFICIENT_A_AMOUNT".into()));
         }
 
         Ok((pool_account, amount_out))
+    }
+
+    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
+    pub fn get_amount_in(
+        &self,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount_out: &Nat,
+        token_a: CanisterId,
+        token_b: CanisterId,
+    ) -> Result<(Account, Nat), BusinessError> {
+        let pool_account = Account {
+            owner: self_canister.id(),
+            subaccount: Some(self.subaccount),
+        };
+
+        let (reserve_in, reserve_out) = self.get_reserves(token_a, token_b);
+
+        // check
+        if *amount_out == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
+        }
+        if reserve_in == *ZERO || reserve_out == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        }
+
+        // (in + amount_in) * (out - amount_out) = in * out
+        // amount_in = (in * out) / (out - amount_out) - in
+        // amount_in = (in * amount_out) / (out - amount_out)
+        // amount_in * (1-r) = (in * amount_out) / (out - amount_out)
+        // amount_in * (1-n/d) = (in * amount_out) / (out - amount_out)
+        // amount_in * (d-n)/d = (in * amount_out) / (out - amount_out)
+        // amount_in = (in * amount_out) * d / ((out - amount_out) *(d-n))
+
+        //               in * amount_out * d
+        // amount_in = -----------------------------
+        //              (out - amount_out) * (d - n)
+
+        let numerator = reserve_in * amount_out.clone() * self.fee_rate.denominator;
+        let denominator = (reserve_out - amount_out.clone())
+            * (self.fee_rate.denominator - self.fee_rate.numerator);
+
+        let amount_in = numerator / denominator;
+
+        if (token_a == pa.pair.token0 && self.reserve0 < *amount_out)
+            || (token_b == pa.pair.token1 && self.reserve1 < *amount_out)
+        {
+            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        }
+
+        Ok((pool_account, amount_in))
     }
 
     pub fn swap(

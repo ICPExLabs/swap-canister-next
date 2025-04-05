@@ -176,11 +176,19 @@ type TokenPairSwapExactTokensForTokensArgs = record {
   deadline : opt nat64;
   amount_in : nat;
 };
-type TokenPairSwapExactTokensForTokensResult = variant {
-  Ok : TokenPairSwapExactTokensForTokensSuccess;
+type TokenPairSwapTokensForExactTokensArgs = record {
+  to : Account;
+  from : Account;
+  path : vec TokenPairPool;
+  deadline : opt nat64;
+  amount_out : nat;
+  amount_in_max : nat;
+};
+type TokenPairSwapTokensResult = variant {
+  Ok : TokenPairSwapTokensSuccess;
   Err : BusinessError;
 };
-type TokenPairSwapExactTokensForTokensSuccess = record { amounts : vec nat };
+type TokenPairSwapTokensSuccess = record { amounts : vec nat };
 type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
   to : Account;
@@ -237,7 +245,11 @@ service : (opt CanisterInitialArg) -> {
   pair_swap_exact_tokens_for_tokens : (
       TokenPairSwapExactTokensForTokensArgs,
       opt nat8,
-    ) -> (TokenPairSwapExactTokensForTokensResult);
+    ) -> (TokenPairSwapTokensResult);
+  pair_swap_tokens_for_exact_tokens : (
+      TokenPairSwapTokensForExactTokensArgs,
+      opt nat8,
+    ) -> (TokenPairSwapTokensResult);
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

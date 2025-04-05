@@ -7,7 +7,7 @@ use crate::types::{
     BusinessError, TokenDepositArgs, TokenPairLiquidityAddArgs, TokenPairLiquidityAddResult,
     TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArgs, TokenPairLiquidityRemoveResult,
     TokenPairLiquidityRemoveSuccess, TokenPairSwapExactTokensForTokensArgs,
-    TokenPairSwapExactTokensForTokensResult, TokenPairSwapExactTokensForTokensSuccess,
+    TokenPairSwapTokensForExactTokensArgs, TokenPairSwapTokensResult, TokenPairSwapTokensSuccess,
     TokenTransferResult, TokenWithdrawArgs,
 };
 
@@ -74,10 +74,25 @@ impl Service {
         &self,
         args: TokenPairSwapExactTokensForTokensArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairSwapExactTokensForTokensResult,)>(
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(
             self.0,
             "pair_swap_exact_tokens_for_tokens",
+            (args, retries),
+        )
+        .await
+        .map_err(BusinessError::CallCanisterError)?
+        .0
+        .into()
+    }
+    pub async fn pair_swap_tokens_for_exact_tokens(
+        &self,
+        args: TokenPairSwapTokensForExactTokensArgs,
+        retries: Option<u8>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(
+            self.0,
+            "pair_swap_tokens_for_exact_tokens",
             (args, retries),
         )
         .await

@@ -139,6 +139,21 @@ impl MarketMaker {
         }
     }
 
+    pub fn get_amount_in(
+        &self,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount_out: &Nat,
+        token_a: CanisterId,
+        token_b: CanisterId,
+    ) -> Result<(Account, Nat), BusinessError> {
+        match self {
+            MarketMaker::SwapV2(value) => {
+                value.get_amount_in(self_canister, pa, amount_out, token_a, token_b)
+            }
+        }
+    }
+
     pub fn swap(
         &mut self,
         token_balances: &mut TokenBalances,
