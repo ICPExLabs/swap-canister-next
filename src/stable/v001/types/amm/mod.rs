@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::PoolLp;
 
 use super::{
-    Amm, AmmText, BusinessError, DummyCanisterId, PairAmm, SelfCanister, SwapRatio, TokenBalances,
+    Amm, AmmText, BusinessError, DummyCanisterId, SelfCanister, SwapRatio, TokenBalances,
     TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
     TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
 };
@@ -42,18 +42,24 @@ impl MarketMaker {
         match amm {
             Amm::SwapV2M500 => Self::SwapV2(new_swap_v2_market_maker(
                 subaccount,
-                lp,
                 SwapRatio::new(5, 10_000), // swap fee 0.05%
+                token0.canister_id,
+                token1.canister_id,
+                lp,
             )),
             Amm::SwapV2T3 => Self::SwapV2(new_swap_v2_market_maker(
                 subaccount,
-                lp,
                 SwapRatio::new(3, 1_000), // swap fee 0.3%
+                token0.canister_id,
+                token1.canister_id,
+                lp,
             )),
             Amm::SwapV2H1 => Self::SwapV2(new_swap_v2_market_maker(
                 subaccount,
-                lp,
                 SwapRatio::new(1, 100), // swap fee 1%
+                token0.canister_id,
+                token1.canister_id,
+                lp,
             )),
         }
     }
@@ -86,12 +92,11 @@ impl MarketMaker {
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.add_liquidity(fee_to, token_balances, self_canister, pa, arg)
+                value.add_liquidity(fee_to, token_balances, self_canister, arg)
             }
         }
     }
@@ -114,12 +119,11 @@ impl MarketMaker {
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
+                value.remove_liquidity(fee_to, token_balances, self_canister, arg)
             }
         }
     }
@@ -127,14 +131,13 @@ impl MarketMaker {
     pub fn get_amount_out(
         &self,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount_in: &Nat,
         token_in: CanisterId,
         token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.get_amount_out(self_canister, pa, amount_in, token_in, token_out)
+                value.get_amount_out(self_canister, amount_in, token_in, token_out)
             }
         }
     }
@@ -142,14 +145,13 @@ impl MarketMaker {
     pub fn get_amount_in(
         &self,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount_out: &Nat,
         token_in: CanisterId,
         token_out: CanisterId,
     ) -> Result<(Account, Nat), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.get_amount_in(self_canister, pa, amount_out, token_in, token_out)
+                value.get_amount_in(self_canister, amount_out, token_in, token_out)
             }
         }
     }
@@ -158,32 +160,30 @@ impl MarketMaker {
         &mut self,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount0_out: Nat,
         amount1_out: Nat,
         to: Account,
     ) -> Result<(), BusinessError> {
         match self {
-            MarketMaker::SwapV2(value) => value.swap(
-                token_balances,
-                self_canister,
-                pa,
-                amount0_out,
-                amount1_out,
-                to,
-            ),
+            MarketMaker::SwapV2(value) => {
+                value.swap(token_balances, self_canister, amount0_out, amount1_out, to)
+            }
         }
     }
 }
 
 fn new_swap_v2_market_maker(
     subaccount: Subaccount,
+    fee_rate: SwapRatio,
+    token0: CanisterId,
+    token1: CanisterId,
     lp: PoolLp,
-    swap_fee: SwapRatio,
 ) -> SwapV2MarketMaker {
     SwapV2MarketMaker::new(
         subaccount,
-        swap_fee,
+        fee_rate,
+        token0,
+        token1,
         lp,
         Some(SwapRatio::new(1, 6)), // protocol fee 1/6
     )

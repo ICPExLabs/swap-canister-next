@@ -86,7 +86,7 @@ impl TokenPairs {
             .and_then(|makers| makers.get_mut(&pa.amm))
             .ok_or_else(|| pa.not_exist())?;
 
-        maker.add_liquidity(fee_to, token_balances, self_canister, pa, arg)
+        maker.add_liquidity(fee_to, token_balances, self_canister, arg)
     }
 
     pub fn check_liquidity_removable(
@@ -119,7 +119,7 @@ impl TokenPairs {
             .and_then(|makers| makers.get_mut(&pa.amm))
             .ok_or_else(|| pa.not_exist())?;
 
-        maker.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
+        maker.remove_liquidity(fee_to, token_balances, self_canister, arg)
     }
 
     // ============================= swap =============================
@@ -155,14 +155,7 @@ impl TokenPairs {
                 .get_mut(&pa.pair)
                 .and_then(|makers| makers.get_mut(&pa.amm))
                 .ok_or_else(|| pa.not_exist())?;
-            maker.swap(
-                token_balances,
-                self_canister,
-                pa,
-                amount0_out,
-                amount1_out,
-                to,
-            )?;
+            maker.swap(token_balances, self_canister, amount0_out, amount1_out, to)?;
         }
         Ok(())
     }
@@ -192,13 +185,8 @@ impl TokenPairs {
                 .and_then(|makers| makers.get(&pa.amm))
                 .ok_or_else(|| pa.not_exist())?;
 
-            let (pool_account, amount) = maker.get_amount_out(
-                self_canister,
-                pa,
-                &last_amount_in,
-                pool.pair.0,
-                pool.pair.1,
-            )?;
+            let (pool_account, amount) =
+                maker.get_amount_out(self_canister, &last_amount_in, pool.pair.0, pool.pair.1)?;
             last_amount_in = amount.clone();
 
             amounts.push(amount);
@@ -240,13 +228,8 @@ impl TokenPairs {
                 .and_then(|makers| makers.get(&pa.amm))
                 .ok_or_else(|| pa.not_exist())?;
 
-            let (pool_account, amount) = maker.get_amount_in(
-                self_canister,
-                pa,
-                &last_amount_out,
-                pool.pair.0,
-                pool.pair.1,
-            )?;
+            let (pool_account, amount) =
+                maker.get_amount_in(self_canister, &last_amount_out, pool.pair.0, pool.pair.1)?;
             last_amount_out = amount.clone();
 
             amounts.push(amount);

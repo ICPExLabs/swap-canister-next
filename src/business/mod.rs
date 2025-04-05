@@ -12,6 +12,8 @@ pub mod token;
 
 pub mod pair;
 
+pub mod test;
+
 #[allow(unused)]
 #[inline(always)]
 async fn with_token_balance_lock<T, R1, F, R2, A, E>(

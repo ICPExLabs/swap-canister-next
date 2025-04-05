@@ -111,15 +111,17 @@ type RejectionCode = variant {
 type SwapV2MarketMakerView = record {
   lp : PoolLp;
   block_timestamp_last : nat64;
+  price_cumulative_unit : nat;
   reserve0 : nat;
   reserve1 : nat;
   subaccount : text;
   price1_cumulative_last : nat;
+  token0 : text;
+  token1 : text;
   fee_rate : text;
   k_last : nat;
   protocol_fee : opt text;
   price0_cumulative_last : nat;
-  price_unit : nat;
 };
 type TokenAccount = record { token : principal; account : Account };
 type TokenDepositArgs = record {
@@ -269,6 +271,7 @@ service : (opt CanisterInitialArg) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
+  test_withdraw_all_tokens : (vec principal) -> ();
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResult);
   token_query : (principal) -> (opt TokenInfo) query;

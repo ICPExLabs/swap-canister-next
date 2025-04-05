@@ -14,9 +14,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     types::{
-        AmmText, BusinessError, PairAmm, PoolLp, SelfCanister, SwapRatio, SwapRatioView,
-        TokenBalances, TokenInfo, TokenPair, TokenPairLiquidityAddArg,
-        TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+        AmmText, BusinessError, PoolLp, SelfCanister, SwapRatio, SwapRatioView, TokenBalances,
+        TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+        TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
     },
     utils::{
         math::{ZERO, zero},
@@ -30,11 +30,13 @@ pub struct SwapV2MarketMaker {
     subaccount: Subaccount, // ! fixed. 资金余额存放位置 self_canister_id.subaccount
     fee_rate: SwapRatio,    // ! fixed. 交易费率
 
-    reserve0: Nat, // ! 当前 token0 存入的余额
-    reserve1: Nat, // ! 当前 token0 存入的余额
+    token0: CanisterId, // ! 当前 token0 的 canister_id
+    token1: CanisterId, // ! 当前 token1 的 canister_id
+    reserve0: Nat,      // ! 当前 token0 存入的余额
+    reserve1: Nat,      // ! 当前 token0 存入的余额
     block_timestamp_last: u64,
 
-    price_unit: Nat,
+    price_cumulative_unit: Nat,
     price0_cumulative_last: Nat,
     price1_cumulative_last: Nat,
     k_last: Nat, // ! 当前 k 值
@@ -47,16 +49,20 @@ impl SwapV2MarketMaker {
     pub fn new(
         subaccount: Subaccount,
         fee_rate: SwapRatio,
+        token0: CanisterId,
+        token1: CanisterId,
         lp: PoolLp,
         protocol_fee: Option<SwapRatio>,
     ) -> Self {
         Self {
             subaccount,
             fee_rate,
+            token0,
+            token1,
             reserve0: zero(),
             reserve1: zero(),
             block_timestamp_last: 0,
-            price_unit: candid::Nat::from(u64::MAX),
+            price_cumulative_unit: candid::Nat::from(u64::MAX),
             price0_cumulative_last: zero(),
             price1_cumulative_last: zero(),
             k_last: zero(),
@@ -185,9 +191,11 @@ impl SwapV2MarketMaker {
         if time_elapsed > 0 && _reserve0 > *ZERO && _reserve1 > *ZERO {
             let e = Nat::from(time_elapsed);
             self.price0_cumulative_last +=
-                e.clone() * _reserve1.clone() * self.price_unit.clone() / _reserve0.clone();
+                e.clone() * _reserve1.clone() * self.price_cumulative_unit.clone()
+                    / _reserve0.clone();
             self.price1_cumulative_last +=
-                e.clone() * _reserve0.clone() * self.price_unit.clone() / _reserve1.clone();
+                e.clone() * _reserve0.clone() * self.price_cumulative_unit.clone()
+                    / _reserve1.clone();
         }
         self.reserve0 = balance0;
         self.reserve1 = balance1;
@@ -200,11 +208,10 @@ impl SwapV2MarketMaker {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        pa: PairAmm,
         pool_account: &Account,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<Nat, BusinessError> {
-        let TokenPair { token0, token1 } = pa.pair;
+        let (token0, token1) = (self.token0, self.token1);
 
         let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
         let balance0 = token_balances.token_balance_of(token0, *pool_account);
@@ -240,7 +247,6 @@ impl SwapV2MarketMaker {
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         let (amount_a, amount_b) = self.inner_add_liquidity(&arg)?;
@@ -250,7 +256,7 @@ impl SwapV2MarketMaker {
         };
         token_balances.token_transfer(arg.token_a, arg.from, pool_account, amount_a.clone());
         token_balances.token_transfer(arg.token_b, arg.from, pool_account, amount_b.clone());
-        let liquidity = self.mint(fee_to, token_balances, pa, &pool_account, arg)?;
+        let liquidity = self.mint(fee_to, token_balances, &pool_account, arg)?;
         Ok(TokenPairLiquidityAddSuccess {
             amount: (amount_a, amount_b),
             liquidity,
@@ -271,11 +277,10 @@ impl SwapV2MarketMaker {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        pa: PairAmm,
         pool_account: &Account,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        let TokenPair { token0, token1 } = pa.pair;
+        let (token0, token1) = (self.token0, self.token1);
 
         let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
         let _token0 = token0;
@@ -334,7 +339,6 @@ impl SwapV2MarketMaker {
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         let pool_account = Account {
@@ -342,19 +346,18 @@ impl SwapV2MarketMaker {
             subaccount: Some(self.subaccount),
         };
 
-        self.burn(fee_to, token_balances, pa, &pool_account, arg)
+        self.burn(fee_to, token_balances, &pool_account, arg)
     }
 
     fn check_k_on_calculate_amount(
         &self,
-        pa: &PairAmm,
         token_out: &CanisterId,
         amount_in: &Nat,
         amount_out: &Nat,
     ) -> Result<(), BusinessError> {
         let n = self.fee_rate.numerator;
         let d = self.fee_rate.denominator;
-        let (balance0, balance1, amount0_in, amount1_in) = if *token_out == pa.pair.token1 {
+        let (balance0, balance1, amount0_in, amount1_in) = if *token_out == self.token1 {
             (
                 self.reserve0.clone() + amount_in.clone(),
                 self.reserve1.clone() - amount_out.clone(),
@@ -384,7 +387,6 @@ impl SwapV2MarketMaker {
     pub fn get_amount_out(
         &self,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount_in: &Nat,
         token_in: CanisterId,
         token_out: CanisterId,
@@ -426,14 +428,14 @@ impl SwapV2MarketMaker {
         let amount_out = numerator / denominator; // ! 转出可以少，向下取整
 
         // 检查转出余额是否足够
-        if (token_out == pa.pair.token0 && self.reserve0 < amount_out)
-            || (token_out == pa.pair.token1 && self.reserve1 < amount_out)
+        if (token_out == self.token0 && self.reserve0 < amount_out)
+            || (token_out == self.token1 && self.reserve1 < amount_out)
         {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
         }
 
         // check K on calculate amount
-        self.check_k_on_calculate_amount(pa, &token_out, amount_in, &amount_out)?;
+        self.check_k_on_calculate_amount(&token_out, amount_in, &amount_out)?;
 
         Ok((pool_account, amount_out))
     }
@@ -442,7 +444,6 @@ impl SwapV2MarketMaker {
     pub fn get_amount_in(
         &self,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount_out: &Nat,
         token_in: CanisterId,
         token_out: CanisterId,
@@ -482,14 +483,14 @@ impl SwapV2MarketMaker {
         let amount_in = (numerator / denominator) + 1_u32; // ! 转入不可以少，向上取整
 
         // 检查转出余额是否足够
-        if (token_out == pa.pair.token0 && self.reserve0 < *amount_out)
-            || (token_out == pa.pair.token1 && self.reserve1 < *amount_out)
+        if (token_out == self.token0 && self.reserve0 < *amount_out)
+            || (token_out == self.token1 && self.reserve1 < *amount_out)
         {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
         }
 
         // check K on calculate amount
-        self.check_k_on_calculate_amount(pa, &token_out, &amount_in, amount_out)?;
+        self.check_k_on_calculate_amount(&token_out, &amount_in, amount_out)?;
 
         Ok((pool_account, amount_in))
     }
@@ -498,7 +499,6 @@ impl SwapV2MarketMaker {
         &mut self,
         token_balances: &mut TokenBalances,
         self_canister: &SelfCanister,
-        pa: &PairAmm,
         amount0_out: Nat,
         amount1_out: Nat,
         to: Account,
@@ -519,8 +519,8 @@ impl SwapV2MarketMaker {
 
         // do transfer out and fetch balance
         let (balance0, balance1) = {
-            let _token0 = pa.pair.token0;
-            let _token1 = pa.pair.token1;
+            let _token0 = self.token0;
+            let _token1 = self.token1;
             if to.owner == _token0 || to.owner == _token1 {
                 return Err(BusinessError::Swap("INVALID_TO".into()));
             }
@@ -562,8 +562,8 @@ impl SwapV2MarketMaker {
             if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d
             {
                 // return back
-                let _token0 = pa.pair.token0;
-                let _token1 = pa.pair.token1;
+                let _token0 = self.token0;
+                let _token1 = self.token1;
                 if amount0_out > *ZERO {
                     token_balances.token_transfer(_token0, to, pool_account, amount0_out.clone());
                 }
@@ -590,11 +590,13 @@ pub struct SwapV2MarketMakerView {
     subaccount: String,
     fee_rate: SwapRatioView,
 
+    token0: String,
+    token1: String,
     reserve0: Nat,
     reserve1: Nat,
     block_timestamp_last: u64,
 
-    price_unit: Nat,
+    price_cumulative_unit: Nat,
     price0_cumulative_last: Nat,
     price1_cumulative_last: Nat,
     k_last: Nat,
@@ -608,10 +610,12 @@ impl From<SwapV2MarketMaker> for SwapV2MarketMakerView {
         Self {
             subaccount: hex::encode(value.subaccount),
             fee_rate: value.fee_rate.into(),
+            token0: value.token0.to_string(),
+            token1: value.token1.to_string(),
             reserve0: value.reserve0,
             reserve1: value.reserve1,
             block_timestamp_last: value.block_timestamp_last,
-            price_unit: value.price_unit,
+            price_cumulative_unit: value.price_cumulative_unit,
             price0_cumulative_last: value.price0_cumulative_last,
             price1_cumulative_last: value.price1_cumulative_last,
             k_last: value.k_last,
