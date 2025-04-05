@@ -271,7 +271,7 @@ service : (opt CanisterInitialArg) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
-  test_withdraw_all_tokens : (vec principal) -> ();
+  test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResult);
   token_query : (principal) -> (opt TokenInfo) query;
