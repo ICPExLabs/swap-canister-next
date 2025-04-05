@@ -125,10 +125,7 @@ impl InnerLP {
         // check balance
         let balance = token_balances.token_balance_of(self.dummy_canister_id.id(), *from);
         if balance < *liquidity {
-            return Err(BusinessError::InsufficientBalance((
-                self.dummy_canister_id.id(),
-                balance,
-            )));
+            return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }
 
         // check minimum liquidity

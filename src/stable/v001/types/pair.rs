@@ -125,8 +125,13 @@ impl TokenPairs {
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
-        let (amounts, pool_accounts) =
-            self.get_amounts_out(self_canister, &args.amount_in, &args.path, &pas)?;
+        let (amounts, pool_accounts) = self.get_amounts_out(
+            self_canister,
+            &args.amount_in,
+            &args.amount_out_min,
+            &args.path,
+            &pas,
+        )?;
 
         // transfer first
         token_balances.token_transfer(
@@ -196,6 +201,7 @@ impl TokenPairs {
         &self,
         self_canister: &SelfCanister,
         amount_in: &Nat,
+        amount_out_min: &Nat,
         path: &[TokenPairPool],
         pas: &[PairAmm],
     ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
@@ -221,6 +227,10 @@ impl TokenPairs {
             amounts.push(amount.clone());
             last_amount = amount;
             pool_accounts.push(pool_account);
+        }
+
+        if amounts[amounts.len() - 1] < *amount_out_min {
+            return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
         }
 
         Ok((amounts, pool_accounts))
