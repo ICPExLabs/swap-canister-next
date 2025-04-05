@@ -1,4 +1,4 @@
-use candid::CandidType;
+use candid::{CandidType, Nat};
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
@@ -71,6 +71,19 @@ impl MarketMaker {
         match self {
             MarketMaker::SwapV2(value) => {
                 value.add_liquidity(fee_to, token_balances, self_canister, pa, arg)
+            }
+        }
+    }
+
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        match self {
+            MarketMaker::SwapV2(value) => {
+                value.check_liquidity_removable(token_balances, from, liquidity)
             }
         }
     }

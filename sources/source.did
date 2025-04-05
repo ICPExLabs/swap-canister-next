@@ -150,6 +150,19 @@ type TokenPairLiquidityAddSuccess = record {
   liquidity : nat;
   amount : record { nat; nat };
 };
+type TokenPairLiquidityRemoveArgs = record {
+  to : Account;
+  from : Account;
+  pool : TokenPairPool;
+  liquidity : nat;
+  deadline : opt nat64;
+  amount_min : record { nat; nat };
+};
+type TokenPairLiquidityRemoveResult = variant {
+  Ok : TokenPairLiquidityRemoveSuccess;
+  Err : BusinessError;
+};
+type TokenPairLiquidityRemoveSuccess = record { amount : record { nat; nat } };
 type TokenPairPool = record {
   amm : text;
   pair : record { principal; principal };
@@ -202,6 +215,9 @@ service : (opt CanisterInitialArg) -> {
   pair_create : (TokenPairPool) -> (BusinessResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
+    );
+  pair_liquidity_remove : (TokenPairLiquidityRemoveArgs, opt nat8) -> (
+      TokenPairLiquidityRemoveResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;

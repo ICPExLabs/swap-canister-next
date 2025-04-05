@@ -5,7 +5,8 @@ use candid::{self, CandidType, Decode, Deserialize, Encode, Principal};
 
 use crate::types::{
     BusinessError, TokenDepositArgs, TokenPairLiquidityAddResult, TokenPairLiquidityAddSuccess,
-    TokenTransferResult, TokenWithdrawArgs,
+    TokenPairLiquidityRemoveResult, TokenPairLiquidityRemoveSuccess, TokenTransferResult,
+    TokenWithdrawArgs,
 };
 
 pub struct Service(pub Principal);
@@ -43,6 +44,21 @@ impl Service {
         ic_cdk::call::<_, (TokenPairLiquidityAddResult,)>(
             self.0,
             "pair_liquidity_add",
+            (args, retries),
+        )
+        .await
+        .map_err(BusinessError::CallCanisterError)?
+        .0
+        .into()
+    }
+    pub async fn pair_liquidity_remove(
+        &self,
+        args: crate::types::TokenPairLiquidityRemoveArgs,
+        retries: Option<u8>,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        ic_cdk::call::<_, (TokenPairLiquidityRemoveResult,)>(
+            self.0,
+            "pair_liquidity_remove",
             (args, retries),
         )
         .await

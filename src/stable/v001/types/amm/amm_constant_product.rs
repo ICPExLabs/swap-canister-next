@@ -240,6 +240,16 @@ impl SwapV2MarketMaker {
             liquidity,
         })
     }
+
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        self.lp
+            .check_liquidity_removable(token_balances, from, liquidity)
+    }
 }
 
 // ========================== view ==========================

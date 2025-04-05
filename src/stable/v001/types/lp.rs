@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::utils::math::zero;
 
-use super::{DummyCanisterId, TokenBalances, TokenInfo};
+use super::{BusinessError, DummyCanisterId, TokenBalances, TokenInfo};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -27,6 +27,20 @@ impl PoolLp {
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
+
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        match self {
+            PoolLp::InnerLP(inner_lp) => {
+                inner_lp.check_liquidity_removable(token_balances, from, liquidity)
+            }
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
 }
 
 // 内部存储 lp
@@ -44,6 +58,30 @@ impl InnerLP {
     pub fn mint(&mut self, token_balances: &mut TokenBalances, fee_to: Account, amount: Nat) {
         token_balances.token_deposit(self.dummy_canister_id.id(), fee_to, amount.clone());
         self.total_supply += amount;
+    }
+
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        // check balance
+        let balance = token_balances.token_balance_of(self.dummy_canister_id.id(), *from);
+        if balance < *liquidity {
+            return Err(BusinessError::InsufficientBalance((
+                self.dummy_canister_id.id(),
+                balance,
+            )));
+        }
+
+        // check minimum liquidity
+        let remain = self.total_supply.clone() - liquidity.to_owned();
+        if remain < self.minimum_liquidity {
+            return Err(BusinessError::Liquidity("TOTAL_LIQUIDITY_TOO_SMALL".into()));
+        }
+
+        Ok(())
     }
 }
 

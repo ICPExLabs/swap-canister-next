@@ -104,3 +104,71 @@ impl CheckArgs for TokenPairLiquidityAddArg {
     }
 }
 
+// ========================= liquidity remove =========================
+
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+pub struct TokenPairLiquidityRemoveArgs {
+    pub from: Account,
+    pub pool: TokenPairPool,
+    pub liquidity: Nat,
+    pub amount_min: (Nat, Nat),
+    pub to: Account,
+    pub deadline: Option<Deadline>,
+}
+
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+pub struct TokenPairLiquidityRemoveSuccess {
+    pub amount: (Nat, Nat),
+}
+
+#[derive(Debug, Deserialize, CandidType, Clone)]
+pub enum TokenPairLiquidityRemoveResult {
+    Ok(TokenPairLiquidityRemoveSuccess),
+    Err(BusinessError),
+}
+
+impl From<Result<TokenPairLiquidityRemoveSuccess, BusinessError>>
+    for TokenPairLiquidityRemoveResult
+{
+    fn from(r: Result<TokenPairLiquidityRemoveSuccess, BusinessError>) -> Self {
+        match r {
+            Ok(n) => TokenPairLiquidityRemoveResult::Ok(n),
+            Err(e) => TokenPairLiquidityRemoveResult::Err(e),
+        }
+    }
+}
+
+impl From<TokenPairLiquidityRemoveResult>
+    for Result<TokenPairLiquidityRemoveSuccess, BusinessError>
+{
+    fn from(r: TokenPairLiquidityRemoveResult) -> Self {
+        match r {
+            TokenPairLiquidityRemoveResult::Ok(n) => Ok(n),
+            TokenPairLiquidityRemoveResult::Err(e) => Err(e),
+        }
+    }
+}
+
+pub struct TokenPairLiquidityRemoveArg {
+    pub from: Account,
+    pub token_a: CanisterId,
+    pub token_b: CanisterId,
+    pub liquidity: Nat,
+    pub amount_a_min: Nat,
+    pub amount_b_min: Nat,
+    pub to: Account,
+}
+
+// check amount
+impl CheckArgs for TokenPairLiquidityRemoveArg {
+    type Result = ();
+
+    fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // check 0
+        if self.liquidity == *ZERO {
+            return Err(BusinessError::Liquidity("LIQUIDITY_TOO_SMALL".into()));
+        }
+
+        Ok(())
+    }
+}

@@ -72,6 +72,19 @@ impl Business for InnerState {
             arg,
         )
     }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &PairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        self.business_data.token_pairs.check_liquidity_removable(
+            &self.token_balances,
+            pa,
+            from,
+            liquidity,
+        )
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

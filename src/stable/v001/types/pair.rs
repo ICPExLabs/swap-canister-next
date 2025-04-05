@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use candid::Nat;
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
@@ -65,5 +66,21 @@ impl TokenPairs {
             .ok_or_else(|| pa.not_exist())?;
 
         maker.add_liquidity(fee_to, token_balances, self_canister, pa, arg)
+    }
+
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        pa: &PairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        let maker = self
+            .0
+            .get(&pa.pair)
+            .and_then(|makers| makers.get(&pa.amm))
+            .ok_or_else(|| pa.not_exist())?;
+
+        maker.check_liquidity_removable(token_balances, from, liquidity)
     }
 }

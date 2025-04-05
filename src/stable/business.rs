@@ -66,6 +66,14 @@ pub trait Business:
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         panic!("Not supported operation by this version.")
     }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &PairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        panic!("Not supported operation by this version.")
+    }
 
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
@@ -167,6 +175,15 @@ impl Business for State {
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         self.get_mut()
             .business_token_pair_liquidity_add(self_canister, pa, arg)
+    }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &PairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        self.get()
+            .business_token_pair_check_liquidity_removable(pa, from, liquidity)
     }
 
     fn business_example_query(&self) -> String {
