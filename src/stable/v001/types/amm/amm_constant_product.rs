@@ -423,7 +423,7 @@ impl SwapV2MarketMaker {
         let numerator = reserve_out * amount_in_with_fee.clone();
         let denominator = reserve_in * d + amount_in_with_fee;
 
-        let amount_out = numerator / denominator; // 转出可以少，向下取整
+        let amount_out = numerator / denominator; // ! 转出可以少，向下取整
 
         // 检查转出余额是否足够
         if (token_out == pa.pair.token0 && self.reserve0 < amount_out)
@@ -479,7 +479,7 @@ impl SwapV2MarketMaker {
         let numerator = reserve_in * amount_out.clone() * d.clone();
         let denominator = (reserve_out - amount_out.clone()) * (d - n);
 
-        let amount_in = (numerator / denominator) + 1_u32; // // 转入不可以少，向上取整
+        let amount_in = (numerator / denominator) + 1_u32; // ! 转入不可以少，向上取整
 
         // 检查转出余额是否足够
         if (token_out == pa.pair.token0 && self.reserve0 < *amount_out)
