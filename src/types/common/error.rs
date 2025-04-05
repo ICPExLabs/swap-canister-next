@@ -16,6 +16,8 @@ pub enum BusinessError {
     TransferError(TransferError),
     /// 不支持的代币罐子
     NotSupportedToken(CanisterId),
+    /// 不支持的代币对
+    InvalidTokenPair((CanisterId, CanisterId)),
     /// 必须自己作为所有者才能调用
     NotOwner(UserId),
     /// 提现余额不足

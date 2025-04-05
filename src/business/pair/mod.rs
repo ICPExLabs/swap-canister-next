@@ -27,6 +27,12 @@ impl CheckArgs for TokenPair {
             if !tokens.contains_key(&self.token1) {
                 return Err(BusinessError::NotSupportedToken(self.token1));
             }
+
+            // must be different
+            if self.token0 == self.token1 {
+                return Err(BusinessError::InvalidTokenPair((self.token0, self.token1)));
+            }
+
             Ok(())
         })
     }
