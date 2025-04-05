@@ -24,7 +24,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, accounts) = check_pool(&self.pool, &self_canister)?;
+        let (pa, accounts) = check_pool(&self.pool, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityAddArg {
             from: self.from,
@@ -86,7 +86,7 @@ async fn inner_pair_liquidity_add(
         retries.unwrap_or_default(),
         || async {
             let success = with_mut_state_without_record(|s| {
-                s.business_token_pair_liquidity_add(self_canister, pa, arg)
+                s.business_token_pair_liquidity_add(&self_canister, pa, arg)
             })?;
 
             // ! push log
@@ -121,7 +121,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, accounts) = check_pool(&self.pool, &self_canister)?;
+        let (pa, accounts) = check_pool(&self.pool, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityRemoveArg {
             from: self.from,
@@ -177,7 +177,7 @@ async fn inner_pair_liquidity_remove(
         retries.unwrap_or_default(),
         || async {
             let success = with_mut_state_without_record(|s| {
-                s.business_token_pair_liquidity_remove(self_canister, pa, arg)
+                s.business_token_pair_liquidity_remove(&self_canister, pa, arg)
             })?;
 
             // ! push log

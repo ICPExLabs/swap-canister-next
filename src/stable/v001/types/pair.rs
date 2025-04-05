@@ -5,10 +5,13 @@ use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
+use crate::utils::{math::zero, principal::sort_tokens};
+
 use super::{
     Amm, BusinessError, DummyCanisterId, MarketMaker, PairAmm, SelfCanister, TokenBalances,
     TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairPool,
+    TokenPairSwapExactTokensForTokensArgs, TokenPairSwapExactTokensForTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -68,7 +71,7 @@ impl TokenPairs {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -101,7 +104,7 @@ impl TokenPairs {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
@@ -112,5 +115,114 @@ impl TokenPairs {
             .ok_or_else(|| pa.not_exist())?;
 
         maker.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
+    }
+
+    // pair swap
+    pub fn swap_exact_tokens_for_tokens(
+        &mut self,
+        token_balances: &mut TokenBalances,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapExactTokensForTokensArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
+        let (amounts, pool_accounts) =
+            self.get_amounts_out(self_canister, &args.amount_in, &args.path, &pas)?;
+
+        // transfer first
+        token_balances.token_transfer(
+            args.path[0].pair.0,
+            args.from,
+            pool_accounts[0],
+            amounts[0].clone(),
+        );
+
+        self.swap(
+            token_balances,
+            self_canister,
+            &amounts,
+            &args.path,
+            &pas,
+            &pool_accounts,
+            args.to,
+        )?;
+
+        Ok(TokenPairSwapExactTokensForTokensSuccess { amounts })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn swap(
+        &mut self,
+        token_balances: &mut TokenBalances,
+        self_canister: &SelfCanister,
+        amounts: &[Nat],
+        path: &[TokenPairPool],
+        pas: &[PairAmm],
+        pool_accounts: &[Account],
+        _to: Account,
+    ) -> Result<(), BusinessError> {
+        for (i, (pool, pa)) in path.iter().zip(pas.iter()).enumerate() {
+            let (input, output) = pool.pair;
+            let (token0, _) = sort_tokens(input, output);
+            let amount_out = amounts[i + 1].clone();
+            let (amount0_out, amount1_out) = if input == token0 {
+                (zero(), amount_out)
+            } else {
+                (amount_out, zero())
+            };
+            let to = if i < path.len() - 1 {
+                pool_accounts[i + 1]
+            } else {
+                _to
+            };
+
+            let maker = self
+                .0
+                .get_mut(&pa.pair)
+                .and_then(|makers| makers.get_mut(&pa.amm))
+                .ok_or_else(|| pa.not_exist())?;
+            maker.swap(
+                token_balances,
+                self_canister,
+                pa,
+                amount0_out,
+                amount1_out,
+                to,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn get_amounts_out(
+        &self,
+        self_canister: &SelfCanister,
+        amount_in: &Nat,
+        path: &[TokenPairPool],
+        pas: &[PairAmm],
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
+        let mut amounts = Vec::with_capacity(path.len() + 1);
+        amounts.push(amount_in.clone());
+        let mut last_amount = amount_in.clone();
+
+        #[allow(clippy::panic)] // ? SAFETY
+        if path.len() != pas.len() {
+            panic!("path.len() != pas.len()");
+        }
+
+        let mut pool_accounts = vec![];
+        for (pool, pa) in path.iter().zip(pas.iter()) {
+            let maker = self
+                .0
+                .get(&pa.pair)
+                .and_then(|makers| makers.get(&pa.amm))
+                .ok_or_else(|| pa.not_exist())?;
+
+            let (pool_account, amount) =
+                maker.get_amount_out(self_canister, pa, &last_amount, pool.pair.0, pool.pair.1)?;
+            amounts.push(amount.clone());
+            last_amount = amount;
+            pool_accounts.push(pool_account);
+        }
+
+        Ok((amounts, pool_accounts))
     }
 }

@@ -28,6 +28,13 @@ impl PoolLp {
         }
     }
 
+    pub fn dummy_canisters(&self) -> Vec<CanisterId> {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.dummy_canisters(),
+            PoolLp::OuterLP(_outer_lp) => vec![],
+        }
+    }
+
     pub fn get_total_supply(&self) -> Nat {
         match self {
             PoolLp::InnerLP(inner_lp) => inner_lp.total_supply.clone(),
@@ -93,6 +100,10 @@ impl InnerLP {
             decimals: self.decimals,
             fee: self.fee.clone(),
         }]
+    }
+
+    pub fn dummy_canisters(&self) -> Vec<CanisterId> {
+        vec![self.dummy_canister_id.id()]
     }
 
     pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {

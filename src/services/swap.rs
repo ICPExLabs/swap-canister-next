@@ -1,12 +1,14 @@
 // This is an experimental feature to generate Rust binding from Candid.
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
-use candid::{self, CandidType, Decode, Deserialize, Encode, Principal};
+use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
 
 use crate::types::{
-    BusinessError, TokenDepositArgs, TokenPairLiquidityAddResult, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveResult, TokenPairLiquidityRemoveSuccess, TokenTransferResult,
-    TokenWithdrawArgs,
+    BusinessError, TokenDepositArgs, TokenPairLiquidityAddArgs, TokenPairLiquidityAddResult,
+    TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArgs, TokenPairLiquidityRemoveResult,
+    TokenPairLiquidityRemoveSuccess, TokenPairSwapExactTokensForTokensArgs,
+    TokenPairSwapExactTokensForTokensResult, TokenPairSwapExactTokensForTokensSuccess,
+    TokenTransferResult, TokenWithdrawArgs,
 };
 
 pub struct Service(pub Principal);
@@ -16,7 +18,7 @@ impl Service {
         &self,
         args: TokenDepositArgs,
         retries: Option<u8>,
-    ) -> Result<candid::Nat, BusinessError> {
+    ) -> Result<Nat, BusinessError> {
         ic_cdk::call::<_, (TokenTransferResult,)>(self.0, "token_deposit", (args, retries))
             .await
             .map_err(BusinessError::CallCanisterError)?
@@ -27,7 +29,7 @@ impl Service {
         &self,
         args: TokenWithdrawArgs,
         retries: Option<u8>,
-    ) -> Result<candid::Nat, BusinessError> {
+    ) -> Result<Nat, BusinessError> {
         ic_cdk::call::<_, (TokenTransferResult,)>(self.0, "token_withdraw", (args, retries))
             .await
             .map_err(BusinessError::CallCanisterError)?
@@ -38,7 +40,7 @@ impl Service {
     // pair liquidity
     pub async fn pair_liquidity_add(
         &self,
-        args: crate::types::TokenPairLiquidityAddArgs,
+        args: TokenPairLiquidityAddArgs,
         retries: Option<u8>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         ic_cdk::call::<_, (TokenPairLiquidityAddResult,)>(
@@ -53,12 +55,29 @@ impl Service {
     }
     pub async fn pair_liquidity_remove(
         &self,
-        args: crate::types::TokenPairLiquidityRemoveArgs,
+        args: TokenPairLiquidityRemoveArgs,
         retries: Option<u8>,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         ic_cdk::call::<_, (TokenPairLiquidityRemoveResult,)>(
             self.0,
             "pair_liquidity_remove",
+            (args, retries),
+        )
+        .await
+        .map_err(BusinessError::CallCanisterError)?
+        .0
+        .into()
+    }
+
+    // pair swap
+    pub async fn pair_swap_exact_tokens_for_tokens(
+        &self,
+        args: TokenPairSwapExactTokensForTokensArgs,
+        retries: Option<u8>,
+    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
+        ic_cdk::call::<_, (TokenPairSwapExactTokensForTokensResult,)>(
+            self.0,
+            "pair_swap_exact_tokens_for_tokens",
             (args, retries),
         )
         .await

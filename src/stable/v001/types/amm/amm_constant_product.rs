@@ -81,6 +81,10 @@ impl SwapV2MarketMaker {
         }]
     }
 
+    pub fn dummy_canisters(&self) -> Vec<CanisterId> {
+        self.lp.dummy_canisters()
+    }
+
     // fetches and sorts the reserves for a pair
     fn get_reserves(&self, token_a: CanisterId, token_b: CanisterId) -> (Nat, Nat) {
         let (token0, _) = sort_tokens(token_a, token_b);
@@ -235,7 +239,7 @@ impl SwapV2MarketMaker {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -329,7 +333,7 @@ impl SwapV2MarketMaker {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
@@ -339,6 +343,138 @@ impl SwapV2MarketMaker {
         };
 
         self.burn(fee_to, token_balances, pa, &pool_account, arg)
+    }
+
+    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
+    pub fn get_amount_out(
+        &self,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount_in: &Nat,
+        token_a: CanisterId,
+        token_b: CanisterId,
+    ) -> Result<(Account, Nat), BusinessError> {
+        let pool_account = Account {
+            owner: self_canister.id(),
+            subaccount: Some(self.subaccount),
+        };
+
+        let (reserve_in, reserve_out) = self.get_reserves(token_a, token_b);
+
+        // check
+        if *amount_in == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
+        }
+        if reserve_in == *ZERO || reserve_out == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        }
+
+        // (in + amount_in) * (out - amount_out) = in * out
+        // amount_out = (in * out) / (in + amount_in) - out
+        // amount_out = (out * amount_in) / (in + amount_in)
+        // amount_out = (out * (amount_in * (1-r))) / (in + (amount_in * (1-r)))
+
+        //              (out * (amount_in * (1-n/d)))
+        // amount_out = -----------------------------
+        //              (in + (amount_in * (1-n/d)))
+
+        //              out * amount_in * (d-n)
+        // amount_out = -----------------------------
+        //              in * d + amount_in * (d-n)
+
+        let amount_in_with_fee =
+            amount_in.clone() * (self.fee_rate.denominator - self.fee_rate.numerator);
+        let numerator = reserve_out * amount_in_with_fee.clone();
+        let denominator = reserve_in * self.fee_rate.denominator + amount_in_with_fee;
+
+        let amount_out = numerator / denominator;
+
+        if token_b == pa.pair.token0 && self.reserve0 < amount_out {
+            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        } else if token_b < pa.pair.token1 && self.reserve1 < amount_out {
+            return Err(BusinessError::Swap("INSUFFICIENT_A_AMOUNT".into()));
+        }
+
+        Ok((pool_account, amount_out))
+    }
+
+    pub fn swap(
+        &mut self,
+        token_balances: &mut TokenBalances,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount0_out: Nat,
+        amount1_out: Nat,
+        to: Account,
+    ) -> Result<(), BusinessError> {
+        let pool_account = Account {
+            owner: self_canister.id(),
+            subaccount: Some(self.subaccount),
+        };
+
+        if amount0_out == *ZERO && amount1_out == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
+        }
+
+        let (_reserve0, _reserve1) = (self.reserve0.clone(), self.reserve1.clone());
+        if _reserve0 < amount0_out || _reserve1 < amount1_out {
+            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        }
+
+        let (balance0, balance1) = {
+            let _token0 = pa.pair.token0;
+            let _token1 = pa.pair.token1;
+            if to.owner == _token0 || to.owner == _token1 {
+                return Err(BusinessError::Swap("INVALID_TO".into()));
+            }
+            if amount0_out > *ZERO {
+                token_balances.token_transfer(_token0, pool_account, to, amount0_out.clone());
+            }
+            if amount1_out > *ZERO {
+                token_balances.token_transfer(_token1, pool_account, to, amount1_out.clone());
+            }
+            let balance0 = token_balances.token_balance_of(_token0, pool_account);
+            let balance1 = token_balances.token_balance_of(_token1, pool_account);
+            (balance0, balance1)
+        };
+
+        let (amount0_in, amount1_in) = {
+            let amount0_in = if balance0 > _reserve0.clone() - amount0_out.clone() {
+                balance0.clone() - (_reserve0.clone() - amount0_out)
+            } else {
+                zero()
+            };
+            let amount1_int = if balance1 > _reserve1.clone() - amount1_out.clone() {
+                balance1.clone() - (_reserve1.clone() - amount1_out)
+            } else {
+                zero()
+            };
+            (amount0_in, amount1_int)
+        };
+        if amount0_in == *ZERO && amount1_in == *ZERO {
+            return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
+        }
+
+        {
+            let balance0_adjusted =
+                balance0.clone() * self.fee_rate.denominator - amount0_in * self.fee_rate.numerator;
+            let balance1_adjusted =
+                balance1.clone() * self.fee_rate.denominator - amount1_in * self.fee_rate.numerator;
+            if balance0_adjusted * balance1_adjusted
+                < _reserve0.clone()
+                    * _reserve1.clone()
+                    * self.fee_rate.denominator
+                    * self.fee_rate.denominator
+            {
+                return Err(BusinessError::Swap("K".into()));
+            }
+        }
+
+        self.update(balance0, balance1, _reserve0, _reserve1);
+
+        // ! push log
+
+        Ok(())
     }
 }
 

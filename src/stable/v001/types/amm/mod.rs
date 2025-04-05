@@ -75,11 +75,17 @@ impl MarketMaker {
         }
     }
 
+    pub fn dummy_canisters(&self) -> Vec<CanisterId> {
+        match self {
+            MarketMaker::SwapV2(value) => value.dummy_canisters(),
+        }
+    }
+
     pub fn add_liquidity(
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -107,7 +113,7 @@ impl MarketMaker {
         &mut self,
         fee_to: Option<Account>,
         token_balances: &mut TokenBalances,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
@@ -115,6 +121,42 @@ impl MarketMaker {
             MarketMaker::SwapV2(value) => {
                 value.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
             }
+        }
+    }
+
+    pub fn get_amount_out(
+        &self,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount_in: &Nat,
+        token_a: CanisterId,
+        token_b: CanisterId,
+    ) -> Result<(Account, Nat), BusinessError> {
+        match self {
+            MarketMaker::SwapV2(value) => {
+                value.get_amount_out(self_canister, pa, amount_in, token_a, token_b)
+            }
+        }
+    }
+
+    pub fn swap(
+        &mut self,
+        token_balances: &mut TokenBalances,
+        self_canister: &SelfCanister,
+        pa: &PairAmm,
+        amount0_out: Nat,
+        amount1_out: Nat,
+        to: Account,
+    ) -> Result<(), BusinessError> {
+        match self {
+            MarketMaker::SwapV2(value) => value.swap(
+                token_balances,
+                self_canister,
+                pa,
+                amount0_out,
+                amount1_out,
+                to,
+            ),
         }
     }
 }

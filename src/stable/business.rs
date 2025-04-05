@@ -63,7 +63,7 @@ pub trait Business:
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -79,10 +79,20 @@ pub trait Business:
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        panic!("Not supported operation by this version.")
+    }
+
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapExactTokensForTokensArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
         panic!("Not supported operation by this version.")
     }
 
@@ -183,7 +193,7 @@ impl Business for State {
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -201,12 +211,23 @@ impl Business for State {
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         self.get_mut()
             .business_token_pair_liquidity_remove(self_canister, pa, arg)
+    }
+
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapExactTokensForTokensArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
+        self.get_mut()
+            .business_token_pair_swap_exact_tokens_for_tokens(self_canister, args, pas)
     }
 
     fn business_example_query(&self) -> String {

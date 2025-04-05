@@ -3,6 +3,7 @@ type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
   TransferError : TransferError;
   NotSupportedToken : principal;
+  Swap : text;
   TokenPairAmmNotExist : record { TokenPair; text };
   InsufficientBalance : record { principal; nat };
   TokenPairAmmExist : record { TokenPair; text };
@@ -167,6 +168,19 @@ type TokenPairPool = record {
   amm : text;
   pair : record { principal; principal };
 };
+type TokenPairSwapExactTokensForTokensArgs = record {
+  to : Account;
+  amount_out_min : nat;
+  from : Account;
+  path : vec TokenPairPool;
+  deadline : opt nat64;
+  amount_in : nat;
+};
+type TokenPairSwapExactTokensForTokensResult = variant {
+  Ok : TokenPairSwapExactTokensForTokensSuccess;
+  Err : BusinessError;
+};
+type TokenPairSwapExactTokensForTokensSuccess = record { amounts : vec nat };
 type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
 type TokenWithdrawArgs = record {
   to : Account;
@@ -220,6 +234,10 @@ service : (opt CanisterInitialArg) -> {
       TokenPairLiquidityRemoveResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
+  pair_swap_exact_tokens_for_tokens : (
+      TokenPairSwapExactTokensForTokensArgs,
+      opt nat8,
+    ) -> (TokenPairSwapExactTokensForTokensResult);
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

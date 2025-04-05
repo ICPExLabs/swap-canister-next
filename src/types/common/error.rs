@@ -32,6 +32,8 @@ pub enum BusinessError {
     TokenPairAmmNotExist((TokenPair, AmmText)),
     /// 请求过期
     Expired(u64),
-    /// 请求过期
+    /// 流动性错误
     Liquidity(String),
+    /// swap 错误
+    Swap(String),
 }

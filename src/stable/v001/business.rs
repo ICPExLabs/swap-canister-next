@@ -65,7 +65,7 @@ impl Business for InnerState {
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
@@ -92,7 +92,7 @@ impl Business for InnerState {
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        self_canister: SelfCanister,
+        self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
@@ -102,6 +102,21 @@ impl Business for InnerState {
             self_canister,
             pa,
             arg,
+        )
+    }
+
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapExactTokensForTokensArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapExactTokensForTokensSuccess, BusinessError> {
+        self.business_data.token_pairs.swap_exact_tokens_for_tokens(
+            &mut self.token_balances,
+            self_canister,
+            args,
+            pas,
         )
     }
 

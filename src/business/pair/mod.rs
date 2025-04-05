@@ -14,6 +14,8 @@ mod create;
 
 mod liquidity;
 
+mod swap;
+
 impl CheckArgs for TokenPair {
     type Result = ();
 
