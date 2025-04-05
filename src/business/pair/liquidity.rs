@@ -23,6 +23,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check pool
         let (pa, accounts) = check_pool(&self.pool, &self_canister)?;
 
         let arg = TokenPairLiquidityAddArg {
@@ -119,6 +120,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check pool
         let (pa, accounts) = check_pool(&self.pool, &self_canister)?;
 
         let arg = TokenPairLiquidityRemoveArg {
