@@ -184,10 +184,16 @@ mod tests {
 
     #[test]
     fn test() {
+        let decimals = get_decimals(6, 18);
+        assert_eq!(decimals, 12);
+
         let fee = get_fee(&Nat::from(10000_u64), &Nat::from(1000000_u64));
         assert_eq!(fee, Nat::from(100000_u64));
 
         let fee = get_fee(&Nat::from(10000_u64), &Nat::from(2000000_u64));
         assert_eq!(fee, Nat::from(100000_u64));
+
+        let fee = get_fee(&Nat::from(10_000_u64), &Nat::from(2_000_000_000_000_u64));
+        assert_eq!(fee, Nat::from(100_000_000_u64));
     }
 }
