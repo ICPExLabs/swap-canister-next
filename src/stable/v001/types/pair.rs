@@ -251,7 +251,8 @@ impl TokenPairs {
         // 逆序
         amounts.reverse();
 
-        if amounts[0] < *amount_in_max {
+        // check amount in
+        if *amount_in_max < amounts[0] {
             return Err(BusinessError::Swap("EXCESSIVE_INPUT_AMOUNT".into()));
         }
 
