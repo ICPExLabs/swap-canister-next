@@ -12,10 +12,11 @@ use crate::types::*;
 
 #[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_pause_replace")]
-async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) {
+async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
     let caller = caller();
     let self_canister_id = self_canister_id();
 
+    let mut results = vec![];
     for token in tokens {
         let service = Service(token);
         let balance = service
@@ -31,6 +32,7 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) {
         }
 
         let fee = service.icrc_1_fee().await.unwrap().0;
+        let amount = balance - fee;
         service
             .icrc_1_transfer(TransferArg {
                 to: Account {
@@ -41,11 +43,15 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) {
                 memo: None,
                 from_subaccount: None,
                 created_at_time: None,
-                amount: balance - fee,
+                amount: amount.clone(),
             })
             .await
             .unwrap()
             .0
             .unwrap();
+
+        results.push(format!("fetch: {} {}", token.to_text(), amount));
     }
+
+    results
 }
