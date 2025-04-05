@@ -6,7 +6,8 @@ use crate::types::PoolLp;
 
 use super::{
     Amm, BusinessError, DummyCanisterId, PairAmm, SelfCanister, SwapRatio, TokenBalances,
-    TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
+    TokenPairLiquidityRemoveSuccess,
 };
 
 /// Automated Market Maker 自动化做市商
@@ -84,6 +85,21 @@ impl MarketMaker {
         match self {
             MarketMaker::SwapV2(value) => {
                 value.check_liquidity_removable(token_balances, from, liquidity)
+            }
+        }
+    }
+
+    pub fn remove_liquidity(
+        &mut self,
+        fee_to: Option<Account>,
+        token_balances: &mut TokenBalances,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityRemoveArg,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        match self {
+            MarketMaker::SwapV2(value) => {
+                value.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
             }
         }
     }

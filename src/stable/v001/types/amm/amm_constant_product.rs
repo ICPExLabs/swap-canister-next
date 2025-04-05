@@ -14,6 +14,7 @@ use crate::{
     types::{
         BusinessError, PairAmm, PoolLp, SelfCanister, SwapRatio, SwapRatioView, TokenBalances,
         TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+        TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
     },
     utils::{
         math::{ZERO, zero},
@@ -249,6 +250,84 @@ impl SwapV2MarketMaker {
     ) -> Result<(), BusinessError> {
         self.lp
             .check_liquidity_removable(token_balances, from, liquidity)
+    }
+
+    fn burn(
+        &mut self,
+        fee_to: Option<Account>,
+        token_balances: &mut TokenBalances,
+        pa: PairAmm,
+        pool_account: &Account,
+        arg: TokenPairLiquidityRemoveArg,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        let TokenPair { token0, token1 } = pa.pair;
+
+        let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
+        let _token0 = token0;
+        let _token1 = token1;
+        let balance0 = token_balances.token_balance_of(_token0, *pool_account);
+        let balance1 = token_balances.token_balance_of(_token1, *pool_account);
+        let liquidity = arg.liquidity;
+
+        let fee_on = self.mint_fee(fee_to, token_balances, &_reserve0, &_reserve1);
+        let _total_supply = self.lp.get_total_supply();
+        let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
+        let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
+
+        // ! check amount before change data
+        if amount0 == *ZERO || amount1 == *ZERO {
+            return Err(BusinessError::Liquidity(
+                "INSUFFICIENT_LIQUIDITY_BURNED".into(),
+            ));
+        }
+        let (amount_a, amount_b) = if arg.token_a == token0 {
+            (amount0.clone(), amount1.clone())
+        } else {
+            (amount1.clone(), amount0.clone())
+        };
+        if amount_a < arg.amount_a_min {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
+        }
+        if amount_b < arg.amount_b_min {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
+        }
+
+        // do burn
+        self.lp.burn(token_balances, arg.from, liquidity.clone());
+
+        // return token
+        token_balances.token_transfer(_token0, *pool_account, arg.to, amount0);
+        token_balances.token_transfer(_token1, *pool_account, arg.to, amount1);
+
+        let balance0 = token_balances.token_balance_of(_token0, *pool_account);
+        let balance1 = token_balances.token_balance_of(_token1, *pool_account);
+
+        self.update(balance0, balance1, _reserve0, _reserve1);
+        if fee_on {
+            self.k_last = self.reserve0.clone() * self.reserve1.clone();
+        }
+
+        // ! push log
+
+        Ok(TokenPairLiquidityRemoveSuccess {
+            amount: (amount_a, amount_b),
+        })
+    }
+
+    pub fn remove_liquidity(
+        &mut self,
+        fee_to: Option<Account>,
+        token_balances: &mut TokenBalances,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityRemoveArg,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        let pool_account = Account {
+            owner: self_canister.id(),
+            subaccount: Some(self.subaccount),
+        };
+
+        self.burn(fee_to, token_balances, pa, &pool_account, arg)
     }
 }
 

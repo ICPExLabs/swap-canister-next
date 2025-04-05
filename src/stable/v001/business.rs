@@ -85,6 +85,20 @@ impl Business for InnerState {
             liquidity,
         )
     }
+    fn business_token_pair_liquidity_remove(
+        &mut self,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityRemoveArg,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        self.business_data.token_pairs.remove_liquidity(
+            self.business_data.fee_to,
+            &mut self.token_balances,
+            self_canister,
+            pa,
+            arg,
+        )
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

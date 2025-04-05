@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use super::{
     Amm, BusinessError, DummyCanisterId, MarketMaker, PairAmm, SelfCanister, TokenBalances,
     TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -82,5 +83,22 @@ impl TokenPairs {
             .ok_or_else(|| pa.not_exist())?;
 
         maker.check_liquidity_removable(token_balances, from, liquidity)
+    }
+
+    pub fn remove_liquidity(
+        &mut self,
+        fee_to: Option<Account>,
+        token_balances: &mut TokenBalances,
+        self_canister: SelfCanister,
+        pa: PairAmm,
+        arg: TokenPairLiquidityRemoveArg,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        let maker = self
+            .0
+            .get_mut(&pa.pair)
+            .and_then(|makers| makers.get_mut(&pa.amm))
+            .ok_or_else(|| pa.not_exist())?;
+
+        maker.remove_liquidity(fee_to, token_balances, self_canister, pa, arg)
     }
 }

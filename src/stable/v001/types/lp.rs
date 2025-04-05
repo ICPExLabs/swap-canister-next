@@ -21,9 +21,16 @@ impl PoolLp {
         }
     }
 
-    pub fn mint(&mut self, token_balances: &mut TokenBalances, fee_to: Account, amount: Nat) {
+    pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.mint(token_balances, fee_to, amount),
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint(token_balances, to, amount),
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
+
+    pub fn burn(&mut self, token_balances: &mut TokenBalances, from: Account, amount: Nat) {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(token_balances, from, amount),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -55,9 +62,14 @@ pub struct InnerLP {
 }
 
 impl InnerLP {
-    pub fn mint(&mut self, token_balances: &mut TokenBalances, fee_to: Account, amount: Nat) {
-        token_balances.token_deposit(self.dummy_canister_id.id(), fee_to, amount.clone());
+    pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {
+        token_balances.token_deposit(self.dummy_canister_id.id(), to, amount.clone());
         self.total_supply += amount;
+    }
+
+    pub fn burn(&mut self, token_balances: &mut TokenBalances, from: Account, amount: Nat) {
+        token_balances.token_withdraw(self.dummy_canister_id.id(), from, amount.clone());
+        self.total_supply -= amount;
     }
 
     pub fn check_liquidity_removable(
@@ -78,7 +90,9 @@ impl InnerLP {
         // check minimum liquidity
         let remain = self.total_supply.clone() - liquidity.to_owned();
         if remain < self.minimum_liquidity {
-            return Err(BusinessError::Liquidity("TOTAL_LIQUIDITY_TOO_SMALL".into()));
+            return Err(BusinessError::Liquidity(
+                "REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into(),
+            ));
         }
 
         Ok(())

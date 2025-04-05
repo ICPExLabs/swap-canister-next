@@ -174,14 +174,13 @@ async fn inner_pair_liquidity_remove(
         &token_accounts,
         retries.unwrap_or_default(),
         || async {
-            todo!()
-            // let success = with_mut_state_without_record(|s| {
-            //     s.business_token_pair_liquidity_add(self_canister, pa, arg)
-            // })?;
+            let success = with_mut_state_without_record(|s| {
+                s.business_token_pair_liquidity_remove(self_canister, pa, arg)
+            })?;
 
-            // // ! push log
+            // ! push log
 
-            // Ok(success)
+            Ok(success)
         },
         // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
         |retries| async move {
