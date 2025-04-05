@@ -13,13 +13,27 @@ use crate::types::*;
 // anyone can query
 #[ic_cdk::query]
 fn tokens_query() -> Vec<TokenInfo> {
-    with_state(|s| s.business_tokens_query().values().cloned().collect())
+    with_state(|s| {
+        s.business_tokens_query()
+            .values()
+            .cloned()
+            .chain(s.business_dummy_tokens_query().into_values())
+            .collect()
+    })
 }
 
 // anyone can query
 #[ic_cdk::query]
 fn token_query(token: CanisterId) -> Option<TokenInfo> {
-    with_state(|s| s.business_tokens_query().get(&token).cloned())
+    with_state(|s| {
+        if let Some(token_info) = s.business_tokens_query().get(&token) {
+            return Some(token_info.clone());
+        }
+        if let Some(token_info) = s.business_dummy_tokens_query().remove(&token) {
+            return Some(token_info.clone());
+        }
+        None
+    })
 }
 
 // anyone can query
@@ -32,10 +46,12 @@ fn token_balance_of(token: CanisterId, account: Account) -> candid::Nat {
 #[ic_cdk::query]
 fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     with_state(|s| {
-        s.business_tokens_query()
+        let tokens = s.business_tokens_query();
+        let dummy_tokens = s.business_dummy_tokens_query();
+        tokens
             .keys()
-            .cloned()
-            .map(|canister_id| {
+            .chain(dummy_tokens.keys())
+            .map(|&canister_id| {
                 (
                     canister_id,
                     s.business_token_balance_of(canister_id, account),

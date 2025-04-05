@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use candid::{CandidType, Nat};
 use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
@@ -5,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::utils::math::zero;
 
-use super::{BusinessError, DummyCanisterId, TokenBalances, TokenInfo};
+use super::{AmmText, BusinessError, DummyCanisterId, TokenBalances, TokenInfo, TokenPair};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -14,6 +16,18 @@ pub enum PoolLp {
 }
 
 impl PoolLp {
+    pub fn dummy_tokens(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+        pair: &TokenPair,
+        amm: &AmmText,
+    ) -> Vec<TokenInfo> {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pair, amm),
+            PoolLp::OuterLP(_outer_lp) => vec![],
+        }
+    }
+
     pub fn get_total_supply(&self) -> Nat {
         match self {
             PoolLp::InnerLP(inner_lp) => inner_lp.total_supply.clone(),
@@ -62,6 +76,25 @@ pub struct InnerLP {
 }
 
 impl InnerLP {
+    pub fn dummy_tokens(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+        pair: &TokenPair,
+        amm: &AmmText,
+    ) -> Vec<TokenInfo> {
+        #[allow(clippy::unwrap_used)] // ? SAFETY
+        let token0 = tokens.get(&pair.token0).unwrap();
+        #[allow(clippy::unwrap_used)] // ? SAFETY
+        let token1 = tokens.get(&pair.token1).unwrap();
+        vec![TokenInfo {
+            canister_id: self.dummy_canister_id.id(),
+            name: format!("{}_{}_{}_LP", token0.name, token1.name, amm.as_ref()),
+            symbol: format!("{}_{}_{}_LP", token0.symbol, token1.symbol, amm.as_ref()),
+            decimals: self.decimals,
+            fee: self.fee.clone(),
+        }]
+    }
+
     pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {
         token_balances.token_deposit(self.dummy_canister_id.id(), to, amount.clone());
         self.total_supply += amount;

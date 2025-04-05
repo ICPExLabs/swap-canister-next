@@ -12,9 +12,9 @@ use ic_canister_kit::types::CanisterId;
 pub struct TokenInfo {
     pub canister_id: CanisterId,
     #[allow(unused)]
-    pub name: &'static str,
+    pub name: String,
     #[allow(unused)]
-    pub symbol: &'static str,
+    pub symbol: String,
     #[allow(unused)]
     pub decimals: u8,
     pub fee: Nat,
@@ -31,8 +31,8 @@ impl TokenInfo {
         #[allow(clippy::unwrap_used)] // ? SAFETY
         Self {
             canister_id: CanisterId::from_text(canister_id).unwrap(),
-            name,
-            symbol,
+            name: name.into(),
+            symbol: symbol.into(),
             decimals,
             fee: Nat::from(fee),
         }

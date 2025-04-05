@@ -1,13 +1,16 @@
+use std::collections::HashMap;
+
 use candid::{CandidType, Nat};
+use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
 use crate::types::PoolLp;
 
 use super::{
-    Amm, BusinessError, DummyCanisterId, PairAmm, SelfCanister, SwapRatio, TokenBalances,
-    TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
-    TokenPairLiquidityRemoveSuccess,
+    Amm, AmmText, BusinessError, DummyCanisterId, PairAmm, SelfCanister, SwapRatio, TokenBalances,
+    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
 };
 
 /// Automated Market Maker 自动化做市商
@@ -52,6 +55,17 @@ impl MarketMaker {
                 lp,
                 SwapRatio::new(1, 100), // swap fee 1%
             )),
+        }
+    }
+
+    pub fn dummy_tokens(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+        pair: &TokenPair,
+        amm: AmmText,
+    ) -> Vec<TokenInfo> {
+        match self {
+            MarketMaker::SwapV2(value) => value.dummy_tokens(tokens, pair, &amm),
         }
     }
 

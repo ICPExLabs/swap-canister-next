@@ -26,6 +26,9 @@ pub trait Business:
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         panic!("Not supported operation by this version.")
     }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        panic!("Not supported operation by this version.")
+    }
 
     // token balance lock
     fn business_token_balance_lock<'a>(
@@ -140,6 +143,9 @@ impl Business for State {
     }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         self.get().business_token_balance_of(token, account)
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.get().business_dummy_tokens_query()
     }
 
     // token balance lock

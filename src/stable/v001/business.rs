@@ -9,6 +9,11 @@ impl Business for InnerState {
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         self.token_balances.token_balance_of(token, account)
     }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.business_data
+            .token_pairs
+            .business_dummy_tokens_query(self.business_tokens_query())
+    }
 
     // token balance lock
     fn business_token_balance_lock<'a>(

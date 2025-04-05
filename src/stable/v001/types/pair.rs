@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use candid::Nat;
+use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +18,18 @@ impl TokenPairs {
     pub fn query_token_pair_pools(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.0
             .iter()
-            .flat_map(|(pool, makers)| makers.iter().map(move |(amm, maker)| (pool, amm, maker)))
+            .flat_map(|(pair, makers)| makers.iter().map(move |(amm, maker)| (pair, amm, maker)))
+            .collect()
+    }
+
+    pub fn business_dummy_tokens_query(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+    ) -> HashMap<CanisterId, TokenInfo> {
+        self.query_token_pair_pools()
+            .into_iter()
+            .flat_map(|(pair, amm, maker)| maker.dummy_tokens(tokens, pair, amm.into()))
+            .map(|info| (info.canister_id, info))
             .collect()
     }
 

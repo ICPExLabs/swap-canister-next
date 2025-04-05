@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// 常数乘积做市商（Constant Product AMM）
 /// - 核心公式：x * y = k（x、y 为两资产数量，k 为常数）
 /// - 代表项目：Uniswap V2/V3、SushiSwap、PancakeSwap
@@ -12,9 +14,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     types::{
-        BusinessError, PairAmm, PoolLp, SelfCanister, SwapRatio, SwapRatioView, TokenBalances,
-        TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-        TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+        AmmText, BusinessError, PairAmm, PoolLp, SelfCanister, SwapRatio, SwapRatioView,
+        TokenBalances, TokenInfo, TokenPair, TokenPairLiquidityAddArg,
+        TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
     },
     utils::{
         math::{ZERO, zero},
@@ -61,6 +63,15 @@ impl SwapV2MarketMaker {
             lp,
             protocol_fee,
         }
+    }
+
+    pub fn dummy_tokens(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+        pair: &TokenPair,
+        amm: &AmmText,
+    ) -> Vec<TokenInfo> {
+        self.lp.dummy_tokens(tokens, pair, amm)
     }
 
     pub fn accounts(&self, self_canister: &SelfCanister) -> Vec<Account> {
