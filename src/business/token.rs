@@ -101,14 +101,17 @@ async fn inner_token_deposit(
         retries.unwrap_or_default(),
         || async {
             let service_icrc2 = crate::services::icrc2::Service(args.token);
+
+            // ? 1. transfer token to self
+            let self_account = Account {
+                owner: self_canister.id(),
+                subaccount: None,
+            };
             let height = service_icrc2
                 .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
                     from: args.from,
                     spender_subaccount: None, // approve subaccount
-                    to: Account {
-                        owner: self_canister.id(),
-                        subaccount: None,
-                    },
+                    to: self_account,         // * to self
                     amount: args.amount_without_fee.clone(),
                     fee: None, // deposit action doesn't care fee
                     memo: None,
@@ -119,11 +122,13 @@ async fn inner_token_deposit(
                 .0
                 .map_err(BusinessError::TransferFromError)?;
 
+            // ? 2. record amount
             let amount = args.amount_without_fee;
             with_mut_state_without_record(|s| {
                 s.business_token_deposit(args.token, args.from, amount);
             });
 
+            // ? 3. log
             // ! push log
 
             Ok(height)
@@ -183,9 +188,16 @@ async fn inner_token_withdraw(
         || async {
             let service_icrc2 = crate::services::icrc2::Service(args.token);
 
-            let height = service_icrc2
+            // ? 1. record amount
+            let amount = args.amount_without_fee.clone() + token.fee.clone();
+            with_mut_state_without_record(|s| {
+                s.business_token_withdraw(args.token, args.from, amount.clone());
+            });
+
+            // ? 2. transfer token to user
+            let height = match service_icrc2
                 .icrc_1_transfer(crate::services::icrc2::TransferArg {
-                    from_subaccount: None,
+                    from_subaccount: None, // * from self
                     to: args.to,
                     amount: args.amount_without_fee.clone(),
                     fee: Some(token.fee.clone()), // withdraw action should care fee
@@ -193,15 +205,26 @@ async fn inner_token_withdraw(
                     created_at_time: None,
                 })
                 .await
-                .map_err(BusinessError::CallCanisterError)?
-                .0
-                .map_err(BusinessError::TransferError)?;
+                .map(|r| r.0.map_err(BusinessError::TransferError))
+                .map_err(BusinessError::CallCanisterError)
+            {
+                Ok(height) => height,
+                Err(err) => Err(err),
+            };
 
-            let amount = args.amount_without_fee + token.fee;
-            with_mut_state_without_record(|s| {
-                s.business_token_withdraw(args.token, args.from, amount);
-            });
+            // ? 3. check transfer result
+            let height = match height {
+                Ok(height) => height,
+                Err(err) => {
+                    // ! rollback
+                    with_mut_state_without_record(|s| {
+                        s.business_token_deposit(args.token, args.from, amount);
+                    });
+                    return Err(err);
+                }
+            };
 
+            // ? 4. log
             // ! push log
 
             Ok(height)
