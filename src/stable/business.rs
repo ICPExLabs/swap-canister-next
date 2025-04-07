@@ -58,7 +58,7 @@ pub trait Business:
         to: Account,
         amount_without_fee: Nat,
         fee: Nat,
-    ) {
+    ) -> Nat {
         panic!("Not supported operation by this version.")
     }
 
@@ -209,7 +209,7 @@ impl Business for State {
         to: Account,
         amount_without_fee: Nat,
         fee: Nat,
-    ) {
+    ) -> Nat {
         self.get_mut()
             .business_token_transfer(token, from, to, amount_without_fee, fee)
     }

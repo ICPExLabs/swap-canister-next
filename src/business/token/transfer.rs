@@ -62,12 +62,12 @@ async fn inner_token_transfer(
         retries.unwrap_or_default(),
         || async {
             // ? 1. transfer
-            with_mut_state_without_record(|s| {
+            let amount = with_mut_state_without_record(|s| {
                 s.business_token_transfer(
                     args.token,
                     args.from,
                     args.to,
-                    args.amount_without_fee.clone(),
+                    args.amount_without_fee,
                     token.fee,
                 )
             });
@@ -75,7 +75,7 @@ async fn inner_token_transfer(
             // ? 2. log
             // ! push log
 
-            Ok(args.amount_without_fee)
+            Ok(amount)
         },
         // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
         |retries| async move {
