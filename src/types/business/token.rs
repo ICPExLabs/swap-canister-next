@@ -8,23 +8,23 @@ use super::super::BusinessError;
 // common
 
 #[derive(Debug, Deserialize, CandidType)]
-pub enum TokenTransferResult {
-    Ok(candid::Nat),
+pub enum TokenChangedResult {
+    Ok(candid::Nat), // height if deposit or withdraw, amount if inner transfer
     Err(BusinessError),
 }
-impl From<Result<candid::Nat, BusinessError>> for TokenTransferResult {
+impl From<Result<candid::Nat, BusinessError>> for TokenChangedResult {
     fn from(r: Result<candid::Nat, BusinessError>) -> Self {
         match r {
-            Ok(n) => TokenTransferResult::Ok(n),
-            Err(e) => TokenTransferResult::Err(e),
+            Ok(n) => TokenChangedResult::Ok(n),
+            Err(e) => TokenChangedResult::Err(e),
         }
     }
 }
-impl From<TokenTransferResult> for Result<candid::Nat, BusinessError> {
-    fn from(r: TokenTransferResult) -> Self {
+impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
+    fn from(r: TokenChangedResult) -> Self {
         match r {
-            TokenTransferResult::Ok(n) => Ok(n),
-            TokenTransferResult::Err(e) => Err(e),
+            TokenChangedResult::Ok(n) => Ok(n),
+            TokenChangedResult::Err(e) => Err(e),
         }
     }
 }
@@ -42,6 +42,16 @@ pub struct TokenDepositArgs {
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenWithdrawArgs {
+    pub token: CanisterId,
+    pub from: Account,
+    pub amount_without_fee: candid::Nat,
+    pub to: Account,
+}
+
+// inner transfer
+
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+pub struct TokenTransferArgs {
     pub token: CanisterId,
     pub from: Account,
     pub amount_without_fee: candid::Nat,

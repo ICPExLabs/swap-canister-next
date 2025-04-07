@@ -6,13 +6,24 @@ impl Business for InnerState {
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         &TOKENS
     }
-    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-        self.token_balances.token_balance_of(token, account)
-    }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
         self.business_data
             .token_pairs
             .business_dummy_tokens_query(self.business_tokens_query())
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.business_tokens_query()
+            .iter()
+            .map(|(token, info)| (*token, Cow::Borrowed(info)))
+            .chain(
+                self.business_dummy_tokens_query()
+                    .into_iter()
+                    .map(|(token, info)| (token, Cow::Owned(info))),
+            )
+            .collect()
+    }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        self.token_balances.token_balance_of(token, account)
     }
 
     // token balance lock
@@ -34,6 +45,34 @@ impl Business for InnerState {
     }
     fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
         self.token_balances.token_withdraw(token, account, amount)
+    }
+    fn business_token_transfer(
+        &mut self,
+        token: CanisterId,
+        from: Account,
+        to: Account,
+        amount_without_fee: Nat,
+        fee: Nat,
+    ) {
+        match &self.business_data.fee_to {
+            Some(fee_to) if *crate::utils::math::ZERO < fee => {
+                // withdraw
+                let amount = amount_without_fee.clone() + fee.clone();
+                self.token_balances.token_withdraw(token, from, amount);
+                // deposit
+                self.token_balances
+                    .token_deposit(token, to, amount_without_fee);
+                self.token_balances.token_deposit(token, *fee_to, fee);
+            }
+            _ => {
+                // withdraw
+                let amount = amount_without_fee.clone() + fee.clone();
+                self.token_balances
+                    .token_withdraw(token, from, amount.clone());
+                // deposit
+                self.token_balances.token_deposit(token, to, amount);
+            }
+        }
     }
 
     // pair

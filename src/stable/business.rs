@@ -23,10 +23,13 @@ pub trait Business:
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         panic!("Not supported operation by this version.")
     }
-    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
         panic!("Not supported operation by this version.")
     }
-    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         panic!("Not supported operation by this version.")
     }
 
@@ -46,6 +49,16 @@ pub trait Business:
         panic!("Not supported operation by this version.")
     }
     fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_token_transfer(
+        &mut self,
+        token: CanisterId,
+        from: Account,
+        to: Account,
+        amount_without_fee: Nat,
+        fee: Nat,
+    ) {
         panic!("Not supported operation by this version.")
     }
 
@@ -159,11 +172,14 @@ impl Business for State {
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()
     }
-    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-        self.get().business_token_balance_of(token, account)
-    }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
         self.get().business_dummy_tokens_query()
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.get().business_all_tokens_query()
+    }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        self.get().business_token_balance_of(token, account)
     }
 
     // token balance lock
@@ -185,6 +201,17 @@ impl Business for State {
     fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
         self.get_mut()
             .business_token_withdraw(token, account, amount)
+    }
+    fn business_token_transfer(
+        &mut self,
+        token: CanisterId,
+        from: Account,
+        to: Account,
+        amount_without_fee: Nat,
+        fee: Nat,
+    ) {
+        self.get_mut()
+            .business_token_transfer(token, from, to, amount_without_fee, fee)
     }
 
     // pair

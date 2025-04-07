@@ -16,9 +16,10 @@ pub use super::super::v000::types::{
 
 // 业务权限
 // token
-pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // 查询指定账户余额
+pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // 查询指定账户余额权限
 pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
 pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // 提取代币权限
+pub const ACTION_BUSINESS_TOKEN_TRANSFER: &str = "BusinessTokenTransfer"; // 代币内部转移权限
 // pair
 pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE: &str = "BusinessTokenPairCreate"; // 创建代币对池子权限
 pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD: &str = "BusinessTokenPairLiquidityAdd"; // 向代币对池子添加流动性权限
@@ -30,7 +31,7 @@ pub const ACTION_BUSINESS_EXAMPLE_SET: &str = "BusinessExampleSet"; // 业务更
 
 // 所有权限列表
 #[allow(unused)]
-pub const ACTIONS: [&str; 19] = [
+pub const ACTIONS: [&str; 20] = [
     // 通用权限
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -47,6 +48,7 @@ pub const ACTIONS: [&str; 19] = [
     ACTION_BUSINESS_TOKEN_BALANCE_BY,
     ACTION_BUSINESS_TOKEN_DEPOSIT,
     ACTION_BUSINESS_TOKEN_WITHDRAW,
+    ACTION_BUSINESS_TOKEN_TRANSFER,
     // pair
     ACTION_BUSINESS_TOKEN_PAIR_CREATE,
     ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD,
@@ -77,6 +79,7 @@ impl ParsePermission for InnerState {
             ACTION_BUSINESS_TOKEN_BALANCE_BY => Permission::by_permit(name),
             ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name), // default anyone
+            ACTION_BUSINESS_TOKEN_TRANSFER => Permission::by_forbid(name), // default anyone
             // pair
             ACTION_BUSINESS_TOKEN_PAIR_CREATE => Permission::by_permit(name),
             ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD => Permission::by_forbid(name), // default anyone
@@ -113,6 +116,10 @@ pub fn has_business_token_deposit() -> Result<(), String> {
 #[allow(unused)]
 pub fn has_business_token_withdraw() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_TOKEN_WITHDRAW, true) // ! required running, not paused
+}
+#[allow(unused)]
+pub fn has_business_token_transfer() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_TRANSFER, true) // ! required running, not paused
 }
 
 // pair

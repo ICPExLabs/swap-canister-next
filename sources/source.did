@@ -124,6 +124,7 @@ type SwapV2MarketMakerView = record {
   price0_cumulative_last : nat;
 };
 type TokenAccount = record { token : principal; account : Account };
+type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
 type TokenDepositArgs = record {
   token : principal;
   from : Account;
@@ -191,8 +192,7 @@ type TokenPairSwapTokensResult = variant {
   Err : BusinessError;
 };
 type TokenPairSwapTokensSuccess = record { amounts : vec nat };
-type TokenTransferResult = variant { Ok : nat; Err : BusinessError };
-type TokenWithdrawArgs = record {
+type TokenTransferArgs = record {
   to : Account;
   token : principal;
   from : Account;
@@ -274,9 +274,10 @@ service : (opt CanisterInitialArg) -> {
   test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance_by : (principal, Account) -> (nat) query;
   token_balance_of : (principal, Account) -> (nat) query;
-  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenTransferResult);
+  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
-  token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenTransferResult);
+  token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
+  token_withdraw : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
