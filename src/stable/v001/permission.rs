@@ -16,6 +16,7 @@ pub use super::super::v000::types::{
 
 // 业务权限
 // token
+pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // 查询指定账户余额
 pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
 pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // 提取代币权限
 // pair
@@ -29,7 +30,7 @@ pub const ACTION_BUSINESS_EXAMPLE_SET: &str = "BusinessExampleSet"; // 业务更
 
 // 所有权限列表
 #[allow(unused)]
-pub const ACTIONS: [&str; 18] = [
+pub const ACTIONS: [&str; 19] = [
     // 通用权限
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -43,6 +44,7 @@ pub const ACTIONS: [&str; 18] = [
     ACTION_SCHEDULE_TRIGGER,
     // 业务权限
     // token
+    ACTION_BUSINESS_TOKEN_BALANCE_BY,
     ACTION_BUSINESS_TOKEN_DEPOSIT,
     ACTION_BUSINESS_TOKEN_WITHDRAW,
     // pair
@@ -72,6 +74,7 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
             // 业务权限
             // token
+            ACTION_BUSINESS_TOKEN_BALANCE_BY => Permission::by_permit(name),
             ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name), // default anyone
             // pair
@@ -99,6 +102,10 @@ pub use super::super::v000::types::{
 // 业务权限
 
 // token
+#[allow(unused)]
+pub fn has_business_token_balance_by() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_BALANCE_BY, false)
+}
 #[allow(unused)]
 pub fn has_business_token_deposit() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_TOKEN_DEPOSIT, true) // ! required running, not paused

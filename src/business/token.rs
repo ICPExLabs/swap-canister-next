@@ -39,12 +39,26 @@ fn token_query(token: CanisterId) -> Option<TokenInfo> {
 // anyone can query
 #[ic_cdk::query]
 fn token_balance_of(token: CanisterId, account: Account) -> candid::Nat {
-    with_state(|s| s.business_token_balance_of(token, account))
+    crate::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
+    token_balance_by(token, account)
 }
 
 // anyone can query
 #[ic_cdk::query]
 fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
+    crate::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
+    tokens_balance_by(account)
+}
+
+// anyone can query
+#[ic_cdk::query(guard = "has_business_token_balance_by")]
+fn token_balance_by(token: CanisterId, account: Account) -> candid::Nat {
+    with_state(|s| s.business_token_balance_of(token, account))
+}
+
+// anyone can query
+#[ic_cdk::query(guard = "has_business_token_balance_by")]
+fn tokens_balance_by(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     with_state(|s| {
         let tokens = s.business_tokens_query();
         let dummy_tokens = s.business_dummy_tokens_query();
@@ -122,7 +136,7 @@ async fn inner_token_deposit(
                 .0
                 .map_err(BusinessError::TransferFromError)?;
 
-            // ? 2. record amount
+            // ? 2. record changed
             let amount = args.amount_without_fee;
             with_mut_state_without_record(|s| {
                 s.business_token_deposit(args.token, args.from, amount);
@@ -188,16 +202,10 @@ async fn inner_token_withdraw(
         || async {
             let service_icrc2 = crate::services::icrc2::Service(args.token);
 
-            // ? 1. record amount
-            let amount = args.amount_without_fee.clone() + token.fee.clone();
-            with_mut_state_without_record(|s| {
-                s.business_token_withdraw(args.token, args.from, amount.clone());
-            });
-
-            // ? 2. transfer token to user
-            let height = match service_icrc2
+            // ? 1. transfer token to user
+            let height = service_icrc2
                 .icrc_1_transfer(crate::services::icrc2::TransferArg {
-                    from_subaccount: None, // * from self
+                    from_subaccount: None,
                     to: args.to,
                     amount: args.amount_without_fee.clone(),
                     fee: Some(token.fee.clone()), // withdraw action should care fee
@@ -205,26 +213,17 @@ async fn inner_token_withdraw(
                     created_at_time: None,
                 })
                 .await
-                .map(|r| r.0.map_err(BusinessError::TransferError))
-                .map_err(BusinessError::CallCanisterError)
-            {
-                Ok(height) => height,
-                Err(err) => Err(err),
-            };
+                .map_err(BusinessError::CallCanisterError)?
+                .0
+                .map_err(BusinessError::TransferError)?;
 
-            // ? 3. check transfer result
-            let height = match height {
-                Ok(height) => height,
-                Err(err) => {
-                    // ! rollback
-                    with_mut_state_without_record(|s| {
-                        s.business_token_deposit(args.token, args.from, amount);
-                    });
-                    return Err(err);
-                }
-            };
+            // ? 2. record changed
+            let amount = args.amount_without_fee + token.fee;
+            with_mut_state_without_record(|s| {
+                s.business_token_withdraw(args.token, args.from, amount);
+            });
 
-            // ? 4. log
+            // ? 3. log
             // ! push log
 
             Ok(height)
