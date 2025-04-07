@@ -95,8 +95,8 @@ impl InnerLP {
         let token1 = tokens.get(&pair.token1).unwrap();
         vec![TokenInfo {
             canister_id: self.dummy_canister_id.id(),
-            name: format!("{}_{}_{}_LP", token0.name, token1.name, amm.as_ref()),
-            symbol: format!("{}_{}_{}_LP", token0.symbol, token1.symbol, amm.as_ref()),
+            name: format!("{}_{}_LP({})", token0.symbol, token1.symbol, amm.as_ref()),
+            symbol: format!("{}_{}_LP({})", token0.symbol, token1.symbol, amm.as_ref()),
             decimals: self.decimals,
             fee: self.fee.clone(),
         }]
