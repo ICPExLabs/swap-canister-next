@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+start_time=$(date +%H:%M:%S)
+start_time_s=$(date +%s)
 
 # 运行完毕自动停止
 dfx stop
@@ -544,6 +546,14 @@ test "business_example_priority_queue_query" "$(dfx canister call swap business_
 echo ""
 green "=================== TEST COMPLETED AND SUCCESSFUL ==================="
 echo ""
+
+end_time=$(date +%H:%M:%S)
+end_time_s=$(date +%s)
+spend=$(($end_time_s - $start_time_s))
+spend_min=$(($spend / 60))
+echo ''
+echo "$start_time -> $end_time" "Total: $spend seconds ($spend_min mins)"
+echo ''
 
 say test successful
 
