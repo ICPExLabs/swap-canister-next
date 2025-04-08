@@ -171,6 +171,13 @@ type TokenPairPool = record {
   amm : text;
   pair : record { principal; principal };
 };
+type TokenPairSwapByLoanArgs = record {
+  to : Account;
+  from : Account;
+  loan : nat;
+  path : vec TokenPairPool;
+  deadline : opt nat64;
+};
 type TokenPairSwapExactTokensForTokensArgs = record {
   to : Account;
   amount_out_min : nat;
@@ -244,6 +251,9 @@ service : (opt CanisterInitialArg) -> {
       TokenPairLiquidityRemoveResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
+  pair_swap_by_loan : (TokenPairSwapByLoanArgs, opt nat8) -> (
+      TokenPairSwapTokensResult,
+    );
   pair_swap_exact_tokens_for_tokens : (
       TokenPairSwapExactTokensForTokensArgs,
       opt nat8,

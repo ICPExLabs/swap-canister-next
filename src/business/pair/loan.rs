@@ -10,12 +10,12 @@ use crate::types::*;
 
 // ========================== swap ==========================
 
-// pay extra tokens
+// pay loan tokens
 impl CheckArgs for TokenPairSwapByLoanArgs {
     type Result = (Vec<TokenAccount>, SelfCanister, Caller, Vec<PairAmm>);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check owner
-        let (self_canister, caller) = check_caller(&self.from)?;
+        let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check path
         if self.path.is_empty() {
