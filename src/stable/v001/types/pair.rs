@@ -11,8 +11,8 @@ use super::{
     Amm, BusinessError, DummyCanisterId, MarketMaker, PairAmm, SelfCanister, TokenBalances,
     TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
     TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairPool,
-    TokenPairSwapExactTokensForTokensArgs, TokenPairSwapTokensForExactTokensArgs,
-    TokenPairSwapTokensSuccess,
+    TokenPairSwapByLoanArgs, TokenPairSwapExactTokensForTokensArgs,
+    TokenPairSwapTokensForExactTokensArgs, TokenPairSwapTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -330,6 +330,36 @@ impl TokenPairs {
             &pool_accounts,
             args.to,
         )?;
+
+        Ok(TokenPairSwapTokensSuccess { amounts })
+    }
+
+    // pair swap by loan
+    pub fn swap_by_loan(
+        &mut self,
+        token_balances: &mut TokenBalances,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapByLoanArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let (amounts, pool_accounts) =
+            self.get_amounts_out(self_canister, &args.loan, &args.loan, &args.path, &pas)?;
+
+        // ! loan token // transfer first
+        token_balances.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone());
+
+        self.swap(
+            token_balances,
+            self_canister,
+            &amounts,
+            &args.path,
+            &pas,
+            &pool_accounts,
+            args.to,
+        )?;
+
+        // ! return loan
+        token_balances.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone());
 
         Ok(TokenPairSwapTokensSuccess { amounts })
     }

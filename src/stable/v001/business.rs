@@ -170,6 +170,19 @@ impl Business for InnerState {
             pas,
         )
     }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapByLoanArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.business_data.token_pairs.swap_by_loan(
+            &mut self.token_balances,
+            self_canister,
+            args,
+            pas,
+        )
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

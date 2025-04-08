@@ -15,6 +15,9 @@ pub use liquidity::*;
 mod swap;
 pub use swap::*;
 
+mod loan;
+pub use loan::*;
+
 /// (token0, token1, amm)
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairPool {

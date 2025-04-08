@@ -116,6 +116,14 @@ pub trait Business:
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         panic!("Not supported operation by this version.")
     }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapByLoanArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        panic!("Not supported operation by this version.")
+    }
 
     fn business_example_query(&self) -> String {
         panic!("Not supported operation by this version.")
@@ -272,6 +280,15 @@ impl Business for State {
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.get_mut()
             .business_token_pair_swap_tokens_for_exact_tokens(self_canister, args, pas)
+    }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        self_canister: &SelfCanister,
+        args: TokenPairSwapByLoanArgs,
+        pas: Vec<PairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.get_mut()
+            .business_token_pair_swap_by_loan(self_canister, args, pas)
     }
 
     fn business_example_query(&self) -> String {

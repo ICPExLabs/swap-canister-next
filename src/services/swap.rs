@@ -6,7 +6,7 @@ use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
 use crate::types::{
     BusinessError, TokenChangedResult, TokenDepositArgs, TokenPairLiquidityAddArgs,
     TokenPairLiquidityAddResult, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArgs,
-    TokenPairLiquidityRemoveResult, TokenPairLiquidityRemoveSuccess,
+    TokenPairLiquidityRemoveResult, TokenPairLiquidityRemoveSuccess, TokenPairSwapByLoanArgs,
     TokenPairSwapExactTokensForTokensArgs, TokenPairSwapTokensForExactTokensArgs,
     TokenPairSwapTokensResult, TokenPairSwapTokensSuccess, TokenTransferArgs, TokenWithdrawArgs,
 };
@@ -104,6 +104,21 @@ impl Service {
         ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(
             self.0,
             "pair_swap_tokens_for_exact_tokens",
+            (args, retries),
+        )
+        .await
+        .map_err(BusinessError::CallCanisterError)?
+        .0
+        .into()
+    }
+    pub async fn pair_swap_by_loan(
+        &self,
+        args: TokenPairSwapByLoanArgs,
+        retries: Option<u8>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(
+            self.0,
+            "pair_swap_by_loan",
             (args, retries),
         )
         .await

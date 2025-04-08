@@ -16,6 +16,8 @@ mod liquidity;
 
 mod swap;
 
+mod loan;
+
 impl CheckArgs for TokenPair {
     type Result = ();
 
