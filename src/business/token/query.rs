@@ -8,7 +8,7 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-// ========================== query token and balance ==========================
+// ========================== query token ==========================
 
 // anyone can query
 #[ic_cdk::query]
@@ -31,6 +31,8 @@ fn token_query(token: CanisterId) -> Option<TokenInfo> {
     })
 }
 
+// ============================ query owner balance ============================
+
 // anyone can query
 #[ic_cdk::query]
 fn token_balance_of(token: CanisterId, account: Account) -> candid::Nat {
@@ -45,13 +47,41 @@ fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     tokens_balance_by(account)
 }
 
-// anyone can query
+// ============================ query owner balance ============================
+
+// anyone can query owner balance
+#[ic_cdk::query]
+fn token_balance(
+    token: CanisterId,
+    subaccount: Option<icrc_ledger_types::icrc1::account::Subaccount>,
+) -> candid::Nat {
+    token_balance_by(
+        token,
+        Account {
+            owner: caller(),
+            subaccount,
+        },
+    )
+}
+
+// anyone can query owner balance
+#[ic_cdk::query]
+fn tokens_balance(
+    subaccount: Option<icrc_ledger_types::icrc1::account::Subaccount>,
+) -> Vec<(CanisterId, candid::Nat)> {
+    tokens_balance_by(Account {
+        owner: caller(),
+        subaccount,
+    })
+}
+
+// ============================== maintainer ==============================
+
 #[ic_cdk::query(guard = "has_business_token_balance_by")]
 fn token_balance_by(token: CanisterId, account: Account) -> candid::Nat {
     with_state(|s| s.business_token_balance_of(token, account))
 }
 
-// anyone can query
 #[ic_cdk::query(guard = "has_business_token_balance_by")]
 fn tokens_balance_by(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     with_state(|s| {

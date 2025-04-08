@@ -8,6 +8,8 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
+pub mod config;
+
 pub mod token;
 
 pub mod pair;

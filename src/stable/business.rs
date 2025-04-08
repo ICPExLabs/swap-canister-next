@@ -19,6 +19,14 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    // config
+    fn business_config_fee_to_query(&self) -> Option<&Account> {
+        panic!("Not supported operation by this version.")
+    }
+    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
+        panic!("Not supported operation by this version.")
+    }
+
     // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         panic!("Not supported operation by this version.")
@@ -176,6 +184,14 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    // config
+    fn business_config_fee_to_query(&self) -> Option<&Account> {
+        self.get().business_config_fee_to_query()
+    }
+    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
+        self.get_mut().business_config_fee_to_replace(fee_to)
+    }
+
     // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()

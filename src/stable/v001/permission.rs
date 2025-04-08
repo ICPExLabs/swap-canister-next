@@ -15,6 +15,8 @@ pub use super::super::v000::types::{
 };
 
 // 业务权限
+// config
+pub const ACTION_BUSINESS_CONFIG_FEE_TO: &str = "BusinessConfigFeeTo"; // 查询和设置手续费接收地址权限
 // token
 pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // 查询指定账户余额权限
 pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
@@ -31,7 +33,7 @@ pub const ACTION_BUSINESS_EXAMPLE_SET: &str = "BusinessExampleSet"; // 业务更
 
 // 所有权限列表
 #[allow(unused)]
-pub const ACTIONS: [&str; 20] = [
+pub const ACTIONS: [&str; 21] = [
     // 通用权限
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -44,6 +46,8 @@ pub const ACTIONS: [&str; 20] = [
     ACTION_SCHEDULE_REPLACE,
     ACTION_SCHEDULE_TRIGGER,
     // 业务权限
+    // config
+    ACTION_BUSINESS_CONFIG_FEE_TO,
     // token
     ACTION_BUSINESS_TOKEN_BALANCE_BY,
     ACTION_BUSINESS_TOKEN_DEPOSIT,
@@ -75,6 +79,8 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_REPLACE => Permission::by_permit(name),
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
             // 业务权限
+            // config
+            ACTION_BUSINESS_CONFIG_FEE_TO => Permission::by_permit(name),
             // token
             ACTION_BUSINESS_TOKEN_BALANCE_BY => Permission::by_permit(name),
             ACTION_BUSINESS_TOKEN_DEPOSIT => Permission::by_forbid(name), // default anyone
@@ -103,6 +109,12 @@ pub use super::super::v000::types::{
 };
 
 // 业务权限
+
+// config
+#[allow(unused)]
+pub fn has_business_config_fee_to() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_CONFIG_FEE_TO, false)
+}
 
 // token
 #[allow(unused)]

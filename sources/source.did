@@ -243,6 +243,8 @@ service : (opt CanisterInitialArg) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
+  config_fee_to_query : () -> (opt Account);
+  config_fee_to_replace : (opt Account) -> (opt Account);
   pair_create : (TokenPairPool) -> (BusinessResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
@@ -282,12 +284,14 @@ service : (opt CanisterInitialArg) -> {
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
   test_withdraw_all_tokens : (vec principal) -> (vec text);
+  token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
   token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
   token_withdraw : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
+  tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
