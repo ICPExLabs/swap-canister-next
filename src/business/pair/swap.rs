@@ -74,11 +74,11 @@ async fn pair_swap_exact_tokens_for_tokens(
     args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
 ) -> TokenPairSwapTokensResult {
-    inner_swap_exact_tokens_for_tokens(args, retries)
+    inner_pair_swap_exact_tokens_for_tokens(args, retries)
         .await
         .into()
 }
-async fn inner_swap_exact_tokens_for_tokens(
+async fn inner_pair_swap_exact_tokens_for_tokens(
     args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
@@ -170,11 +170,11 @@ async fn pair_swap_tokens_for_exact_tokens(
     args: TokenPairSwapTokensForExactTokensArgs,
     retries: Option<u8>,
 ) -> TokenPairSwapTokensResult {
-    inner_swap_tokens_for_exact_tokens(args, retries)
+    inner_pair_swap_tokens_for_exact_tokens(args, retries)
         .await
         .into()
 }
-async fn inner_swap_tokens_for_exact_tokens(
+async fn inner_pair_swap_tokens_for_exact_tokens(
     args: TokenPairSwapTokensForExactTokensArgs,
     retries: Option<u8>,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
