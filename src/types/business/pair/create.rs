@@ -1,7 +1,4 @@
-use candid::CandidType;
-use serde::{Deserialize, Serialize};
-
-use super::TokenPairPool;
+use super::*;
 
 // create token pair pool
 

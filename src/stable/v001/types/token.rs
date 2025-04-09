@@ -1,10 +1,8 @@
 // cSpell:words eurc kinic dolr goldao trax neutrinite sneed elna icfc yuku motoko icpcc origyn dogmi icvc nfid nfidw draggin
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
+use super::*;
 
 // =================================== token info ===================================
 

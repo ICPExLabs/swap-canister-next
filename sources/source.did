@@ -16,7 +16,6 @@ type BusinessError = variant {
   Expired : nat64;
 };
 type BusinessResult = variant { Ok; Err : BusinessError };
-type CanisterInitialArg = record { schedule : opt nat };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -38,6 +37,8 @@ type DefiniteCanisterSettings = record {
   compute_allocation : nat;
 };
 type ExampleVec = record { vec_data : nat64 };
+type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
+type InitArgs = variant { V0 : InitArg; V1 : InitArg };
 type InnerLP = record {
   fee : nat;
   decimals : nat8;
@@ -226,7 +227,7 @@ type TransferFromError = variant {
   TooOld;
   InsufficientFunds : record { balance : nat };
 };
-service : (opt CanisterInitialArg) -> {
+service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   business_example_cell_query : () -> (text) query;
   business_example_cell_set : (text) -> ();

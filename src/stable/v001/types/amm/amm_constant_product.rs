@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 /// 常数乘积做市商（Constant Product AMM）
 /// - 核心公式：x * y = k（x、y 为两资产数量，k 为常数）
 /// - 代表项目：Uniswap V2/V3、SushiSwap、PancakeSwap
@@ -7,10 +5,9 @@ use std::collections::HashMap;
 ///   - 简单高效，适合大多数交易场景。
 ///   - 大额交易时滑点显著（价格变化剧烈）。
 ///   - Uniswap V3 引入「集中流动性」，允许 LP 设定价格区间，提升资本效率。
-use candid::{CandidType, Nat};
-use ic_canister_kit::{times::now, types::CanisterId};
-use icrc_ledger_types::icrc1::account::{Account, Subaccount};
-use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use super::*;
 
 use crate::{
     types::{
@@ -186,7 +183,7 @@ impl SwapV2MarketMaker {
     }
 
     fn update(&mut self, balance0: Nat, balance1: Nat, _reserve0: Nat, _reserve1: Nat) {
-        let block_timestamp = now().into_inner() as u64;
+        let block_timestamp = ic_canister_kit::times::now().into_inner() as u64;
         let time_elapsed = block_timestamp - self.block_timestamp_last;
         if time_elapsed > 0 && _reserve0 > *ZERO && _reserve1 > *ZERO {
             let e = Nat::from(time_elapsed);

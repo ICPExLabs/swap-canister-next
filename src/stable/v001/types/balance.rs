@@ -1,15 +1,13 @@
-use core::panic;
+use icrc_ledger_types::icrc1::account::DEFAULT_SUBACCOUNT;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
 };
 
-use candid::{CandidType, Nat, Principal};
-use ic_canister_kit::types::{Bound, CanisterId, StableBTreeMap, Storable};
-use icrc_ledger_types::icrc1::account::{Account, DEFAULT_SUBACCOUNT};
+use super::*;
 
-use super::with_mut_state_without_record;
+use super::super::super::with_mut_state_without_record;
 
 #[derive(
     Debug, Serialize, Deserialize, CandidType, Hash, Eq, PartialEq, Clone, PartialOrd, Ord,
@@ -195,19 +193,17 @@ impl TokenBalanceLocks {
             // if not true, panic
             #[allow(clippy::panic)] // ? SAFETY
             {
-                panic!(
-                    "Unlock a token account ({}) that is not locked.",
-                    format!(
-                        "{}|{}.{}",
-                        token_account.token.to_text(),
-                        token_account.account.owner.to_text(),
-                        token_account
-                            .account
-                            .subaccount
-                            .map(hex::encode)
-                            .unwrap_or_default()
-                    )
-                )
+                let tips = format!(
+                    "Unlock a token account (\"{}|{}.{}\") that is not locked.",
+                    token_account.token.to_text(),
+                    token_account.account.owner.to_text(),
+                    token_account
+                        .account
+                        .subaccount
+                        .map(hex::encode)
+                        .unwrap_or_default()
+                );
+                panic!("{}", tips)
             }
         }
 

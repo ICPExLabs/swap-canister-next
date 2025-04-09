@@ -1,10 +1,4 @@
-use candid::{CandidType, Nat};
-use icrc_ledger_types::icrc1::account::Account;
-use serde::{Deserialize, Serialize};
-
-use crate::types::{BusinessError, Deadline};
-
-use super::TokenPairPool;
+use super::*;
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairSwapTokensSuccess {

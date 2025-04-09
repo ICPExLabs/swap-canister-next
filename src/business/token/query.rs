@@ -51,10 +51,7 @@ fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
 
 // anyone can query owner balance
 #[ic_cdk::query]
-fn token_balance(
-    token: CanisterId,
-    subaccount: Option<icrc_ledger_types::icrc1::account::Subaccount>,
-) -> candid::Nat {
+fn token_balance(token: CanisterId, subaccount: Option<Subaccount>) -> candid::Nat {
     token_balance_by(
         token,
         Account {
@@ -66,9 +63,7 @@ fn token_balance(
 
 // anyone can query owner balance
 #[ic_cdk::query]
-fn tokens_balance(
-    subaccount: Option<icrc_ledger_types::icrc1::account::Subaccount>,
-) -> Vec<(CanisterId, candid::Nat)> {
+fn tokens_balance(subaccount: Option<Subaccount>) -> Vec<(CanisterId, candid::Nat)> {
     tokens_balance_by(Account {
         owner: caller(),
         subaccount,
