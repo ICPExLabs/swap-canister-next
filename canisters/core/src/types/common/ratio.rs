@@ -9,14 +9,11 @@ pub struct SwapRatio {
 
 impl SwapRatio {
     pub fn new(numerator: u32, denominator: u32) -> Self {
-        #[allow(clippy::panic)] // ? SAFETY
-        if denominator == 0 {
-            panic!("Denominator cannot be zero");
-        }
-        #[allow(clippy::panic)] // ? SAFETY
-        if denominator < numerator {
-            panic!("Denominator cannot be less than numerator");
-        }
+        assert!(0 < denominator, "Denominator cannot be zero");
+        assert!(
+            numerator < denominator,
+            "Denominator cannot be less than numerator"
+        );
         Self {
             numerator,
             denominator,

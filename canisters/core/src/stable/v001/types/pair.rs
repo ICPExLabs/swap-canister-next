@@ -169,10 +169,7 @@ impl TokenPairs {
         amounts.push(amount_in.clone());
         let mut last_amount_in = amount_in.clone();
 
-        #[allow(clippy::panic)] // ? SAFETY
-        if path.len() != pas.len() {
-            panic!("path.len() != pas.len()");
-        }
+        assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
 
         let mut pool_accounts = vec![];
         for (pool, pa) in path.iter().zip(pas.iter()) {
@@ -212,10 +209,7 @@ impl TokenPairs {
         amounts.push(amount_out.clone());
         let mut last_amount_out = amount_out.clone();
 
-        #[allow(clippy::panic)] // ? SAFETY
-        if path.len() != pas.len() {
-            panic!("path.len() != pas.len()");
-        }
+        assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
 
         let mut pool_accounts = vec![];
         for (pool, pa) in path.iter().zip(pas.iter()).rev() {

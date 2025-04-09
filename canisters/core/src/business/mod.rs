@@ -32,10 +32,7 @@ where
     A: FnOnce(u8) -> R2 + Send,
     E: FnOnce(Vec<TokenAccount>) -> T,
 {
-    #[allow(clippy::panic)] // ? SAFETY
-    if 5 < retries {
-        panic!("Too many retries");
-    }
+    assert!(retries < 10, "Too many retries");
 
     match with_mut_state_without_record(|s| s.business_token_balance_lock(token_accounts)) {
         Ok(guard) => {

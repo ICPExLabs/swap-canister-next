@@ -255,6 +255,7 @@ test "token_balance_of" "$(dfx --identity default canister call core token_balan
 test "tokens_balance_of" "$(dfx --identity default canister call core tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 0 : nat;}'
 
 blue "\n🚩 1.1 business tokens deposit"
+test "token_deposit" "$(dfx --identity default canister call core token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=5_000_000_000_000_000_000: nat }, opt 100)" 2>&1)" 'Too many retries'
 test "token_deposit" "$(dfx --identity default canister call core token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=5_000_000_000_000_000_000: nat }, null)" 2>&1)" '( variant { Err = variant { TransferFromError = variant { InsufficientAllowance = record { allowance = 0 : nat } } } }, )'
 test "icrc2_approve token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc2_approve "(record { spender=record{owner=principal \"$core\";}; amount=1_000_000_000_000_000_000:nat })" 2>&1)" '(variant { Ok = 2 : nat })'
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(9_999_998_000_000_000_000 : nat)'
@@ -568,7 +569,7 @@ end_time=$(date +%H:%M:%S)
 end_time_s=$(date +%s)
 spend=$(($end_time_s - $start_time_s))
 spend_minutes=$(($spend / 60))
-echo "✅  $start_time -> $end_time" "Total: $spend seconds ($spend_minutes mins) 🎉🎉🎉\n"
+echo "✅ $start_time -> $end_time" "Total: $spend seconds ($spend_minutes mins) 🎉🎉🎉\n"
 
 say test successful
 

@@ -128,17 +128,18 @@ impl TokenBalances {
     // token deposit and withdraw
     pub fn token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
         let token_account = TokenAccount::new(token, account);
+
         let balance = self.0.get(&token_account).unwrap_or_default();
+
         let new_balance = TokenBalance(balance.0 + amount);
         self.0.insert(token_account, new_balance);
     }
     pub fn token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
         let token_account = TokenAccount::new(token, account);
+
         let balance = self.0.get(&token_account).unwrap_or_default();
-        #[allow(clippy::panic)] // ? SAFETY
-        if balance.0 < amount {
-            panic!("Insufficient balance.");
-        }
+        assert!(amount <= balance.0, "Insufficient balance.");
+
         let new_balance = TokenBalance(balance.0 - amount);
         if new_balance.0 == 0_u64 {
             self.0.remove(&token_account);
@@ -191,20 +192,17 @@ impl TokenBalanceLocks {
                 continue; // locked is right
             }
             // if not true, panic
-            #[allow(clippy::panic)] // ? SAFETY
-            {
-                let tips = format!(
-                    "Unlock a token account (\"{}|{}.{}\") that is not locked.",
-                    token_account.token.to_text(),
-                    token_account.account.owner.to_text(),
-                    token_account
-                        .account
-                        .subaccount
-                        .map(hex::encode)
-                        .unwrap_or_default()
-                );
-                panic!("{}", tips)
-            }
+            let tips = format!(
+                "Unlock a token account (\"{}|{}.{}\") that is not locked.",
+                token_account.token.to_text(),
+                token_account.account.owner.to_text(),
+                token_account
+                    .account
+                    .subaccount
+                    .map(hex::encode)
+                    .unwrap_or_default()
+            );
+            ic_cdk::trap(&tips); // never be here
         }
 
         // then unlock
