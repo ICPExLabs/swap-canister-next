@@ -90,15 +90,15 @@ pub struct TokenBalance(Nat);
 
 impl Storable for TokenBalance {
     fn to_bytes(&self) -> Cow<[u8]> {
-        #[allow(clippy::unwrap_used)] // ? SAFETY
-        let bytes = candid::encode_one(self.0.clone()).unwrap();
-        Cow::Owned(bytes)
+        use ic_canister_kit::common::trap;
+        let bytes = candid::encode_one(self.0.clone());
+        Cow::Owned(trap(bytes))
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
-        #[allow(clippy::unwrap_used)] // ? SAFETY
-        let nat = candid::decode_one(&bytes).unwrap();
-        Self(nat)
+        use ic_canister_kit::common::trap;
+        let nat = candid::decode_one(&bytes);
+        Self(trap(nat))
     }
 
     const BOUND: Bound = Bound::Unbounded;
@@ -191,7 +191,7 @@ impl TokenBalanceLocks {
             if self.0.get(token_account).is_some_and(|lock| *lock) {
                 continue; // locked is right
             }
-            // if not true, panic
+            // if not true, terminator
             let tips = format!(
                 "Unlock a token account (\"{}|{}.{}\") that is not locked.",
                 token_account.token.to_text(),

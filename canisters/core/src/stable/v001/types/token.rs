@@ -26,9 +26,9 @@ impl TokenInfo {
         decimals: u8,
         fee: u128,
     ) -> Self {
-        #[allow(clippy::unwrap_used)] // ? SAFETY
+        use ic_canister_kit::common::trap;
         Self {
-            canister_id: CanisterId::from_text(canister_id).unwrap(),
+            canister_id: trap(CanisterId::from_text(canister_id)),
             name: name.into(),
             symbol: symbol.into(),
             decimals,
