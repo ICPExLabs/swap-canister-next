@@ -1,0 +1,13 @@
+[package]
+name = "common"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]

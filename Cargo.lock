@@ -142,6 +142,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.0.1"
+
+[[package]]
+name = "core"
+version = "0.0.1"
+dependencies = [
+ "candid",
+ "common",
+ "hex",
+ "ic-canister-kit",
+ "ic-cdk",
+ "icrc-ledger-types",
+ "num-bigint",
+ "once_cell",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "sha2",
+ "strum 0.27.1",
+ "strum_macros 0.27.1",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -788,25 +812,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 2.0.100",
-]
-
-[[package]]
-name = "swap"
-version = "0.0.1"
-dependencies = [
- "candid",
- "hex",
- "ic-canister-kit",
- "ic-cdk",
- "icrc-ledger-types",
- "num-bigint",
- "once_cell",
- "serde",
- "serde_bytes",
- "serde_json",
- "sha2",
- "strum 0.27.1",
- "strum_macros 0.27.1",
 ]
 
 [[package]]

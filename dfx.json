@@ -1,16 +1,16 @@
 {
   "canisters": {
-    "swap": {
+    "core": {
       "type": "custom",
       "build": [
-        "cargo test update_candid -- --nocapture",
-        "cargo build --target wasm32-unknown-unknown --release",
-        "ic-wasm target/wasm32-unknown-unknown/release/swap.wasm -o sources/source_opt.wasm metadata candid:service -f sources/source.did -v public",
-        "ic-wasm sources/source_opt.wasm -o sources/source_opt.wasm shrink"
+        "cargo test -p core update_candid -- --nocapture",
+        "cargo build -p core --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/core.wasm -o canisters/core/sources/source_opt.wasm metadata candid:service -f canisters/core/sources/source.did -v public",
+        "ic-wasm canisters/core/sources/source_opt.wasm -o canisters/core/sources/source_opt.wasm shrink"
       ],
       "gzip": true,
-      "wasm": "sources/source_opt.wasm",
-      "candid": "sources/source.did"
+      "wasm": "canisters/core/sources/source_opt.wasm",
+      "candid": "canisters/core/sources/source.did"
     },
     "token_ICP": {
       "type": "custom",

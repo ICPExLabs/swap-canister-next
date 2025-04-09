@@ -2,6 +2,7 @@
     "material-icon-theme.folders.associations": {
         "business": "interface",
         "stable": "store",
+        "canisters": "server",
     },
     "cSpell.words": [
         "2vxsx-fae",
