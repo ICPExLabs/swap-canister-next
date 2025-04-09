@@ -9,7 +9,6 @@ pub use std::collections::{HashMap, HashSet};
 #[allow(unused)]
 pub use std::fmt::Display;
 
-#[allow(clippy::panic)] // ? SAFETY
 #[allow(unused_variables)]
 pub trait Business:
     Pausable<PauseReason>
@@ -22,24 +21,24 @@ pub trait Business:
 {
     // config
     fn business_config_fee_to_query(&self) -> Option<&Account> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // tokens
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // token balance lock
@@ -47,18 +46,18 @@ pub trait Business:
         &mut self,
         token_accounts: &'a [TokenAccount],
     ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // token deposit and withdraw
     fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_transfer(
         &mut self,
@@ -68,18 +67,18 @@ pub trait Business:
         amount_without_fee: Nat,
         fee: Nat,
     ) -> Nat {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // pair
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_pool_maker_get(&self, pa: &PairAmm) -> Option<&MarketMaker> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_pool_create(&mut self, pa: PairAmm) -> Result<(), BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // pair liquidity
@@ -89,7 +88,7 @@ pub trait Business:
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_check_liquidity_removable(
         &self,
@@ -97,7 +96,7 @@ pub trait Business:
         from: &Account,
         liquidity: &Nat,
     ) -> Result<(), BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
@@ -105,7 +104,7 @@ pub trait Business:
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     // pair swap
@@ -115,7 +114,7 @@ pub trait Business:
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
@@ -123,7 +122,7 @@ pub trait Business:
         args: TokenPairSwapTokensForExactTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
@@ -131,55 +130,55 @@ pub trait Business:
         args: TokenPairSwapByLoanArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_query(&self) -> String {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_update(&mut self, test: String) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_cell_query(&self) -> crate::stable::ExampleCell {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_cell_update(&mut self, test: String) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_vec_query(&self) -> Vec<crate::stable::ExampleVec> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_vec_push(&mut self, test: u64) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_vec_pop(&mut self) -> Option<crate::stable::ExampleVec> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_map_query(&self) -> HashMap<u64, String> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_map_update(&mut self, key: u64, value: Option<String>) -> Option<String> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_log_query(&self) -> Vec<String> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_log_update(&mut self, item: String) -> u64 {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 
     fn business_example_priority_queue_query(&self) -> Vec<crate::stable::ExampleVec> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_priority_queue_push(&mut self, item: u64) {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_example_priority_queue_pop(&mut self) -> Option<crate::stable::ExampleVec> {
-        panic!("Not supported operation by this version.")
+        ic_cdk::trap("Not supported operation by this version.")
     }
 }
 

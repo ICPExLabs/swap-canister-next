@@ -26,8 +26,8 @@ function check {
             green "✅ Passed: $1 -> $2 -> $3"
         else
             red "❌ Failed: $1"
-            green "Expected: $2"
-            yellow "Got: $3"
+            green "Expected: $3"
+            yellow "Got: $2"
             red "Line: ./test.sh:$5 👉 $4"
             exit 1
         fi
