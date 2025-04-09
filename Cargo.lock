@@ -332,19 +332,18 @@ dependencies = [
 
 [[package]]
 name = "ic-canister-kit"
-version = "1.0.21"
+version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f122425e8ad18a42468aa205e6a307838b679800e5fe6e5947f0e3f12ac0a6ab"
+checksum = "8148e937df85d1d2e30b401aa1a017034f653d013bced0b7e14b9d24e6bb69ef"
 dependencies = [
  "candid",
  "ciborium",
- "crc32fast",
- "hex",
  "ic-cdk",
  "ic-cdk-timers",
+ "ic-ledger-types",
  "ic-stable-structures",
+ "icrc-ledger-types",
  "serde",
- "sha2",
 ]
 
 [[package]]
@@ -387,6 +386,21 @@ dependencies = [
  "serde",
  "serde_bytes",
  "slotmap",
+]
+
+[[package]]
+name = "ic-ledger-types"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a7103dea96107c8b1e49d6e80ab452ab48e9f3594d618dbb46449381f4f0a01"
+dependencies = [
+ "candid",
+ "crc32fast",
+ "hex",
+ "ic-cdk",
+ "serde",
+ "serde_bytes",
+ "sha2",
 ]
 
 [[package]]

@@ -18,8 +18,19 @@ pub use super::permission::*;
 #[allow(unused)]
 pub use super::schedule::schedule_task;
 
-#[allow(unused)]
-pub use crate::types::*;
+// 初始化参数
+#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
+pub struct InitArg {
+    pub supers: Option<Vec<UserId>>, // init super administrators or deployer
+    pub schedule: Option<DurationNanos>, // init scheduled task or not
+}
+
+// 升级参数
+#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
+pub struct UpgradeArg {
+    pub supers: Option<Vec<UserId>>, // add new super administrators of not
+    pub schedule: Option<DurationNanos>, // init scheduled task or not
+}
 
 mod amm;
 mod balance;
