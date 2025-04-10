@@ -18,6 +18,35 @@ impl Business for InnerState {
         trap(remaining_capacity.ok_or("exceed max memory size"))
     }
 
+    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
+        if self
+            .business_data
+            .core_canister_id
+            .is_some_and(|core| core == *caller)
+        {
+            return Ok(());
+        }
+        Err("Only Core canister is allowed to append blocks to an Archive Node".into())
+    }
+    fn business_blocks_append(&mut self, blocks: Vec<Vec<u8>>) {
+        self.business_remaining_capacity(); // would be failed if exceed max memory size
+        ic_cdk::println!(
+            "[archive node] append_blocks(): archive size: {} blocks, appending {} blocks",
+            self.blocks.blocks_len(),
+            blocks.len()
+        );
+        for block in &blocks {
+            self.blocks.append_block(block);
+        }
+        if self.blocks.total_block_size() > self.business_data.max_memory_size_bytes {
+            ic_cdk::trap("No space left");
+        }
+        ic_cdk::println!(
+            "[archive node] append_blocks(): done. archive size: {} blocks",
+            self.blocks.blocks_len()
+        );
+    }
+
     fn business_example_query(&self) -> String {
         self.example_data.clone()
     }

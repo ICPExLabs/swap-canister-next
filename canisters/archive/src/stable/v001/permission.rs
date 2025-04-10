@@ -83,6 +83,12 @@ pub use super::super::v000::types::{
 
 // 业务权限
 
+pub fn has_business_blocks_append() -> Result<(), String> {
+    use super::super::Business;
+    let caller = ic_canister_kit::identity::caller();
+    crate::types::with_state(|s| s.business_blocks_append_authorized(&caller))
+}
+
 #[allow(unused)]
 pub fn has_business_example_query() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_EXAMPLE_QUERY, false)

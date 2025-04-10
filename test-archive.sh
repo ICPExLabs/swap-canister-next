@@ -67,9 +67,11 @@ if [ -z "$archive" ]; then
     exit 1
 fi
 
-blue "\n🚩 1 business get_block_pb"
+blue "\n🚩 1 business"
 test "get_block_pb" "$(dfx canister call archive get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "remaining_capacity" "$(dfx --identity alice canister call archive remaining_capacity 2>&1)" '(10_737_418_240 : nat64)'
+test "append_blocks" "$(dfx --identity alice canister call archive append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'
+test "append_blocks" "$(dfx canister call archive append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" '()'
 test "token_balance_of" "$(dfx --identity alice canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" 'You can only query your own balance'
 test "token_balance_by" "$(dfx --identity default canister call archive token_balance_by "(principal \"$token_ICP\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
 test "token_balance_of" "$(dfx --identity default canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'
