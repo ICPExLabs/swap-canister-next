@@ -9,6 +9,19 @@ impl Business for InnerState {
         let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
         self.blocks.get_block(adjusted_height)
     }
+    fn business_blocks_query(&self, start: BlockIndex, length: BlockIndex) -> Vec<Vec<u8>> {
+        let length = length.min(MAX_BLOCKS_PER_REQUEST);
+        let blocks_len = self.blocks.blocks_len();
+        let start = start.min(blocks_len);
+        let end = std::cmp::min(start + length, blocks_len);
+        let mut blocks = Vec::with_capacity((end - start) as usize);
+        for height in start..end {
+            let block = self.business_block_query(height);
+            let block = trap(block.ok_or(format!("can not find block: {height}")));
+            blocks.push(block);
+        }
+        blocks
+    }
 
     fn business_remaining_capacity(&self) -> u64 {
         let remaining_capacity = self

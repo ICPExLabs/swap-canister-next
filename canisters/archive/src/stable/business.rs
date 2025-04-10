@@ -22,6 +22,9 @@ pub trait Business:
     fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_blocks_query(&self, start: BlockIndex, length: BlockIndex) -> Vec<Vec<u8>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     fn business_remaining_capacity(&self) -> u64 {
         ic_cdk::trap("Not supported operation by this version.")
@@ -87,6 +90,9 @@ pub trait Business:
 impl Business for State {
     fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
         self.get().business_block_query(block_height)
+    }
+    fn business_blocks_query(&self, start: BlockIndex, length: BlockIndex) -> Vec<Vec<u8>> {
+        self.get().business_blocks_query(start, length)
     }
 
     fn business_remaining_capacity(&self) -> u64 {

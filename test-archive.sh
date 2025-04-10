@@ -74,6 +74,8 @@ test "append_blocks" "$(dfx --identity alice canister call archive append_blocks
 test "append_blocks" "$(dfx canister call archive append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" '()'
 test "get_block_pb" "$(dfx canister call archive get_block_pb "(blob \"\")" 2>&1)" '(blob ' '(blob "' '(blob "a' # ! '(blob "aa' # why?
 test "remaining_capacity" "$(dfx --identity alice canister call archive remaining_capacity 2>&1)" '(10_737_418_239 : nat64)'
+test "iter_blocks_pb" "$(dfx canister call archive iter_blocks_pb "(blob \"\10\64\")" 2>&1)" '(blob ' '(blob "' '(blob "a' # ! '(blob "aa' # why?
+
 test "token_balance_of" "$(dfx --identity alice canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" 'You can only query your own balance'
 test "token_balance_by" "$(dfx --identity default canister call archive token_balance_by "(principal \"$token_ICP\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
 test "token_balance_of" "$(dfx --identity default canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(0 : nat)'

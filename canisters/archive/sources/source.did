@@ -92,6 +92,7 @@ service : (opt InitArgs) -> {
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
   get_block_pb : (blob) -> (blob) query;
+  iter_blocks_pb : (blob) -> (blob) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();

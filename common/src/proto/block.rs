@@ -15,3 +15,16 @@ pub struct GetBlockResponse {
     #[prost(message, optional, tag = "1")]
     pub block: ::core::option::Option<EncodedBlock>,
 }
+/// Get many blocks
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct GetBlocksRequest {
+    #[prost(uint64, tag = "1")]
+    pub start: u64,
+    #[prost(uint64, tag = "2")]
+    pub length: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetBlocksResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub blocks: ::prost::alloc::vec::Vec<EncodedBlock>,
+}

@@ -21,3 +21,20 @@ fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
     };
     trap(to_proto_bytes(&response))
 }
+
+/// arg: GetBlocksRequest
+/// ret: GetBlocksResponse
+#[ic_cdk::query]
+fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
+    let GetBlocksRequest { start, length } = trap(from_proto_bytes(&arg[..]));
+    let response = with_state(|s| s.business_blocks_query(start, length));
+    let response = GetBlocksResponse {
+        blocks: response
+            .into_iter()
+            .map(|bytes| EncodedBlock {
+                block: bytes.into(),
+            })
+            .collect(),
+    };
+    trap(to_proto_bytes(&response))
+}

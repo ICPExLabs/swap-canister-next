@@ -90,6 +90,8 @@ pub struct CanisterKit {
 
 // 默认的最大内存
 const DEFAULT_MAX_MEMORY_SIZE: u64 = 10 * 1024 * 1024 * 1024; // 10 GB
+// 最大请求块数
+pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {

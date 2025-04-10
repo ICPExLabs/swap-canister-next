@@ -2,19 +2,24 @@ syntax = "proto3";
 
 package block;
 
-   
-
 message EncodedBlock {
-    bytes block = 1; 
-  }
+    bytes block = 1;
+}
 
 // Get a single block
 message GetBlockRequest {
     uint64 block_height = 1;
-  }
-  
-  
-  
-  message GetBlockResponse {
-    optional EncodedBlock block = 1; 
-  }    
+}
+message GetBlockResponse {
+    optional EncodedBlock block = 1;
+}
+
+
+// Get many blocks
+message GetBlocksRequest {
+    uint64 start = 1;
+    uint64 length = 2;
+}
+message GetBlocksResponse {
+    repeated EncodedBlock blocks = 1;
+}
