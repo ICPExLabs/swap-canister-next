@@ -19,6 +19,10 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -70,6 +74,10 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+        self.get().business_block_query(block_height)
+    }
+
     fn business_example_query(&self) -> String {
         self.get().business_example_query()
     }

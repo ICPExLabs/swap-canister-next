@@ -28,7 +28,7 @@ function check {
             red "❌ Failed: $1"
             green "Expected: $3"
             yellow "Got: $2"
-            red "Line: ./test.sh:$5 👉 $4"
+            red "Line: ./test-archive.sh:$5 👉 $4"
             exit 1
         fi
     fi
@@ -57,7 +57,7 @@ cargo clippy
 
 # ! 1. 测试 archive
 red "\n=========== 1. archive ===========\n"
-dfx canister create archive --specified-id "piwiu-wiaaa-aaaaj-azzka-cai" # --with-cycles 50T
+dfx canister create archive --specified-id "bkyz2-fmaaa-aaaaa-qaaaq-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(null)" archive
 archive=$(canister_id "archive")
 blue "Archive Canister: $archive"
@@ -68,7 +68,7 @@ if [ -z "$archive" ]; then
 fi
 
 blue "\n🚩 1 business get_block_pb"
-test "get_block_pb" "$(dfx canister call archive get_block_pb 2>&1)" '"ICP"' '"ckUSDT'
+test "get_block_pb" "$(dfx canister call archive get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "token_query" "$(dfx --identity alice canister call archive token_query "(principal \"$token_ICP\")" 2>&1)" '"Internet Computer"'
 test "token_balance_of" "$(dfx --identity alice canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" 'You can only query your own balance'
 test "token_balance_by" "$(dfx --identity default canister call archive token_balance_by "(principal \"$token_ICP\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'

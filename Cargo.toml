@@ -26,7 +26,7 @@ expect_used = "deny"
 panic = "deny"
 
 [workspace.dependencies]
-common = { path = "./common" }
+common = { path = "common" }
 
 candid = "0.10.13"
 ic-cdk = "0.17.1"

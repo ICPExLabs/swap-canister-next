@@ -18,6 +18,8 @@
         "nocapture",
         "Pausable",
         "Permissable",
+        "prost",
+        "protos",
         "rlib",
         "rustdoc",
         "Schedulable",

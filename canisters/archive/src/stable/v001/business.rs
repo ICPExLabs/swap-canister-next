@@ -1,7 +1,18 @@
+use ic_canister_kit::common::trap;
+
 use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+        let adjusted_height = trap(
+            block_height
+                .checked_sub(self.business_data.block_height_offset)
+                .ok_or("block height too small."),
+        );
+        self.blocks.get_block(adjusted_height)
+    }
+
     fn business_example_query(&self) -> String {
         self.example_data.clone()
     }

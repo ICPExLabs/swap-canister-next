@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package block;
+
+   
+
+message EncodedBlock {
+    bytes block = 1; 
+  }
+
+// Get a single block
+message GetBlockRequest {
+    uint64 block_height = 1;
+  }
+  
+  
+  
+  message GetBlockResponse {
+    optional EncodedBlock block = 1; 
+  }    
