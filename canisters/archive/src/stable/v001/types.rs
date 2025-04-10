@@ -20,9 +20,13 @@ pub use super::schedule::schedule_task;
 
 // 初始化参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArg {
+pub struct InitArgV1 {
     pub supers: Option<Vec<UserId>>, // init super administrators or deployer
     pub schedule: Option<DurationNanos>, // init scheduled task or not
+
+    pub max_memory_size_bytes: Option<u64>,
+    pub core_canister_id: Option<CanisterId>,
+    pub block_height_offset: Option<u64>,
 }
 
 // 升级参数
@@ -84,12 +88,27 @@ pub struct CanisterKit {
     pub schedule: Schedule,       // 记录定时任务 // ? 堆内存 序列化
 }
 
+// 默认的最大内存
+const DEFAULT_MAX_MEMORY_SIZE: u64 = 10 * 1024 * 1024 * 1024; // 10 GB
+
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
     pub max_memory_size_bytes: u64,           // 最大使用内存
-    pub block_height_offset: u64,             // 本罐子记录的偏移量
     pub core_canister_id: Option<CanisterId>, // 宿主罐子, 业务相关的 update 接口，都要检查是否宿主罐子发起的
+    pub block_height_offset: u64,             // 本罐子记录的偏移量
     pub last_upgrade_timestamp_ns: u64,       // 记录上次升级时间戳
+}
+
+impl BusinessData {
+    pub fn init(&mut self, arg: Box<InitArgV1>) {
+        self.max_memory_size_bytes = arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
+        self.core_canister_id = match arg.core_canister_id {
+            Some(core_canister_id) => Some(core_canister_id),
+            None => Some(ic_canister_kit::identity::caller()),
+        };
+        self.block_height_offset = arg.block_height_offset.unwrap_or(0);
+        self.last_upgrade_timestamp_ns = 0;
+    }
 }
 
 // 能序列化的和不能序列化的放在一起

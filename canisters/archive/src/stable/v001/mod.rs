@@ -16,12 +16,12 @@ use types::*;
 
 // 初始化
 // ! 第一次部署会执行
-impl Initial<Option<Box<InitArg>>> for InnerState {
-    fn init(&mut self, arg: Option<Box<InitArg>>) {
+impl Initial<Option<Box<InitArgV1>>> for InnerState {
+    fn init(&mut self, arg: Option<Box<InitArgV1>>) {
         let arg = arg.unwrap_or_default(); // ! 就算是 None，也要执行一次
 
         // 超级管理员初始化
-        let supers = arg.supers.unwrap_or_else(|| {
+        let supers = arg.supers.clone().unwrap_or_else(|| {
             vec![caller()] // 默认调用者为超级管理员
         });
 
@@ -38,6 +38,9 @@ impl Initial<Option<Box<InitArg>>> for InnerState {
 
         // 定时任务
         self.schedule_replace(arg.schedule);
+
+        // 业务参数
+        self.business_data.init(arg);
     }
 }
 

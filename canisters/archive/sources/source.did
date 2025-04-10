@@ -20,7 +20,14 @@ type DefiniteCanisterSettings = record {
 };
 type ExampleVec = record { vec_data : nat64 };
 type InitArg = record { supers : opt vec principal; schedule : opt nat };
-type InitArgs = variant { V0 : InitArg; V1 : InitArg };
+type InitArgV1 = record {
+  core_canister_id : opt principal;
+  max_memory_size_bytes : opt nat64;
+  supers : opt vec principal;
+  schedule : opt nat;
+  block_height_offset : opt nat64;
+};
+type InitArgs = variant { V0 : InitArg; V1 : InitArgV1 };
 type LogVisibility = variant {
   controllers;
   public;
