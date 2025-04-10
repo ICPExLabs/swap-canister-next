@@ -28,9 +28,6 @@ impl Initial<Option<Box<InitArg>>> for InnerState {
         let permissions = get_all_permissions(|n| self.parse_permission(n));
         let updated = supers_updated(&maintainers, &permissions);
 
-        ic_cdk::println!("permissions: {:?}", permissions);
-        ic_cdk::println!("updated: {:?}", updated);
-
         // 刷新权限
         self.permission_reset(permissions);
         // 维护人员赋予所有权限
