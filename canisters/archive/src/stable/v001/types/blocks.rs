@@ -10,4 +10,8 @@ impl Blocks {
     pub fn get_block(&self, index: u64) -> Option<Vec<u8>> {
         self.0.get(index)
     }
+
+    pub fn total_block_size(&self) -> u64 {
+        self.0.log_size_bytes()
+    }
 }

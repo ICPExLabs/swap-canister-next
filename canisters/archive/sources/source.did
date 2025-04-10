@@ -106,6 +106,7 @@ service : (opt InitArgs) -> {
   record_find_by_page : (QueryPage, opt RecordSearchArg) -> (PageData) query;
   record_migrate : (nat32) -> (MigratedRecords);
   record_topics : () -> (vec text) query;
+  remaining_capacity : () -> (nat64) query;
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();

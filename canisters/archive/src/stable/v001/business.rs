@@ -5,12 +5,17 @@ use super::types::*;
 
 impl Business for InnerState {
     fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
-        let adjusted_height = trap(
-            block_height
-                .checked_sub(self.business_data.block_height_offset)
-                .ok_or("block height too small."),
-        );
+        let adjusted_height = block_height.checked_sub(self.business_data.block_height_offset);
+        let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
         self.blocks.get_block(adjusted_height)
+    }
+
+    fn business_remaining_capacity(&self) -> u64 {
+        let remaining_capacity = self
+            .business_data
+            .max_memory_size_bytes
+            .checked_sub(self.blocks.total_block_size());
+        trap(remaining_capacity.ok_or("exceed max memory size"))
     }
 
     fn business_example_query(&self) -> String {
