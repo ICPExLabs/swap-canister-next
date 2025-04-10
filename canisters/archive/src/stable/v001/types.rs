@@ -100,7 +100,7 @@ pub struct BusinessData {
 }
 
 impl BusinessData {
-    pub fn init(&mut self, arg: Box<InitArgV1>) {
+    pub fn init(&mut self, arg: InitArgV1) {
         self.max_memory_size_bytes = arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
         self.core_canister_id = match arg.core_canister_id {
             Some(core_canister_id) => Some(core_canister_id),
