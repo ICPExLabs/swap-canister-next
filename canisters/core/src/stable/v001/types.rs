@@ -169,7 +169,7 @@ const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
 const MEMORY_ID_EXAMPLE_VEC: MemoryId = MemoryId::new(101); // 测试 Vec
 const MEMORY_ID_EXAMPLE_MAP: MemoryId = MemoryId::new(102); // 测试 Map
-const MEMORY_ID_EXAMPLE_LOG_ID: MemoryId = MemoryId::new(103); // 测试 Log
+const MEMORY_ID_EXAMPLE_LOG_INDEX: MemoryId = MemoryId::new(103); // 测试 Log
 const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(104); // 测试 Log
 const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试 PriorityQueue
 
@@ -190,7 +190,7 @@ fn init_example_map_data() -> StableBTreeMap<u64, String> {
 }
 
 fn init_example_log_data() -> StableLog<String> {
-    stable::init_log_data(MEMORY_ID_EXAMPLE_LOG_ID, MEMORY_ID_EXAMPLE_LOG_DATA)
+    stable::init_log_data(MEMORY_ID_EXAMPLE_LOG_INDEX, MEMORY_ID_EXAMPLE_LOG_DATA)
 }
 
 fn init_example_priority_queue_data() -> StablePriorityQueue<ExampleVec> {
