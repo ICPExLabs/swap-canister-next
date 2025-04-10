@@ -12,6 +12,18 @@
       "wasm": "canisters/core/sources/source_opt.wasm",
       "candid": "canisters/core/sources/source.did"
     },
+    "archive": {
+      "type": "custom",
+      "build": [
+        "cargo test -p archive update_candid -- --nocapture",
+        "cargo build -p archive --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/archive.wasm -o canisters/archive/sources/source_opt.wasm metadata candid:service -f canisters/archive/sources/source.did -v public",
+        "ic-wasm canisters/archive/sources/source_opt.wasm -o canisters/archive/sources/source_opt.wasm shrink"
+      ],
+      "gzip": true,
+      "wasm": "canisters/archive/sources/source_opt.wasm",
+      "candid": "canisters/archive/sources/source.did"
+    },
     "token_ICP": {
       "type": "custom",
       "wasm": "sources/ic-icrc1-ledger.wasm",
