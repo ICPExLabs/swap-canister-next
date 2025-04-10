@@ -9,18 +9,46 @@ impl Business for InnerState {
         let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
         self.blocks.get_block(adjusted_height)
     }
-    fn business_blocks_query(&self, start: BlockIndex, length: BlockIndex) -> Vec<Vec<u8>> {
+    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<Vec<u8>> {
         let length = length.min(MAX_BLOCKS_PER_REQUEST);
         let blocks_len = self.blocks.blocks_len();
-        let start = start.min(blocks_len);
+        let start = index_start.min(blocks_len);
         let end = std::cmp::min(start + length, blocks_len);
         let mut blocks = Vec::with_capacity((end - start) as usize);
-        for height in start..end {
-            let block = self.business_block_query(height);
-            let block = trap(block.ok_or(format!("can not find block: {height}")));
+        for index in start..end {
+            let block = self.blocks.get_block(index);
+            let block = trap(block.ok_or(format!("can not find block: {index}")));
             blocks.push(block);
         }
         blocks
+    }
+    fn business_blocks_query(
+        &self,
+        start: BlockIndex,
+        length: u64,
+    ) -> Result<Vec<Vec<u8>>, String> {
+        let from_offset = self.business_data.block_height_offset;
+        let length = length.min(MAX_BLOCKS_PER_REQUEST);
+        let local_blocks_range = from_offset..from_offset + self.blocks.blocks_len();
+        let requested_range = start..start + length;
+        if !::common::utils::range::is_sub_range(&requested_range, &local_blocks_range) {
+            return Err(format!(
+                "Requested blocks outside the range stored in the archive node. Requested [{} .. {}]. Available [{} .. {}].",
+                requested_range.start,
+                requested_range.end,
+                local_blocks_range.start,
+                local_blocks_range.end
+            ));
+        }
+        let mut blocks = Vec::with_capacity(length as usize);
+        let offset_requested_range =
+            requested_range.start - from_offset..requested_range.end - from_offset;
+        for index in offset_requested_range {
+            let block = self.blocks.get_block(index);
+            let block = trap(block.ok_or(format!("can not find block: {index}")));
+            blocks.push(block);
+        }
+        Ok(blocks)
     }
 
     fn business_remaining_capacity(&self) -> u64 {

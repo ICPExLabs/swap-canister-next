@@ -75,6 +75,7 @@ test "append_blocks" "$(dfx canister call archive append_blocks "(vec { vec { 0:
 test "get_block_pb" "$(dfx canister call archive get_block_pb "(blob \"\")" 2>&1)" '(blob ' '(blob "' '(blob "a' # ! '(blob "aa' # why?
 test "remaining_capacity" "$(dfx --identity alice canister call archive remaining_capacity 2>&1)" '(10_737_418_239 : nat64)'
 test "iter_blocks_pb" "$(dfx canister call archive iter_blocks_pb "(blob \"\10\64\")" 2>&1)" '(blob ' '(blob "' '(blob "a' # ! '(blob "aa' # why?
+test "get_blocks_pb" "$(dfx canister call archive get_blocks_pb "(blob \"\10\64\")" 2>&1)" '( blob "\12\68\52\65\71\75\65\73\74\65\64\20\62\6c\6f\63\6b\73\20\6f\75\74\73\69\64\65\20\74\68\65\20\72\61\6e\67\65\20\73\74\6f\72\65\64\20\69\6e\20\74\68\65\20\61\72\63\68\69\76\65\20\6e\6f\64\65\2e\20\52\65\71\75\65\73\74\65\64\20\5b\30\20\2e\2e\20\31\30\30\5d\2e\20\41\76\61\69\6c\61\62\6c\65\20\5b\30\20\2e\2e\20\31\5d\2e", )'
 
 test "token_balance_of" "$(dfx --identity alice canister call archive token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" 'You can only query your own balance'
 test "token_balance_by" "$(dfx --identity default canister call archive token_balance_by "(principal \"$token_ICP\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'

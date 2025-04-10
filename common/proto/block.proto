@@ -15,11 +15,26 @@ message GetBlockResponse {
 }
 
 
+// Iter many blocks
+message IterBlocksRequest {
+    uint64 start = 1;
+    uint64 length = 2;
+}
+message IterBlocksResponse {
+    repeated EncodedBlock blocks = 1;
+}
+
 // Get many blocks
 message GetBlocksRequest {
     uint64 start = 1;
     uint64 length = 2;
 }
-message GetBlocksResponse {
+message EncodedBlocks {
     repeated EncodedBlock blocks = 1;
+}
+message GetBlocksResponse {
+    oneof get_blocks_content {
+        EncodedBlocks blocks = 1;
+        string error = 2;
+    }
 }

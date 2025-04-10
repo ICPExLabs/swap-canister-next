@@ -15,6 +15,19 @@ pub struct GetBlockResponse {
     #[prost(message, optional, tag = "1")]
     pub block: ::core::option::Option<EncodedBlock>,
 }
+/// Iter many blocks
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct IterBlocksRequest {
+    #[prost(uint64, tag = "1")]
+    pub start: u64,
+    #[prost(uint64, tag = "2")]
+    pub length: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct IterBlocksResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub blocks: ::prost::alloc::vec::Vec<EncodedBlock>,
+}
 /// Get many blocks
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct GetBlocksRequest {
@@ -24,7 +37,25 @@ pub struct GetBlocksRequest {
     pub length: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetBlocksResponse {
+pub struct EncodedBlocks {
     #[prost(message, repeated, tag = "1")]
     pub blocks: ::prost::alloc::vec::Vec<EncodedBlock>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetBlocksResponse {
+    #[prost(oneof = "get_blocks_response::GetBlocksContent", tags = "1, 2")]
+    pub get_blocks_content: ::core::option::Option<
+        get_blocks_response::GetBlocksContent,
+    >,
+}
+/// Nested message and enum types in `GetBlocksResponse`.
+pub mod get_blocks_response {
+    #[non_exhaustive]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum GetBlocksContent {
+        #[prost(message, tag = "1")]
+        Blocks(super::EncodedBlocks),
+        #[prost(string, tag = "2")]
+        Error(::prost::alloc::string::String),
+    }
 }
