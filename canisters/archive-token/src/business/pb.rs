@@ -12,13 +12,11 @@ use crate::types::*;
 /// ret: GetBlockResponse
 #[ic_cdk::query]
 fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
-    let get_block_request: GetBlockRequest =
+    let proto::GetBlockRequest { block_height } =
         trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode get_block_pb argument"));
-    let response = with_state(|s| s.business_block_query(get_block_request.block_height));
-    let response = GetBlockResponse {
-        block: response.map(|bytes| EncodedBlock {
-            block: bytes.into(),
-        }),
+    let block = with_state(|s| s.business_block_query(block_height));
+    let response = proto::GetBlockResponse {
+        block: block.map(|block| block.into()),
     };
     trap(to_proto_bytes(&response).map_err(|_| "failed to encode get_block_pb response"))
 }
@@ -28,16 +26,13 @@ fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
 /// ret: IterBlocksResponse
 #[ic_cdk::query]
 fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
-    let IterBlocksRequest { start, length } =
-        trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode iter_blocks_pb argument"));
-    let response = with_state(|s| s.business_blocks_iter(start, length));
-    let response = IterBlocksResponse {
-        blocks: response
-            .into_iter()
-            .map(|bytes| EncodedBlock {
-                block: bytes.into(),
-            })
-            .collect(),
+    let proto::IterBlocksRequest {
+        start: index_start,
+        length,
+    } = trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode iter_blocks_pb argument"));
+    let blocks = with_state(|s| s.business_blocks_iter(index_start, length));
+    let response = proto::IterBlocksResponse {
+        blocks: blocks.into_iter().map(|block| block.into()).collect(),
     };
     trap(to_proto_bytes(&response).map_err(|_| "failed to encode iter_blocks_pb response"))
 }
@@ -47,21 +42,18 @@ fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
 /// ret: GetBlocksResponse
 #[ic_cdk::query]
 fn get_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
-    let IterBlocksRequest { start, length } =
-        trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode get_blocks_pb argument"));
-    let response = with_state(|s| s.business_blocks_query(start, length));
+    let proto::GetBlocksRequest {
+        start: height_start,
+        length,
+    } = trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode get_blocks_pb argument"));
+    let response = with_state(|s| s.business_blocks_query(height_start, length));
     let response = match response {
-        Ok(blocks) => get_blocks_response::GetBlocksContent::Blocks(EncodedBlocks {
-            blocks: blocks
-                .into_iter()
-                .map(|bytes| EncodedBlock {
-                    block: bytes.into(),
-                })
-                .collect(),
+        Ok(blocks) => proto::get_blocks_response::GetBlocksContent::Blocks(proto::EncodedBlocks {
+            blocks: blocks.into_iter().map(|block| block.into()).collect(),
         }),
-        Err(message) => get_blocks_response::GetBlocksContent::Error(message),
+        Err(message) => proto::get_blocks_response::GetBlocksContent::Error(message),
     };
-    let response = GetBlocksResponse {
+    let response = proto::GetBlocksResponse {
         get_blocks_content: Some(response),
     };
     trap(to_proto_bytes(&response).map_err(|_| "failed to encode get_blocks_pb response"))

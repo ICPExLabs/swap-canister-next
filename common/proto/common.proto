@@ -5,3 +5,20 @@ package common;
 message Hash {
     bytes hash = 1;
 }
+
+message Account {
+    bytes owner = 1;
+    optional bytes subaccount = 2;
+}
+
+message CanisterId {
+    bytes bytes = 1;
+}
+
+message Nat {
+    bytes bytes = 1;
+}
+
+message UserId {
+    bytes bytes = 1;
+}

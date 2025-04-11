@@ -13,6 +13,13 @@ fn main() {
 
     config
         .out_dir("src/proto")
-        .compile_protos(&["./proto/common.proto", "./proto/block.proto"], &["."])
+        .compile_protos(
+            &[
+                "../common/proto/common.proto",
+                "../common/proto/block.proto",
+                "../common/proto/token.proto",
+            ],
+            &[".."],
+        )
         .unwrap();
 }

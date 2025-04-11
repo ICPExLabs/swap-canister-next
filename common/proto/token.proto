@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package token;
+
+import "common/proto/common.proto";
+
+// deposit
+message DepositToken {
+    common.Account from = 1;
+    common.CanisterId token = 2;
+    common.Nat amount = 3;
+}
+
+// withdraw
+message WithdrawToken {
+    common.Account from = 1;
+    common.CanisterId token = 2;
+    common.Nat amount = 3;
+    common.Account to = 4;
+}
+
+// transfer
+message TransferFee {
+    common.Nat fee = 1;
+    common.Account fee_to = 2;
+}
+message TransferToken {
+    common.Account from = 1;
+    common.CanisterId token = 2;
+    common.Nat amount = 3;
+    optional TransferFee fee = 4;
+    common.Account to = 5;
+}
+
+// transaction
+message TokenTransaction {
+    oneof token_transaction {
+        DepositToken deposit = 1;
+        WithdrawToken withdraw = 2;
+        TransferToken transfer = 3;
+    }
+}
+
+// TokenBlock
+message TokenBlock {
+    common.Hash parent_hash = 1;
+    uint64 timestamp = 2;
+    TokenTransaction transaction = 3;
+}

@@ -1,3 +1,4 @@
+type Account = record { owner : principal; subaccount : opt blob };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -18,7 +19,20 @@ type DefiniteCanisterSettings = record {
   memory_allocation : nat;
   compute_allocation : nat;
 };
+type DepositToken = record { token : principal; from : Account; amount : nat };
 type ExampleVec = record { vec_data : nat64 };
+type GetBlocksArgs = record { start : nat64; length : nat64 };
+type GetBlocksError = variant {
+  BadFirstBlockIndex : record {
+    requested_index : nat64;
+    first_valid_index : nat64;
+  };
+  Other : record { error_message : text; error_code : nat64 };
+};
+type GetTokenBlocksResult = variant {
+  Ok : TokenBlockRange;
+  Err : GetBlocksError;
+};
 type InitArg = record { supers : opt vec principal; schedule : opt nat };
 type InitArgV1 = record {
   core_canister_id : opt principal;
@@ -73,6 +87,31 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
+type TokenBlock = record {
+  transaction : TokenTransaction;
+  timestamp : nat64;
+  parent_hash : blob;
+};
+type TokenBlockRange = record { blocks : vec TokenBlock };
+type TokenTransaction = variant {
+  Withdraw : WithdrawToken;
+  Deposit : DepositToken;
+  Transfer : TransferToken;
+};
+type TransferFee = record { fee : nat; fee_to : Account };
+type TransferToken = record {
+  to : Account;
+  fee : opt TransferFee;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
+type WithdrawToken = record {
+  to : Account;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   append_blocks : (vec blob) -> ();
@@ -92,6 +131,7 @@ service : (opt InitArgs) -> {
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
   get_block_pb : (blob) -> (blob) query;
+  get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;
   iter_blocks_pb : (blob) -> (blob) query;
   pause_query : () -> (bool) query;

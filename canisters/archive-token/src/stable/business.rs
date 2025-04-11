@@ -19,17 +19,24 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
-    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<Vec<u8>> {
+    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<EncodedBlock> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_blocks_query(
         &self,
-        start: BlockIndex,
+        height_start: BlockIndex,
         length: u64,
-    ) -> Result<Vec<Vec<u8>>, String> {
+    ) -> Result<Vec<EncodedBlock>, String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_blocks_get(
+        &self,
+        height_start: BlockIndex,
+        length: u64,
+    ) -> Result<Vec<EncodedBlock>, GetBlocksError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -40,7 +47,7 @@ pub trait Business:
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_blocks_append(&mut self, blocks: Vec<Vec<u8>>) {
+    fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -95,18 +102,25 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
-    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         self.get().business_block_query(block_height)
     }
-    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<Vec<u8>> {
+    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<EncodedBlock> {
         self.get().business_blocks_iter(index_start, length)
     }
     fn business_blocks_query(
         &self,
-        start: BlockIndex,
+        height_start: BlockIndex,
         length: u64,
-    ) -> Result<Vec<Vec<u8>>, String> {
-        self.get().business_blocks_query(start, length)
+    ) -> Result<Vec<EncodedBlock>, String> {
+        self.get().business_blocks_query(height_start, length)
+    }
+    fn business_blocks_get(
+        &self,
+        height_start: BlockIndex,
+        length: u64,
+    ) -> Result<Vec<EncodedBlock>, GetBlocksError> {
+        self.get().business_blocks_get(height_start, length)
     }
 
     fn business_remaining_capacity(&self) -> u64 {
@@ -116,7 +130,7 @@ impl Business for State {
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
         self.get().business_blocks_append_authorized(caller)
     }
-    fn business_blocks_append(&mut self, blocks: Vec<Vec<u8>>) {
+    fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.get_mut().business_blocks_append(blocks)
     }
 

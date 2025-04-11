@@ -10,9 +10,11 @@ pub use crate::stable::*;
 // ===================== business =====================
 
 #[allow(unused)]
-pub use ::common::common::BlockIndex;
+pub use ::common::archive::token::{GetTokenBlocksResult, TokenBlockRange};
 #[allow(unused)]
-pub use ::common::proto::*;
+pub use ::common::common::{BlockIndex, EncodedBlock, GetBlocksArgs, GetBlocksError};
+#[allow(unused)]
+pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};
 

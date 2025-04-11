@@ -9,8 +9,8 @@ impl Blocks {
         Self(inner)
     }
 
-    pub fn get_block(&self, index: u64) -> Option<Vec<u8>> {
-        self.0.get(index)
+    pub fn get_block(&self, index: u64) -> Option<EncodedBlock> {
+        self.0.get(index).map(|block| block.into())
     }
 
     pub fn total_block_size(&self) -> u64 {

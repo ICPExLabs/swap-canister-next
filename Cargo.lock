@@ -188,6 +188,9 @@ version = "0.0.1"
 dependencies = [
  "candid",
  "hex",
+ "ic-canister-kit",
+ "ic-cdk",
+ "icrc-ledger-types",
  "prost",
  "prost-build",
  "serde",

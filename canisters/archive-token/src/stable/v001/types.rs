@@ -37,9 +37,9 @@ pub struct UpgradeArg {
 }
 
 #[allow(unused)]
-pub use crate::types::BlockIndex;
+pub use crate::types::{BlockIndex, EncodedBlock, GetBlocksError};
 #[allow(unused)]
-pub use ::common::proto::*;
+pub use ::common::proto;
 
 mod blocks;
 

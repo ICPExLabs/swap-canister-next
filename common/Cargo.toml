@@ -17,9 +17,13 @@ archive-swap = []
 
 [dependencies]
 candid = { workspace = true }
+ic-cdk = { workspace = true }
+icrc-ledger-types = { workspace = true }
 
 serde = { workspace = true }
 serde_bytes = { workspace = true }
+
+ic-canister-kit = { workspace = true, features = ["identity"] }
 
 hex = { workspace = true }
 

@@ -4,12 +4,12 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
-    fn business_block_query(&self, block_height: BlockIndex) -> Option<Vec<u8>> {
+    fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         let adjusted_height = block_height.checked_sub(self.business_data.block_height_offset);
         let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
         self.blocks.get_block(adjusted_height)
     }
-    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<Vec<u8>> {
+    fn business_blocks_iter(&self, index_start: u64, length: u64) -> Vec<EncodedBlock> {
         let length = length.min(MAX_BLOCKS_PER_REQUEST);
         let blocks_len = self.blocks.blocks_len();
         let start = index_start.min(blocks_len);
@@ -24,14 +24,16 @@ impl Business for InnerState {
     }
     fn business_blocks_query(
         &self,
-        start: BlockIndex,
+        height_start: BlockIndex,
         length: u64,
-    ) -> Result<Vec<Vec<u8>>, String> {
+    ) -> Result<Vec<EncodedBlock>, String> {
+        use ::common::utils::range::*;
+
         let from_offset = self.business_data.block_height_offset;
         let length = length.min(MAX_BLOCKS_PER_REQUEST);
         let local_blocks_range = from_offset..from_offset + self.blocks.blocks_len();
-        let requested_range = start..start + length;
-        if !::common::utils::range::is_sub_range(&requested_range, &local_blocks_range) {
+        let requested_range = height_start..height_start + length;
+        if !is_sub_range(&requested_range, &local_blocks_range) {
             return Err(format!(
                 "Requested blocks outside the range stored in the archive node. Requested [{} .. {}]. Available [{} .. {}].",
                 requested_range.start,
@@ -40,15 +42,55 @@ impl Business for InnerState {
                 local_blocks_range.end
             ));
         }
+
         let mut blocks = Vec::with_capacity(length as usize);
         let offset_requested_range =
             requested_range.start - from_offset..requested_range.end - from_offset;
         for index in offset_requested_range {
             let block = self.blocks.get_block(index);
-            let block = trap(block.ok_or(format!("can not find block: {index}")));
+            let block = trap(block.ok_or(format!("can not find block by index: {index}")));
             blocks.push(block);
         }
+
         Ok(blocks)
+    }
+    fn business_blocks_get(
+        &self,
+        height_start: BlockIndex,
+        length: u64,
+    ) -> Result<Vec<EncodedBlock>, GetBlocksError> {
+        use ::common::utils::range::*;
+
+        let block_range = make_range(
+            self.business_data.block_height_offset,
+            self.blocks.blocks_len(),
+        );
+
+        if height_start < block_range.start {
+            return Err(GetBlocksError::BadFirstBlockIndex {
+                requested_index: height_start,
+                first_valid_index: block_range.start,
+            });
+        }
+
+        let requested_range = make_range(height_start, length);
+        let effective_range = match intersect(
+            &block_range,
+            &take(&requested_range, MAX_BLOCKS_PER_REQUEST),
+        ) {
+            Ok(range) => range,
+            Err(NoIntersection) => return Ok(vec![]),
+        };
+
+        let mut encoded_blocks = Vec::with_capacity(range_len(&effective_range) as usize);
+        for height in effective_range {
+            let index = height - block_range.start;
+            let block = self.blocks.get_block(index);
+            let block = trap(block.ok_or(format!("can not find block by index: {index}")));
+            encoded_blocks.push(block);
+        }
+
+        Ok(encoded_blocks)
     }
 
     fn business_remaining_capacity(&self) -> u64 {
@@ -69,7 +111,7 @@ impl Business for InnerState {
         }
         Err("Only Core canister is allowed to append blocks to an Archive Node".into())
     }
-    fn business_blocks_append(&mut self, blocks: Vec<Vec<u8>>) {
+    fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.business_remaining_capacity(); // would be failed if exceed max memory size
         ic_cdk::println!(
             "[archive node] append_blocks(): archive size: {} blocks, appending {} blocks",
@@ -77,7 +119,7 @@ impl Business for InnerState {
             blocks.len()
         );
         for block in &blocks {
-            self.blocks.append_block(block);
+            self.blocks.append_block(&block.0);
         }
         if self.blocks.total_block_size() > self.business_data.max_memory_size_bytes {
             ic_cdk::trap("No space left");
