@@ -284,7 +284,7 @@ test "tokens_balance_of" "$(dfx --identity default canister call core tokens_bal
 
 blue "\n🚩 1.5 business tokens transfer"
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
-test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=999_998_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '(variant { Ok = 1_000_000_000_000_000_000 : nat })'
+test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=1_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '(variant { Ok = 1_000_000_000_000_000_000 : nat })'
 test "token_balance_of" "$(dfx --identity default canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(3_000_000_000_000_000_000 : nat)'
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(1_000_000_000_000_000_000 : nat)'
 

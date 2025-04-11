@@ -62,24 +62,31 @@ impl Business for InnerState {
         amount_without_fee: Nat,
         fee: Nat,
     ) -> Nat {
-        // withdraw
-        let amount = amount_without_fee.clone() + fee.clone();
-        self.token_balances
-            .token_withdraw(token, from, amount.clone());
-
-        // deposit
         match &self.business_data.fee_to {
             Some(fee_to) if *crate::utils::math::ZERO < fee => {
+                let amount = amount_without_fee.clone() + fee.clone();
+
+                // withdraw
                 self.token_balances
-                    .token_deposit(token, to, amount_without_fee.clone());
+                    .token_withdraw(token, from, amount.clone());
+
+                // deposit
+                self.token_balances
+                    .token_deposit(token, to, amount_without_fee);
                 self.token_balances.token_deposit(token, *fee_to, fee);
+
+                // return changed amount
+                amount
             }
             _ => {
-                self.token_balances.token_deposit(token, to, amount.clone());
-            }
-        };
+                // transfer
+                self.token_balances
+                    .token_transfer(token, from, to, amount_without_fee.clone());
 
-        amount
+                // return changed amount
+                amount_without_fee
+            }
+        }
     }
 
     // pair
