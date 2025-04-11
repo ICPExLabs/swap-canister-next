@@ -23,26 +23,17 @@ pub struct TokenPairLiquidityAddSuccess {
 }
 
 #[derive(Debug, Deserialize, CandidType, Clone)]
-pub enum TokenPairLiquidityAddResult {
-    Ok(TokenPairLiquidityAddSuccess),
-    Err(BusinessError),
-}
+pub struct TokenPairLiquidityAddResult(Result<TokenPairLiquidityAddSuccess, BusinessError>);
 
 impl From<Result<TokenPairLiquidityAddSuccess, BusinessError>> for TokenPairLiquidityAddResult {
-    fn from(r: Result<TokenPairLiquidityAddSuccess, BusinessError>) -> Self {
-        match r {
-            Ok(n) => TokenPairLiquidityAddResult::Ok(n),
-            Err(e) => TokenPairLiquidityAddResult::Err(e),
-        }
+    fn from(value: Result<TokenPairLiquidityAddSuccess, BusinessError>) -> Self {
+        Self(value)
     }
 }
 
 impl From<TokenPairLiquidityAddResult> for Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    fn from(r: TokenPairLiquidityAddResult) -> Self {
-        match r {
-            TokenPairLiquidityAddResult::Ok(n) => Ok(n),
-            TokenPairLiquidityAddResult::Err(e) => Err(e),
-        }
+    fn from(value: TokenPairLiquidityAddResult) -> Self {
+        value.0
     }
 }
 
@@ -116,30 +107,21 @@ pub struct TokenPairLiquidityRemoveSuccess {
 }
 
 #[derive(Debug, Deserialize, CandidType, Clone)]
-pub enum TokenPairLiquidityRemoveResult {
-    Ok(TokenPairLiquidityRemoveSuccess),
-    Err(BusinessError),
-}
+pub struct TokenPairLiquidityRemoveResult(Result<TokenPairLiquidityRemoveSuccess, BusinessError>);
 
 impl From<Result<TokenPairLiquidityRemoveSuccess, BusinessError>>
     for TokenPairLiquidityRemoveResult
 {
-    fn from(r: Result<TokenPairLiquidityRemoveSuccess, BusinessError>) -> Self {
-        match r {
-            Ok(n) => TokenPairLiquidityRemoveResult::Ok(n),
-            Err(e) => TokenPairLiquidityRemoveResult::Err(e),
-        }
+    fn from(value: Result<TokenPairLiquidityRemoveSuccess, BusinessError>) -> Self {
+        Self(value)
     }
 }
 
 impl From<TokenPairLiquidityRemoveResult>
     for Result<TokenPairLiquidityRemoveSuccess, BusinessError>
 {
-    fn from(r: TokenPairLiquidityRemoveResult) -> Self {
-        match r {
-            TokenPairLiquidityRemoveResult::Ok(n) => Ok(n),
-            TokenPairLiquidityRemoveResult::Err(e) => Err(e),
-        }
+    fn from(value: TokenPairLiquidityRemoveResult) -> Self {
+        value.0
     }
 }
 

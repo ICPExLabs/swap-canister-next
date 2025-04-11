@@ -3,24 +3,16 @@ use super::*;
 // common
 
 #[derive(Debug, Deserialize, CandidType)]
-pub enum TokenChangedResult {
-    Ok(candid::Nat), // height if deposit or withdraw, amount if inner transfer
-    Err(BusinessError),
-}
+pub struct TokenChangedResult(Result<candid::Nat, BusinessError>);
+
 impl From<Result<candid::Nat, BusinessError>> for TokenChangedResult {
-    fn from(r: Result<candid::Nat, BusinessError>) -> Self {
-        match r {
-            Ok(n) => TokenChangedResult::Ok(n),
-            Err(e) => TokenChangedResult::Err(e),
-        }
+    fn from(value: Result<candid::Nat, BusinessError>) -> Self {
+        Self(value)
     }
 }
 impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
-    fn from(r: TokenChangedResult) -> Self {
-        match r {
-            TokenChangedResult::Ok(n) => Ok(n),
-            TokenChangedResult::Err(e) => Err(e),
-        }
+    fn from(value: TokenChangedResult) -> Self {
+        value.0
     }
 }
 

@@ -6,26 +6,17 @@ pub struct TokenPairSwapTokensSuccess {
 }
 
 #[derive(Debug, Deserialize, CandidType, Clone)]
-pub enum TokenPairSwapTokensResult {
-    Ok(TokenPairSwapTokensSuccess),
-    Err(BusinessError),
-}
+pub struct TokenPairSwapTokensResult(Result<TokenPairSwapTokensSuccess, BusinessError>);
 
 impl From<Result<TokenPairSwapTokensSuccess, BusinessError>> for TokenPairSwapTokensResult {
-    fn from(r: Result<TokenPairSwapTokensSuccess, BusinessError>) -> Self {
-        match r {
-            Ok(n) => TokenPairSwapTokensResult::Ok(n),
-            Err(e) => TokenPairSwapTokensResult::Err(e),
-        }
+    fn from(value: Result<TokenPairSwapTokensSuccess, BusinessError>) -> Self {
+        Self(value)
     }
 }
 
 impl From<TokenPairSwapTokensResult> for Result<TokenPairSwapTokensSuccess, BusinessError> {
-    fn from(r: TokenPairSwapTokensResult) -> Self {
-        match r {
-            TokenPairSwapTokensResult::Ok(n) => Ok(n),
-            TokenPairSwapTokensResult::Err(e) => Err(e),
-        }
+    fn from(value: TokenPairSwapTokensResult) -> Self {
+        value.0
     }
 }
 

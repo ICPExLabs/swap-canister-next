@@ -11,15 +11,10 @@ mod pair;
 pub use pair::*;
 
 #[derive(Debug, Deserialize, CandidType)]
-pub enum BusinessResult {
-    Ok(()),
-    Err(BusinessError),
-}
+pub struct BusinessResult(Result<(), BusinessError>);
+
 impl From<Result<(), BusinessError>> for BusinessResult {
-    fn from(r: Result<(), BusinessError>) -> Self {
-        match r {
-            Ok(n) => BusinessResult::Ok(n),
-            Err(e) => BusinessResult::Err(e),
-        }
+    fn from(value: Result<(), BusinessError>) -> Self {
+        Self(value)
     }
 }
