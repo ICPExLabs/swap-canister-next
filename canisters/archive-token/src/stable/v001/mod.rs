@@ -20,53 +20,56 @@ impl Initial<Option<InitArgV1>> for InnerState {
     fn init(&mut self, arg: Option<InitArgV1>) {
         let arg = arg.unwrap_or_default(); // ! 就算是 None，也要执行一次
 
-        // 超级管理员初始化
-        let supers = arg.supers.clone().unwrap_or_else(|| {
-            vec![caller()] // 默认调用者为超级管理员
+        // 维护人员初始化
+        let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
+            vec![caller()] // 默认调用者为维护人员
         });
 
         let permissions = get_all_permissions(|n| self.parse_permission(n));
-        let updated = supers_updated(&supers, &permissions);
+        let updated = supers_updated(&maintainers, &permissions);
 
         // 刷新权限
         self.permission_reset(permissions);
-        // 超级管理员赋予所有权限
+        // 维护人员赋予所有权限
         assert!(self.permission_update(updated).is_ok()); // 插入权限
 
         // 定时任务
         self.schedule_replace(arg.schedule);
 
-        // 业务参数
-        self.business_data.init(arg);
+        // 业务数据
+        self.do_init(arg);
     }
 }
 
 // 升级
 // ! 升级时执行
-impl Upgrade<Option<UpgradeArg>> for InnerState {
-    fn upgrade(&mut self, arg: Option<UpgradeArg>) {
+impl Upgrade<Option<UpgradeArgV1>> for InnerState {
+    fn upgrade(&mut self, arg: Option<UpgradeArgV1>) {
         let arg = match arg {
             Some(arg) => arg,
             None => return, // ! None 表示升级无需处理数据
         };
 
-        // 超级管理员初始化
-        let supers = arg.supers;
+        // 维护人员初始化
+        let maintainers = arg.maintainers.clone();
 
         let permissions = get_all_permissions(|n| self.parse_permission(n));
-        let updated = supers
+        let updated = maintainers
             .as_ref()
-            .map(|supers| supers_updated(supers, &permissions));
+            .map(|maintainers| supers_updated(maintainers, &permissions));
 
         // 刷新权限
         self.permission_reset(permissions);
-        // 超级管理员赋予所有权限
+        // 维护人员赋予所有权限
         if let Some(updated) = updated {
             assert!(self.permission_update(updated).is_ok()); // 插入权限
         }
 
         // 定时任务
         self.schedule_replace(arg.schedule);
+
+        // 业务数据
+        self.do_upgrade(arg);
     }
 }
 

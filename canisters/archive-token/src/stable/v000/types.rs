@@ -21,15 +21,15 @@ pub use super::schedule::schedule_task;
 // 初始化参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
 pub struct InitArg {
-    pub supers: Option<Vec<UserId>>, // init super administrators or deployer
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
+    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
+    pub schedule: Option<DurationNanos>,  // init scheduled task or not
 }
 
 // 升级参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
 pub struct UpgradeArg {
-    pub supers: Option<Vec<UserId>>, // add new super administrators of not
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
+    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
+    pub schedule: Option<DurationNanos>,  // init scheduled task or not
 }
 
 #[allow(unused)]
@@ -84,5 +84,15 @@ impl Default for InnerState {
         Self {
             canister_kit: Default::default(),
         }
+    }
+}
+
+impl InnerState {
+    pub fn do_init(&mut self, _arg: InitArg) {
+        // maybe do something
+    }
+
+    pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
+        // maybe do something
     }
 }

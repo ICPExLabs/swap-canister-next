@@ -82,6 +82,11 @@ pub use super::super::v000::types::{
 };
 
 // 业务权限
+pub fn has_business_maintaining() -> Result<(), String> {
+    use super::super::Business;
+    let caller = ic_canister_kit::identity::caller();
+    crate::types::with_state(|s| s.business_maintainer(&caller))
+}
 
 pub fn has_business_blocks_append() -> Result<(), String> {
     use super::super::Business;

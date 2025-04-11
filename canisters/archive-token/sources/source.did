@@ -33,11 +33,11 @@ type GetTokenBlocksResult = variant {
   Ok : TokenBlockRange;
   Err : GetBlocksError;
 };
-type InitArg = record { supers : opt vec principal; schedule : opt nat };
+type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgV1 = record {
+  maintainers : opt vec principal;
   core_canister_id : opt principal;
   max_memory_size_bytes : opt nat64;
-  supers : opt vec principal;
   schedule : opt nat;
   block_height_offset : opt nat64;
 };

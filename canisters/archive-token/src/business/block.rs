@@ -9,7 +9,7 @@ use crate::stable::*;
 use crate::types::*;
 
 /// 本罐子存储的 Block，参数是对应的 height
-#[ic_cdk::query]
+#[ic_cdk::query(guard = "has_business_maintaining")]
 fn get_blocks(args: GetBlocksArgs) -> GetTokenBlocksResult {
     inner_get_blocks(args).into()
 }

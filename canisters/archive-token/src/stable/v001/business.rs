@@ -4,6 +4,28 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
+    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
+        if self
+            .business_data
+            .maintainers
+            .as_ref()
+            .is_some_and(|maintainers| !maintainers.contains(caller))
+        {
+            return Err("Only Maintainers are allowed to query data".into());
+        }
+        Ok(())
+    }
+    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
+        if self
+            .business_data
+            .core_canister_id
+            .is_some_and(|core| core == *caller)
+        {
+            return Ok(());
+        }
+        Err("Only Core canister is allowed to append blocks to an Archive Node".into())
+    }
+
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         let adjusted_height = block_height.checked_sub(self.business_data.block_height_offset);
         let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
@@ -101,16 +123,6 @@ impl Business for InnerState {
         trap(remaining_capacity.ok_or("exceed max memory size"))
     }
 
-    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
-        if self
-            .business_data
-            .core_canister_id
-            .is_some_and(|core| core == *caller)
-        {
-            return Ok(());
-        }
-        Err("Only Core canister is allowed to append blocks to an Archive Node".into())
-    }
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.business_remaining_capacity(); // would be failed if exceed max memory size
         ic_cdk::println!(

@@ -19,6 +19,13 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -44,9 +51,6 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -102,6 +106,13 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_maintainer(caller)
+    }
+    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_blocks_append_authorized(caller)
+    }
+
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
         self.get().business_block_query(block_height)
     }
@@ -127,9 +138,6 @@ impl Business for State {
         self.get().business_remaining_capacity()
     }
 
-    fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
-        self.get().business_blocks_append_authorized(caller)
-    }
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.get_mut().business_blocks_append(blocks)
     }

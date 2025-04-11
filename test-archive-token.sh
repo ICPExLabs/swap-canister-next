@@ -78,7 +78,7 @@ cargo clippy
 # ! 1. 测试 archive_token
 red "\n=========== 1. archive_token ===========\n"
 dfx canister create archive_token --specified-id "bkyz2-fmaaa-aaaaa-qaaaq-cai" # --with-cycles 50T
-dfx deploy --mode=reinstall --yes --argument "(null)" archive_token
+dfx deploy --mode=reinstall --yes --argument "(opt variant { V1=record {maintainers=opt vec { principal \"$DEFAULT\" }}})" archive_token
 archive_token=$(canister_id "archive_token")
 blue "Archive Token Canister: $archive_token_token"
 
@@ -88,6 +88,7 @@ if [ -z "$archive_token" ]; then
 fi
 
 blue "\n🚩 1 business"
+test "get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
 test "get_block_pb" "$(dfx canister call archive_token get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_token remaining_capacity 2>&1)" '(10_737_418_240 : nat64)'
 test "append_blocks" "$(dfx --identity alice canister call archive_token append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'

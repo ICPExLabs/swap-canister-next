@@ -10,7 +10,7 @@ use crate::types::*;
 
 /// arg: GetBlockRequest
 /// ret: GetBlockResponse
-#[ic_cdk::query]
+#[ic_cdk::query(guard = "has_business_maintaining")]
 fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
     let proto::GetBlockRequest { block_height } =
         trap(from_proto_bytes(&arg[..]).map_err(|_| "failed to decode get_block_pb argument"));
@@ -24,7 +24,7 @@ fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
 /// 本罐子存储的 Block，参数不是对应的 height
 /// arg: IterBlocksRequest
 /// ret: IterBlocksResponse
-#[ic_cdk::query]
+#[ic_cdk::query(guard = "has_business_maintaining")]
 fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
     let proto::IterBlocksRequest {
         start: index_start,
@@ -40,7 +40,7 @@ fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
 /// 本罐子存储的 Block，参数是对应的 height
 /// arg: GetBlocksRequest
 /// ret: GetBlocksResponse
-#[ic_cdk::query]
+#[ic_cdk::query(guard = "has_business_maintaining")]
 fn get_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
     let proto::GetBlocksRequest {
         start: height_start,

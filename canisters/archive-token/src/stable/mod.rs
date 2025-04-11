@@ -34,7 +34,7 @@ pub enum InitArgs {
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum UpgradeArgs {
     V0(Box<v000::types::UpgradeArg>),
-    V1(Box<v001::types::UpgradeArg>),
+    V1(Box<v001::types::UpgradeArgV1>),
     // *    👆👆 UPGRADE WARNING: 引入新版本
 }
 

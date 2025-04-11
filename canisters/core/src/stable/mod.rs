@@ -43,8 +43,8 @@ impl Initial<Option<InitArgs>> for State {
     fn init(&mut self, args: Option<InitArgs>) {
         match args {
             Some(args) => match (self, args) {
-                (V0(s), InitArgs::V0(arg)) => s.init(Some(arg)),
-                (V1(s), InitArgs::V1(arg)) => s.init(Some(arg)),
+                (V0(s), InitArgs::V0(arg)) => s.init(Some(*arg)),
+                (V1(s), InitArgs::V1(arg)) => s.init(Some(*arg)),
                 // ! 👆👆 新增版本需要添加默认的数据
                 _ => ic_cdk::trap("version mismatched"),
             },
@@ -71,8 +71,8 @@ impl Upgrade<Option<UpgradeArgs>> for State {
         match args {
             Some(args) => {
                 match (self, args) {
-                    (V0(s), UpgradeArgs::V0(arg)) => s.upgrade(Some(arg)),
-                    (V1(s), UpgradeArgs::V1(arg)) => s.upgrade(Some(arg)),
+                    (V0(s), UpgradeArgs::V0(arg)) => s.upgrade(Some(*arg)),
+                    (V1(s), UpgradeArgs::V1(arg)) => s.upgrade(Some(*arg)),
                     // ! 👆👆 新增版本需要添加默认的数据
                     _ => ic_cdk::trap("version mismatched"),
                 }

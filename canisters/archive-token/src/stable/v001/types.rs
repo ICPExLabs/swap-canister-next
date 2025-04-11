@@ -21,8 +21,8 @@ pub use super::schedule::schedule_task;
 // 初始化参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
 pub struct InitArgV1 {
-    pub supers: Option<Vec<UserId>>, // init super administrators or deployer
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
+    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
+    pub schedule: Option<DurationNanos>,  // init scheduled task or not
 
     pub max_memory_size_bytes: Option<u64>,
     pub core_canister_id: Option<CanisterId>,
@@ -31,9 +31,11 @@ pub struct InitArgV1 {
 
 // 升级参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArg {
-    pub supers: Option<Vec<UserId>>, // add new super administrators of not
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
+pub struct UpgradeArgV1 {
+    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
+    pub schedule: Option<DurationNanos>,  // init scheduled task or not
+
+    pub max_memory_size_bytes: Option<u64>,
 }
 
 #[allow(unused)]
@@ -95,22 +97,12 @@ pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
+    pub maintainers: Option<HashSet<UserId>>, // None, 所有人可读, 否则指定人员可读
+
     pub max_memory_size_bytes: u64,           // 最大使用内存
     pub core_canister_id: Option<CanisterId>, // 宿主罐子, 业务相关的 update 接口，都要检查是否宿主罐子发起的
     pub block_height_offset: u64,             // 本罐子记录的偏移量
     pub last_upgrade_timestamp_ns: u64,       // 记录上次升级时间戳
-}
-
-impl BusinessData {
-    pub fn init(&mut self, arg: InitArgV1) {
-        self.max_memory_size_bytes = arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
-        self.core_canister_id = match arg.core_canister_id {
-            Some(core_canister_id) => Some(core_canister_id),
-            None => Some(ic_canister_kit::identity::caller()),
-        };
-        self.block_height_offset = arg.block_height_offset.unwrap_or(0);
-        self.last_upgrade_timestamp_ns = 0;
-    }
 }
 
 // 能序列化的和不能序列化的放在一起
@@ -245,4 +237,42 @@ impl Storable for ExampleVec {
         max_size: 8,
         is_fixed_size: true,
     };
+}
+
+impl InnerState {
+    pub fn do_init(&mut self, arg: InitArgV1) {
+        self.business_data.maintainers = arg.maintainers.map(HashSet::from_iter);
+
+        self.business_data.max_memory_size_bytes =
+            arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
+        self.business_data.core_canister_id = match arg.core_canister_id {
+            Some(core_canister_id) => Some(core_canister_id),
+            None => Some(ic_canister_kit::identity::caller()),
+        };
+        self.business_data.block_height_offset = arg.block_height_offset.unwrap_or(0);
+        self.business_data.last_upgrade_timestamp_ns = 0;
+    }
+
+    pub fn do_upgrade(&mut self, arg: UpgradeArgV1) {
+        // 拓展维护人员
+        if let Some(maintainers) = arg.maintainers {
+            match &mut self.business_data.maintainers {
+                Some(_maintainers) => _maintainers.extend(maintainers),
+                None => self.business_data.maintainers = Some(HashSet::from_iter(maintainers)),
+            }
+        }
+
+        // 更新业务数据
+        self.business_data.last_upgrade_timestamp_ns = ic_cdk::api::time();
+
+        if let Some(max_memory_size_bytes) = arg.max_memory_size_bytes {
+            let total_block_size = self.blocks.total_block_size();
+            if max_memory_size_bytes < total_block_size {
+                ic_cdk::trap(&format!(
+                    "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
+                ));
+            }
+            self.business_data.max_memory_size_bytes = max_memory_size_bytes;
+        }
+    }
 }
