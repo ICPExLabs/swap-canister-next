@@ -10,6 +10,11 @@ path = "src/lib.rs"
 [lints]
 workspace = true
 
+[features]
+default = []
+archive-token = []
+archive-swap = []
+
 [dependencies]
 candid = { workspace = true }
 

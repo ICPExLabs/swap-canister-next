@@ -1,5 +1,5 @@
 [package]
-name = "archive"
+name = "archive-token"
 version.workspace = true
 edition.workspace = true
 
@@ -8,7 +8,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-common = { workspace = true }
+common = { workspace = true, features = ["archive-token"] }
 
 candid = { workspace = true }
 ic-cdk = { workspace = true }

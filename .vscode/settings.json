@@ -3,6 +3,8 @@
         "business": "interface",
         "stable": "store",
         "canisters": "server",
+        "archive-token": "archive",
+        "archive-swap": "archive",
     },
     "cSpell.words": [
         "2vxsx-fae",

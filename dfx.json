@@ -12,17 +12,17 @@
       "wasm": "canisters/core/sources/source_opt.wasm",
       "candid": "canisters/core/sources/source.did"
     },
-    "archive": {
+    "archive_token": {
       "type": "custom",
       "build": [
-        "cargo test -p archive update_candid -- --nocapture",
-        "cargo build -p archive --target wasm32-unknown-unknown --release",
-        "ic-wasm target/wasm32-unknown-unknown/release/archive.wasm -o canisters/archive/sources/source_opt.wasm metadata candid:service -f canisters/archive/sources/source.did -v public",
-        "ic-wasm canisters/archive/sources/source_opt.wasm -o canisters/archive/sources/source_opt.wasm shrink"
+        "cargo test -p archive-token update_candid -- --nocapture",
+        "cargo build -p archive-token --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public",
+        "ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink"
       ],
       "gzip": true,
-      "wasm": "canisters/archive/sources/source_opt.wasm",
-      "candid": "canisters/archive/sources/source.did"
+      "wasm": "canisters/archive-token/sources/source_opt.wasm",
+      "candid": "canisters/archive-token/sources/source.did"
     },
     "token_ICP": {
       "type": "custom",
