@@ -14,7 +14,7 @@ use crate::types::*;
 impl CheckArgs for TokenDepositArgs {
     type Result = (SelfCanister, Caller);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-        // ! must be token, can not be dummy lp token
+        // ! must be token, can not be dummy LP token
         if !with_state(|s| s.business_tokens_query().contains_key(&self.token)) {
             return Err(BusinessError::NotSupportedToken(self.token));
         }
