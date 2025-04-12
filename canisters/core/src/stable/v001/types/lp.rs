@@ -119,7 +119,7 @@ impl InnerLP {
         amount: Nat,
     ) -> Result<(), BusinessError> {
         guard.token_deposit(self.dummy_canister_id.id(), to, amount.clone())?;
-        self.total_supply += amount;
+        self.total_supply += amount; // Nat 不会超出精度
         Ok(())
     }
 
@@ -130,7 +130,10 @@ impl InnerLP {
         amount: Nat,
     ) -> Result<(), BusinessError> {
         guard.token_withdraw(self.dummy_canister_id.id(), from, amount.clone())?;
-        self.total_supply -= amount;
+        if self.total_supply < amount {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
+        }
+        self.total_supply -= amount; // 如果变成负值会 panic
         Ok(())
     }
 
