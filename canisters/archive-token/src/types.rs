@@ -12,7 +12,9 @@ pub use crate::stable::*;
 #[allow(unused)]
 pub use ::common::archive::token::{GetTokenBlocksResult, TokenBlockRange};
 #[allow(unused)]
-pub use ::common::common::{BlockIndex, EncodedBlock, GetBlocksArgs, GetBlocksError};
+pub use ::common::common::{
+    BlockIndex, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult,
+};
 #[allow(unused)]
 pub use ::common::proto;
 #[allow(unused)]

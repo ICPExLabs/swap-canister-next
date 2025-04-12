@@ -29,6 +29,20 @@ fn inner_get_blocks(args: GetBlocksArgs) -> Result<TokenBlockRange, GetBlocksErr
     Ok(TokenBlockRange { blocks })
 }
 
+/// 本罐子存储的 Block，参数是对应的 height
+#[ic_cdk::query(guard = "has_business_maintaining")]
+fn get_encoded_blocks(args: GetBlocksArgs) -> GetEncodedBlocksResult {
+    inner_get_encoded_blocks(args).into()
+}
+fn inner_get_encoded_blocks(args: GetBlocksArgs) -> Result<Vec<EncodedBlock>, GetBlocksError> {
+    let GetBlocksArgs {
+        start: height_start,
+        length,
+    } = args;
+    let response = with_state(|s| s.business_blocks_get(height_start, length))?;
+    Ok(response)
+}
+
 #[cfg(test)]
 mod tests {
     use candid::Principal;

@@ -42,6 +42,7 @@ type GetBlocksError = variant {
   };
   Other : record { error_message : text; error_code : nat64 };
 };
+type GetEncodedBlocksResult = variant { Ok : vec blob; Err : GetBlocksError };
 type GetTokenBlocksResult = variant {
   Ok : TokenBlockRange;
   Err : GetBlocksError;
@@ -162,6 +163,7 @@ service : (opt InitArgs) -> {
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;
+  get_encoded_blocks : (GetBlocksArgs) -> (GetEncodedBlocksResult) query;
   http_request : (CustomHttpRequest) -> (CustomHttpResponse) query;
   iter_blocks_pb : (blob) -> (blob) query;
   pause_query : () -> (bool) query;

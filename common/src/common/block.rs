@@ -69,3 +69,13 @@ pub enum GetBlocksError {
         error_message: String,
     },
 }
+
+/// 编码后的结果
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct GetEncodedBlocksResult(Result<Vec<EncodedBlock>, GetBlocksError>);
+
+impl From<Result<Vec<EncodedBlock>, GetBlocksError>> for GetEncodedBlocksResult {
+    fn from(value: Result<Vec<EncodedBlock>, GetBlocksError>) -> Self {
+        GetEncodedBlocksResult(value)
+    }
+}
