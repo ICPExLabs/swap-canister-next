@@ -72,7 +72,7 @@ impl TokenPairs {
     pub fn add_liquidity(
         &mut self,
         fee_to: Option<Account>,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
@@ -83,7 +83,7 @@ impl TokenPairs {
             .and_then(|makers| makers.get_mut(&pa.amm))
             .ok_or_else(|| pa.not_exist())?;
 
-        maker.add_liquidity(fee_to, token_balances, self_canister, arg)
+        maker.add_liquidity(fee_to, guard, self_canister, arg)
     }
 
     pub fn check_liquidity_removable(
@@ -105,7 +105,7 @@ impl TokenPairs {
     pub fn remove_liquidity(
         &mut self,
         fee_to: Option<Account>,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
@@ -116,7 +116,7 @@ impl TokenPairs {
             .and_then(|makers| makers.get_mut(&pa.amm))
             .ok_or_else(|| pa.not_exist())?;
 
-        maker.remove_liquidity(fee_to, token_balances, self_canister, arg)
+        maker.remove_liquidity(fee_to, guard, self_canister, arg)
     }
 
     // ============================= swap =============================
@@ -124,7 +124,7 @@ impl TokenPairs {
     #[allow(clippy::too_many_arguments)]
     fn swap(
         &mut self,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         amounts: &[Nat],
         path: &[TokenPairPool],
@@ -152,7 +152,7 @@ impl TokenPairs {
                 .get_mut(&pa.pair)
                 .and_then(|makers| makers.get_mut(&pa.amm))
                 .ok_or_else(|| pa.not_exist())?;
-            maker.swap(token_balances, self_canister, amount0_out, amount1_out, to)?;
+            maker.swap(guard, self_canister, amount0_out, amount1_out, to)?;
         }
         Ok(())
     }
@@ -245,7 +245,7 @@ impl TokenPairs {
     // pair swap pay extra tokens
     pub fn swap_exact_tokens_for_tokens(
         &mut self,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
@@ -259,15 +259,15 @@ impl TokenPairs {
         )?;
 
         // transfer first
-        token_balances.token_transfer(
+        guard.token_transfer(
             args.path[0].pair.0,
             args.from,
             pool_accounts[0],
             amounts[0].clone(),
-        );
+        )?;
 
         self.swap(
-            token_balances,
+            guard,
             self_canister,
             &amounts,
             &args.path,
@@ -282,7 +282,7 @@ impl TokenPairs {
     // pair swap got extra tokens
     pub fn swap_tokens_for_exact_tokens(
         &mut self,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
         pas: Vec<PairAmm>,
@@ -296,7 +296,7 @@ impl TokenPairs {
         )?;
 
         // check balance in
-        let balance_in = token_balances.token_balance_of(args.path[0].pair.0, args.from);
+        let balance_in = guard.token_balance_of(args.path[0].pair.0, args.from)?;
         if balance_in < amounts[0] {
             return Err(BusinessError::InsufficientBalance((
                 args.path[0].pair.0,
@@ -305,15 +305,15 @@ impl TokenPairs {
         }
 
         // transfer first
-        token_balances.token_transfer(
+        guard.token_transfer(
             args.path[0].pair.0,
             args.from,
             pool_accounts[0],
             amounts[0].clone(),
-        );
+        )?;
 
         self.swap(
-            token_balances,
+            guard,
             self_canister,
             &amounts,
             &args.path,
@@ -328,7 +328,7 @@ impl TokenPairs {
     // pair swap by loan
     pub fn swap_by_loan(
         &mut self,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
         pas: Vec<PairAmm>,
@@ -337,10 +337,10 @@ impl TokenPairs {
             self.get_amounts_out(self_canister, &args.loan, &args.loan, &args.path, &pas)?;
 
         // ! loan token // transfer first
-        token_balances.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone());
+        guard.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone())?;
 
         self.swap(
-            token_balances,
+            guard,
             self_canister,
             &amounts,
             &args.path,
@@ -350,7 +350,7 @@ impl TokenPairs {
         )?;
 
         // ! return loan
-        token_balances.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone());
+        guard.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone())?;
 
         Ok(TokenPairSwapTokensSuccess { amounts })
     }

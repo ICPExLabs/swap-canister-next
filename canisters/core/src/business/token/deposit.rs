@@ -31,6 +31,7 @@ impl CheckArgs for TokenDepositArgs {
 async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenChangedResult {
     inner_token_deposit(args, retries).await.into()
 }
+#[inline]
 async fn inner_token_deposit(
     args: TokenDepositArgs,
     retries: Option<u8>,
@@ -40,52 +41,54 @@ async fn inner_token_deposit(
     let args_clone = args.clone();
 
     // 2. some value
+    let fee_to = vec![];
     let token_account = TokenAccount::new(args.token, args.from);
-    let token_accounts = vec![token_account];
+    let required = vec![token_account];
 
-    super::super::with_token_balance_lock(
-        &token_accounts,
-        retries.unwrap_or_default(),
-        || async {
-            let service_icrc2 = crate::services::icrc2::Service(args.token);
+    // 3. lock
+    let lock =
+        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
+            Lock(lock) => lock,
+            Retry(retries) => {
+                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+                let service_swap = crate::services::swap::Service(self_canister.id());
+                return service_swap.token_deposit(args_clone, Some(retries)).await;
+            }
+        };
 
-            // ? 1. transfer token to self
-            let self_account = Account {
-                owner: self_canister.id(),
-                subaccount: None,
-            };
-            let height = service_icrc2
-                .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
-                    from: args.from,
-                    spender_subaccount: None, // approve subaccount
-                    to: self_account,         // * to self
-                    amount: args.amount_without_fee.clone(),
-                    fee: None, // deposit action doesn't care fee
-                    memo: None,
-                    created_at_time: None,
-                })
-                .await
-                .map_err(BusinessError::CallCanisterError)?
-                .0
-                .map_err(BusinessError::TransferFromError)?;
+    // * 4. do business
+    {
+        let service_icrc2 = crate::services::icrc2::Service(args.token);
 
-            // ? 2. record changed
-            let amount = args.amount_without_fee;
-            with_mut_state_without_record(|s| {
-                s.business_token_deposit(args.token, args.from, amount);
-            });
+        // ? 1. transfer token to self
+        let self_account = Account {
+            owner: self_canister.id(),
+            subaccount: None,
+        };
+        let height = service_icrc2
+            .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
+                from: args.from,
+                spender_subaccount: None, // approve subaccount
+                to: self_account,         // * to self
+                amount: args.amount_without_fee.clone(),
+                fee: None, // deposit action doesn't care fee
+                memo: None,
+                created_at_time: None,
+            })
+            .await
+            .map_err(BusinessError::CallCanisterError)?
+            .0
+            .map_err(BusinessError::TransferFromError)?;
 
-            // ? 3. log
-            // ! push log
+        // ? 2. record changed
+        let amount = args.amount_without_fee; // ! Actual deposit
+        with_mut_state_without_record(|s| {
+            s.business_token_deposit(&lock, args.token, args.from, amount)
+        })?;
 
-            Ok(height)
-        },
-        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-        |retries| async move {
-            let service_swap = crate::services::swap::Service(self_canister.id());
-            service_swap.token_deposit(args_clone, Some(retries)).await
-        },
-        |accounts| Err(BusinessError::Locked(accounts)),
-    )
-    .await
+        // ? 3. log
+        // ! push log
+
+        Ok(height)
+    }
 }

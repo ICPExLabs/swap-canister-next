@@ -13,6 +13,7 @@ use crate::types::*;
 // liquidity add
 impl CheckArgs for TokenPairLiquidityAddArgs {
     type Result = (
+        Vec<CanisterId>,
         Vec<TokenAccount>,
         SelfCanister,
         Caller,
@@ -24,7 +25,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, accounts) = check_pool(&self.pool, &self_canister, Some(&self.to))?;
+        let (pa, fee_to, required) = check_pool(&self.pool, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityAddArg {
             from: self.from,
@@ -55,7 +56,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
             deadline.check_args()?;
         }
 
-        Ok((accounts, self_canister, caller, pa, arg))
+        Ok((fee_to, required, self_canister, caller, pa, arg))
     }
 }
 
@@ -67,42 +68,45 @@ async fn pair_liquidity_add(
 ) -> TokenPairLiquidityAddResult {
     inner_pair_liquidity_add(args, retries).await.into()
 }
+#[inline]
 async fn inner_pair_liquidity_add(
     args: TokenPairLiquidityAddArgs,
     retries: Option<u8>,
 ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
     // 1. check args
-    let (mut token_accounts, self_canister, _caller, pa, arg) = args.check_args()?;
+    let (fee_to, mut required, self_canister, _caller, pa, arg) = args.check_args()?;
     let args_clone = args.clone();
 
     // 2. some value
+    // let fee_to = fee_to;
     let token_account_a = TokenAccount::new(arg.token_a, arg.from);
     let token_account_b = TokenAccount::new(arg.token_b, arg.from);
-    token_accounts.push(token_account_a);
-    token_accounts.push(token_account_b);
+    required.push(token_account_a);
+    required.push(token_account_b);
 
-    super::super::with_token_balance_lock(
-        &token_accounts,
-        retries.unwrap_or_default(),
-        || async {
-            let success = with_mut_state_without_record(|s| {
-                s.business_token_pair_liquidity_add(&self_canister, pa, arg)
-            })?;
+    // 3. lock
+    let lock =
+        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
+            Lock(guard) => guard,
+            Retry(retries) => {
+                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+                let service_swap = crate::services::swap::Service(self_canister.id());
+                return service_swap
+                    .pair_liquidity_add(args_clone, Some(retries))
+                    .await;
+            }
+        };
 
-            // ! push log
+    // * 4. do business
+    {
+        let success = with_mut_state_without_record(|s| {
+            s.business_token_pair_liquidity_add(&lock, &self_canister, pa, arg)
+        })?;
 
-            Ok(success)
-        },
-        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-        |retries| async move {
-            let service_swap = crate::services::swap::Service(self_canister.id());
-            service_swap
-                .pair_liquidity_add(args_clone, Some(retries))
-                .await
-        },
-        |accounts| Err(BusinessError::Locked(accounts)),
-    )
-    .await
+        // ! push log
+
+        Ok(success)
+    }
 }
 
 // ========================== remove ==========================
@@ -110,6 +114,7 @@ async fn inner_pair_liquidity_add(
 // liquidity remove
 impl CheckArgs for TokenPairLiquidityRemoveArgs {
     type Result = (
+        Vec<CanisterId>,
         Vec<TokenAccount>,
         SelfCanister,
         Caller,
@@ -121,7 +126,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, accounts) = check_pool(&self.pool, &self_canister, Some(&self.to))?;
+        let (pa, fee_to, required) = check_pool(&self.pool, &self_canister, Some(&self.from))?;
 
         let arg = TokenPairLiquidityRemoveArg {
             from: self.from,
@@ -146,7 +151,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
             deadline.check_args()?;
         }
 
-        Ok((accounts, self_canister, caller, pa, arg))
+        Ok((fee_to, required, self_canister, caller, pa, arg))
     }
 }
 
@@ -158,40 +163,43 @@ async fn pair_liquidity_remove(
 ) -> TokenPairLiquidityRemoveResult {
     inner_pair_liquidity_remove(args, retries).await.into()
 }
+#[inline]
 async fn inner_pair_liquidity_remove(
     args: TokenPairLiquidityRemoveArgs,
     retries: Option<u8>,
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     // 1. check args
-    let (mut token_accounts, self_canister, _caller, pa, arg) = args.check_args()?;
+    let (fee_to, mut required, self_canister, _caller, pa, arg) = args.check_args()?;
     let args_clone = args.clone();
 
     // 2. some value
+    // let fee_to = fee_to;
     let token_account_a = TokenAccount::new(arg.token_a, arg.from);
     let token_account_b = TokenAccount::new(arg.token_b, arg.from);
-    token_accounts.push(token_account_a);
-    token_accounts.push(token_account_b);
+    required.push(token_account_a);
+    required.push(token_account_b);
 
-    super::super::with_token_balance_lock(
-        &token_accounts,
-        retries.unwrap_or_default(),
-        || async {
-            let success = with_mut_state_without_record(|s| {
-                s.business_token_pair_liquidity_remove(&self_canister, pa, arg)
-            })?;
+    // 3. lock
+    let lock =
+        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
+            Lock(guard) => guard,
+            Retry(retries) => {
+                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+                let service_swap = crate::services::swap::Service(self_canister.id());
+                return service_swap
+                    .pair_liquidity_remove(args_clone, Some(retries))
+                    .await;
+            }
+        };
 
-            // ! push log
+    // * 4. do business
+    {
+        let success = with_mut_state_without_record(|s| {
+            s.business_token_pair_liquidity_remove(&lock, &self_canister, pa, arg)
+        })?;
 
-            Ok(success)
-        },
-        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-        |retries| async move {
-            let service_swap = crate::services::swap::Service(self_canister.id());
-            service_swap
-                .pair_liquidity_remove(args_clone, Some(retries))
-                .await
-        },
-        |accounts| Err(BusinessError::Locked(accounts)),
-    )
-    .await
+        // ! push log
+
+        Ok(success)
+    }
 }

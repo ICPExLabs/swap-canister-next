@@ -87,14 +87,12 @@ impl MarketMaker {
     pub fn add_liquidity(
         &mut self,
         fee_to: Option<Account>,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         match self {
-            MarketMaker::SwapV2(value) => {
-                value.add_liquidity(fee_to, token_balances, self_canister, arg)
-            }
+            MarketMaker::SwapV2(value) => value.add_liquidity(fee_to, guard, self_canister, arg),
         }
     }
 
@@ -114,14 +112,12 @@ impl MarketMaker {
     pub fn remove_liquidity(
         &mut self,
         fee_to: Option<Account>,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         match self {
-            MarketMaker::SwapV2(value) => {
-                value.remove_liquidity(fee_to, token_balances, self_canister, arg)
-            }
+            MarketMaker::SwapV2(value) => value.remove_liquidity(fee_to, guard, self_canister, arg),
         }
     }
 
@@ -155,7 +151,7 @@ impl MarketMaker {
 
     pub fn swap(
         &mut self,
-        token_balances: &mut TokenBalances,
+        guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         amount0_out: Nat,
         amount1_out: Nat,
@@ -163,7 +159,7 @@ impl MarketMaker {
     ) -> Result<(), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.swap(token_balances, self_canister, amount0_out, amount1_out, to)
+                value.swap(guard, self_canister, amount0_out, amount1_out, to)
             }
         }
     }

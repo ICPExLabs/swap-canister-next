@@ -1,3 +1,4 @@
+use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 
 use crate::types::{Business, CheckArgs, TokenAccount, TokenPairPool, with_state};
@@ -8,8 +9,8 @@ use super::{Amm, BusinessError, PairAmm, SelfCanister, TokenPair};
 pub fn check_pool(
     pool: &TokenPairPool,
     self_canister: &SelfCanister,
-    to: Option<&Account>,
-) -> Result<(PairAmm, Vec<TokenAccount>), BusinessError> {
+    liquidity: Option<&Account>,
+) -> Result<(PairAmm, Vec<CanisterId>, Vec<TokenAccount>), BusinessError> {
     let TokenPairPool {
         pair: (token_a, token_b),
         amm,
@@ -19,27 +20,27 @@ pub fn check_pool(
     let amm: Amm = amm.try_into()?; // parse amm
     let pa = PairAmm { pair, amm };
     // check pool exist
-    let (accounts, dummy_tokens) = with_state(|s| {
+    let (required, dummy_tokens) = with_state(|s| {
         s.business_token_pair_pool_maker_get(&pa)
             .map(|maker| (maker.accounts(self_canister), maker.dummy_canisters()))
     })
     .ok_or(pa.not_exist())?;
 
-    let mut accounts: Vec<TokenAccount> = accounts
+    let mut required: Vec<TokenAccount> = required
         .into_iter()
         .flat_map(|account| {
             vec![
-                TokenAccount::new(pa.pair.token0, account),
-                TokenAccount::new(pa.pair.token1, account),
+                TokenAccount::new(pa.pair.token0, account), // self pool account of token0
+                TokenAccount::new(pa.pair.token1, account), // self pool account of token1
             ]
         })
         .collect();
 
-    if let Some(to) = to {
-        for token in dummy_tokens {
-            accounts.push(TokenAccount::new(token, *to));
+    if let Some(liquidity) = liquidity {
+        for token in &dummy_tokens {
+            required.push(TokenAccount::new(*token, *liquidity)); // liquidity of account would be changed
         }
     }
 
-    Ok((pa, accounts))
+    Ok((pa, dummy_tokens, required))
 }

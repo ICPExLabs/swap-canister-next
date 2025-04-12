@@ -38,6 +38,7 @@ impl CheckArgs for TokenWithdrawArgs {
 async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenChangedResult {
     inner_token_withdraw(args, retries).await.into()
 }
+#[inline]
 async fn inner_token_withdraw(
     args: TokenWithdrawArgs,
     retries: Option<u8>,
@@ -47,47 +48,49 @@ async fn inner_token_withdraw(
     let args_clone = args.clone();
 
     // 2. some value
+    let fee_to = vec![];
     let token_account = TokenAccount::new(args.token, args.from);
-    let token_accounts = vec![token_account];
+    let required = vec![token_account];
 
-    super::super::with_token_balance_lock(
-        &token_accounts,
-        retries.unwrap_or_default(),
-        || async {
-            let service_icrc2 = crate::services::icrc2::Service(args.token);
+    // 3. lock
+    let lock =
+        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
+            Lock(guard) => guard,
+            Retry(retries) => {
+                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+                let service_swap = crate::services::swap::Service(self_canister.id());
+                return service_swap.token_withdraw(args_clone, Some(retries)).await;
+            }
+        };
 
-            // ? 1. transfer token to user
-            let height = service_icrc2
-                .icrc_1_transfer(crate::services::icrc2::TransferArg {
-                    from_subaccount: None,
-                    to: args.to,
-                    amount: args.amount_without_fee.clone(),
-                    fee: Some(token.fee.clone()), // withdraw action should care fee
-                    memo: None,
-                    created_at_time: None,
-                })
-                .await
-                .map_err(BusinessError::CallCanisterError)?
-                .0
-                .map_err(BusinessError::TransferError)?;
+    // * 4. do business
+    {
+        let service_icrc2 = crate::services::icrc2::Service(args.token);
 
-            // ? 2. record changed
-            let amount = args.amount_without_fee + token.fee;
-            with_mut_state_without_record(|s| {
-                s.business_token_withdraw(args.token, args.from, amount);
-            });
+        // ? 1. transfer token to user
+        let height = service_icrc2
+            .icrc_1_transfer(crate::services::icrc2::TransferArg {
+                from_subaccount: None,
+                to: args.to,
+                amount: args.amount_without_fee.clone(),
+                fee: Some(token.fee.clone()), // withdraw action should care fee
+                memo: None,
+                created_at_time: None,
+            })
+            .await
+            .map_err(BusinessError::CallCanisterError)?
+            .0
+            .map_err(BusinessError::TransferError)?;
 
-            // ? 3. log
-            // ! push log
+        // ? 2. record changed
+        let amount = args.amount_without_fee + token.fee; // Total withdrawal
+        with_mut_state_without_record(|s| {
+            s.business_token_withdraw(&lock, args.token, args.from, amount)
+        })?;
 
-            Ok(height)
-        },
-        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-        |retries| async move {
-            let service_swap = crate::services::swap::Service(self_canister.id());
-            service_swap.token_withdraw(args_clone, Some(retries)).await
-        },
-        |accounts| Err(BusinessError::Locked(accounts)),
-    )
-    .await
+        // ? 3. log
+        // ! push log
+
+        Ok(height)
+    }
 }

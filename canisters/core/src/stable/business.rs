@@ -42,31 +42,45 @@ pub trait Business:
     }
 
     // token balance lock
-    fn business_token_balance_lock<'a>(
+    fn business_token_balance_lock(
         &mut self,
-        token_accounts: &'a [TokenAccount],
-    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
+        fee_to: Vec<CanisterId>,
+        required: Vec<TokenAccount>,
+    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
+    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // token deposit and withdraw
-    fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
+    // token deposit and withdraw and transfer
+    fn business_token_deposit(
+        &mut self,
+        lock: &TokenBalancesLock,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
+    fn business_token_withdraw(
+        &mut self,
+        lock: &TokenBalancesLock,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_transfer(
         &mut self,
+        lock: &TokenBalancesLock,
         token: CanisterId,
         from: Account,
         to: Account,
         amount_without_fee: Nat,
         fee: Nat,
-    ) -> Nat {
+    ) -> Result<Nat, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -84,6 +98,7 @@ pub trait Business:
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
@@ -100,6 +115,7 @@ pub trait Business:
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
@@ -110,6 +126,7 @@ pub trait Business:
     // pair swap
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
@@ -118,6 +135,7 @@ pub trait Business:
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
         pas: Vec<PairAmm>,
@@ -126,6 +144,7 @@ pub trait Business:
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
         pas: Vec<PairAmm>,
@@ -207,35 +226,49 @@ impl Business for State {
     }
 
     // token balance lock
-    fn business_token_balance_lock<'a>(
+    fn business_token_balance_lock(
         &mut self,
-        token_accounts: &'a [TokenAccount],
-    ) -> Result<TokenBalanceLockGuard<'a>, Vec<TokenAccount>> {
-        self.get_mut().business_token_balance_lock(token_accounts)
+        fee_to: Vec<CanisterId>,
+        required: Vec<TokenAccount>,
+    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+        self.get_mut().business_token_balance_lock(fee_to, required)
     }
-    fn business_token_balance_unlock(&mut self, token_accounts: &[TokenAccount]) {
-        self.get_mut().business_token_balance_unlock(token_accounts)
+    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
+        self.get_mut().business_token_balance_unlock(locked)
     }
 
-    // token deposit and withdraw
-    fn business_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) {
+    // token deposit and withdraw and transfer
+    fn business_token_deposit(
+        &mut self,
+        lock: &TokenBalancesLock,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
         self.get_mut()
-            .business_token_deposit(token, account, amount)
+            .business_token_deposit(lock, token, account, amount)
     }
-    fn business_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) {
+    fn business_token_withdraw(
+        &mut self,
+        lock: &TokenBalancesLock,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
         self.get_mut()
-            .business_token_withdraw(token, account, amount)
+            .business_token_withdraw(lock, token, account, amount)
     }
     fn business_token_transfer(
         &mut self,
+        lock: &TokenBalancesLock,
         token: CanisterId,
         from: Account,
         to: Account,
         amount_without_fee: Nat,
         fee: Nat,
-    ) -> Nat {
+    ) -> Result<Nat, BusinessError> {
         self.get_mut()
-            .business_token_transfer(token, from, to, amount_without_fee, fee)
+            .business_token_transfer(lock, token, from, to, amount_without_fee, fee)
     }
 
     // pair
@@ -252,12 +285,13 @@ impl Business for State {
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         self.get_mut()
-            .business_token_pair_liquidity_add(self_canister, pa, arg)
+            .business_token_pair_liquidity_add(lock, self_canister, pa, arg)
     }
     fn business_token_pair_check_liquidity_removable(
         &self,
@@ -270,41 +304,45 @@ impl Business for State {
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         self.get_mut()
-            .business_token_pair_liquidity_remove(self_canister, pa, arg)
+            .business_token_pair_liquidity_remove(lock, self_canister, pa, arg)
     }
 
     // pair swap
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.get_mut()
-            .business_token_pair_swap_exact_tokens_for_tokens(self_canister, args, pas)
+            .business_token_pair_swap_exact_tokens_for_tokens(lock, self_canister, args, pas)
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.get_mut()
-            .business_token_pair_swap_tokens_for_exact_tokens(self_canister, args, pas)
+            .business_token_pair_swap_tokens_for_exact_tokens(lock, self_canister, args, pas)
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
+        lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.get_mut()
-            .business_token_pair_swap_by_loan(self_canister, args, pas)
+            .business_token_pair_swap_by_loan(lock, self_canister, args, pas)
     }
 
     fn business_example_query(&self) -> String {

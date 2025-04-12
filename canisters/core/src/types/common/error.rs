@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::{super::TokenAccount, AmmText, TokenPair};
 
-#[derive(Debug, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Deserialize, CandidType)]
 pub enum BusinessError {
     /// 跨罐子调用错误
     CallCanisterError((RejectionCode, String)),
@@ -24,6 +24,8 @@ pub enum BusinessError {
     InsufficientBalance((CanisterId, Nat)),
     /// 用户操作涉及到的账户被锁定，无法执行操作
     Locked(Vec<TokenAccount>),
+    /// 用户操作涉及到的账户未被锁定，无法执行操作
+    Unlocked(Vec<TokenAccount>),
     /// 无效的 Amm 算法
     InvalidAmm(AmmText),
     /// 代币池子已经存在

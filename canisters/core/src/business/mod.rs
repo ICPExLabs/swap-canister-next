@@ -18,33 +18,20 @@ pub mod test;
 
 #[allow(unused)]
 #[inline(always)]
-async fn with_token_balance_lock<T, R1, F, R2, A, E>(
-    token_accounts: &[TokenAccount],
+fn lock_token_balances(
+    fee_to: Vec<CanisterId>,
+    required: Vec<TokenAccount>,
     retries: u8,
-    execute: F, // do execute
-    call: A,    // async call
-    error: E,   // error handle
-) -> T
-where
-    R1: Future<Output = T> + Send,
-    F: FnOnce() -> R1 + Send,
-    R2: Future<Output = T> + Send,
-    A: FnOnce(u8) -> R2 + Send,
-    E: FnOnce(Vec<TokenAccount>) -> T,
-{
+) -> Result<LockBalanceResult, BusinessError> {
     assert!(retries < 10, "Too many retries");
 
-    match with_mut_state_without_record(|s| s.business_token_balance_lock(token_accounts)) {
-        Ok(guard) => {
-            let r = execute().await;
-            drop(guard);
-            r
-        }
-        Err(accounts) => {
+    match with_mut_state_without_record(|s| s.business_token_balance_lock(fee_to, required)) {
+        Ok(lock) => Ok(LockBalanceResult::Lock(lock)),
+        Err(locked) => {
             if 0 < retries {
-                call(retries - 1).await
+                Ok(LockBalanceResult::Retry(retries - 1))
             } else {
-                error(accounts)
+                Err(BusinessError::Locked(locked))
             }
         }
     }

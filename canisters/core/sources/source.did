@@ -3,6 +3,7 @@ type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
   TransferError : TransferError;
   NotSupportedToken : principal;
+  Unlocked : vec TokenAccount;
   Swap : text;
   TokenPairAmmNotExist : record { TokenPair; text };
   InsufficientBalance : record { principal; nat };

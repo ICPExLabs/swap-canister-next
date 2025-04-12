@@ -44,6 +44,7 @@ impl CheckArgs for TokenTransferArgs {
 async fn token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> TokenChangedResult {
     inner_token_transfer(args, retries).await.into()
 }
+#[inline]
 async fn inner_token_transfer(
     args: TokenTransferArgs,
     retries: Option<u8>,
@@ -53,36 +54,39 @@ async fn inner_token_transfer(
     let args_clone = args.clone();
 
     // 2. some value
+    let fee_to = vec![args.token]; // ! There is a handling fee for this operation
     let token_account_from = TokenAccount::new(args.token, args.from);
     let token_account_to = TokenAccount::new(args.token, args.to);
-    let token_accounts = vec![token_account_from, token_account_to];
+    let required = vec![token_account_from, token_account_to];
 
-    super::super::with_token_balance_lock(
-        &token_accounts,
-        retries.unwrap_or_default(),
-        || async {
-            // ? 1. transfer
-            let amount = with_mut_state_without_record(|s| {
-                s.business_token_transfer(
-                    args.token,
-                    args.from,
-                    args.to,
-                    args.amount_without_fee,
-                    token.fee,
-                )
-            });
+    // 3. lock
+    let lock =
+        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
+            Lock(guard) => guard,
+            Retry(retries) => {
+                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+                let service_swap = crate::services::swap::Service(self_canister.id());
+                return service_swap.token_transfer(args_clone, Some(retries)).await;
+            }
+        };
 
-            // ? 2. log
-            // ! push log
+    // * 4. do business
+    {
+        // ? 1. transfer
+        let amount = with_mut_state_without_record(|s| {
+            s.business_token_transfer(
+                &lock,
+                args.token,
+                args.from,
+                args.to,
+                args.amount_without_fee,
+                token.fee,
+            )
+        })?;
 
-            Ok(amount)
-        },
-        // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-        |retries| async move {
-            let service_swap = crate::services::swap::Service(self_canister.id());
-            service_swap.token_transfer(args_clone, Some(retries)).await
-        },
-        |accounts| Err(BusinessError::Locked(accounts)),
-    )
-    .await
+        // ? 2. log
+        // ! push log
+
+        Ok(amount)
+    }
 }

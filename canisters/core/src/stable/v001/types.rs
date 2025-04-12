@@ -48,6 +48,8 @@ mod token;
 #[allow(unused)]
 pub use amm::*;
 #[allow(unused)]
+pub use balance::LockBalanceResult::*;
+#[allow(unused)]
 pub use balance::*;
 #[allow(unused)]
 pub use lp::*;
@@ -103,7 +105,6 @@ pub struct CanisterKit {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
-    pub token_balance_locks: TokenBalanceLocks, // 记录账户锁
     pub fee_to: Option<Account>, // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
     pub token_pairs: TokenPairs, // 所有交易对池子
 }
@@ -120,8 +121,7 @@ pub struct InnerState {
     // 业务数据
     pub business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
 
-    #[serde(skip, default = "init_token_balances")]
-    pub token_balances: TokenBalances, // 业务数据 // ? 稳定内存
+    pub token_balances: TokenBalances, // 业务数据 // ? 堆内存 序列化 稳定内存
 
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
@@ -146,7 +146,7 @@ impl Default for InnerState {
             // 业务数据
             business_data: Default::default(),
 
-            token_balances: init_token_balances(),
+            token_balances: Default::default(),
 
             example_data: Default::default(),
 
@@ -173,8 +173,8 @@ const MEMORY_ID_EXAMPLE_LOG_INDEX: MemoryId = MemoryId::new(103); // 测试 Log
 const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(104); // 测试 Log
 const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试 PriorityQueue
 
-fn init_token_balances() -> TokenBalances {
-    TokenBalances::new(stable::init_map_data(MEMORY_ID_TOKEN_BALANCES))
+fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
+    stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
 }
 
 fn init_example_cell_data() -> StableCell<ExampleCell> {

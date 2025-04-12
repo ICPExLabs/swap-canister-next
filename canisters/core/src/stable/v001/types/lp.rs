@@ -4,7 +4,7 @@ use super::*;
 
 use crate::utils::math::zero;
 
-use super::{AmmText, BusinessError, DummyCanisterId, TokenBalances, TokenInfo, TokenPair};
+use super::{AmmText, BusinessError, DummyCanisterId, TokenInfo, TokenPair};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -39,30 +39,40 @@ impl PoolLp {
         }
     }
 
-    pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {
-        match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.mint(token_balances, to, amount),
-            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
-        }
-    }
-
-    pub fn burn(&mut self, token_balances: &mut TokenBalances, from: Account, amount: Nat) {
-        match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.burn(token_balances, from, amount),
-            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
-        }
-    }
-
-    pub fn check_liquidity_removable(
-        &self,
-        token_balances: &TokenBalances,
-        from: &Account,
-        liquidity: &Nat,
+    pub fn mint(
+        &mut self,
+        guard: &mut TokenBalancesGuard,
+        to: Account,
+        amount: Nat,
     ) -> Result<(), BusinessError> {
         match self {
-            PoolLp::InnerLP(inner_lp) => {
-                inner_lp.check_liquidity_removable(token_balances, from, liquidity)
-            }
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint(guard, to, amount),
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
+
+    pub fn burn(
+        &mut self,
+        guard: &mut TokenBalancesGuard,
+        from: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, from, amount),
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
+
+    pub fn check_liquidity_removable<F>(
+        &self,
+        balance_of: F,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError>
+    where
+        F: Fn(CanisterId) -> Result<Nat, BusinessError>,
+    {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.check_liquidity_removable(balance_of, liquidity),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -102,24 +112,38 @@ impl InnerLP {
         vec![self.dummy_canister_id.id()]
     }
 
-    pub fn mint(&mut self, token_balances: &mut TokenBalances, to: Account, amount: Nat) {
-        token_balances.token_deposit(self.dummy_canister_id.id(), to, amount.clone());
-        self.total_supply += amount;
-    }
-
-    pub fn burn(&mut self, token_balances: &mut TokenBalances, from: Account, amount: Nat) {
-        token_balances.token_withdraw(self.dummy_canister_id.id(), from, amount.clone());
-        self.total_supply -= amount;
-    }
-
-    pub fn check_liquidity_removable(
-        &self,
-        token_balances: &TokenBalances,
-        from: &Account,
-        liquidity: &Nat,
+    pub fn mint(
+        &mut self,
+        guard: &mut TokenBalancesGuard,
+        to: Account,
+        amount: Nat,
     ) -> Result<(), BusinessError> {
+        guard.token_deposit(self.dummy_canister_id.id(), to, amount.clone())?;
+        self.total_supply += amount;
+        Ok(())
+    }
+
+    pub fn burn(
+        &mut self,
+        guard: &mut TokenBalancesGuard,
+        from: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        guard.token_withdraw(self.dummy_canister_id.id(), from, amount.clone())?;
+        self.total_supply -= amount;
+        Ok(())
+    }
+
+    pub fn check_liquidity_removable<F>(
+        &self,
+        balance_of: F,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError>
+    where
+        F: Fn(CanisterId) -> Result<Nat, BusinessError>,
+    {
         // check balance
-        let balance = token_balances.token_balance_of(self.dummy_canister_id.id(), *from);
+        let balance = balance_of(self.dummy_canister_id.id())?;
         if balance < *liquidity {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }
