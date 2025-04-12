@@ -31,6 +31,7 @@ common = { path = "common" }
 candid = "0.10.13"
 ic-cdk = "0.17.1"
 icrc-ledger-types = "0.1.8"
+ic-metrics-encoder = "1.1.1"
 
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -51,3 +52,4 @@ once_cell = "1.21.3"
 hex = "0.4.3"
 num-bigint = "0.4.6"
 sha2 = "0.10.8"
+percent-encoding = "2.2" # 网络模块 解析请求

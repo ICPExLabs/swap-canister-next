@@ -20,3 +20,7 @@ pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};
 
 #[allow(unused)]
 pub use ic_canister_kit::common::trap;
+
+// ===================== http =====================
+pub use ic_metrics_encoder::MetricsEncoder;
+pub use std::io::Result as IoResult;

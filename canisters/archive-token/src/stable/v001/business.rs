@@ -122,6 +122,50 @@ impl Business for InnerState {
             .checked_sub(self.blocks.total_block_size());
         trap(remaining_capacity.ok_or("exceed max memory size"))
     }
+    fn business_metrics(&self, w: &mut MetricsEncoder<Vec<u8>>) -> IoResult<()> {
+        w.encode_gauge(
+            "archive_node_block_height_offset",
+            self.business_data.block_height_offset as f64,
+            "Block height offset assigned to this instance of the archive canister.",
+        )?;
+        w.encode_gauge(
+            "archive_node_max_memory_size_bytes",
+            self.business_data.max_memory_size_bytes as f64,
+            "Maximum amount of memory this canister is allowed to use for blocks.",
+        )?;
+        // This value can increase/decrease in the current implementation.
+        w.encode_gauge(
+            "archive_node_blocks",
+            self.blocks.blocks_len() as f64,
+            "Number of blocks stored by this canister.",
+        )?;
+        w.encode_gauge(
+            "archive_node_blocks_bytes",
+            self.blocks.total_block_size() as f64,
+            "Total amount of memory consumed by the blocks stored by this canister.",
+        )?;
+        w.encode_gauge(
+            "archive_node_stable_memory_pages",
+            ic_cdk::api::stable::stable_size() as f64,
+            "Size of the stable memory allocated by this canister measured in 64K Wasm pages.",
+        )?;
+        w.encode_gauge(
+            "stable_memory_bytes",
+            (ic_cdk::api::stable::stable_size() * 64 * 1024) as f64,
+            "Size of the stable memory allocated by this canister measured in bytes.",
+        )?;
+        w.encode_gauge(
+            "heap_memory_bytes",
+            common::utils::runtime::heap_memory_size_bytes() as f64,
+            "Size of the heap memory allocated by this canister measured in bytes.",
+        )?;
+        w.encode_gauge(
+            "archive_node_last_upgrade_time_seconds",
+            self.business_data.last_upgrade_timestamp_ns as f64 / 1_000_000_000.0,
+            "IC timestamp of the last upgrade performed on this canister.",
+        )?;
+        Ok(())
+    }
 
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.business_remaining_capacity(); // would be failed if exceed max memory size
@@ -131,6 +175,8 @@ impl Business for InnerState {
             blocks.len()
         );
         for block in &blocks {
+            // TODO check block hash before append
+
             self.blocks.append_block(&block.0);
         }
         if self.blocks.total_block_size() > self.business_data.max_memory_size_bytes {

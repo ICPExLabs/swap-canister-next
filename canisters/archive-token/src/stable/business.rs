@@ -50,6 +50,9 @@ pub trait Business:
     fn business_remaining_capacity(&self) -> u64 {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_metrics(&self, w: &mut MetricsEncoder<Vec<u8>>) -> IoResult<()> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         ic_cdk::trap("Not supported operation by this version.")
@@ -136,6 +139,9 @@ impl Business for State {
 
     fn business_remaining_capacity(&self) -> u64 {
         self.get().business_remaining_capacity()
+    }
+    fn business_metrics(&self, w: &mut MetricsEncoder<Vec<u8>>) -> IoResult<()> {
+        self.get().business_metrics(w)
     }
 
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {

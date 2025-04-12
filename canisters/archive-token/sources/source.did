@@ -10,6 +10,19 @@ type CanisterStatusResponse = record {
   reserved_cycles : nat;
 };
 type CanisterStatusType = variant { stopped; stopping; running };
+type CustomHttpRequest = record {
+  url : text;
+  method : text;
+  body : blob;
+  headers : vec record { text; text };
+};
+type CustomHttpResponse = record {
+  body : blob;
+  headers : vec record { text; text };
+  upgrade : opt bool;
+  streaming_strategy : opt StreamingStrategy;
+  status_code : nat16;
+};
 type DefiniteCanisterSettings = record {
   freezing_threshold : nat;
   controllers : vec principal;
@@ -87,6 +100,22 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
+type StreamingCallbackHttpResponse = record {
+  token : opt StreamingCallbackToken;
+  body : blob;
+};
+type StreamingCallbackToken = record {
+  token : vec record { text; text };
+  path : text;
+};
+type StreamingStrategy = variant {
+  Callback : record {
+    token : StreamingCallbackToken;
+    callback : func (StreamingCallbackToken) -> (
+        StreamingCallbackHttpResponse,
+      ) query;
+  };
+};
 type TokenBlock = record {
   transaction : TokenTransaction;
   timestamp : nat64;
@@ -133,6 +162,7 @@ service : (opt InitArgs) -> {
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;
+  http_request : (CustomHttpRequest) -> (CustomHttpResponse) query;
   iter_blocks_pb : (blob) -> (blob) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

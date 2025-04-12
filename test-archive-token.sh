@@ -100,6 +100,7 @@ test "get_blocks_pb" "$(dfx canister call archive_token get_blocks_pb "(blob \"\
 test "get_blocks" "$(dfx canister call archive_token get_blocks "(record { start=1:nat64; length=100:nat64})" 2>&1)" '(variant { Ok = record { blocks = vec {} } })'
 test "get_blocks" "$(dfx canister call archive_token get_blocks "(record { start=11:nat64; length=100:nat64})" 2>&1)" '(variant { Ok = record { blocks = vec {} } })'
 test "get_blocks" "$(dfx canister call archive_token get_blocks "(record { start=0:nat64; length=100:nat64})" 2>&1)" '( variant { Ok = record { blocks = vec { record { transaction = variant { Deposit = record { token = principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; from = record { owner = principal "aaaaa-aa"; subaccount = null }; amount = 100 : nat; } }; timestamp = 0 : nat64; parent_hash = blob ""; }; }; } }, )'
+test "http /metrics" "$(curl "http://$archive_token.raw.localhost:4943/metrics" 2>&1)" 'archive_node_blocks_bytes 61' 'archive_node_blocks 1' 'archive_node_max_memory_size_bytes 10737418240'
 
 test "token_balance_of" "$(dfx --identity alice canister call archive_token token_balance_of "(principal \"$token_ICP\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" 'You can only query your own balance'
 test "token_balance_by" "$(dfx --identity default canister call archive_token token_balance_by "(principal \"$token_ICP\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'

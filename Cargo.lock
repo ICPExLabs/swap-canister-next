@@ -26,9 +26,11 @@ dependencies = [
  "hex",
  "ic-canister-kit",
  "ic-cdk",
+ "ic-metrics-encoder",
  "icrc-ledger-types",
  "num-bigint",
  "once_cell",
+ "percent-encoding",
  "serde",
  "serde_bytes",
  "serde_json",
@@ -526,6 +528,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ic-metrics-encoder"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b5c7628eac357aecda461130f8074468be5aa4d258a002032d82d817f79f1f8"
+
+[[package]]
 name = "ic-stable-structures"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -729,6 +737,12 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "percent-encoding"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "petgraph"

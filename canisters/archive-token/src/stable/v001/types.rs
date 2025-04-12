@@ -39,7 +39,7 @@ pub struct UpgradeArgV1 {
 }
 
 #[allow(unused)]
-pub use crate::types::{BlockIndex, EncodedBlock, GetBlocksError};
+pub use crate::types::{BlockIndex, EncodedBlock, GetBlocksError, IoResult, MetricsEncoder};
 #[allow(unused)]
 pub use ::common::proto;
 

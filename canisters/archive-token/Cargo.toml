@@ -13,6 +13,7 @@ common = { workspace = true, features = ["archive-token"] }
 candid = { workspace = true }
 ic-cdk = { workspace = true }
 icrc-ledger-types = { workspace = true }
+ic-metrics-encoder = { workspace = true }
 
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -21,6 +22,7 @@ serde_bytes = { workspace = true }
 ic-canister-kit = { workspace = true, features = [
     "identity",
     "canister",
+    "http",
     "call-once",
     "schedule",
     "stable",
@@ -33,3 +35,4 @@ once_cell = { workspace = true }
 hex = { workspace = true }
 num-bigint = { workspace = true }
 sha2 = { workspace = true }
+percent-encoding = { workspace = true }
