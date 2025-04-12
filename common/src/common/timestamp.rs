@@ -9,6 +9,11 @@ use serde::{Deserialize, Serialize};
 pub struct TimestampNanos(u64);
 
 impl TimestampNanos {
+    /// 当前时间
+    pub fn now() -> Self {
+        Self(ic_cdk::api::time())
+    }
+
     /// 构造
     pub fn from_inner(inner: u64) -> Self {
         Self(inner)

@@ -1,8 +1,10 @@
+use ic_canister_kit::common::trap;
 use icrc_ledger_types::icrc1::account::DEFAULT_SUBACCOUNT;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
+    sync::RwLock,
 };
 
 use super::*;
@@ -114,7 +116,7 @@ impl Storable for TokenBalance {
 pub struct TokenBalances {
     #[serde(skip, default = "init_token_balances")]
     balances: StableBTreeMap<TokenAccount, TokenBalance>,
-    locks: HashMap<TokenAccount, bool>,
+    locks: RwLock<HashMap<TokenAccount, bool>>,
 }
 
 impl Default for TokenBalances {
@@ -146,6 +148,8 @@ impl TokenBalances {
         fee_to: Vec<TokenAccount>,
         mut required: Vec<TokenAccount>,
     ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+        let mut locks = trap(self.locks.write()); // ! what if failed ?
+
         // 0. 手续费账户
         for fee_to in &fee_to {
             required.push(fee_to.clone());
@@ -157,7 +161,7 @@ impl TokenBalances {
         // 1. check first
         let mut already_locked: Vec<TokenAccount> = vec![];
         for token_account in &locked {
-            if self.locks.get(token_account).is_some_and(|lock| *lock) {
+            if locks.get(token_account).is_some_and(|lock| *lock) {
                 already_locked.push(token_account.clone());
             }
         }
@@ -167,7 +171,7 @@ impl TokenBalances {
 
         // 2. do lock
         for token_account in &locked {
-            self.locks.insert(token_account.clone(), true);
+            locks.insert(token_account.clone(), true);
         }
 
         for account in &required {
@@ -191,9 +195,11 @@ impl TokenBalances {
     }
 
     pub fn unlock(&mut self, locked: &HashSet<TokenAccount>) {
+        let mut locks = trap(self.locks.write()); // ! what if failed ?
+
         // 1. check first
         for token_account in locked {
-            if self.locks.get(token_account).is_some_and(|lock| *lock) {
+            if locks.get(token_account).is_some_and(|lock| *lock) {
                 continue; // locked is right
             }
             // if not true, terminator
@@ -212,7 +218,7 @@ impl TokenBalances {
 
         // 2. do unlock
         for token_account in locked {
-            self.locks.remove(token_account);
+            locks.remove(token_account);
         }
     }
 
@@ -225,6 +231,7 @@ impl TokenBalances {
 }
 
 // ============================ lock ============================
+
 pub enum LockBalanceResult {
     Lock(TokenBalancesLock),
     Retry(u8),
@@ -255,6 +262,7 @@ impl Drop for TokenBalancesLock {
 }
 
 // ============================ guard ============================
+
 pub struct TokenBalancesGuard<'a> {
     balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>,
     lock: &'a TokenBalancesLock,

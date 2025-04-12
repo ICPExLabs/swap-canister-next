@@ -3,7 +3,7 @@ use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Subaccount;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::{hash::hash_sha256, principal::sort_tokens};
+use crate::utils::principal::sort_tokens;
 
 use super::{Amm, AmmText, BusinessError};
 
@@ -34,17 +34,17 @@ pub struct PairAmm {
 }
 
 impl PairAmm {
-    pub fn get_subaccount_and_dummy_canister_id(&self) -> (Subaccount, DummyCanisterId) {
+    pub fn get_subaccount(&self) -> [u8; 32] {
         let amm: AmmText = (&self.amm).into();
-
         let mut data = Vec::new();
         data.extend_from_slice(self.pair.token0.as_slice());
         data.extend_from_slice(self.pair.token1.as_slice());
         data.extend_from_slice(amm.as_ref().as_bytes());
-
-        let subaccount = hash_sha256(&data);
+        common::utils::hash::hash_sha256(&data)
+    }
+    pub fn get_subaccount_and_dummy_canister_id(&self) -> (Subaccount, DummyCanisterId) {
+        let subaccount = self.get_subaccount();
         let canister_id = CanisterId::from_slice(&subaccount[..CanisterId::MAX_LENGTH_IN_BYTES]);
-
         (subaccount, DummyCanisterId(canister_id))
     }
 

@@ -23,7 +23,13 @@ pub enum BusinessError {
     /// 提现余额不足
     InsufficientBalance((CanisterId, Nat)),
     /// 用户操作涉及到的账户被锁定，无法执行操作
-    Locked(Vec<TokenAccount>),
+    TokenAccountsLocked(Vec<TokenAccount>),
+    /// 用户操作涉及到的账户被锁定，无法执行操作
+    TokenBlockChainLocked,
+    /// 用户操作涉及到的账户被锁定，无法执行操作
+    TokenBlockChainError(String),
+    /// 用户操作涉及到的账户被锁定，无法执行操作
+    SwapBlockChainLocked,
     /// 用户操作涉及到的账户未被锁定，无法执行操作
     Unlocked(Vec<TokenAccount>),
     /// 无效的 Amm 算法
@@ -38,4 +44,10 @@ pub enum BusinessError {
     Liquidity(String),
     /// swap 错误
     Swap(String),
+}
+
+impl From<candid::Error> for BusinessError {
+    fn from(value: candid::Error) -> Self {
+        Self::TokenBlockChainError(format!("{value:?}"))
+    }
 }

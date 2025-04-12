@@ -95,3 +95,9 @@ impl<T> TryFrom<proto::Hash> for HashOf<T> {
         })
     }
 }
+
+/// sha256 hash
+pub trait DoHash: Sized {
+    /// sha256 hash
+    fn do_hash(&self) -> Result<HashOf<Self>, String>;
+}

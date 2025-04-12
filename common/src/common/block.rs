@@ -1,9 +1,12 @@
+use std::borrow::Cow;
+
 use candid::CandidType;
+use ic_canister_kit::types::{Bound, Storable};
 use serde::{Deserialize, Serialize};
 
-use crate::proto;
+use crate::{proto, utils::hash::hash_sha256};
 
-use super::{BlockIndex, HashOf, timestamp::TimestampNanos};
+use super::{BlockIndex, DoHash, HashOf, timestamp::TimestampNanos};
 
 // ========================== Block ==========================
 
@@ -29,15 +32,38 @@ impl From<Vec<u8>> for EncodedBlock {
     }
 }
 
+impl Storable for EncodedBlock {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Borrowed(&self.0)
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        Self(bytes.to_vec())
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
 /// 块
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
-pub struct CandidBlock<T> {
+pub struct CandidBlock<B, T> {
     /// 前置 hash
-    pub parent_hash: HashOf<T>,
+    pub parent_hash: HashOf<B>,
     /// 时间戳
     pub timestamp: TimestampNanos,
     /// 交易内容
     pub transaction: T,
+}
+
+impl<B, T: DoHash> CandidBlock<B, T> {
+    /// hash_without_parent
+    pub fn hash_without_parent(&self) -> Result<HashOf<CandidBlock<B, T>>, String> {
+        let mut bytes = Vec::with_capacity(8 + 32);
+        bytes.extend(self.timestamp.into_inner().to_le_bytes());
+        bytes.extend(self.transaction.do_hash()?.as_slice());
+        let hash = hash_sha256(&bytes);
+        Ok(HashOf::new(hash))
+    }
 }
 
 // ========================== 查询 ==========================

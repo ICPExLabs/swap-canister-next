@@ -60,10 +60,10 @@ async fn inner_token_transfer(
     let required = vec![token_account_from, token_account_to];
 
     // 3. lock
-    let lock =
+    let balance_lock =
         match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            Lock(guard) => guard,
-            Retry(retries) => {
+            LockBalanceResult::Lock(guard) => guard,
+            LockBalanceResult::Retry(retries) => {
                 // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
                 let service_swap = crate::services::swap::Service(self_canister.id());
                 return service_swap.token_transfer(args_clone, Some(retries)).await;
@@ -75,7 +75,7 @@ async fn inner_token_transfer(
         // ? 1. transfer
         let amount = with_mut_state_without_record(|s| {
             s.business_token_transfer(
-                &lock,
+                &balance_lock,
                 args.token,
                 args.from,
                 args.to,

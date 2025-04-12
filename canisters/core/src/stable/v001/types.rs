@@ -37,10 +37,14 @@ pub use crate::types::business::*;
 #[allow(unused)]
 pub use crate::types::common::*;
 #[allow(unused)]
-pub use crate::types::{Account, Nat};
+pub use crate::types::{
+    Account, BlockIndex, DepositToken, DoHash, EncodedBlock, Nat, TokenBlock, TokenTransaction,
+    proto,
+};
 
 mod amm;
 mod balance;
+mod blockchain;
 mod lp;
 mod pair;
 mod token;
@@ -48,9 +52,9 @@ mod token;
 #[allow(unused)]
 pub use amm::*;
 #[allow(unused)]
-pub use balance::LockBalanceResult::*;
-#[allow(unused)]
 pub use balance::*;
+#[allow(unused)]
+pub use blockchain::*;
 #[allow(unused)]
 pub use lp::*;
 #[allow(unused)]
@@ -123,6 +127,8 @@ pub struct InnerState {
 
     pub token_balances: TokenBalances, // 业务数据 // ? 堆内存 序列化 稳定内存
 
+    pub token_block_chain: TokenBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
+
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
     #[serde(skip, default = "init_example_cell_data")]
@@ -148,6 +154,8 @@ impl Default for InnerState {
 
             token_balances: Default::default(),
 
+            token_block_chain: Default::default(),
+
             example_data: Default::default(),
 
             example_cell: init_example_cell_data(),
@@ -164,6 +172,8 @@ use ic_canister_kit::stable;
 
 // Token
 const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
+const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(1); // token blocks
+// const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
 
 // example
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
@@ -176,6 +186,14 @@ const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试
 fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
     stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
 }
+
+fn init_token_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
+    stable::init_map_data(MEMORY_ID_TOKEN_BLOCKS)
+}
+
+// fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
+//     stable::init_map_data(MEMORY_ID_SWAP_BLOCKS)
+// }
 
 fn init_example_cell_data() -> StableCell<ExampleCell> {
     stable::init_cell_data(MEMORY_ID_EXAMPLE_CELL, ExampleCell::default())

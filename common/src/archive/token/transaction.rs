@@ -1,19 +1,23 @@
 use candid::CandidType;
-use deposit::DepositToken;
 use serde::{Deserialize, Serialize};
-use transfer::TransferToken;
-use withdraw::WithdrawToken;
 
-use crate::proto;
+use crate::{
+    common::{DoHash, HashOf},
+    proto,
+    utils::{hash::hash_sha256, pb::to_proto_bytes},
+};
 
 /// 存入代币
-pub mod deposit;
+mod deposit;
+pub use deposit::*;
 
 /// 提取代币
-pub mod withdraw;
+mod withdraw;
+pub use withdraw::*;
 
 /// 转移代币
-pub mod transfer;
+mod transfer;
+pub use transfer::*;
 
 /// 代币交易
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
@@ -56,5 +60,15 @@ impl TryFrom<proto::TokenTransaction> for TokenTransaction {
             Withdraw(value) => TokenTransaction::Withdraw(value.try_into()?),
             Transfer(value) => TokenTransaction::Transfer(value.try_into()?),
         })
+    }
+}
+
+impl DoHash for TokenTransaction {
+    fn do_hash(&self) -> Result<HashOf<TokenTransaction>, String> {
+        let transaction: proto::TokenTransaction =
+            self.clone().try_into().map_err(|err| format!("{err:?}"))?;
+        let bytes = to_proto_bytes(&transaction)?;
+        let hash = hash_sha256(&bytes);
+        Ok(HashOf::new(hash))
     }
 }

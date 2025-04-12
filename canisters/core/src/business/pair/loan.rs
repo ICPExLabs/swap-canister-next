@@ -93,10 +93,10 @@ async fn inner_pair_swap_by_loan(
     required.push(token_account_out);
 
     // 3. lock
-    let lock =
+    let balance_lock =
         match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            Lock(guard) => guard,
-            Retry(retries) => {
+            LockBalanceResult::Lock(guard) => guard,
+            LockBalanceResult::Retry(retries) => {
                 // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
                 let service_swap = crate::services::swap::Service(self_canister.id());
                 return service_swap
@@ -108,7 +108,7 @@ async fn inner_pair_swap_by_loan(
     // * 4. do business
     {
         let success = with_mut_state_without_record(|s| {
-            s.business_token_pair_swap_by_loan(&lock, &self_canister, args, pas)
+            s.business_token_pair_swap_by_loan(&balance_lock, &self_canister, args, pas)
         })?;
 
         // ! push log

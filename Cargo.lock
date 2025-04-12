@@ -197,6 +197,7 @@ dependencies = [
  "prost-build",
  "serde",
  "serde_bytes",
+ "sha2",
 ]
 
 [[package]]

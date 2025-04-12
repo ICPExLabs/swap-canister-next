@@ -2,9 +2,12 @@ use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    common::{CandidBlock, EncodedBlock, GetBlocksError, TimestampNanos},
+    common::{CandidBlock, DoHash, EncodedBlock, GetBlocksError, HashOf, TimestampNanos},
     proto,
-    utils::pb::{from_proto_bytes, to_proto_bytes},
+    utils::{
+        hash::hash_sha256,
+        pb::{from_proto_bytes, to_proto_bytes},
+    },
 };
 
 use super::transaction::TokenTransaction;
@@ -12,7 +15,17 @@ use super::transaction::TokenTransaction;
 /// 代币块
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
-pub struct TokenBlock(pub CandidBlock<TokenTransaction>);
+pub struct TokenBlock(pub CandidBlock<TokenBlock, TokenTransaction>);
+
+impl DoHash for TokenBlock {
+    fn do_hash(&self) -> Result<HashOf<TokenBlock>, String> {
+        let mut bytes = Vec::with_capacity(32 + 32);
+        bytes.extend(self.0.parent_hash.as_slice());
+        bytes.extend(self.0.hash_without_parent()?.as_slice());
+        let hash = hash_sha256(&bytes);
+        Ok(HashOf::new(hash))
+    }
+}
 
 /// 多个块
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]

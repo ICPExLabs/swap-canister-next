@@ -26,6 +26,7 @@ serde_bytes = { workspace = true }
 ic-canister-kit = { workspace = true, features = ["identity"] }
 
 hex = { workspace = true }
+sha2 = { workspace = true }
 
 prost = "0.13.5" # 处理 protobuf 的代码
 

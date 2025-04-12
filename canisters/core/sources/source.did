@@ -1,15 +1,18 @@
 type Account = record { owner : principal; subaccount : opt blob };
 type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
+  TokenBlockChainLocked;
   TransferError : TransferError;
   NotSupportedToken : principal;
   Unlocked : vec TokenAccount;
   Swap : text;
   TokenPairAmmNotExist : record { TokenPair; text };
+  TokenAccountsLocked : vec TokenAccount;
   InsufficientBalance : record { principal; nat };
   TokenPairAmmExist : record { TokenPair; text };
   InvalidAmm : text;
-  Locked : vec TokenAccount;
+  SwapBlockChainLocked;
+  TokenBlockChainError : text;
   TransferFromError : TransferFromError;
   NotOwner : principal;
   CallCanisterError : record { RejectionCode; text };

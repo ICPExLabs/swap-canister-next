@@ -10,7 +10,7 @@ impl Business for InnerState {
         std::mem::replace(&mut self.business_data.fee_to, fee_to)
     }
 
-    // tokens
+    // tokens query
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         &TOKENS
     }
@@ -58,37 +58,54 @@ impl Business for InnerState {
         self.token_balances.unlock(locked)
     }
 
+    // token block chain lock
+    fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
+        self.token_block_chain.lock()
+    }
+    fn business_token_block_chain_unlock(&mut self) {
+        self.token_block_chain.unlock()
+    }
+
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
-        lock: &TokenBalancesLock,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
+        balance_lock: &TokenBalancesLock,
+        token_lock: &TokenBlockChainLock,
+        arg: DepositToken,
     ) -> Result<(), BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
-        guard.token_deposit(token, account, amount)
+        let mut balance_guard = self.token_balances.be_guard(balance_lock);
+        let mut token_guard = self.token_block_chain.be_guard(token_lock);
+        // 1. get token block
+        let transaction = TokenTransaction::Deposit(arg.clone());
+        let (encoded_block, hash) = token_guard.push_token_transaction(transaction)?;
+        // 2. do deposit
+        balance_guard.token_deposit(arg.token, arg.from, arg.amount)?;
+        // 3. push block
+        token_guard.push_block(encoded_block, hash);
+        // 4. set certified data
+        ic_cdk::api::set_certified_data(hash.as_slice()); // TODO with swap hash?
+        Ok(())
     }
     fn business_token_withdraw(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         token: CanisterId,
         account: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         guard.token_withdraw(token, account, amount)
     }
     fn business_token_transfer(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         token: CanisterId,
         from: Account,
         to: Account,
         amount_without_fee: Nat,
         fee: Nat,
     ) -> Result<Nat, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         match guard
             .fee_to()
             .iter()
@@ -149,12 +166,12 @@ impl Business for InnerState {
     // pair liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.add_liquidity(
             self.business_data.fee_to,
             &mut guard,
@@ -178,12 +195,12 @@ impl Business for InnerState {
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         pa: PairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.remove_liquidity(
             self.business_data.fee_to,
             &mut guard,
@@ -196,12 +213,12 @@ impl Business for InnerState {
     // pair swap
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.swap_exact_tokens_for_tokens(
             &mut guard,
             self_canister,
@@ -211,12 +228,12 @@ impl Business for InnerState {
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.swap_tokens_for_exact_tokens(
             &mut guard,
             self_canister,
@@ -226,12 +243,12 @@ impl Business for InnerState {
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
-        lock: &TokenBalancesLock,
+        balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
         pas: Vec<PairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(lock);
+        let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data
             .token_pairs
             .swap_by_loan(&mut guard, self_canister, args, pas)

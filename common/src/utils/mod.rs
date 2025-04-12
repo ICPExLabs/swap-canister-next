@@ -6,3 +6,6 @@ pub mod range;
 
 /// runtime
 pub mod runtime;
+
+/// hash
+pub mod hash;

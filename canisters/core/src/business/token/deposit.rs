@@ -46,15 +46,20 @@ async fn inner_token_deposit(
     let required = vec![token_account];
 
     // 3. lock
-    let lock =
+    let balance_lock =
         match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            Lock(lock) => lock,
-            Retry(retries) => {
-                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-                let service_swap = crate::services::swap::Service(self_canister.id());
-                return service_swap.token_deposit(args_clone, Some(retries)).await;
+            LockBalanceResult::Lock(lock) => lock,
+            LockBalanceResult::Retry(retries) => {
+                return retry_token_deposit(self_canister.id(), args_clone, retries).await;
             }
         };
+    let token_lock = match super::super::lock_token_block_chain(retries.unwrap_or_default())? {
+        LockTokenBlockChainResult::Lock(lock) => lock,
+        LockTokenBlockChainResult::Retry(retries) => {
+            drop(balance_lock); // ! must drop before retry
+            return retry_token_deposit(self_canister.id(), args_clone, retries).await;
+        }
+    };
 
     // * 4. do business
     {
@@ -83,12 +88,32 @@ async fn inner_token_deposit(
         // ? 2. record changed
         let amount = args.amount_without_fee; // ! Actual deposit
         with_mut_state_without_record(|s| {
-            s.business_token_deposit(&lock, args.token, args.from, amount)
+            s.business_token_deposit(
+                &balance_lock,
+                &token_lock,
+                DepositToken {
+                    from: args.from,
+                    token: args.token,
+                    amount,
+                },
+            )
         })?;
 
         // ? 3. log
         // ! push log
 
+        // TODO 异步触发同步任务
+
         Ok(height)
     }
+}
+// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+#[inline]
+async fn retry_token_deposit(
+    self_canister_id: CanisterId,
+    args: TokenDepositArgs,
+    retries: u8,
+) -> Result<candid::Nat, BusinessError> {
+    let service_swap = crate::services::swap::Service(self_canister_id);
+    return service_swap.token_deposit(args, Some(retries)).await;
 }

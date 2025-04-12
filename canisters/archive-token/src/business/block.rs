@@ -47,7 +47,7 @@ fn inner_get_encoded_blocks(args: GetBlocksArgs) -> Result<Vec<EncodedBlock>, Ge
 mod tests {
     use candid::Principal;
     use common::{
-        archive::token::{TokenBlock, TokenTransaction, deposit::DepositToken},
+        archive::token::{DepositToken, TokenBlock, TokenTransaction},
         common::{CandidBlock, HashOf, TimestampNanos},
     };
     use ic_canister_kit::types::CanisterId;

@@ -53,10 +53,10 @@ async fn inner_token_withdraw(
     let required = vec![token_account];
 
     // 3. lock
-    let lock =
+    let balance_lock =
         match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            Lock(guard) => guard,
-            Retry(retries) => {
+            LockBalanceResult::Lock(guard) => guard,
+            LockBalanceResult::Retry(retries) => {
                 // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
                 let service_swap = crate::services::swap::Service(self_canister.id());
                 return service_swap.token_withdraw(args_clone, Some(retries)).await;
@@ -85,7 +85,7 @@ async fn inner_token_withdraw(
         // ? 2. record changed
         let amount = args.amount_without_fee + token.fee; // Total withdrawal
         with_mut_state_without_record(|s| {
-            s.business_token_withdraw(&lock, args.token, args.from, amount)
+            s.business_token_withdraw(&balance_lock, args.token, args.from, amount)
         })?;
 
         // ? 3. log

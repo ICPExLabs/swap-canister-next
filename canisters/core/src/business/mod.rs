@@ -31,7 +31,24 @@ fn lock_token_balances(
             if 0 < retries {
                 Ok(LockBalanceResult::Retry(retries - 1))
             } else {
-                Err(BusinessError::Locked(locked))
+                Err(BusinessError::TokenAccountsLocked(locked))
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_token_block_chain(retries: u8) -> Result<LockTokenBlockChainResult, BusinessError> {
+    assert!(retries < 10, "Too many retries");
+
+    match with_mut_state_without_record(|s| s.business_token_block_chain_lock()) {
+        Some(lock) => Ok(LockTokenBlockChainResult::Lock(lock)),
+        None => {
+            if 0 < retries {
+                Ok(LockTokenBlockChainResult::Retry(retries - 1))
+            } else {
+                Err(BusinessError::TokenBlockChainLocked)
             }
         }
     }
