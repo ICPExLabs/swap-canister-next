@@ -21,7 +21,7 @@ impl DoHash for TokenBlock {
     fn do_hash(&self) -> Result<HashOf<TokenBlock>, String> {
         let mut bytes = Vec::with_capacity(32 + 32);
         bytes.extend(self.0.parent_hash.as_slice());
-        bytes.extend(self.0.hash_without_parent()?.as_slice());
+        bytes.extend(self.0.hash_without_parent_hash()?.as_slice());
         let hash = hash_sha256(&bytes);
         Ok(HashOf::new(hash))
     }

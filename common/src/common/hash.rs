@@ -52,6 +52,12 @@ impl<T> CandidType for HashOf<T> {
 
 impl<T: std::clone::Clone> Copy for HashOf<T> {}
 
+impl<T> Default for HashOf<T> {
+    fn default() -> Self {
+        Self::new([0; 32])
+    }
+}
+
 impl<T> HashOf<T> {
     /// Creates a new hash from a byte array.
     pub fn new(bytes: [u8; HASH_LENGTH]) -> Self {
@@ -69,6 +75,11 @@ impl<T> HashOf<T> {
     /// 使用
     pub fn as_slice(&self) -> &[u8] {
         &self.inner
+    }
+
+    /// hex
+    pub fn hex(&self) -> String {
+        hex::encode(self.as_slice())
     }
 }
 

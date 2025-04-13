@@ -1,3 +1,7 @@
+/// 操作
+mod operation;
+pub use operation::*;
+
 /// 交易
 mod transaction;
 pub use transaction::*;

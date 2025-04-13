@@ -56,8 +56,8 @@ pub struct CandidBlock<B, T> {
 }
 
 impl<B, T: DoHash> CandidBlock<B, T> {
-    /// hash_without_parent
-    pub fn hash_without_parent(&self) -> Result<HashOf<CandidBlock<B, T>>, String> {
+    /// hash_without_parent_hash
+    pub fn hash_without_parent_hash(&self) -> Result<HashOf<CandidBlock<B, T>>, String> {
         let mut bytes = Vec::with_capacity(8 + 32);
         bytes.extend(self.timestamp.into_inner().to_le_bytes());
         bytes.extend(self.transaction.do_hash()?.as_slice());

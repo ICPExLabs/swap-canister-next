@@ -3,9 +3,9 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DepositToken {
     #[prost(message, optional, tag = "1")]
-    pub from: ::core::option::Option<super::common::Account>,
-    #[prost(message, optional, tag = "2")]
     pub token: ::core::option::Option<super::common::CanisterId>,
+    #[prost(message, optional, tag = "2")]
+    pub from: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "3")]
     pub amount: ::core::option::Option<super::common::Nat>,
 }
@@ -13,9 +13,9 @@ pub struct DepositToken {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct WithdrawToken {
     #[prost(message, optional, tag = "1")]
-    pub from: ::core::option::Option<super::common::Account>,
-    #[prost(message, optional, tag = "2")]
     pub token: ::core::option::Option<super::common::CanisterId>,
+    #[prost(message, optional, tag = "2")]
+    pub from: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "3")]
     pub amount: ::core::option::Option<super::common::Nat>,
     #[prost(message, optional, tag = "4")]
@@ -23,36 +23,36 @@ pub struct WithdrawToken {
 }
 /// transfer
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TransferToken {
+    #[prost(message, optional, tag = "1")]
+    pub token: ::core::option::Option<super::common::CanisterId>,
+    #[prost(message, optional, tag = "2")]
+    pub from: ::core::option::Option<super::common::Account>,
+    #[prost(message, optional, tag = "3")]
+    pub amount: ::core::option::Option<super::common::Nat>,
+    #[prost(message, optional, tag = "4")]
+    pub to: ::core::option::Option<super::common::Account>,
+    #[prost(message, optional, tag = "5")]
+    pub fee: ::core::option::Option<TransferFee>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TransferFee {
     #[prost(message, optional, tag = "1")]
     pub fee: ::core::option::Option<super::common::Nat>,
     #[prost(message, optional, tag = "2")]
     pub fee_to: ::core::option::Option<super::common::Account>,
 }
+/// operation
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TransferToken {
-    #[prost(message, optional, tag = "1")]
-    pub from: ::core::option::Option<super::common::Account>,
-    #[prost(message, optional, tag = "2")]
-    pub token: ::core::option::Option<super::common::CanisterId>,
-    #[prost(message, optional, tag = "3")]
-    pub amount: ::core::option::Option<super::common::Nat>,
-    #[prost(message, optional, tag = "4")]
-    pub fee: ::core::option::Option<TransferFee>,
-    #[prost(message, optional, tag = "5")]
-    pub to: ::core::option::Option<super::common::Account>,
+pub struct TokenOperation {
+    #[prost(oneof = "token_operation::TokenOperation", tags = "1, 2, 3")]
+    pub token_operation: ::core::option::Option<token_operation::TokenOperation>,
 }
-/// transaction
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TokenTransaction {
-    #[prost(oneof = "token_transaction::TokenTransaction", tags = "1, 2, 3")]
-    pub token_transaction: ::core::option::Option<token_transaction::TokenTransaction>,
-}
-/// Nested message and enum types in `TokenTransaction`.
-pub mod token_transaction {
+/// Nested message and enum types in `TokenOperation`.
+pub mod token_operation {
     #[non_exhaustive]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum TokenTransaction {
+    pub enum TokenOperation {
         #[prost(message, tag = "1")]
         Deposit(super::DepositToken),
         #[prost(message, tag = "2")]
@@ -60,6 +60,16 @@ pub mod token_transaction {
         #[prost(message, tag = "3")]
         Transfer(super::TransferToken),
     }
+}
+/// transaction
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TokenTransaction {
+    #[prost(message, optional, tag = "1")]
+    pub operation: ::core::option::Option<TokenOperation>,
+    #[prost(bytes = "bytes", optional, tag = "2")]
+    pub memo: ::core::option::Option<::prost::bytes::Bytes>,
+    #[prost(uint64, optional, tag = "3")]
+    pub created: ::core::option::Option<u64>,
 }
 /// TokenBlock
 #[derive(Clone, PartialEq, ::prost::Message)]

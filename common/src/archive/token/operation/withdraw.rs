@@ -8,10 +8,10 @@ use crate::proto;
 /// 提取交易
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
 pub struct WithdrawToken {
-    /// 源账户
-    pub from: Account,
     /// 代币
     pub token: CanisterId,
+    /// 源账户
+    pub from: Account,
     /// 转出数量，实际消耗数量，转出过程中代币罐子扣除的手续费需要计入
     pub amount: Nat,
     /// 目标账户
@@ -22,13 +22,13 @@ impl TryFrom<WithdrawToken> for proto::WithdrawToken {
     type Error = candid::Error;
 
     fn try_from(value: WithdrawToken) -> Result<Self, Self::Error> {
-        let from = value.from.into();
         let token = value.token.into();
+        let from = value.from.into();
         let amount = value.amount.try_into()?;
         let to = value.to.into();
         Ok(Self {
-            from: Some(from),
             token: Some(token),
+            from: Some(from),
             amount: Some(amount),
             to: Some(to),
         })
@@ -39,14 +39,14 @@ impl TryFrom<proto::WithdrawToken> for WithdrawToken {
     type Error = String;
 
     fn try_from(value: proto::WithdrawToken) -> Result<Self, Self::Error> {
-        let from = value
-            .from
-            .ok_or_else(|| "from of withdraw can not be none".to_string())?
-            .try_into()?;
         let token = value
             .token
             .ok_or_else(|| "token of withdraw can not be none".to_string())?
             .into();
+        let from = value
+            .from
+            .ok_or_else(|| "from of withdraw can not be none".to_string())?
+            .try_into()?;
         let amount = value
             .amount
             .ok_or_else(|| "from of withdraw can not be none".to_string())?

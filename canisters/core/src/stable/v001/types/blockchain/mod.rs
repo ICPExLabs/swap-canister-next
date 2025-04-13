@@ -24,7 +24,7 @@ impl<T> Default for BlockChain<T> {
             current_archiving: Default::default(),
             archive_config: Default::default(),
             locked: Default::default(),
-            parent_hash: HashOf::new([0; 32]),
+            parent_hash: HashOf::default(),
             next_block_index: Default::default(),
         }
     }

@@ -50,10 +50,10 @@ type GetTokenBlocksResult = variant {
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgV1 = record {
   maintainers : opt vec principal;
+  block_offset : opt record { nat64; blob };
   core_canister_id : opt principal;
   max_memory_size_bytes : opt nat64;
   schedule : opt nat;
-  block_height_offset : opt nat64;
 };
 type InitArgs = variant { V0 : InitArg; V1 : InitArgV1 };
 type LogVisibility = variant {
@@ -123,10 +123,15 @@ type TokenBlock = record {
   parent_hash : blob;
 };
 type TokenBlockRange = record { blocks : vec TokenBlock };
-type TokenTransaction = variant {
+type TokenOperation = variant {
   Withdraw : WithdrawToken;
   Deposit : DepositToken;
   Transfer : TransferToken;
+};
+type TokenTransaction = record {
+  created : opt nat64;
+  memo : opt blob;
+  operation : TokenOperation;
 };
 type TransferFee = record { fee : nat; fee_to : Account };
 type TransferToken = record {

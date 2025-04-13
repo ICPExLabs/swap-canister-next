@@ -1,5 +1,3 @@
-use ic_canister_kit::common::trap;
-
 use super::super::business::*;
 use super::types::*;
 
@@ -27,7 +25,7 @@ impl Business for InnerState {
     }
 
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
-        let adjusted_height = block_height.checked_sub(self.business_data.block_height_offset);
+        let adjusted_height = block_height.checked_sub(self.business_data.block_height_offset());
         let adjusted_height = trap(adjusted_height.ok_or("block height too small."));
         self.blocks.get_block(adjusted_height)
     }
@@ -51,7 +49,7 @@ impl Business for InnerState {
     ) -> Result<Vec<EncodedBlock>, String> {
         use ::common::utils::range::*;
 
-        let from_offset = self.business_data.block_height_offset;
+        let from_offset = self.business_data.block_height_offset();
         let length = length.min(MAX_BLOCKS_PER_REQUEST);
         let local_blocks_range = from_offset..from_offset + self.blocks.blocks_len();
         let requested_range = height_start..height_start + length;
@@ -84,7 +82,7 @@ impl Business for InnerState {
         use ::common::utils::range::*;
 
         let block_range = make_range(
-            self.business_data.block_height_offset,
+            self.business_data.block_height_offset(),
             self.blocks.blocks_len(),
         );
 
@@ -125,7 +123,7 @@ impl Business for InnerState {
     fn business_metrics(&self, w: &mut MetricsEncoder<Vec<u8>>) -> IoResult<()> {
         w.encode_gauge(
             "archive_node_block_height_offset",
-            self.business_data.block_height_offset as f64,
+            self.business_data.block_height_offset() as f64,
             "Block height offset assigned to this instance of the archive canister.",
         )?;
         w.encode_gauge(
@@ -175,9 +173,23 @@ impl Business for InnerState {
             blocks.len()
         );
         for block in &blocks {
-            // TODO check block hash before append
-
+            // 1. try to parse block bytes before append
+            let token_block: proto::TokenBlock = trap(from_proto_bytes(&block.0));
+            let token_block: TokenBlock = trap(token_block.try_into());
+            // 2. check block hash before append
+            if token_block.0.parent_hash != self.business_data.latest_block_hash {
+                ic_cdk::trap(&format!(
+                    "Parent hash mismatch. Expected: {}, got: {}",
+                    self.business_data.latest_block_hash.hex(),
+                    token_block.0.parent_hash.hex()
+                ));
+            }
+            // 3. get current block hash
+            let block_hash = trap(token_block.do_hash());
+            // 4. push
             self.blocks.append_block(&block.0);
+            // 5. update latest block hash
+            self.business_data.latest_block_hash = block_hash;
         }
         if self.blocks.total_block_size() > self.business_data.max_memory_size_bytes {
             ic_cdk::trap("No space left");

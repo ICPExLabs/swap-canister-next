@@ -47,7 +47,7 @@ fn inner_get_encoded_blocks(args: GetBlocksArgs) -> Result<Vec<EncodedBlock>, Ge
 mod tests {
     use candid::Principal;
     use common::{
-        archive::token::{DepositToken, TokenBlock, TokenTransaction},
+        archive::token::{DepositToken, TokenBlock, TokenOperation, TokenTransaction},
         common::{CandidBlock, HashOf, TimestampNanos},
     };
     use ic_canister_kit::types::CanisterId;
@@ -59,20 +59,24 @@ mod tests {
     fn test() {
         let user_id = Principal::from_text("aaaaa-aa").unwrap();
         let block = TokenBlock(CandidBlock {
-            parent_hash: HashOf::new([0; 32]),
+            parent_hash: HashOf::default(),
             timestamp: TimestampNanos::from_inner(0),
-            transaction: TokenTransaction::Deposit(DepositToken {
-                from: Account {
-                    owner: user_id,
-                    subaccount: None,
-                },
-                token: CanisterId::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
-                amount: candid::Nat::from(100_u64),
-            }),
+            transaction: TokenTransaction {
+                operation: TokenOperation::Deposit(DepositToken {
+                    from: Account {
+                        owner: user_id,
+                        subaccount: None,
+                    },
+                    token: CanisterId::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
+                    amount: candid::Nat::from(100_u64),
+                }),
+                memo: None,
+                created: None,
+            },
         });
         let proto_block: proto::TokenBlock = block.clone().try_into().unwrap();
         let bytes = to_proto_bytes(&proto_block).unwrap();
-        assert_eq!(hex::encode(&bytes), "0a220a2000000000000000000000000000000000000000000000000000000000000000001a170a150a00120c0a0a000000000000000201011a030a0164".to_string());
+        assert_eq!(hex::encode(&bytes), "0a220a2000000000000000000000000000000000000000000000000000000000000000001a190a170a150a0c0a0a0000000000000002010112001a030a0164".to_string());
         let proto_block2: proto::TokenBlock = from_proto_bytes(&bytes).unwrap();
         assert_eq!(proto_block, proto_block2);
         let block2: TokenBlock = proto_block2.try_into().unwrap();

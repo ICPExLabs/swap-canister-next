@@ -1,3 +1,5 @@
+pub use crate::proto::Message;
+
 /// 解码
 pub fn from_proto_bytes<T: prost::Message + Default>(bytes: &[u8]) -> Result<T, String> {
     prost::Message::decode(bytes).map_err(|e| e.to_string())
