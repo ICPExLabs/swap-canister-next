@@ -7,7 +7,7 @@ use super::{BusinessError, Caller};
 // 默认 1 天时间
 const TRANSACTION_WINDOW: Duration = Duration::from_secs(24 * 60 * 60);
 
-pub fn check_memo_and_created(
+pub fn check_meta(
     memo: &Option<Vec<u8>>,
     created: &Option<TimestampNanos>,
 ) -> Result<TimestampNanos, BusinessError> {

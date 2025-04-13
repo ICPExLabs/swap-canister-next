@@ -91,13 +91,25 @@ impl Business for InnerState {
     }
     fn business_token_withdraw(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<WithdrawToken>,
     ) -> Result<(), BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        guard.token_withdraw(token, account, amount)
+        let mut balance_guard = self.token_balances.be_guard(&locks.0);
+        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+        // 1. get token block
+        let transaction = TokenTransaction {
+            operation: TokenOperation::Withdraw(arg.arg.clone()),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, hash) = token_guard.push_token_transaction(arg.now, transaction)?;
+        // 2. do deposit
+        balance_guard.token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)?;
+        // 3. push block
+        token_guard.push_block(encoded_block, hash);
+        // 4. set certified data
+        ic_cdk::api::set_certified_data(hash.as_slice()); // TODO with swap hash?
+        Ok(())
     }
     fn business_token_transfer(
         &mut self,

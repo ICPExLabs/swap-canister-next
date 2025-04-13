@@ -39,7 +39,7 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, BlockIndex, DepositToken, DoHash, EncodedBlock, Nat, TimestampNanos, TokenBlock,
-    TokenOperation, TokenTransaction, proto,
+    TokenOperation, TokenTransaction, WithdrawToken, proto,
 };
 
 mod amm;

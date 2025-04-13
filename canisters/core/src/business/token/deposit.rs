@@ -22,8 +22,8 @@ impl CheckArgs for TokenDepositArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
-        // check memo and created
-        let now = check_memo_and_created(&self.memo, &self.created)?;
+        // check meta
+        let now = check_meta(&self.memo, &self.created)?;
 
         Ok((now, self_canister, caller))
     }
@@ -93,8 +93,8 @@ async fn inner_token_deposit(
                     now,
                     caller,
                     arg: DepositToken {
-                        from: args.from,
                         token: args.token,
+                        from: args.from,
                         amount,
                     },
                     memo: args.memo,

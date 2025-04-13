@@ -13,7 +13,7 @@ use crate::types::*;
 // withdraw
 
 impl CheckArgs for TokenWithdrawArgs {
-    type Result = (SelfCanister, Caller, TokenInfo);
+    type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // ! must be token, can not be dummy lp token
         let token = with_state(|s| s.business_tokens_query().get(&self.token).cloned())
@@ -29,7 +29,10 @@ impl CheckArgs for TokenWithdrawArgs {
             return Err(BusinessError::InsufficientBalance((self.token, balance)));
         }
 
-        Ok((self_canister, caller, token))
+        // check meta
+        let now = check_meta(&self.memo, &self.created)?;
+
+        Ok((now, self_canister, caller, token))
     }
 }
 
@@ -44,7 +47,7 @@ async fn inner_token_withdraw(
     retries: Option<u8>,
 ) -> Result<candid::Nat, BusinessError> {
     // 1. check args
-    let (self_canister, _caller, token) = args.check_args()?;
+    let (now, self_canister, caller, token) = args.check_args()?;
     let args_clone = args.clone();
 
     // 2. some value
@@ -53,15 +56,16 @@ async fn inner_token_withdraw(
     let required = vec![token_account];
 
     // 3. lock
-    let balance_lock =
-        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            LockBalanceResult::Lock(guard) => guard,
-            LockBalanceResult::Retry(retries) => {
-                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-                let service_swap = crate::services::swap::Service(self_canister.id());
-                return service_swap.token_withdraw(args_clone, Some(retries)).await;
-            }
-        };
+    let locks = match super::super::lock_token_balances_and_token_block_chain(
+        fee_to,
+        required,
+        retries.unwrap_or_default(),
+    )? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            return retry_token_withdraw(self_canister.id(), args_clone, retries).await;
+        }
+    };
 
     // * 4. do business
     {
@@ -85,7 +89,21 @@ async fn inner_token_withdraw(
         // ? 2. record changed
         let amount = args.amount_without_fee + token.fee; // Total withdrawal
         with_mut_state_without_record(|s| {
-            s.business_token_withdraw(&balance_lock, args.token, args.from, amount)
+            s.business_token_withdraw(
+                &locks,
+                ArgWithMeta {
+                    now,
+                    caller,
+                    arg: WithdrawToken {
+                        token: args.token,
+                        from: args.from,
+                        amount,
+                        to: args.to,
+                    },
+                    memo: args.memo,
+                    created: args.created,
+                },
+            )
         })?;
 
         // ? 3. log
@@ -93,4 +111,14 @@ async fn inner_token_withdraw(
 
         Ok(height)
     }
+}
+// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+#[inline]
+async fn retry_token_withdraw(
+    self_canister_id: CanisterId,
+    args: TokenWithdrawArgs,
+    retries: u8,
+) -> Result<candid::Nat, BusinessError> {
+    let service_swap = crate::services::swap::Service(self_canister_id);
+    return service_swap.token_withdraw(args, Some(retries)).await;
 }
