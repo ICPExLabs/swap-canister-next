@@ -48,7 +48,7 @@ mod tests {
     use candid::Principal;
     use common::{
         archive::token::{DepositToken, TokenBlock, TokenOperation, TokenTransaction},
-        common::{CandidBlock, HashOf, TimestampNanos},
+        types::{CandidBlock, HashOf, TimestampNanos},
     };
     use ic_canister_kit::types::CanisterId;
     use icrc_ledger_types::icrc1::account::Account;
