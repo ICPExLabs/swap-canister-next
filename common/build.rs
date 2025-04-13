@@ -18,6 +18,7 @@ fn main() {
                 "../common/proto/common.proto",
                 "../common/proto/block.proto",
                 "../common/proto/token.proto",
+                "../common/proto/swap.proto",
             ],
             &[".."],
         )

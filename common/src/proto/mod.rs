@@ -10,6 +10,12 @@ pub mod token;
 #[cfg(feature = "archive-token")]
 pub use token::*;
 
+#[cfg(feature = "archive-swap")]
+#[allow(missing_docs)]
+pub mod swap;
+#[cfg(feature = "archive-swap")]
+pub use swap::*;
+
 pub use block::*;
 pub use common::*;
 pub use prost::Message;

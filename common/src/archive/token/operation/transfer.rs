@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::proto;
 
 /// 转账交易
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TransferToken {
     /// 代币
     pub token: CanisterId,
@@ -21,7 +21,7 @@ pub struct TransferToken {
 }
 
 /// 转账手续费
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TransferFee {
     /// 手续费数量
     pub fee: Nat,
@@ -62,7 +62,7 @@ impl TryFrom<proto::TransferToken> for TransferToken {
             .try_into()?;
         let amount = value
             .amount
-            .ok_or_else(|| "from of withdraw can not be none".to_string())?
+            .ok_or_else(|| "amount of withdraw can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount of withdraw failed".to_string())?;
         let to = value

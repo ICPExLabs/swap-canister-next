@@ -4,9 +4,9 @@ use candid::CandidType;
 use ic_canister_kit::types::{Bound, Storable};
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, utils::hash::hash_sha256};
+use crate::{proto, types::TimestampNanos, utils::hash::hash_sha256};
 
-use super::{BlockIndex, DoHash, HashOf, timestamp::TimestampNanos};
+use super::{BlockIndex, DoHash, HashOf};
 
 // ========================== Block ==========================
 
@@ -45,7 +45,7 @@ impl Storable for EncodedBlock {
 }
 
 /// 块
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct CandidBlock<B, T> {
     /// 前置 hash
     pub parent_hash: HashOf<B>,

@@ -24,7 +24,7 @@ impl TryFrom<proto::Account> for Account {
         let owner = Principal::from_slice(&value.owner);
         let subaccount = if let Some(sub) = value.subaccount {
             if sub.len() != 32 {
-                return Err("length of subsccount of account must be 32".into());
+                return Err("length of subaccount of account must be 32".into());
             }
             let mut subaccount = [0; 32];
             subaccount.copy_from_slice(&sub[..32]);

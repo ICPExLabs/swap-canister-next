@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::proto;
 
 /// 存入交易
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct DepositToken {
     /// 代币
     pub token: CanisterId,
@@ -45,7 +45,7 @@ impl TryFrom<proto::DepositToken> for DepositToken {
             .try_into()?;
         let amount = value
             .amount
-            .ok_or_else(|| "from of deposit can not be none".to_string())?
+            .ok_or_else(|| "amount of deposit can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount of deposit failed".to_string())?;
 

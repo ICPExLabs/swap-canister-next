@@ -9,3 +9,6 @@ pub mod runtime;
 
 /// hash
 pub mod hash;
+
+/// principal
+pub mod principal;

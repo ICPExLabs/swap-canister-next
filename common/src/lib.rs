@@ -14,11 +14,8 @@ pub mod utils;
 /// proto
 pub mod proto;
 
-/// 通用
-pub mod common;
+/// 类型
+pub mod types;
 
-/// 核心罐子
-pub mod core;
-
-/// 存档罐子
+/// 存档
 pub mod archive;

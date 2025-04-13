@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::proto;
 
 /// 提取交易
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct WithdrawToken {
     /// 代币
     pub token: CanisterId,
@@ -49,7 +49,7 @@ impl TryFrom<proto::WithdrawToken> for WithdrawToken {
             .try_into()?;
         let amount = value
             .amount
-            .ok_or_else(|| "from of withdraw can not be none".to_string())?
+            .ok_or_else(|| "amount of withdraw can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount of withdraw failed".to_string())?;
         let to = value

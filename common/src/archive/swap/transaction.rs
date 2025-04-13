@@ -7,23 +7,23 @@ use crate::{
     utils::{hash::hash_sha256, pb::to_proto_bytes},
 };
 
-use super::TokenOperation;
+use super::SwapOperation;
 
 /// 代币交易
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
-pub struct TokenTransaction {
+pub struct SwapTransaction {
     /// 用户操作
-    pub operation: TokenOperation,
+    pub operation: SwapOperation,
     /// 用户标记，最大 32 字节
     pub memo: Option<Vec<u8>>,
     /// 用户设置的创建时间
     pub created: Option<TimestampNanos>,
 }
 
-impl TryFrom<TokenTransaction> for proto::TokenTransaction {
+impl TryFrom<SwapTransaction> for proto::SwapTransaction {
     type Error = candid::Error;
 
-    fn try_from(value: TokenTransaction) -> Result<Self, Self::Error> {
+    fn try_from(value: SwapTransaction) -> Result<Self, Self::Error> {
         let operation = value.operation.try_into()?;
         let memo = value.memo.map(|m| m.into());
         let created = value.created.map(|t| t.into_inner());
@@ -36,10 +36,10 @@ impl TryFrom<TokenTransaction> for proto::TokenTransaction {
     }
 }
 
-impl TryFrom<proto::TokenTransaction> for TokenTransaction {
+impl TryFrom<proto::SwapTransaction> for SwapTransaction {
     type Error = String;
 
-    fn try_from(value: proto::TokenTransaction) -> Result<Self, Self::Error> {
+    fn try_from(value: proto::SwapTransaction) -> Result<Self, Self::Error> {
         let operation = value
             .operation
             .ok_or_else(|| "operation of transaction can not be none".to_string())?
@@ -55,9 +55,9 @@ impl TryFrom<proto::TokenTransaction> for TokenTransaction {
     }
 }
 
-impl DoHash for TokenTransaction {
-    fn do_hash(&self) -> Result<HashOf<TokenTransaction>, String> {
-        let transaction: proto::TokenTransaction =
+impl DoHash for SwapTransaction {
+    fn do_hash(&self) -> Result<HashOf<SwapTransaction>, String> {
+        let transaction: proto::SwapTransaction =
             self.clone().try_into().map_err(|err| format!("{err:?}"))?;
         let bytes = to_proto_bytes(&transaction)?;
         let hash = hash_sha256(&bytes);

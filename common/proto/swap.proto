@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package swap;
+
+import "common/proto/common.proto";
+
+// ========================= common =========================
+
+// token pair
+message TokenPair {
+    common.CanisterId token0 = 1;
+    common.CanisterId token1 = 2;
+}
+
+// token pair
+message TokenPairAmm {
+    TokenPair pair = 1;
+    string amm = 2;
+}
+
+// ========================= basic operation =========================
+
+// ========================= basic operation pair =========================
+
+// create
+message PairCreate {
+    TokenPairAmm pair_amm = 1;
+}
+
+// swap
+message PairSwapToken {
+    // which token pair
+    common.CanisterId token_a = 1;
+    common.CanisterId token_b = 2;
+    string amm = 3;
+    // account pay
+    common.Account from = 4;
+    // account got
+    common.Account to = 5;
+    // amount pay
+    common.Nat amount_a = 6;
+    // amount got
+    common.Nat amount_b = 7;
+}
+
+// ========================= basic operation pair swap v2 =========================
+
+// mint
+message SwapV2MintToken {
+    // which token pair
+    TokenPairAmm pair_amm = 1;
+    // which account
+    common.Account account = 2;
+    // token transfer in
+    common.CanisterId token0 = 3;
+    common.CanisterId token1 = 4;
+    common.Nat amount0 = 5;
+    common.Nat amount1 = 6;
+    // lp token mint
+    common.CanisterId token = 7;
+    common.Nat amount = 8;
+}
+
+// burn
+message SwapV2BurnToken {
+    // which token pair
+    TokenPairAmm pair_amm = 1;
+    // which account
+    common.Account account = 2;
+    // lp token burn
+    common.CanisterId token = 3;
+    common.Nat amount = 4;
+    // token transfer out
+    common.CanisterId token0 = 5;
+    common.CanisterId token1 = 6;
+    common.Nat amount0 = 7;
+    common.Nat amount1 = 8;
+}
+
+// swap v2 operation
+message SwapV2Operation {
+    oneof swap_v2_operation {
+        SwapV2MintToken mint = 1;
+        SwapV2BurnToken burn = 2;
+    }
+}
+
+// ========================= basic operation pair =========================
+
+// pair operation
+message PairOperation {
+    oneof pair_operation {
+        PairCreate create = 1;
+        PairSwapToken swap = 2;
+        // swap v2
+        SwapV2Operation swap_v2 = 10; // start by 10
+    }
+}
+
+// ========================= swap operation =========================
+
+// operation
+message SwapOperation {
+    oneof swap_operation {
+        PairOperation pair  = 1;
+    }
+}
+
+// ========================= swap transaction =========================
+
+// transaction
+message SwapTransaction {
+    SwapOperation operation = 1;
+    optional bytes memo = 2;
+    optional uint64 created = 3;
+}
+
+// ========================= swap block =========================
+
+// SwapBlock
+message SwapBlock {
+    common.Hash parent_hash = 1;
+    uint64 timestamp = 2;
+    SwapTransaction transaction = 3;
+}

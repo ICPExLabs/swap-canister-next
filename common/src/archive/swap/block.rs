@@ -10,15 +10,15 @@ use crate::{
     },
 };
 
-use super::transaction::TokenTransaction;
+use super::transaction::SwapTransaction;
 
 /// 代币块
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
-pub struct TokenBlock(pub CandidBlock<TokenBlock, TokenTransaction>);
+pub struct SwapBlock(pub CandidBlock<SwapBlock, SwapTransaction>);
 
-impl DoHash for TokenBlock {
-    fn do_hash(&self) -> Result<HashOf<TokenBlock>, String> {
+impl DoHash for SwapBlock {
+    fn do_hash(&self) -> Result<HashOf<SwapBlock>, String> {
         let mut bytes = Vec::with_capacity(32 + 32);
         bytes.extend(self.0.parent_hash.as_slice());
         bytes.extend(self.0.hash_without_parent_hash()?.as_slice());
@@ -29,25 +29,25 @@ impl DoHash for TokenBlock {
 
 /// 多个块
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenBlockRange {
+pub struct SwapBlockRange {
     /// 块
-    pub blocks: Vec<TokenBlock>,
+    pub blocks: Vec<SwapBlock>,
 }
 
 /// 查询块结果
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct GetTokenBlocksResult(Result<TokenBlockRange, GetBlocksError>);
+pub struct GetSwapBlocksResult(Result<SwapBlockRange, GetBlocksError>);
 
-impl From<Result<TokenBlockRange, GetBlocksError>> for GetTokenBlocksResult {
-    fn from(value: Result<TokenBlockRange, GetBlocksError>) -> Self {
+impl From<Result<SwapBlockRange, GetBlocksError>> for GetSwapBlocksResult {
+    fn from(value: Result<SwapBlockRange, GetBlocksError>) -> Self {
         Self(value)
     }
 }
 
-impl TryFrom<TokenBlock> for proto::TokenBlock {
+impl TryFrom<SwapBlock> for proto::SwapBlock {
     type Error = candid::Error;
 
-    fn try_from(value: TokenBlock) -> Result<Self, Self::Error> {
+    fn try_from(value: SwapBlock) -> Result<Self, Self::Error> {
         let parent_hash = value.0.parent_hash.into();
         let timestamp = value.0.timestamp.into_inner();
         let transaction = value.0.transaction.try_into()?;
@@ -59,17 +59,17 @@ impl TryFrom<TokenBlock> for proto::TokenBlock {
     }
 }
 
-impl TryFrom<proto::TokenBlock> for TokenBlock {
+impl TryFrom<proto::SwapBlock> for SwapBlock {
     type Error = String;
-    fn try_from(value: proto::TokenBlock) -> Result<Self, Self::Error> {
+    fn try_from(value: proto::SwapBlock) -> Result<Self, Self::Error> {
         let parent_hash = value
             .parent_hash
-            .ok_or_else(|| "parent_hash of token block can not be none".to_string())?
+            .ok_or_else(|| "parent_hash of swap block can not be none".to_string())?
             .try_into()?;
         let timestamp = TimestampNanos::from_inner(value.timestamp);
         let transaction = value
             .transaction
-            .ok_or_else(|| "transaction of token block can not be none".to_string())?
+            .ok_or_else(|| "transaction of swap block can not be none".to_string())?
             .try_into()?;
         Ok(Self(CandidBlock {
             parent_hash,
@@ -79,24 +79,24 @@ impl TryFrom<proto::TokenBlock> for TokenBlock {
     }
 }
 
-impl TryFrom<TokenBlock> for EncodedBlock {
+impl TryFrom<SwapBlock> for EncodedBlock {
     type Error = String;
 
-    fn try_from(value: TokenBlock) -> Result<Self, Self::Error> {
-        let block: Result<proto::TokenBlock, _> = value.try_into();
+    fn try_from(value: SwapBlock) -> Result<Self, Self::Error> {
+        let block: Result<proto::SwapBlock, _> = value.try_into();
         let block = block.map_err(|err| err.to_string())?;
         let bytes = to_proto_bytes(&block)?;
         Ok(Self(bytes))
     }
 }
 
-impl TryFrom<EncodedBlock> for TokenBlock {
+impl TryFrom<EncodedBlock> for SwapBlock {
     type Error = String;
     fn try_from(value: EncodedBlock) -> Result<Self, Self::Error> {
         let bytes = value.0;
         ic_cdk::println!("bytes: {:?}", bytes);
         ic_cdk::println!("bytes: {:?}", hex::encode(&bytes));
-        let block: proto::TokenBlock = from_proto_bytes(&bytes)?;
+        let block: proto::SwapBlock = from_proto_bytes(&bytes)?;
         ic_cdk::println!("bytes: {:?}", block);
         block.try_into()
     }

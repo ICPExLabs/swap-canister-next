@@ -17,7 +17,7 @@ mod transfer;
 pub use transfer::*;
 
 /// 代币操作
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum TokenOperation {
     /// 存入
     Deposit(DepositToken),
@@ -55,10 +55,12 @@ impl TryFrom<proto::TokenOperation> for TokenOperation {
             .token_operation
             .ok_or_else(|| "token_operation can not be none".to_string())?;
 
-        Ok(match value {
+        let value = match value {
             Deposit(value) => TokenOperation::Deposit(value.try_into()?),
             Withdraw(value) => TokenOperation::Withdraw(value.try_into()?),
             Transfer(value) => TokenOperation::Transfer(value.try_into()?),
-        })
+        };
+
+        Ok(value)
     }
 }

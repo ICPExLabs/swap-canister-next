@@ -4,6 +4,8 @@ package token;
 
 import "common/proto/common.proto";
 
+// ========================= basic operation =========================
+
 // deposit
 message DepositToken {
     common.CanisterId token = 1;
@@ -32,6 +34,8 @@ message TransferFee {
     common.Account fee_to = 2;
 }
 
+// ========================= token operation =========================
+
 // operation
 message TokenOperation {
     oneof token_operation {
@@ -41,12 +45,16 @@ message TokenOperation {
     }
 }
 
+// ========================= token transaction =========================
+
 // transaction
 message TokenTransaction {
     TokenOperation operation = 1;
     optional bytes memo = 2;
     optional uint64 created = 3;
 }
+
+// ========================= token block =========================
 
 // TokenBlock
 message TokenBlock {

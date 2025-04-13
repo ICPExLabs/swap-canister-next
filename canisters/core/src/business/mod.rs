@@ -12,7 +12,7 @@ pub mod config;
 
 pub mod token;
 
-// pub mod pair;
+pub mod pair;
 
 pub mod test;
 
