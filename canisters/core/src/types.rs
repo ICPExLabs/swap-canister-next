@@ -31,9 +31,9 @@ pub use ::common::archive::token::{
 pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::types::{
-    Amm, AmmText, BlockIndex, BusinessError, DoHash, DummyCanisterId, EncodedBlock, GetBlocksArgs,
-    GetBlocksError, GetEncodedBlocksResult, SelfCanister, TimestampNanos, TokenAccount, TokenPair,
-    TokenPairAmm,
+    Amm, AmmText, BlockIndex, BusinessError, Caller, DoHash, DummyCanisterId, EncodedBlock,
+    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, SelfCanister, TimestampNanos,
+    TokenAccount, TokenPair, TokenPairAmm, check_caller,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

@@ -38,9 +38,9 @@ pub use crate::types::business::*;
 pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
-    Account, Amm, AmmText, BlockIndex, BusinessError, DepositToken, DoHash, DummyCanisterId,
-    EncodedBlock, Nat, SelfCanister, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
-    TokenPair, TokenPairAmm, TokenTransaction, TransferToken, WithdrawToken, proto,
+    Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
+    DummyCanisterId, EncodedBlock, Nat, SelfCanister, TimestampNanos, TokenAccount, TokenBlock,
+    TokenOperation, TokenPair, TokenPairAmm, TokenTransaction, TransferToken, WithdrawToken, proto,
 };
 
 mod amm;

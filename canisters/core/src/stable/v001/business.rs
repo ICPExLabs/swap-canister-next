@@ -2,7 +2,9 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
-    // config
+    // ======================== config ========================
+
+    // fee to
     fn business_config_fee_to_query(&self) -> Option<&Account> {
         self.business_data.fee_to.as_ref()
     }
@@ -10,29 +12,13 @@ impl Business for InnerState {
         std::mem::replace(&mut self.business_data.fee_to, fee_to)
     }
 
-    // tokens query
-    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-        &TOKENS
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        let token_hash = self.token_block_chain.get_latest_hash();
+        ic_cdk::api::set_certified_data(token_hash); // TODO with swap hash?
     }
-    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-        self.business_data
-            .token_pairs
-            .business_dummy_tokens_query(self.business_tokens_query())
-    }
-    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-        self.business_tokens_query()
-            .iter()
-            .map(|(token, info)| (*token, Cow::Borrowed(info)))
-            .chain(
-                self.business_dummy_tokens_query()
-                    .into_iter()
-                    .map(|(token, info)| (token, Cow::Owned(info))),
-            )
-            .collect()
-    }
-    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-        ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
-    }
+
+    // ======================== locks ========================
 
     // token balance lock
     fn business_token_balance_lock(
@@ -66,13 +52,41 @@ impl Business for InnerState {
         self.token_block_chain.unlock()
     }
 
-    // set_certified_data
-    fn business_certified_data_refresh(&self) {
-        let token_hash = self.token_block_chain.get_latest_hash();
-        ic_cdk::api::set_certified_data(token_hash); // TODO with swap hash?
+    // swap block chain lock
+    fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
+        self.swap_block_chain.lock()
+    }
+    fn business_swap_block_chain_unlock(&mut self) {
+        self.swap_block_chain.unlock()
     }
 
-    // token deposit and withdraw and transfer
+    // ======================== tokens query ========================
+
+    // tokens query
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        &TOKENS
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.business_data
+            .token_pairs
+            .business_dummy_tokens_query(self.business_tokens_query())
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.business_tokens_query()
+            .iter()
+            .map(|(token, info)| (*token, Cow::Borrowed(info)))
+            .chain(
+                self.business_dummy_tokens_query()
+                    .into_iter()
+                    .map(|(token, info)| (token, Cow::Owned(info))),
+            )
+            .collect()
+    }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
+    }
+
+    // ======================== token block chain ========================
     fn business_token_deposit(
         &mut self,
         locks: &(TokenBalancesLock, TokenBlockChainLock),
@@ -84,145 +98,145 @@ impl Business for InnerState {
         self.business_certified_data_refresh(); // set certified data
         Ok(())
     }
-    fn business_token_withdraw(
-        &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock),
-        arg: ArgWithMeta<WithdrawToken>,
-    ) -> Result<(), BusinessError> {
-        let mut balance_guard = self.token_balances.be_guard(&locks.0);
-        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-        balance_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
-        self.business_certified_data_refresh(); // set certified data
-        Ok(())
-    }
-    fn business_token_transfer(
-        &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock),
-        arg: ArgWithMeta<TransferToken>,
-    ) -> Result<Nat, BusinessError> {
-        let mut balance_guard = self.token_balances.be_guard(&locks.0);
-        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-        let changed = balance_guard.token_transfer(&mut token_guard, arg)?; // do transfer
-        self.business_certified_data_refresh(); // set certified data
-        Ok(changed)
-    }
+    // fn business_token_withdraw(
+    //     &mut self,
+    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
+    //     arg: ArgWithMeta<WithdrawToken>,
+    // ) -> Result<(), BusinessError> {
+    //     let mut balance_guard = self.token_balances.be_guard(&locks.0);
+    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+    //     balance_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
+    //     self.business_certified_data_refresh(); // set certified data
+    //     Ok(())
+    // }
+    // fn business_token_transfer(
+    //     &mut self,
+    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
+    //     arg: ArgWithMeta<TransferToken>,
+    // ) -> Result<Nat, BusinessError> {
+    //     let mut balance_guard = self.token_balances.be_guard(&locks.0);
+    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+    //     let changed = balance_guard.token_transfer(&mut token_guard, arg)?; // do transfer
+    //     self.business_certified_data_refresh(); // set certified data
+    //     Ok(changed)
+    // }
 
-    // pair
-    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-        self.business_data.token_pairs.query_token_pair_pools()
-    }
-    fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-        self.business_data.token_pairs.get_token_pair_pool_maker(pa)
-    }
-    fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
-        let token0 = TOKENS
-            .get(&pa.pair.token0)
-            .ok_or(BusinessError::NotSupportedToken(pa.pair.token0))?;
-        let token1 = TOKENS
-            .get(&pa.pair.token1)
-            .ok_or(BusinessError::NotSupportedToken(pa.pair.token1))?;
+    // // pair
+    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+    //     self.business_data.token_pairs.query_token_pair_pools()
+    // }
+    // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+    //     self.business_data.token_pairs.get_token_pair_pool_maker(pa)
+    // }
+    // fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
+    //     let token0 = TOKENS
+    //         .get(&pa.pair.token0)
+    //         .ok_or(BusinessError::NotSupportedToken(pa.pair.token0))?;
+    //     let token1 = TOKENS
+    //         .get(&pa.pair.token1)
+    //         .ok_or(BusinessError::NotSupportedToken(pa.pair.token1))?;
 
-        let (subaccount, dummy_canister_id) = pa.get_subaccount_and_dummy_canister_id();
+    //     let (subaccount, dummy_canister_id) = pa.get_subaccount_and_dummy_canister_id();
 
-        self.business_data.token_pairs.create_token_pair_pool(
-            pa,
-            subaccount,
-            dummy_canister_id,
-            token0,
-            token1,
-        )
-    }
+    //     self.business_data.token_pairs.create_token_pair_pool(
+    //         pa,
+    //         subaccount,
+    //         dummy_canister_id,
+    //         token0,
+    //         token1,
+    //     )
+    // }
 
-    // pair liquidity
-    fn business_token_pair_liquidity_add(
-        &mut self,
-        balance_lock: &TokenBalancesLock,
-        self_canister: &SelfCanister,
-        pa: TokenPairAmm,
-        arg: TokenPairLiquidityAddArg,
-    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        self.business_data.token_pairs.add_liquidity(
-            self.business_data.fee_to,
-            &mut guard,
-            self_canister,
-            pa,
-            arg,
-        )
-    }
-    fn business_token_pair_check_liquidity_removable(
-        &self,
-        pa: &TokenPairAmm,
-        from: &Account,
-        liquidity: &Nat,
-    ) -> Result<(), BusinessError> {
-        self.business_data.token_pairs.check_liquidity_removable(
-            &self.token_balances,
-            pa,
-            from,
-            liquidity,
-        )
-    }
-    fn business_token_pair_liquidity_remove(
-        &mut self,
-        balance_lock: &TokenBalancesLock,
-        self_canister: &SelfCanister,
-        pa: TokenPairAmm,
-        arg: TokenPairLiquidityRemoveArg,
-    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        self.business_data.token_pairs.remove_liquidity(
-            self.business_data.fee_to,
-            &mut guard,
-            self_canister,
-            pa,
-            arg,
-        )
-    }
+    // // pair liquidity
+    // fn business_token_pair_liquidity_add(
+    //     &mut self,
+    //     balance_lock: &TokenBalancesLock,
+    //     self_canister: &SelfCanister,
+    //     pa: TokenPairAmm,
+    //     arg: TokenPairLiquidityAddArg,
+    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+    //     let mut guard = self.token_balances.be_guard(balance_lock);
+    //     self.business_data.token_pairs.add_liquidity(
+    //         self.business_data.fee_to,
+    //         &mut guard,
+    //         self_canister,
+    //         pa,
+    //         arg,
+    //     )
+    // }
+    // fn business_token_pair_check_liquidity_removable(
+    //     &self,
+    //     pa: &TokenPairAmm,
+    //     from: &Account,
+    //     liquidity: &Nat,
+    // ) -> Result<(), BusinessError> {
+    //     self.business_data.token_pairs.check_liquidity_removable(
+    //         &self.token_balances,
+    //         pa,
+    //         from,
+    //         liquidity,
+    //     )
+    // }
+    // fn business_token_pair_liquidity_remove(
+    //     &mut self,
+    //     balance_lock: &TokenBalancesLock,
+    //     self_canister: &SelfCanister,
+    //     pa: TokenPairAmm,
+    //     arg: TokenPairLiquidityRemoveArg,
+    // ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+    //     let mut guard = self.token_balances.be_guard(balance_lock);
+    //     self.business_data.token_pairs.remove_liquidity(
+    //         self.business_data.fee_to,
+    //         &mut guard,
+    //         self_canister,
+    //         pa,
+    //         arg,
+    //     )
+    // }
 
-    // pair swap
-    fn business_token_pair_swap_exact_tokens_for_tokens(
-        &mut self,
-        balance_lock: &TokenBalancesLock,
-        self_canister: &SelfCanister,
-        args: TokenPairSwapExactTokensForTokensArgs,
-        pas: Vec<TokenPairAmm>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        self.business_data.token_pairs.swap_exact_tokens_for_tokens(
-            &mut guard,
-            self_canister,
-            args,
-            pas,
-        )
-    }
-    fn business_token_pair_swap_tokens_for_exact_tokens(
-        &mut self,
-        balance_lock: &TokenBalancesLock,
-        self_canister: &SelfCanister,
-        args: TokenPairSwapTokensForExactTokensArgs,
-        pas: Vec<TokenPairAmm>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        self.business_data.token_pairs.swap_tokens_for_exact_tokens(
-            &mut guard,
-            self_canister,
-            args,
-            pas,
-        )
-    }
-    fn business_token_pair_swap_by_loan(
-        &mut self,
-        balance_lock: &TokenBalancesLock,
-        self_canister: &SelfCanister,
-        args: TokenPairSwapByLoanArgs,
-        pas: Vec<TokenPairAmm>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        self.business_data
-            .token_pairs
-            .swap_by_loan(&mut guard, self_canister, args, pas)
-    }
+    // // pair swap
+    // fn business_token_pair_swap_exact_tokens_for_tokens(
+    //     &mut self,
+    //     balance_lock: &TokenBalancesLock,
+    //     self_canister: &SelfCanister,
+    //     args: TokenPairSwapExactTokensForTokensArgs,
+    //     pas: Vec<TokenPairAmm>,
+    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    //     let mut guard = self.token_balances.be_guard(balance_lock);
+    //     self.business_data.token_pairs.swap_exact_tokens_for_tokens(
+    //         &mut guard,
+    //         self_canister,
+    //         args,
+    //         pas,
+    //     )
+    // }
+    // fn business_token_pair_swap_tokens_for_exact_tokens(
+    //     &mut self,
+    //     balance_lock: &TokenBalancesLock,
+    //     self_canister: &SelfCanister,
+    //     args: TokenPairSwapTokensForExactTokensArgs,
+    //     pas: Vec<TokenPairAmm>,
+    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    //     let mut guard = self.token_balances.be_guard(balance_lock);
+    //     self.business_data.token_pairs.swap_tokens_for_exact_tokens(
+    //         &mut guard,
+    //         self_canister,
+    //         args,
+    //         pas,
+    //     )
+    // }
+    // fn business_token_pair_swap_by_loan(
+    //     &mut self,
+    //     balance_lock: &TokenBalancesLock,
+    //     self_canister: &SelfCanister,
+    //     args: TokenPairSwapByLoanArgs,
+    //     pas: Vec<TokenPairAmm>,
+    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    //     let mut guard = self.token_balances.be_guard(balance_lock);
+    //     self.business_data
+    //         .token_pairs
+    //         .swap_by_loan(&mut guard, self_canister, args, pas)
+    // }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()
