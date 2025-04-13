@@ -66,6 +66,12 @@ impl Business for InnerState {
         self.token_block_chain.unlock()
     }
 
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        let token_hash = self.token_block_chain.get_latest_hash();
+        ic_cdk::api::set_certified_data(token_hash); // TODO with swap hash?
+    }
+
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
@@ -74,19 +80,8 @@ impl Business for InnerState {
     ) -> Result<(), BusinessError> {
         let mut balance_guard = self.token_balances.be_guard(&locks.0);
         let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-        // 1. get token block
-        let transaction = TokenTransaction {
-            operation: TokenOperation::Deposit(arg.arg.clone()),
-            memo: arg.memo,
-            created: arg.created,
-        };
-        let (encoded_block, hash) = token_guard.push_token_transaction(arg.now, transaction)?;
-        // 2. do deposit
-        balance_guard.token_deposit(arg.arg.token, arg.arg.from, arg.arg.amount)?;
-        // 3. push block
-        token_guard.push_block(encoded_block, hash);
-        // 4. set certified data
-        ic_cdk::api::set_certified_data(hash.as_slice()); // TODO with swap hash?
+        balance_guard.token_deposit(&mut token_guard, arg)?; // do deposit
+        self.business_certified_data_refresh(); // set certified data
         Ok(())
     }
     fn business_token_withdraw(
@@ -96,19 +91,8 @@ impl Business for InnerState {
     ) -> Result<(), BusinessError> {
         let mut balance_guard = self.token_balances.be_guard(&locks.0);
         let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-        // 1. get token block
-        let transaction = TokenTransaction {
-            operation: TokenOperation::Withdraw(arg.arg.clone()),
-            memo: arg.memo,
-            created: arg.created,
-        };
-        let (encoded_block, hash) = token_guard.push_token_transaction(arg.now, transaction)?;
-        // 2. do deposit
-        balance_guard.token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)?;
-        // 3. push block
-        token_guard.push_block(encoded_block, hash);
-        // 4. set certified data
-        ic_cdk::api::set_certified_data(hash.as_slice()); // TODO with swap hash?
+        balance_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
+        self.business_certified_data_refresh(); // set certified data
         Ok(())
     }
     fn business_token_transfer(

@@ -61,6 +61,11 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
@@ -247,6 +252,11 @@ impl Business for State {
     }
     fn business_token_block_chain_unlock(&mut self) {
         self.get_mut().business_token_block_chain_unlock()
+    }
+
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        self.get().business_certified_data_refresh()
     }
 
     // token deposit and withdraw and transfer

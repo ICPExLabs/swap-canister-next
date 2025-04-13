@@ -13,7 +13,7 @@ pub struct BlockChain<T> {
     pub current_archiving: Option<ArchivedBlocks>, // 当前正在存档的块
     pub archive_config: NextArchiveCanisterConfig, // 下一个存档的配置
     pub locked: RwLock<bool>,                      // 标记是否获取锁,只有持有锁才能修改
-    pub parent_hash: HashOf<T>,                    // 记录上一个块的 hash
+    pub latest_block_hash: HashOf<T>,              // 记录上一个块的 hash
     pub next_block_index: BlockIndex,              // 记录下一个块的高度
 }
 
@@ -24,15 +24,15 @@ impl<T> Default for BlockChain<T> {
             current_archiving: Default::default(),
             archive_config: Default::default(),
             locked: Default::default(),
-            parent_hash: HashOf::default(),
+            latest_block_hash: HashOf::default(),
             next_block_index: Default::default(),
         }
     }
 }
 
 impl<T> BlockChain<T> {
-    fn next_block(&mut self, parent_hash: HashOf<T>) {
-        self.parent_hash = parent_hash;
+    fn next_block(&mut self, latest_block_hash: HashOf<T>) {
+        self.latest_block_hash = latest_block_hash;
         self.next_block_index += 1;
     }
 }

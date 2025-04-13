@@ -63,6 +63,10 @@ impl TokenBlockChain {
             _lock: lock,
         }
     }
+
+    pub fn get_latest_hash(&self) -> &[u8] {
+        self.block_chain.latest_block_hash.as_slice()
+    }
 }
 
 // ============================ lock ============================
@@ -101,7 +105,7 @@ impl TokenBlockChainGuard<'_> {
             ));
         }
 
-        let parent_hash = self.token_block_chain.block_chain.parent_hash;
+        let parent_hash = self.token_block_chain.block_chain.latest_block_hash;
         let block = TokenBlock(CandidBlock {
             parent_hash,
             timestamp: now,
@@ -115,11 +119,11 @@ impl TokenBlockChainGuard<'_> {
         Ok((encoded_block, hash))
     }
 
-    pub fn push_block(&mut self, encoded_block: EncodedBlock, hash: HashOf<TokenBlock>) {
+    pub fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<TokenBlock>) {
         let block_height = self.token_block_chain.block_chain.next_block_index;
         self.token_block_chain
             .cached
             .insert(block_height, encoded_block);
-        self.token_block_chain.block_chain.next_block(hash);
+        self.token_block_chain.block_chain.next_block(block_hash);
     }
 }

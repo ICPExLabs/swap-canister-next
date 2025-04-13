@@ -4,16 +4,15 @@ use serde::{Deserialize, Serialize};
 use crate::proto;
 
 /// 存入代币
-/// 移除流动性, from 是池子账户，to 是用户账户
 mod deposit;
 pub use deposit::*;
 
 /// 提取代币
-/// 添加流动性, from 是用户账户，to 是池子账户
 mod withdraw;
 pub use withdraw::*;
 
 /// 转移代币
+/// 流动性添加和移除
 mod transfer;
 pub use transfer::*;
 

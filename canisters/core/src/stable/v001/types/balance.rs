@@ -266,14 +266,14 @@ pub struct TokenBalancesGuard<'a> {
 
 impl TokenBalancesGuard<'_> {
     #[inline]
-    fn do_token_deposit(&mut self, token_account: TokenAccount, amount: Nat) {
+    fn inner_do_token_deposit(&mut self, token_account: TokenAccount, amount: Nat) {
         let balance = self.balances.get(&token_account).unwrap_or_default();
 
         let new_balance = TokenBalance(balance.0 + amount);
         self.balances.insert(token_account, new_balance);
     }
     #[inline]
-    fn do_token_withdraw(&mut self, token_account: TokenAccount, amount: Nat) {
+    fn inner_token_withdraw(&mut self, token_account: TokenAccount, amount: Nat) {
         let balance = self.balances.get(&token_account).unwrap_or_default();
         assert!(amount <= balance.0, "Insufficient balance.");
 
@@ -283,6 +283,34 @@ impl TokenBalancesGuard<'_> {
         } else {
             self.balances.insert(token_account, new_balance);
         }
+    }
+    // deposit token
+    fn do_token_deposit(
+        &mut self,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        let token_account = TokenAccount::new(token, account);
+        if !self.lock.locked.contains(&token_account) {
+            return Err(BusinessError::Unlocked(vec![token_account]));
+        }
+        self.inner_do_token_deposit(token_account, amount); // do deposit
+        Ok(())
+    }
+    // withdraw token
+    fn do_token_withdraw(
+        &mut self,
+        token: CanisterId,
+        account: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        let token_account = TokenAccount::new(token, account);
+        if !self.lock.locked.contains(&token_account) {
+            return Err(BusinessError::Unlocked(vec![token_account]));
+        }
+        self.inner_token_withdraw(token_account, amount); // do withdraw
+        Ok(())
     }
 
     pub fn token_balance_of(
@@ -310,29 +338,39 @@ impl TokenBalancesGuard<'_> {
     // deposit token
     pub fn token_deposit(
         &mut self,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
+        guard: &mut TokenBlockChainGuard,
+        arg: ArgWithMeta<DepositToken>,
     ) -> Result<(), BusinessError> {
-        let token_account = TokenAccount::new(token, account);
-        if !self.lock.locked.contains(&token_account) {
-            return Err(BusinessError::Unlocked(vec![token_account]));
-        }
-        self.do_token_deposit(token_account, amount); // do deposit
+        // 1. get token block
+        let transaction = TokenTransaction {
+            operation: TokenOperation::Deposit(arg.arg.clone()),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, block_hash) = guard.push_token_transaction(arg.now, transaction)?;
+        // 2. do deposit
+        self.do_token_deposit(arg.arg.token, arg.arg.from, arg.arg.amount)?;
+        // 3. push block
+        guard.push_block(encoded_block, block_hash);
         Ok(())
     }
     // withdraw token
     pub fn token_withdraw(
         &mut self,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
+        guard: &mut TokenBlockChainGuard,
+        arg: ArgWithMeta<WithdrawToken>,
     ) -> Result<(), BusinessError> {
-        let token_account = TokenAccount::new(token, account);
-        if !self.lock.locked.contains(&token_account) {
-            return Err(BusinessError::Unlocked(vec![token_account]));
-        }
-        self.do_token_withdraw(token_account, amount); // do withdraw
+        // 1. get token block
+        let transaction = TokenTransaction {
+            operation: TokenOperation::Withdraw(arg.arg.clone()),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, hash) = guard.push_token_transaction(arg.now, transaction)?;
+        // 2. do withdraw
+        self.do_token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)?;
+        // 3. push block
+        guard.push_block(encoded_block, hash);
         Ok(())
     }
     // transfer token
@@ -355,8 +393,8 @@ impl TokenBalancesGuard<'_> {
         let from_balance = self.balances.get(&token_account_from).unwrap_or_default();
         assert!(amount <= from_balance.0, "Insufficient balance.");
 
-        self.do_token_withdraw(token_account_from, amount.clone());
-        self.do_token_deposit(token_account_to, amount);
+        self.inner_token_withdraw(token_account_from, amount.clone());
+        self.inner_do_token_deposit(token_account_to, amount);
 
         Ok(())
     }
