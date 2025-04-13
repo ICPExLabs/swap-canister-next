@@ -6,6 +6,14 @@ mod caller;
 #[allow(unused)]
 pub use caller::*;
 
+mod meta;
+#[allow(unused)]
+pub use meta::*;
+
+mod lock;
+#[allow(unused)]
+pub use lock::*;
+
 mod deadline;
 #[allow(unused)]
 pub use deadline::*;

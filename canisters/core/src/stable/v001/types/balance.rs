@@ -232,10 +232,6 @@ impl TokenBalances {
 
 // ============================ lock ============================
 
-pub enum LockBalanceResult {
-    Lock(TokenBalancesLock),
-    Retry(u8),
-}
 pub struct TokenBalancesLock {
     required: Vec<TokenAccount>,   // 目标要求锁住的账户，打印显示
     fee_to: Vec<TokenAccount>,     // 本次锁是否涉及到的手续费账户

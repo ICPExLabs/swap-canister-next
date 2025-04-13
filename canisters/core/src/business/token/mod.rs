@@ -12,6 +12,6 @@ mod query;
 
 mod deposit;
 
-mod withdraw;
+// mod withdraw;
 
-mod transfer;
+// mod transfer;

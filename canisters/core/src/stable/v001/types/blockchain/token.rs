@@ -1,6 +1,6 @@
 use common::{
     archive::token::{TokenBlock, TokenTransaction},
-    common::{BlockIndex, CandidBlock, EncodedBlock, HashOf},
+    common::{BlockIndex, CandidBlock, EncodedBlock, HashOf, TimestampNanos},
 };
 use ic_canister_kit::{common::trap, types::StableBTreeMap};
 use serde::{Deserialize, Serialize};
@@ -67,10 +67,6 @@ impl TokenBlockChain {
 
 // ============================ lock ============================
 
-pub enum LockTokenBlockChainResult {
-    Lock(TokenBlockChainLock),
-    Retry(u8),
-}
 pub struct TokenBlockChainLock;
 
 impl Drop for TokenBlockChainLock {
@@ -89,10 +85,11 @@ pub struct TokenBlockChainGuard<'a> {
 impl TokenBlockChainGuard<'_> {
     pub fn push_token_transaction(
         &self,
+        now: TimestampNanos,
         transaction: TokenTransaction,
     ) -> Result<(EncodedBlock, HashOf<TokenBlock>), BusinessError> {
         use ::common::utils::pb::to_proto_bytes;
-        use ::common::{archive::token::TokenBlock, common::TimestampNanos, proto};
+        use ::common::{archive::token::TokenBlock, proto};
 
         if self
             .token_block_chain
@@ -105,10 +102,9 @@ impl TokenBlockChainGuard<'_> {
         }
 
         let parent_hash = self.token_block_chain.block_chain.parent_hash;
-        let timestamp = TimestampNanos::now();
         let block = TokenBlock(CandidBlock {
             parent_hash,
-            timestamp,
+            timestamp: now,
             transaction,
         });
         let hash =

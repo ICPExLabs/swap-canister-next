@@ -12,7 +12,7 @@ use crate::types::*;
 
 // deposit
 impl CheckArgs for TokenDepositArgs {
-    type Result = (SelfCanister, Caller);
+    type Result = (TimestampNanos, SelfCanister, Caller);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // ! must be token, can not be dummy LP token
         if !with_state(|s| s.business_tokens_query().contains_key(&self.token)) {
@@ -22,7 +22,10 @@ impl CheckArgs for TokenDepositArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
-        Ok((self_canister, caller))
+        // check memo and created
+        let now = check_memo_and_created(&self.memo, &self.created)?;
+
+        Ok((now, self_canister, caller))
     }
 }
 
@@ -37,7 +40,7 @@ async fn inner_token_deposit(
     retries: Option<u8>,
 ) -> Result<candid::Nat, BusinessError> {
     // 1. check args
-    let (self_canister, _caller) = args.check_args()?;
+    let (now, self_canister, caller) = args.check_args()?;
     let args_clone = args.clone();
 
     // 2. some value
@@ -46,17 +49,13 @@ async fn inner_token_deposit(
     let required = vec![token_account];
 
     // 3. lock
-    let balance_lock =
-        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            LockBalanceResult::Lock(lock) => lock,
-            LockBalanceResult::Retry(retries) => {
-                return retry_token_deposit(self_canister.id(), args_clone, retries).await;
-            }
-        };
-    let token_lock = match super::super::lock_token_block_chain(retries.unwrap_or_default())? {
-        LockTokenBlockChainResult::Lock(lock) => lock,
-        LockTokenBlockChainResult::Retry(retries) => {
-            drop(balance_lock); // ! must drop before retry
+    let locks = match super::super::lock_token_balances_and_token_block_chain(
+        fee_to,
+        required,
+        retries.unwrap_or_default(),
+    )? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
             return retry_token_deposit(self_canister.id(), args_clone, retries).await;
         }
     };
@@ -89,12 +88,17 @@ async fn inner_token_deposit(
         let amount = args.amount_without_fee; // ! Actual deposit
         with_mut_state_without_record(|s| {
             s.business_token_deposit(
-                &balance_lock,
-                &token_lock,
-                DepositToken {
-                    from: args.from,
-                    token: args.token,
-                    amount,
+                &locks,
+                ArgWithMeta {
+                    now,
+                    caller,
+                    arg: DepositToken {
+                        from: args.from,
+                        token: args.token,
+                        amount,
+                    },
+                    memo: args.memo,
+                    created: args.created,
                 },
             )
         })?;

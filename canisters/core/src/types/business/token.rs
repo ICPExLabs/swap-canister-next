@@ -1,3 +1,5 @@
+use ::common::common::TimestampNanos;
+
 use super::*;
 
 // common
@@ -20,27 +22,36 @@ impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenDepositArgs {
-    pub from: Account,
     pub token: CanisterId,
+    pub from: Account,
     pub amount_without_fee: candid::Nat,
+
+    pub memo: Option<Vec<u8>>,
+    pub created: Option<TimestampNanos>,
 }
 
 // withdraw
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenWithdrawArgs {
-    pub from: Account,
     pub token: CanisterId,
+    pub from: Account,
     pub amount_without_fee: candid::Nat,
     pub to: Account,
+
+    pub memo: Option<Vec<u8>>,
+    pub created: Option<TimestampNanos>,
 }
 
 // inner transfer
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenTransferArgs {
-    pub from: Account,
     pub token: CanisterId,
+    pub from: Account,
     pub amount_without_fee: candid::Nat,
     pub to: Account,
+
+    pub memo: Option<Vec<u8>>,
+    pub created: Option<TimestampNanos>,
 }

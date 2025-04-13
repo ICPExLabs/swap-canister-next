@@ -24,12 +24,13 @@ pub use business::*;
 
 #[allow(unused)]
 pub use ::common::archive::token::{
-    DepositToken, GetTokenBlocksResult, TokenBlock, TokenBlockRange, TokenTransaction, TransferFee,
-    TransferToken, WithdrawToken,
+    DepositToken, GetTokenBlocksResult, TokenBlock, TokenBlockRange, TokenOperation,
+    TokenTransaction, TransferFee, TransferToken, WithdrawToken,
 };
 #[allow(unused)]
 pub use ::common::common::{
     BlockIndex, DoHash, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult,
+    TimestampNanos,
 };
 #[allow(unused)]
 pub use ::common::proto;

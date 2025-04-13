@@ -64,9 +64,8 @@ pub trait Business:
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token_lock: &TokenBlockChainLock,
-        arg: DepositToken,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
     ) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -255,12 +254,10 @@ impl Business for State {
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token_lock: &TokenBlockChainLock,
-        arg: DepositToken,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
     ) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_token_deposit(balance_lock, token_lock, arg)
+        self.get_mut().business_token_deposit(locks, arg)
     }
     fn business_token_withdraw(
         &mut self,

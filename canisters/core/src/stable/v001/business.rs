@@ -69,17 +69,20 @@ impl Business for InnerState {
     // token deposit and withdraw and transfer
     fn business_token_deposit(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token_lock: &TokenBlockChainLock,
-        arg: DepositToken,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
     ) -> Result<(), BusinessError> {
-        let mut balance_guard = self.token_balances.be_guard(balance_lock);
-        let mut token_guard = self.token_block_chain.be_guard(token_lock);
+        let mut balance_guard = self.token_balances.be_guard(&locks.0);
+        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
         // 1. get token block
-        let transaction = TokenTransaction::Deposit(arg.clone());
-        let (encoded_block, hash) = token_guard.push_token_transaction(transaction)?;
+        let transaction = TokenTransaction {
+            operation: TokenOperation::Deposit(arg.arg.clone()),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, hash) = token_guard.push_token_transaction(arg.now, transaction)?;
         // 2. do deposit
-        balance_guard.token_deposit(arg.token, arg.from, arg.amount)?;
+        balance_guard.token_deposit(arg.arg.token, arg.arg.from, arg.arg.amount)?;
         // 3. push block
         token_guard.push_block(encoded_block, hash);
         // 4. set certified data

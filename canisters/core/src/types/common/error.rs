@@ -8,6 +8,10 @@ use super::{super::TokenAccount, AmmText, TokenPair};
 
 #[derive(Debug, Clone, Deserialize, CandidType)]
 pub enum BusinessError {
+    /// memo 太长
+    MemoTooLong,
+    /// 交易时间窗口无效
+    InvalidCreated(String),
     /// 跨罐子调用错误
     CallCanisterError((RejectionCode, String)),
     /// 代币转账错误

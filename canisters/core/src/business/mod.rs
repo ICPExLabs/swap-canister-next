@@ -12,7 +12,7 @@ pub mod config;
 
 pub mod token;
 
-pub mod pair;
+// pub mod pair;
 
 pub mod test;
 
@@ -22,14 +22,14 @@ fn lock_token_balances(
     fee_to: Vec<CanisterId>,
     required: Vec<TokenAccount>,
     retries: u8,
-) -> Result<LockBalanceResult, BusinessError> {
+) -> Result<LockResult<TokenBalancesLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
 
     match with_mut_state_without_record(|s| s.business_token_balance_lock(fee_to, required)) {
-        Ok(lock) => Ok(LockBalanceResult::Lock(lock)),
+        Ok(lock) => Ok(LockResult::Locked(lock)),
         Err(locked) => {
             if 0 < retries {
-                Ok(LockBalanceResult::Retry(retries - 1))
+                Ok(LockResult::Retry(retries - 1))
             } else {
                 Err(BusinessError::TokenAccountsLocked(locked))
             }
@@ -39,19 +39,42 @@ fn lock_token_balances(
 
 #[allow(unused)]
 #[inline(always)]
-fn lock_token_block_chain(retries: u8) -> Result<LockTokenBlockChainResult, BusinessError> {
+fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
 
     match with_mut_state_without_record(|s| s.business_token_block_chain_lock()) {
-        Some(lock) => Ok(LockTokenBlockChainResult::Lock(lock)),
+        Some(lock) => Ok(LockResult::Locked(lock)),
         None => {
             if 0 < retries {
-                Ok(LockTokenBlockChainResult::Retry(retries - 1))
+                Ok(LockResult::Retry(retries - 1))
             } else {
                 Err(BusinessError::TokenBlockChainLocked)
             }
         }
     }
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_token_balances_and_token_block_chain(
+    fee_to: Vec<CanisterId>,
+    required: Vec<TokenAccount>,
+    retries: u8,
+) -> Result<LockResult<(TokenBalancesLock, TokenBlockChainLock)>, BusinessError> {
+    let balances_lock = match lock_token_balances(fee_to, required, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
+    };
+
+    let token_lock = match lock_token_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(balances_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    Ok(LockResult::Locked((balances_lock, token_lock)))
 }
 
 // 查询
