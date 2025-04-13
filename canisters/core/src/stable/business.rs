@@ -83,12 +83,8 @@ pub trait Business:
     }
     fn business_token_transfer(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token: CanisterId,
-        from: Account,
-        to: Account,
-        amount_without_fee: Nat,
-        fee: Nat,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
     ) -> Result<Nat, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -276,21 +272,10 @@ impl Business for State {
     }
     fn business_token_transfer(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token: CanisterId,
-        from: Account,
-        to: Account,
-        amount_without_fee: Nat,
-        fee: Nat,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
     ) -> Result<Nat, BusinessError> {
-        self.get_mut().business_token_transfer(
-            balance_lock,
-            token,
-            from,
-            to,
-            amount_without_fee,
-            fee,
-        )
+        self.get_mut().business_token_transfer(locks, arg)
     }
 
     // pair

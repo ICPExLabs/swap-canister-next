@@ -1,3 +1,4 @@
+use common::archive::token::TransferFee;
 use ic_canister_kit::common::trap;
 use icrc_ledger_types::icrc1::account::DEFAULT_SUBACCOUNT;
 use serde::{Deserialize, Serialize};
@@ -257,6 +258,12 @@ impl Drop for TokenBalancesLock {
     }
 }
 
+impl TokenBalancesLock {
+    pub fn fee_to(&self) -> &[TokenAccount] {
+        &self.fee_to
+    }
+}
+
 // ============================ guard ============================
 
 pub struct TokenBalancesGuard<'a> {
@@ -312,6 +319,39 @@ impl TokenBalancesGuard<'_> {
         self.inner_token_withdraw(token_account, amount); // do withdraw
         Ok(())
     }
+    // transfer token
+    fn do_token_transfer(
+        &mut self,
+        token: CanisterId,
+        from: Account,
+        amount_without_fee: Nat,
+        to: Account,
+        fee: Option<TransferFee>,
+    ) -> Result<Nat, BusinessError> {
+        // check
+        let changed = amount_without_fee.clone()
+            + fee
+                .as_ref()
+                .map(|TransferFee { fee, .. }| fee.clone())
+                .unwrap_or_default();
+        let from_balance = self.token_balance_of(token, from)?;
+        if from_balance < changed {
+            return Err(BusinessError::InsufficientBalance((token, from_balance)));
+        }
+
+        // do transfer
+        self.do_token_withdraw(token, from, amount_without_fee.clone())?; // withdraw
+        self.do_token_deposit(token, to, amount_without_fee.clone())?; // deposit
+
+        // fee
+        if let Some(TransferFee { fee, fee_to }) = fee {
+            // do transfer fee
+            self.do_token_withdraw(token, from, fee.clone())?; // withdraw
+            self.do_token_deposit(token, fee_to, fee.clone())?; // deposit
+        }
+
+        Ok(changed)
+    }
 
     pub fn token_balance_of(
         &self,
@@ -329,10 +369,6 @@ impl TokenBalancesGuard<'_> {
             .get(&token_account)
             .map(|b| b.0)
             .unwrap_or_default())
-    }
-
-    pub fn fee_to(&self) -> &[TokenAccount] {
-        &self.lock.fee_to
     }
 
     // deposit token
@@ -376,28 +412,53 @@ impl TokenBalancesGuard<'_> {
     // transfer token
     pub fn token_transfer(
         &mut self,
-        token: CanisterId,
-        from: Account,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
-        let token_account_from = TokenAccount::new(token, from);
-        if !self.lock.locked.contains(&token_account_from) {
-            return Err(BusinessError::Unlocked(vec![token_account_from]));
-        }
-        let token_account_to = TokenAccount::new(token, to);
-        if !self.lock.locked.contains(&token_account_to) {
-            return Err(BusinessError::Unlocked(vec![token_account_to]));
-        }
-
-        let from_balance = self.balances.get(&token_account_from).unwrap_or_default();
-        assert!(amount <= from_balance.0, "Insufficient balance.");
-
-        self.inner_token_withdraw(token_account_from, amount.clone());
-        self.inner_do_token_deposit(token_account_to, amount);
-
-        Ok(())
+        guard: &mut TokenBlockChainGuard,
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        // 1. get token block
+        let transaction = TokenTransaction {
+            operation: TokenOperation::Transfer(arg.arg.clone()),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, hash) = guard.push_token_transaction(arg.now, transaction)?;
+        // 2. do withdraw
+        let changed = self.do_token_transfer(
+            arg.arg.token,
+            arg.arg.from,
+            arg.arg.amount,
+            arg.arg.to,
+            arg.arg.fee,
+        )?;
+        // 3. push block
+        guard.push_block(encoded_block, hash);
+        Ok(changed)
     }
+    // // transfer token
+    // pub fn token_transfer(
+    //     &mut self,
+    //     token: CanisterId,
+    //     from: Account,
+    //     to: Account,
+    //     amount: Nat,
+    // ) -> Result<(), BusinessError> {
+    //     let token_account_from = TokenAccount::new(token, from);
+    //     if !self.lock.locked.contains(&token_account_from) {
+    //         return Err(BusinessError::Unlocked(vec![token_account_from]));
+    //     }
+    //     let token_account_to = TokenAccount::new(token, to);
+    //     if !self.lock.locked.contains(&token_account_to) {
+    //         return Err(BusinessError::Unlocked(vec![token_account_to]));
+    //     }
+
+    //     let from_balance = self.balances.get(&token_account_from).unwrap_or_default();
+    //     assert!(amount <= from_balance.0, "Insufficient balance.");
+
+    //     self.inner_token_withdraw(token_account_from, amount.clone());
+    //     self.inner_do_token_deposit(token_account_to, amount);
+
+    //     Ok(())
+    // }
 }
 
 #[cfg(test)]

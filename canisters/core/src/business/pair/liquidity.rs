@@ -75,7 +75,6 @@ async fn inner_pair_liquidity_add(
 ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
     // 1. check args
     let (fee_to, mut required, self_canister, _caller, pa, arg) = args.check_args()?;
-    let args_clone = args.clone();
 
     // 2. some value
     // let fee_to = fee_to;
@@ -170,7 +169,6 @@ async fn inner_pair_liquidity_remove(
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     // 1. check args
     let (fee_to, mut required, self_canister, _caller, pa, arg) = args.check_args()?;
-    let args_clone = args.clone();
 
     // 2. some value
     // let fee_to = fee_to;

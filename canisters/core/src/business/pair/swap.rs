@@ -93,7 +93,6 @@ async fn inner_pair_swap_exact_tokens_for_tokens(
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     // 1. check args
     let (fee_to, mut required, self_canister, _caller, pas) = args.check_args()?;
-    let args_clone = args.clone();
 
     // 2. some value
     // let fee_to = fee_to;
@@ -205,7 +204,6 @@ async fn inner_pair_swap_tokens_for_exact_tokens(
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     // 1. check args
     let (fee_to, mut required, self_canister, _caller, pas) = args.check_args()?;
-    let args_clone = args.clone();
 
     // 2. some value
     // let fee_to = fee_to;

@@ -97,43 +97,14 @@ impl Business for InnerState {
     }
     fn business_token_transfer(
         &mut self,
-        balance_lock: &TokenBalancesLock,
-        token: CanisterId,
-        from: Account,
-        to: Account,
-        amount_without_fee: Nat,
-        fee: Nat,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
     ) -> Result<Nat, BusinessError> {
-        let mut guard = self.token_balances.be_guard(balance_lock);
-        match guard
-            .fee_to()
-            .iter()
-            .find(|&fee_to| fee_to.token == token)
-            .cloned()
-        {
-            Some(fee_to) if *crate::utils::math::ZERO < fee => {
-                assert_eq!(token, fee_to.token, "wrong fee_to token");
-
-                let amount = amount_without_fee.clone() + fee.clone();
-
-                // withdraw
-                guard.token_withdraw(token, from, amount.clone())?;
-
-                // deposit
-                guard.token_deposit(token, to, amount_without_fee)?;
-                guard.token_deposit(token, fee_to.account, fee)?;
-
-                // return changed amount
-                Ok(amount)
-            }
-            _ => {
-                // transfer
-                guard.token_transfer(token, from, to, amount_without_fee.clone())?;
-
-                // return changed amount
-                Ok(amount_without_fee)
-            }
-        }
+        let mut balance_guard = self.token_balances.be_guard(&locks.0);
+        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+        let changed = balance_guard.token_transfer(&mut token_guard, arg)?; // do transfer
+        self.business_certified_data_refresh(); // set certified data
+        Ok(changed)
     }
 
     // pair
