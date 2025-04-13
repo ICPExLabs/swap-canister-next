@@ -1,11 +1,15 @@
 use std::sync::RwLock;
 
-use common::common::{BlockIndex, HashOf};
 use ic_canister_kit::types::{CanisterId, UserId};
+use serde::{Deserialize, Serialize};
+
+use common::types::{BlockIndex, HashOf};
 
 mod token;
-use serde::{Deserialize, Serialize};
 pub use token::*;
+
+mod swap;
+pub use swap::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockChain<T> {

@@ -1,25 +1,4 @@
 type Account = record { owner : principal; subaccount : opt blob };
-type BusinessError = variant {
-  InvalidTokenPair : record { principal; principal };
-  TokenBlockChainLocked;
-  TransferError : TransferError;
-  NotSupportedToken : principal;
-  Unlocked : vec TokenAccount;
-  Swap : text;
-  TokenPairAmmNotExist : record { TokenPair; text };
-  TokenAccountsLocked : vec TokenAccount;
-  InsufficientBalance : record { principal; nat };
-  TokenPairAmmExist : record { TokenPair; text };
-  InvalidAmm : text;
-  SwapBlockChainLocked;
-  TokenBlockChainError : text;
-  TransferFromError : TransferFromError;
-  NotOwner : principal;
-  CallCanisterError : record { RejectionCode; text };
-  Liquidity : text;
-  Expired : nat64;
-};
-type BusinessResult = variant { Ok; Err : BusinessError };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -43,30 +22,15 @@ type DefiniteCanisterSettings = record {
 type ExampleVec = record { vec_data : nat64 };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
-type InnerLP = record {
-  fee : nat;
-  decimals : nat8;
-  dummy_canister_id : principal;
-  minimum_liquidity : nat;
-  total_supply : nat;
-};
 type LogVisibility = variant {
   controllers;
   public;
   allowed_viewers : vec principal;
 };
-type MarketMakerView = variant { SwapV2 : SwapV2MarketMakerView };
 type MigratedRecords = record {
   records : vec Record;
   next_id : nat64;
   removed : nat64;
-};
-type OuterLP = record {
-  fee : nat;
-  decimals : nat8;
-  token_canister_id : principal;
-  minimum_liquidity : nat;
-  total_supply : nat;
 };
 type PageData = record {
   total : nat64;
@@ -81,7 +45,6 @@ type PermissionUpdatedArg = variant {
   UpdateUserPermission : record { principal; opt vec text };
   UpdateUserRole : record { principal; opt vec text };
 };
-type PoolLp = variant { InnerLP : InnerLP; OuterLP : OuterLP };
 type QueryPage = record { page : nat64; size : nat32 };
 type QueryStats = record {
   response_payload_bytes_total : nat;
@@ -104,133 +67,6 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
-type RejectionCode = variant {
-  NoError;
-  CanisterError;
-  SysTransient;
-  DestinationInvalid;
-  Unknown;
-  SysFatal;
-  CanisterReject;
-};
-type SwapV2MarketMakerView = record {
-  lp : PoolLp;
-  block_timestamp_last : nat64;
-  price_cumulative_unit : nat;
-  reserve0 : nat;
-  reserve1 : nat;
-  subaccount : text;
-  price1_cumulative_last : nat;
-  token0 : text;
-  token1 : text;
-  fee_rate : text;
-  k_last : nat;
-  protocol_fee : opt text;
-  price0_cumulative_last : nat;
-};
-type TokenAccount = record { token : principal; account : Account };
-type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
-type TokenDepositArgs = record {
-  token : principal;
-  from : Account;
-  amount_without_fee : nat;
-};
-type TokenInfo = record {
-  fee : nat;
-  decimals : nat8;
-  name : text;
-  canister_id : principal;
-  symbol : text;
-};
-type TokenPair = record { token0 : principal; token1 : principal };
-type TokenPairLiquidityAddArgs = record {
-  to : Account;
-  from : Account;
-  pool : TokenPairPool;
-  deadline : opt nat64;
-  amount_desired : record { nat; nat };
-  amount_min : record { nat; nat };
-};
-type TokenPairLiquidityAddResult = variant {
-  Ok : TokenPairLiquidityAddSuccess;
-  Err : BusinessError;
-};
-type TokenPairLiquidityAddSuccess = record {
-  liquidity : nat;
-  amount : record { nat; nat };
-};
-type TokenPairLiquidityRemoveArgs = record {
-  to : Account;
-  from : Account;
-  pool : TokenPairPool;
-  liquidity : nat;
-  deadline : opt nat64;
-  amount_min : record { nat; nat };
-};
-type TokenPairLiquidityRemoveResult = variant {
-  Ok : TokenPairLiquidityRemoveSuccess;
-  Err : BusinessError;
-};
-type TokenPairLiquidityRemoveSuccess = record { amount : record { nat; nat } };
-type TokenPairPool = record {
-  amm : text;
-  pair : record { principal; principal };
-};
-type TokenPairSwapByLoanArgs = record {
-  to : Account;
-  from : Account;
-  loan : nat;
-  path : vec TokenPairPool;
-  deadline : opt nat64;
-};
-type TokenPairSwapExactTokensForTokensArgs = record {
-  to : Account;
-  amount_out_min : nat;
-  from : Account;
-  path : vec TokenPairPool;
-  deadline : opt nat64;
-  amount_in : nat;
-};
-type TokenPairSwapTokensForExactTokensArgs = record {
-  to : Account;
-  from : Account;
-  path : vec TokenPairPool;
-  deadline : opt nat64;
-  amount_out : nat;
-  amount_in_max : nat;
-};
-type TokenPairSwapTokensResult = variant {
-  Ok : TokenPairSwapTokensSuccess;
-  Err : BusinessError;
-};
-type TokenPairSwapTokensSuccess = record { amounts : vec nat };
-type TokenTransferArgs = record {
-  to : Account;
-  token : principal;
-  from : Account;
-  amount_without_fee : nat;
-};
-type TransferError = variant {
-  GenericError : record { message : text; error_code : nat };
-  TemporarilyUnavailable;
-  BadBurn : record { min_burn_amount : nat };
-  Duplicate : record { duplicate_of : nat };
-  BadFee : record { expected_fee : nat };
-  CreatedInFuture : record { ledger_time : nat64 };
-  TooOld;
-  InsufficientFunds : record { balance : nat };
-};
-type TransferFromError = variant {
-  GenericError : record { message : text; error_code : nat };
-  TemporarilyUnavailable;
-  InsufficientAllowance : record { allowance : nat };
-  BadBurn : record { min_burn_amount : nat };
-  Duplicate : record { duplicate_of : nat };
-  BadFee : record { expected_fee : nat };
-  CreatedInFuture : record { ledger_time : nat64 };
-  TooOld;
-  InsufficientFunds : record { balance : nat };
-};
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   business_example_cell_query : () -> (text) query;
@@ -250,26 +86,6 @@ service : (opt InitArgs) -> {
   canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (opt Account);
   config_fee_to_replace : (opt Account) -> (opt Account);
-  pair_create : (TokenPairPool) -> (BusinessResult);
-  pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
-      TokenPairLiquidityAddResult,
-    );
-  pair_liquidity_remove : (TokenPairLiquidityRemoveArgs, opt nat8) -> (
-      TokenPairLiquidityRemoveResult,
-    );
-  pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
-  pair_swap_by_loan : (TokenPairSwapByLoanArgs, opt nat8) -> (
-      TokenPairSwapTokensResult,
-    );
-  pair_swap_exact_tokens_for_tokens : (
-      TokenPairSwapExactTokensForTokensArgs,
-      opt nat8,
-    ) -> (TokenPairSwapTokensResult);
-  pair_swap_tokens_for_exact_tokens : (
-      TokenPairSwapTokensForExactTokensArgs,
-      opt nat8,
-    ) -> (TokenPairSwapTokensResult);
-  pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();
@@ -289,17 +105,6 @@ service : (opt InitArgs) -> {
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
   test_withdraw_all_tokens : (vec principal) -> (vec text);
-  token_balance : (principal, opt blob) -> (nat) query;
-  token_balance_by : (principal, Account) -> (nat) query;
-  token_balance_of : (principal, Account) -> (nat) query;
-  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
-  token_query : (principal) -> (opt TokenInfo) query;
-  token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
-  token_withdraw : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
-  tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
-  tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
-  tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
-  tokens_query : () -> (vec TokenInfo) query;
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
   wallet_receive : () -> (nat);

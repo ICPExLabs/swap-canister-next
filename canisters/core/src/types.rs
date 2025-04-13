@@ -28,12 +28,13 @@ pub use ::common::archive::token::{
     TokenTransaction, TransferFee, TransferToken, WithdrawToken,
 };
 #[allow(unused)]
-pub use ::common::common::{
-    BlockIndex, DoHash, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult,
-    TimestampNanos,
-};
-#[allow(unused)]
 pub use ::common::proto;
+#[allow(unused)]
+pub use ::common::types::{
+    Amm, AmmText, BlockIndex, BusinessError, DoHash, DummyCanisterId, EncodedBlock, GetBlocksArgs,
+    GetBlocksError, GetEncodedBlocksResult, SelfCanister, TimestampNanos, TokenAccount, TokenPair,
+    TokenPairAmm,
+};
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};
 

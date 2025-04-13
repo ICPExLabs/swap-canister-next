@@ -1,6 +1,5 @@
 use common::archive::token::TransferFee;
 use ic_canister_kit::common::trap;
-use icrc_ledger_types::icrc1::account::DEFAULT_SUBACCOUNT;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -222,7 +221,7 @@ impl TokenBalancesGuard<'_> {
     ) -> Result<(), BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
-            return Err(BusinessError::Unlocked(vec![token_account]));
+            return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
         }
         self.inner_do_token_deposit(token_account, amount); // do deposit
         Ok(())
@@ -236,7 +235,7 @@ impl TokenBalancesGuard<'_> {
     ) -> Result<(), BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
-            return Err(BusinessError::Unlocked(vec![token_account]));
+            return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
         }
         self.inner_token_withdraw(token_account, amount); // do withdraw
         Ok(())
@@ -282,7 +281,7 @@ impl TokenBalancesGuard<'_> {
     ) -> Result<candid::Nat, BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
-            return Err(BusinessError::Unlocked(vec![token_account]));
+            return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
         }
 
         let token_account = TokenAccount::new(token, account);

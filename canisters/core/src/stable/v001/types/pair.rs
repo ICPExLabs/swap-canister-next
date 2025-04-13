@@ -1,15 +1,17 @@
 use std::collections::HashMap;
 
+use common::utils::principal::sort_tokens;
+
 use super::*;
 
-use crate::utils::{math::zero, principal::sort_tokens};
+use crate::utils::math::zero;
 
 use super::{
-    Amm, BusinessError, DummyCanisterId, MarketMaker, PairAmm, SelfCanister, TokenBalances,
-    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairPool,
-    TokenPairSwapByLoanArgs, TokenPairSwapExactTokensForTokensArgs,
-    TokenPairSwapTokensForExactTokensArgs, TokenPairSwapTokensSuccess,
+    Amm, BusinessError, MarketMaker, SelfCanister, TokenBalances, TokenInfo, TokenPair,
+    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
+    TokenPairLiquidityRemoveSuccess, TokenPairPool, TokenPairSwapByLoanArgs,
+    TokenPairSwapExactTokensForTokensArgs, TokenPairSwapTokensForExactTokensArgs,
+    TokenPairSwapTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -29,14 +31,14 @@ impl TokenPairs {
     ) -> HashMap<CanisterId, TokenInfo> {
         self.query_token_pair_pools()
             .into_iter()
-            .flat_map(|(pair, amm, maker)| maker.dummy_tokens(tokens, pair, amm.into()))
+            .flat_map(|(pair, amm, maker)| maker.dummy_tokens(tokens, pair, (*amm).into()))
             .map(|info| (info.canister_id, info))
             .collect()
     }
 
     /// 查询该币对池子涉及的账户
-    pub fn get_token_pair_pool_maker(&self, pa: &PairAmm) -> Option<&MarketMaker> {
-        let PairAmm { pair, amm } = pa;
+    pub fn get_token_pair_pool_maker(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+        let TokenPairAmm { pair, amm } = pa;
         self.0.get(pair).and_then(|makers| makers.get(amm))
     }
 
@@ -44,20 +46,17 @@ impl TokenPairs {
 
     pub fn create_token_pair_pool(
         &mut self,
-        pa: PairAmm,
+        pa: TokenPairAmm,
         subaccount: Subaccount,
         dummy_canister_id: DummyCanisterId,
         token0: &TokenInfo,
         token1: &TokenInfo,
     ) -> Result<(), BusinessError> {
         if self.get_token_pair_pool_maker(&pa).is_some() {
-            return Err(BusinessError::TokenPairAmmExist((
-                pa.pair,
-                (&pa.amm).into(),
-            )));
+            return Err(BusinessError::TokenPairAmmExist((pa.pair, pa.amm.into())));
         }
 
-        let PairAmm { pair, amm } = pa;
+        let TokenPairAmm { pair, amm } = pa;
 
         let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);
 
@@ -74,7 +73,7 @@ impl TokenPairs {
         fee_to: Option<Account>,
         guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
-        pa: PairAmm,
+        pa: TokenPairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         let maker = self
@@ -89,7 +88,7 @@ impl TokenPairs {
     pub fn check_liquidity_removable(
         &self,
         token_balances: &TokenBalances,
-        pa: &PairAmm,
+        pa: &TokenPairAmm,
         from: &Account,
         liquidity: &Nat,
     ) -> Result<(), BusinessError> {
@@ -107,7 +106,7 @@ impl TokenPairs {
         fee_to: Option<Account>,
         guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
-        pa: PairAmm,
+        pa: TokenPairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         let maker = self
@@ -128,7 +127,7 @@ impl TokenPairs {
         self_canister: &SelfCanister,
         amounts: &[Nat],
         path: &[TokenPairPool],
-        pas: &[PairAmm],
+        pas: &[TokenPairAmm],
         pool_accounts: &[Account],
         _to: Account,
     ) -> Result<(), BusinessError> {
@@ -163,7 +162,7 @@ impl TokenPairs {
         amount_in: &Nat,
         amount_out_min: &Nat,
         path: &[TokenPairPool],
-        pas: &[PairAmm],
+        pas: &[TokenPairAmm],
     ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
         let mut amounts = Vec::with_capacity(path.len() + 1);
         amounts.push(amount_in.clone());
@@ -203,7 +202,7 @@ impl TokenPairs {
         amount_out: &Nat,
         amount_in_max: &Nat,
         path: &[TokenPairPool],
-        pas: &[PairAmm],
+        pas: &[TokenPairAmm],
     ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
         let mut amounts = Vec::with_capacity(path.len() + 1);
         amounts.push(amount_out.clone());
@@ -248,35 +247,37 @@ impl TokenPairs {
         guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let (amounts, pool_accounts) = self.get_amounts_out(
-            self_canister,
-            &args.amount_in,
-            &args.amount_out_min,
-            &args.path,
-            &pas,
-        )?;
+        todo!()
 
-        // transfer first
-        guard.token_transfer(
-            args.path[0].pair.0,
-            args.from,
-            pool_accounts[0],
-            amounts[0].clone(),
-        )?;
+        // let (amounts, pool_accounts) = self.get_amounts_out(
+        //     self_canister,
+        //     &args.amount_in,
+        //     &args.amount_out_min,
+        //     &args.path,
+        //     &pas,
+        // )?;
 
-        self.swap(
-            guard,
-            self_canister,
-            &amounts,
-            &args.path,
-            &pas,
-            &pool_accounts,
-            args.to,
-        )?;
+        // // transfer first
+        // guard.token_transfer(
+        //     args.path[0].pair.0,
+        //     args.from,
+        //     pool_accounts[0],
+        //     amounts[0].clone(),
+        // )?;
 
-        Ok(TokenPairSwapTokensSuccess { amounts })
+        // self.swap(
+        //     guard,
+        //     self_canister,
+        //     &amounts,
+        //     &args.path,
+        //     &pas,
+        //     &pool_accounts,
+        //     args.to,
+        // )?;
+
+        // Ok(TokenPairSwapTokensSuccess { amounts })
     }
 
     // pair swap got extra tokens
@@ -285,44 +286,46 @@ impl TokenPairs {
         guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let (amounts, pool_accounts) = self.get_amounts_in(
-            self_canister,
-            &args.amount_out,
-            &args.amount_in_max,
-            &args.path,
-            &pas,
-        )?;
+        todo!()
 
-        // check balance in
-        let balance_in = guard.token_balance_of(args.path[0].pair.0, args.from)?;
-        if balance_in < amounts[0] {
-            return Err(BusinessError::InsufficientBalance((
-                args.path[0].pair.0,
-                balance_in,
-            )));
-        }
+        // let (amounts, pool_accounts) = self.get_amounts_in(
+        //     self_canister,
+        //     &args.amount_out,
+        //     &args.amount_in_max,
+        //     &args.path,
+        //     &pas,
+        // )?;
 
-        // transfer first
-        guard.token_transfer(
-            args.path[0].pair.0,
-            args.from,
-            pool_accounts[0],
-            amounts[0].clone(),
-        )?;
+        // // check balance in
+        // let balance_in = guard.token_balance_of(args.path[0].pair.0, args.from)?;
+        // if balance_in < amounts[0] {
+        //     return Err(BusinessError::InsufficientBalance((
+        //         args.path[0].pair.0,
+        //         balance_in,
+        //     )));
+        // }
 
-        self.swap(
-            guard,
-            self_canister,
-            &amounts,
-            &args.path,
-            &pas,
-            &pool_accounts,
-            args.to,
-        )?;
+        // // transfer first
+        // guard.token_transfer(
+        //     args.path[0].pair.0,
+        //     args.from,
+        //     pool_accounts[0],
+        //     amounts[0].clone(),
+        // )?;
 
-        Ok(TokenPairSwapTokensSuccess { amounts })
+        // self.swap(
+        //     guard,
+        //     self_canister,
+        //     &amounts,
+        //     &args.path,
+        //     &pas,
+        //     &pool_accounts,
+        //     args.to,
+        // )?;
+
+        // Ok(TokenPairSwapTokensSuccess { amounts })
     }
 
     // pair swap by loan
@@ -331,27 +334,29 @@ impl TokenPairs {
         guard: &mut TokenBalancesGuard,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        let (amounts, pool_accounts) =
-            self.get_amounts_out(self_canister, &args.loan, &args.loan, &args.path, &pas)?;
+        todo!()
 
-        // ! loan token // transfer first
-        guard.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone())?;
+        // let (amounts, pool_accounts) =
+        //     self.get_amounts_out(self_canister, &args.loan, &args.loan, &args.path, &pas)?;
 
-        self.swap(
-            guard,
-            self_canister,
-            &amounts,
-            &args.path,
-            &pas,
-            &pool_accounts,
-            args.to,
-        )?;
+        // // ! loan token // transfer first
+        // guard.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone())?;
 
-        // ! return loan
-        guard.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone())?;
+        // self.swap(
+        //     guard,
+        //     self_canister,
+        //     &amounts,
+        //     &args.path,
+        //     &pas,
+        //     &pool_accounts,
+        //     args.to,
+        // )?;
 
-        Ok(TokenPairSwapTokensSuccess { amounts })
+        // // ! return loan
+        // guard.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone())?;
+
+        // Ok(TokenPairSwapTokensSuccess { amounts })
     }
 }

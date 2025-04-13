@@ -8,11 +8,11 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-mod query;
+// mod query;
 
-mod create;
+// mod create;
 
-mod liquidity;
+// mod liquidity;
 
 // mod swap;
 

@@ -1,5 +1,5 @@
 use common::{
-    archive::token::{TokenBlock, TokenTransaction},
+    archive::swap::{SwapBlock, SwapTransaction},
     types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, TimestampNanos},
 };
 use ic_canister_kit::{common::trap, types::StableBTreeMap};
@@ -7,29 +7,29 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{Business, BusinessError, with_mut_state_without_record};
 
-use super::super::init_token_blocks;
+use super::super::init_swap_blocks;
 
 use super::BlockChain;
 
 #[derive(Serialize, Deserialize)]
-pub struct TokenBlockChain {
-    #[serde(skip, default = "init_token_blocks")]
+pub struct SwapBlockChain {
+    #[serde(skip, default = "init_swap_blocks")]
     cached: StableBTreeMap<BlockIndex, EncodedBlock>, // 暂存所有缓存的块
-    block_chain: BlockChain<TokenBlock>,
+    block_chain: BlockChain<SwapBlock>,
 }
 
-impl Default for TokenBlockChain {
+impl Default for SwapBlockChain {
     fn default() -> Self {
         Self {
-            cached: init_token_blocks(),
+            cached: init_swap_blocks(),
             block_chain: BlockChain::default(),
         }
     }
 }
 
-impl TokenBlockChain {
+impl SwapBlockChain {
     // locks
-    pub fn lock(&mut self) -> Option<TokenBlockChainLock> {
+    pub fn lock(&mut self) -> Option<SwapBlockChainLock> {
         let mut locked = trap(self.block_chain.locked.write()); // ! what if failed ?
 
         if *locked {
@@ -39,7 +39,7 @@ impl TokenBlockChain {
         *locked = true;
         ic_cdk::println!("🔒 Locked token block chain.");
 
-        Some(TokenBlockChainLock)
+        Some(SwapBlockChainLock)
     }
 
     pub fn unlock(&mut self) {
@@ -48,18 +48,18 @@ impl TokenBlockChain {
         // 1. check first
         if !*locked {
             // if not true, terminator
-            let tips = "Unlock a token block chain failed. That is not locked.";
+            let tips = "Unlock a swap block chain failed. That is not locked.";
             ic_cdk::trap(tips); // never be here
         }
 
         // 2. do unlock
         *locked = false;
-        ic_cdk::println!("🔒 Locked token block chain.");
+        ic_cdk::println!("🔒 Locked swap block chain.");
     }
 
-    pub fn be_guard<'a>(&'a mut self, lock: &'a TokenBlockChainLock) -> TokenBlockChainGuard<'a> {
-        TokenBlockChainGuard {
-            token_block_chain: self,
+    pub fn be_guard<'a>(&'a mut self, lock: &'a SwapBlockChainLock) -> SwapBlockChainGuard<'a> {
+        SwapBlockChainGuard {
+            swap_block_chain: self,
             _lock: lock,
         }
     }
@@ -71,9 +71,9 @@ impl TokenBlockChain {
 
 // ============================ lock ============================
 
-pub struct TokenBlockChainLock;
+pub struct SwapBlockChainLock;
 
-impl Drop for TokenBlockChainLock {
+impl Drop for SwapBlockChainLock {
     fn drop(&mut self) {
         with_mut_state_without_record(|s| s.business_token_block_chain_unlock())
     }
@@ -81,52 +81,52 @@ impl Drop for TokenBlockChainLock {
 
 // ============================ guard ============================
 
-pub struct TokenBlockChainGuard<'a> {
-    token_block_chain: &'a mut TokenBlockChain,
-    _lock: &'a TokenBlockChainLock,
+pub struct SwapBlockChainGuard<'a> {
+    swap_block_chain: &'a mut SwapBlockChain,
+    _lock: &'a SwapBlockChainLock,
 }
 
-impl TokenBlockChainGuard<'_> {
-    pub fn push_token_transaction(
+impl SwapBlockChainGuard<'_> {
+    pub fn push_swap_transaction(
         &self,
         now: TimestampNanos,
-        transaction: TokenTransaction,
-    ) -> Result<(EncodedBlock, HashOf<TokenBlock>), BusinessError> {
+        transaction: SwapTransaction,
+    ) -> Result<(EncodedBlock, HashOf<SwapBlock>), BusinessError> {
         use ::common::utils::pb::to_proto_bytes;
-        use ::common::{archive::token::TokenBlock, proto, types::DoHash};
+        use ::common::{archive::swap::SwapBlock, proto, types::DoHash};
 
         if self
-            .token_block_chain
+            .swap_block_chain
             .cached
-            .contains_key(&self.token_block_chain.block_chain.next_block_index)
+            .contains_key(&self.swap_block_chain.block_chain.next_block_index)
         {
-            return Err(BusinessError::TokenBlockChainError(
+            return Err(BusinessError::SwapBlockChainError(
                 "The next block index is already in the cache.".to_string(),
             ));
         }
 
-        let parent_hash = self.token_block_chain.block_chain.latest_block_hash;
-        let block = TokenBlock(CandidBlock {
+        let parent_hash = self.swap_block_chain.block_chain.latest_block_hash;
+        let block = SwapBlock(CandidBlock {
             parent_hash,
             timestamp: now,
             transaction,
         });
         let hash = block
             .do_hash()
-            .map_err(BusinessError::TokenBlockChainError)?;
-        let block: proto::TokenBlock = block
+            .map_err(BusinessError::SwapBlockChainError)?;
+        let block: proto::SwapBlock = block
             .try_into()
-            .map_err(|err| BusinessError::TokenBlockChainError(format!("{err:?}")))?;
-        let encoded_block = to_proto_bytes(&block).map_err(BusinessError::TokenBlockChainError)?;
+            .map_err(|err| BusinessError::SwapBlockChainError(format!("{err:?}")))?;
+        let encoded_block = to_proto_bytes(&block).map_err(BusinessError::SwapBlockChainError)?;
         let encoded_block = EncodedBlock(encoded_block);
         Ok((encoded_block, hash))
     }
 
-    pub fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<TokenBlock>) {
-        let block_height = self.token_block_chain.block_chain.next_block_index;
-        self.token_block_chain
+    pub fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<SwapBlock>) {
+        let block_height = self.swap_block_chain.block_chain.next_block_index;
+        self.swap_block_chain
             .cached
             .insert(block_height, encoded_block);
-        self.token_block_chain.block_chain.next_block(block_hash);
+        self.swap_block_chain.block_chain.next_block(block_hash);
     }
 }

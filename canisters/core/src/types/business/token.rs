@@ -1,4 +1,4 @@
-use ::common::common::TimestampNanos;
+use ::common::types::TimestampNanos;
 
 use super::*;
 

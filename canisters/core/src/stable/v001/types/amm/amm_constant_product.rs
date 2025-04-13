@@ -7,6 +7,8 @@
 ///   - Uniswap V3 引入「集中流动性」，允许 LP 设定价格区间，提升资本效率。
 use std::collections::HashMap;
 
+use common::utils::principal::sort_tokens;
+
 use super::*;
 
 use crate::{
@@ -15,10 +17,7 @@ use crate::{
         TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
         TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
     },
-    utils::{
-        math::{ZERO, zero},
-        principal::sort_tokens,
-    },
+    utils::math::{ZERO, zero},
 };
 
 /// 当前算法手续费下，需要的数据
@@ -246,33 +245,35 @@ impl SwapV2MarketMaker {
         self_canister: &SelfCanister,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        // ! check balance
-        {
-            let balance_a = guard.token_balance_of(arg.token_a, arg.from)?;
-            if balance_a < arg.amount_a_desired {
-                return Err(BusinessError::InsufficientBalance((arg.token_a, balance_a)));
-            }
-        }
-        {
-            let balance_b = guard.token_balance_of(arg.token_b, arg.from)?;
-            if balance_b < arg.amount_b_desired {
-                return Err(BusinessError::InsufficientBalance((arg.token_b, balance_b)));
-            }
-        }
+        todo!()
 
-        // calculate amount
-        let (amount_a, amount_b) = self.inner_add_liquidity(&arg)?;
-        let pool_account = Account {
-            owner: self_canister.id(),
-            subaccount: Some(self.subaccount),
-        };
-        guard.token_transfer(arg.token_a, arg.from, pool_account, amount_a.clone())?;
-        guard.token_transfer(arg.token_b, arg.from, pool_account, amount_b.clone())?;
-        let liquidity = self.mint(fee_to, guard, &pool_account, arg)?;
-        Ok(TokenPairLiquidityAddSuccess {
-            amount: (amount_a, amount_b),
-            liquidity,
-        })
+        // // ! check balance
+        // {
+        //     let balance_a = guard.token_balance_of(arg.token_a, arg.from)?;
+        //     if balance_a < arg.amount_a_desired {
+        //         return Err(BusinessError::InsufficientBalance((arg.token_a, balance_a)));
+        //     }
+        // }
+        // {
+        //     let balance_b = guard.token_balance_of(arg.token_b, arg.from)?;
+        //     if balance_b < arg.amount_b_desired {
+        //         return Err(BusinessError::InsufficientBalance((arg.token_b, balance_b)));
+        //     }
+        // }
+
+        // // calculate amount
+        // let (amount_a, amount_b) = self.inner_add_liquidity(&arg)?;
+        // let pool_account = Account {
+        //     owner: self_canister.id(),
+        //     subaccount: Some(self.subaccount),
+        // };
+        // guard.token_transfer(arg.token_a, arg.from, pool_account, amount_a.clone())?;
+        // guard.token_transfer(arg.token_b, arg.from, pool_account, amount_b.clone())?;
+        // let liquidity = self.mint(fee_to, guard, &pool_account, arg)?;
+        // Ok(TokenPairLiquidityAddSuccess {
+        //     amount: (amount_a, amount_b),
+        //     liquidity,
+        // })
     }
 
     pub fn check_liquidity_removable(
@@ -294,58 +295,59 @@ impl SwapV2MarketMaker {
         pool_account: &Account,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        let (token0, token1) = (self.token0, self.token1);
+        todo!()
+        // let (token0, token1) = (self.token0, self.token1);
 
-        let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
-        let _token0 = token0;
-        let _token1 = token1;
-        let balance0 = guard.token_balance_of(_token0, *pool_account)?;
-        let balance1 = guard.token_balance_of(_token1, *pool_account)?;
-        let liquidity = arg.liquidity;
+        // let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
+        // let _token0 = token0;
+        // let _token1 = token1;
+        // let balance0 = guard.token_balance_of(_token0, *pool_account)?;
+        // let balance1 = guard.token_balance_of(_token1, *pool_account)?;
+        // let liquidity = arg.liquidity;
 
-        let fee_on = self.mint_fee(fee_to, guard, &_reserve0, &_reserve1)?;
-        let _total_supply = self.lp.get_total_supply();
-        let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
-        let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
+        // let fee_on = self.mint_fee(fee_to, guard, &_reserve0, &_reserve1)?;
+        // let _total_supply = self.lp.get_total_supply();
+        // let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
+        // let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
 
-        // ! check amount before change data
-        if amount0 == *ZERO || amount1 == *ZERO {
-            return Err(BusinessError::Liquidity(
-                "INSUFFICIENT_LIQUIDITY_BURNED".into(),
-            ));
-        }
-        let (amount_a, amount_b) = if arg.token_a == token0 {
-            (amount0.clone(), amount1.clone())
-        } else {
-            (amount1.clone(), amount0.clone())
-        };
-        if amount_a < arg.amount_a_min {
-            return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
-        }
-        if amount_b < arg.amount_b_min {
-            return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
-        }
+        // // ! check amount before change data
+        // if amount0 == *ZERO || amount1 == *ZERO {
+        //     return Err(BusinessError::Liquidity(
+        //         "INSUFFICIENT_LIQUIDITY_BURNED".into(),
+        //     ));
+        // }
+        // let (amount_a, amount_b) = if arg.token_a == token0 {
+        //     (amount0.clone(), amount1.clone())
+        // } else {
+        //     (amount1.clone(), amount0.clone())
+        // };
+        // if amount_a < arg.amount_a_min {
+        //     return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
+        // }
+        // if amount_b < arg.amount_b_min {
+        //     return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
+        // }
 
-        // do burn
-        self.lp.burn(guard, arg.from, liquidity.clone())?;
+        // // do burn
+        // self.lp.burn(guard, arg.from, liquidity.clone())?;
 
-        // return token
-        guard.token_transfer(_token0, *pool_account, arg.to, amount0)?;
-        guard.token_transfer(_token1, *pool_account, arg.to, amount1)?;
+        // // return token
+        // guard.token_transfer(_token0, *pool_account, arg.to, amount0)?;
+        // guard.token_transfer(_token1, *pool_account, arg.to, amount1)?;
 
-        let balance0 = guard.token_balance_of(_token0, *pool_account)?;
-        let balance1 = guard.token_balance_of(_token1, *pool_account)?;
+        // let balance0 = guard.token_balance_of(_token0, *pool_account)?;
+        // let balance1 = guard.token_balance_of(_token1, *pool_account)?;
 
-        self.update(balance0, balance1, _reserve0, _reserve1);
-        if fee_on {
-            self.k_last = self.reserve0.clone() * self.reserve1.clone();
-        }
+        // self.update(balance0, balance1, _reserve0, _reserve1);
+        // if fee_on {
+        //     self.k_last = self.reserve0.clone() * self.reserve1.clone();
+        // }
 
-        // ! push log
+        // // ! push log
 
-        Ok(TokenPairLiquidityRemoveSuccess {
-            amount: (amount_a, amount_b),
-        })
+        // Ok(TokenPairLiquidityRemoveSuccess {
+        //     amount: (amount_a, amount_b),
+        // })
     }
 
     pub fn remove_liquidity(
@@ -525,83 +527,85 @@ impl SwapV2MarketMaker {
         amount1_out: Nat,
         to: Account,
     ) -> Result<(), BusinessError> {
-        let pool_account = Account {
-            owner: self_canister.id(),
-            subaccount: Some(self.subaccount),
-        };
+        todo!()
 
-        if amount0_out == *ZERO && amount1_out == *ZERO {
-            return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
-        }
+        // let pool_account = Account {
+        //     owner: self_canister.id(),
+        //     subaccount: Some(self.subaccount),
+        // };
 
-        let (_reserve0, _reserve1) = (self.reserve0.clone(), self.reserve1.clone());
-        if _reserve0 < amount0_out || _reserve1 < amount1_out {
-            return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
-        }
+        // if amount0_out == *ZERO && amount1_out == *ZERO {
+        //     return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
+        // }
 
-        // do transfer out and fetch balance
-        let (balance0, balance1) = {
-            let _token0 = self.token0;
-            let _token1 = self.token1;
-            if to.owner == _token0 || to.owner == _token1 {
-                return Err(BusinessError::Swap("INVALID_TO".into()));
-            }
-            if amount0_out > *ZERO {
-                guard.token_transfer(_token0, pool_account, to, amount0_out.clone())?;
-            }
-            if amount1_out > *ZERO {
-                guard.token_transfer(_token1, pool_account, to, amount1_out.clone())?;
-            }
-            let balance0 = guard.token_balance_of(_token0, pool_account)?;
-            let balance1 = guard.token_balance_of(_token1, pool_account)?;
-            (balance0, balance1)
-        };
+        // let (_reserve0, _reserve1) = (self.reserve0.clone(), self.reserve1.clone());
+        // if _reserve0 < amount0_out || _reserve1 < amount1_out {
+        //     return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
+        // }
 
-        // get in
-        let (amount0_in, amount1_in) = {
-            let amount0_in = if balance0 > _reserve0.clone() - amount0_out.clone() {
-                balance0.clone() - (_reserve0.clone() - amount0_out.clone())
-            } else {
-                zero()
-            };
-            let amount1_in = if balance1 > _reserve1.clone() - amount1_out.clone() {
-                balance1.clone() - (_reserve1.clone() - amount1_out.clone())
-            } else {
-                zero()
-            };
-            (amount0_in, amount1_in)
-        };
-        if amount0_in == *ZERO && amount1_in == *ZERO {
-            return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
-        }
+        // // do transfer out and fetch balance
+        // let (balance0, balance1) = {
+        //     let _token0 = self.token0;
+        //     let _token1 = self.token1;
+        //     if to.owner == _token0 || to.owner == _token1 {
+        //         return Err(BusinessError::Swap("INVALID_TO".into()));
+        //     }
+        //     if amount0_out > *ZERO {
+        //         guard.token_transfer(_token0, pool_account, to, amount0_out.clone())?;
+        //     }
+        //     if amount1_out > *ZERO {
+        //         guard.token_transfer(_token1, pool_account, to, amount1_out.clone())?;
+        //     }
+        //     let balance0 = guard.token_balance_of(_token0, pool_account)?;
+        //     let balance1 = guard.token_balance_of(_token1, pool_account)?;
+        //     (balance0, balance1)
+        // };
 
-        // check after changed
-        {
-            let n = self.fee_rate.numerator;
-            let d = self.fee_rate.denominator;
-            let balance0_adjusted = balance0.clone() * d - amount0_in * n;
-            let balance1_adjusted = balance1.clone() * d - amount1_in * n;
-            if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d
-            {
-                // return back
-                let _token0 = self.token0;
-                let _token1 = self.token1;
-                if amount0_out > *ZERO {
-                    guard.token_transfer(_token0, to, pool_account, amount0_out.clone())?;
-                }
-                if amount1_out > *ZERO {
-                    guard.token_transfer(_token1, to, pool_account, amount1_out.clone())?;
-                }
+        // // get in
+        // let (amount0_in, amount1_in) = {
+        //     let amount0_in = if balance0 > _reserve0.clone() - amount0_out.clone() {
+        //         balance0.clone() - (_reserve0.clone() - amount0_out.clone())
+        //     } else {
+        //         zero()
+        //     };
+        //     let amount1_in = if balance1 > _reserve1.clone() - amount1_out.clone() {
+        //         balance1.clone() - (_reserve1.clone() - amount1_out.clone())
+        //     } else {
+        //         zero()
+        //     };
+        //     (amount0_in, amount1_in)
+        // };
+        // if amount0_in == *ZERO && amount1_in == *ZERO {
+        //     return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
+        // }
 
-                return Err(BusinessError::Swap("K".into()));
-            }
-        }
+        // // check after changed
+        // {
+        //     let n = self.fee_rate.numerator;
+        //     let d = self.fee_rate.denominator;
+        //     let balance0_adjusted = balance0.clone() * d - amount0_in * n;
+        //     let balance1_adjusted = balance1.clone() * d - amount1_in * n;
+        //     if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d
+        //     {
+        //         // return back
+        //         let _token0 = self.token0;
+        //         let _token1 = self.token1;
+        //         if amount0_out > *ZERO {
+        //             guard.token_transfer(_token0, to, pool_account, amount0_out.clone())?;
+        //         }
+        //         if amount1_out > *ZERO {
+        //             guard.token_transfer(_token1, to, pool_account, amount1_out.clone())?;
+        //         }
 
-        self.update(balance0, balance1, _reserve0, _reserve1);
+        //         return Err(BusinessError::Swap("K".into()));
+        //     }
+        // }
 
-        // ! push log
+        // self.update(balance0, balance1, _reserve0, _reserve1);
 
-        Ok(())
+        // // ! push log
+
+        // Ok(())
     }
 }
 

@@ -1,4 +1,4 @@
-use super::*;
+use ::common::types::{Amm, AmmText, TokenPair};
 
 mod create;
 pub use create::*;
@@ -12,6 +12,8 @@ pub use swap::*;
 mod loan;
 pub use loan::*;
 
+use super::*;
+
 /// (token0, token1, amm)
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairPool {
@@ -19,11 +21,9 @@ pub struct TokenPairPool {
     pub amm: AmmText,
 }
 
-impl TokenPair {
-    pub fn to_pool(self, amm: &Amm) -> TokenPairPool {
-        TokenPairPool {
-            pair: (self.token0, self.token1),
-            amm: amm.into(),
-        }
+pub fn token_pair_to_pool(pair: &TokenPair, amm: Amm) -> TokenPairPool {
+    TokenPairPool {
+        pair: (pair.token0, pair.token1),
+        amm: amm.into(),
     }
 }

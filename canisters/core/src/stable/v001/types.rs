@@ -38,8 +38,9 @@ pub use crate::types::business::*;
 pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
-    Account, BlockIndex, DepositToken, DoHash, EncodedBlock, Nat, TimestampNanos, TokenBlock,
-    TokenOperation, TokenTransaction, TransferToken, WithdrawToken, proto,
+    Account, Amm, AmmText, BlockIndex, BusinessError, DepositToken, DoHash, DummyCanisterId,
+    EncodedBlock, Nat, SelfCanister, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
+    TokenPair, TokenPairAmm, TokenTransaction, TransferToken, WithdrawToken, proto,
 };
 
 mod amm;
@@ -129,6 +130,8 @@ pub struct InnerState {
 
     pub token_block_chain: TokenBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
 
+    pub swap_block_chain: SwapBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
+
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
     #[serde(skip, default = "init_example_cell_data")]
@@ -156,6 +159,8 @@ impl Default for InnerState {
 
             token_block_chain: Default::default(),
 
+            swap_block_chain: Default::default(),
+
             example_data: Default::default(),
 
             example_cell: init_example_cell_data(),
@@ -173,7 +178,7 @@ use ic_canister_kit::stable;
 // Token
 const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
 const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(1); // token blocks
-// const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
+const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
 
 // example
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
@@ -189,6 +194,10 @@ fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
 
 fn init_token_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
     stable::init_map_data(MEMORY_ID_TOKEN_BLOCKS)
+}
+
+fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
+    stable::init_map_data(MEMORY_ID_SWAP_BLOCKS)
 }
 
 // fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {

@@ -111,10 +111,10 @@ impl Business for InnerState {
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.business_data.token_pairs.query_token_pair_pools()
     }
-    fn business_token_pair_pool_maker_get(&self, pa: &PairAmm) -> Option<&MarketMaker> {
+    fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
         self.business_data.token_pairs.get_token_pair_pool_maker(pa)
     }
-    fn business_token_pair_pool_create(&mut self, pa: PairAmm) -> Result<(), BusinessError> {
+    fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
         let token0 = TOKENS
             .get(&pa.pair.token0)
             .ok_or(BusinessError::NotSupportedToken(pa.pair.token0))?;
@@ -138,7 +138,7 @@ impl Business for InnerState {
         &mut self,
         balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
-        pa: PairAmm,
+        pa: TokenPairAmm,
         arg: TokenPairLiquidityAddArg,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         let mut guard = self.token_balances.be_guard(balance_lock);
@@ -152,7 +152,7 @@ impl Business for InnerState {
     }
     fn business_token_pair_check_liquidity_removable(
         &self,
-        pa: &PairAmm,
+        pa: &TokenPairAmm,
         from: &Account,
         liquidity: &Nat,
     ) -> Result<(), BusinessError> {
@@ -167,7 +167,7 @@ impl Business for InnerState {
         &mut self,
         balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
-        pa: PairAmm,
+        pa: TokenPairAmm,
         arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         let mut guard = self.token_balances.be_guard(balance_lock);
@@ -186,7 +186,7 @@ impl Business for InnerState {
         balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapExactTokensForTokensArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.swap_exact_tokens_for_tokens(
@@ -201,7 +201,7 @@ impl Business for InnerState {
         balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapTokensForExactTokensArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data.token_pairs.swap_tokens_for_exact_tokens(
@@ -216,7 +216,7 @@ impl Business for InnerState {
         balance_lock: &TokenBalancesLock,
         self_canister: &SelfCanister,
         args: TokenPairSwapByLoanArgs,
-        pas: Vec<PairAmm>,
+        pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         let mut guard = self.token_balances.be_guard(balance_lock);
         self.business_data

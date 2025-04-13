@@ -1,8 +1,6 @@
 use std::time::Duration;
 
-use common::common::TimestampNanos;
-
-use super::{BusinessError, Caller};
+use common::types::{BusinessError, Caller, TimestampNanos};
 
 // 默认 1 天时间
 const TRANSACTION_WINDOW: Duration = Duration::from_secs(24 * 60 * 60);

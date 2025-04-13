@@ -60,6 +60,10 @@ pub enum BusinessError {
     Swap(String),
 
     // ================= token block chain =================
-    /// 用户操作涉及到的账户被锁定，无法执行操作
+    /// Token Block Chain Error
     TokenBlockChainError(String),
+
+    // ================= swap block chain =================
+    /// Swap Block Chain Error
+    SwapBlockChainError(String),
 }
