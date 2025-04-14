@@ -48,15 +48,30 @@ type DepositToken = record { token : principal; from : Account; amount : nat };
 type ExampleVec = record { vec_data : nat64 };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
+type InnerLP = record {
+  fee : nat;
+  decimals : nat8;
+  dummy_canister_id : principal;
+  minimum_liquidity : nat;
+  total_supply : nat;
+};
 type LogVisibility = variant {
   controllers;
   public;
   allowed_viewers : vec principal;
 };
+type MarketMakerView = variant { SwapV2 : SwapV2MarketMakerView };
 type MigratedRecords = record {
   records : vec Record;
   next_id : nat64;
   removed : nat64;
+};
+type OuterLP = record {
+  fee : nat;
+  decimals : nat8;
+  token_canister_id : principal;
+  minimum_liquidity : nat;
+  total_supply : nat;
 };
 type PageData = record {
   total : nat64;
@@ -86,6 +101,7 @@ type PermissionUpdatedArg = variant {
   UpdateUserPermission : record { principal; opt vec text };
   UpdateUserRole : record { principal; opt vec text };
 };
+type PoolLp = variant { InnerLP : InnerLP; OuterLP : OuterLP };
 type QueryPage = record { page : nat64; size : nat32 };
 type QueryStats = record {
   response_payload_bytes_total : nat;
@@ -143,6 +159,21 @@ type SwapV2BurnToken = record {
   pair_amm : TokenPairAmm;
   amount : nat;
 };
+type SwapV2MarketMakerView = record {
+  lp : PoolLp;
+  price_cumulative_exponent : nat8;
+  block_timestamp_last : nat64;
+  reserve0 : nat;
+  reserve1 : nat;
+  subaccount : text;
+  price1_cumulative_last : nat;
+  token0 : text;
+  token1 : text;
+  fee_rate : text;
+  k_last : nat;
+  protocol_fee : opt text;
+  price0_cumulative_last : nat;
+};
 type SwapV2Operation = variant {
   Burn : SwapV2BurnToken;
   Mint : SwapV2BurnToken;
@@ -175,6 +206,11 @@ type TokenOperation = variant {
 };
 type TokenPair = record { token0 : principal; token1 : principal };
 type TokenPairAmm = record { amm : Amm; pair : TokenPair };
+type TokenPairPool = record {
+  amm : text;
+  token0 : principal;
+  token1 : principal;
+};
 type TokenTransaction = record {
   created : opt nat64;
   memo : opt blob;
@@ -253,6 +289,8 @@ service : (opt InitArgs) -> {
   canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (opt Account);
   config_fee_to_replace : (opt Account) -> (opt Account);
+  pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
+  pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();

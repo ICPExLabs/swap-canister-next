@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairSwapTokensSuccess {

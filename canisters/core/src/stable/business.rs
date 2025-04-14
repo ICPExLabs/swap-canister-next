@@ -105,10 +105,14 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // // pair
-    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // ======================== swap block chain ========================
+
+    // ======================== token pair swap ========================
+
+    // ======================== query ========================
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
@@ -326,10 +330,14 @@ impl Business for State {
         self.get_mut().business_token_transfer(locks, arg)
     }
 
-    // // pair
-    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-    //     self.get().business_token_pair_pools_query()
-    // }
+    // ======================== swap block chain ========================
+
+    // ======================== token pair swap ========================
+
+    // ======================== query ========================
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        self.get().business_token_pair_pools_query()
+    }
     // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
     //     self.get().business_token_pair_pool_maker_get(pa)
     // }

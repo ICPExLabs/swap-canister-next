@@ -41,7 +41,8 @@ pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
     DummyCanisterId, EncodedBlock, Nat, QueryBlockResult, QuerySwapBlockResult,
     QueryTokenBlockResult, SelfCanister, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
-    TokenPair, TokenPairAmm, TokenTransaction, TransferToken, UserId, WithdrawToken, proto,
+    TokenPair, TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken,
+    proto,
 };
 
 mod amm;

@@ -129,10 +129,14 @@ impl Business for InnerState {
         Ok(changed)
     }
 
-    // // pair
-    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-    //     self.business_data.token_pairs.query_token_pair_pools()
-    // }
+    // ======================== swap block chain ========================
+
+    // ======================== token pair swap ========================
+
+    // ======================== query ========================
+    fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
+        self.business_data.token_pairs.query_token_pair_pools()
+    }
     // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
     //     self.business_data.token_pairs.get_token_pair_pool_maker(pa)
     // }
