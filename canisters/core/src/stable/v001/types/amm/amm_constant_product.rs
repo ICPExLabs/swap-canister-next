@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 
 use common::utils::principal::sort_tokens;
+use num_bigint::BigUint;
 
 use super::*;
 
@@ -32,7 +33,7 @@ pub struct SwapV2MarketMaker {
     reserve1: Nat,      // ! 当前 token0 存入的余额
     block_timestamp_last: u64,
 
-    price_cumulative_unit: Nat,
+    price_cumulative_exponent: u8, // 指数计算
     price0_cumulative_last: Nat,
     price1_cumulative_last: Nat,
     k_last: Nat, // ! 当前 k 值
@@ -58,13 +59,18 @@ impl SwapV2MarketMaker {
             reserve0: zero(),
             reserve1: zero(),
             block_timestamp_last: 0,
-            price_cumulative_unit: candid::Nat::from(u64::MAX),
+            price_cumulative_exponent: 64,
             price0_cumulative_last: zero(),
             price1_cumulative_last: zero(),
             k_last: zero(),
             lp,
             protocol_fee,
         }
+    }
+
+    pub fn price_cumulative_unit(&self) -> Nat {
+        let price_cumulative_unit = BigUint::from(2_u8).pow(self.price_cumulative_exponent as u32);
+        Nat::from(price_cumulative_unit)
     }
 
     pub fn dummy_tokens(
@@ -186,12 +192,11 @@ impl SwapV2MarketMaker {
         let time_elapsed = block_timestamp - self.block_timestamp_last;
         if time_elapsed > 0 && _reserve0 > *ZERO && _reserve1 > *ZERO {
             let e = Nat::from(time_elapsed);
+            let price_cumulative_unit = self.price_cumulative_unit();
             self.price0_cumulative_last +=
-                e.clone() * _reserve1.clone() * self.price_cumulative_unit.clone()
-                    / _reserve0.clone();
+                e.clone() * _reserve1.clone() * price_cumulative_unit.clone() / _reserve0.clone();
             self.price1_cumulative_last +=
-                e.clone() * _reserve0.clone() * self.price_cumulative_unit.clone()
-                    / _reserve1.clone();
+                e.clone() * _reserve0.clone() * price_cumulative_unit.clone() / _reserve1.clone();
         }
         self.reserve0 = balance0;
         self.reserve1 = balance1;
@@ -622,7 +627,7 @@ pub struct SwapV2MarketMakerView {
     reserve1: Nat,
     block_timestamp_last: u64,
 
-    price_cumulative_unit: Nat,
+    price_cumulative_exponent: u8,
     price0_cumulative_last: Nat,
     price1_cumulative_last: Nat,
     k_last: Nat,
@@ -641,7 +646,7 @@ impl From<SwapV2MarketMaker> for SwapV2MarketMakerView {
             reserve0: value.reserve0,
             reserve1: value.reserve1,
             block_timestamp_last: value.block_timestamp_last,
-            price_cumulative_unit: value.price_cumulative_unit,
+            price_cumulative_exponent: value.price_cumulative_exponent,
             price0_cumulative_last: value.price0_cumulative_last,
             price1_cumulative_last: value.price1_cumulative_last,
             k_last: value.k_last,
