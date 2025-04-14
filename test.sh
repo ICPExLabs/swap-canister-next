@@ -284,11 +284,11 @@ test "token_deposit" "$(dfx --identity default canister call core token_deposit 
 test "icrc2_approve token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc2_approve "(record { spender=record{owner=principal \"$core\";}; amount=10_000_000_000_000_000_000:nat })" 2>&1)" '(variant { Ok = 3 : nat })'
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(9_999_996_000_000_000_000 : nat)'
 test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_000_000_000_000_000 : nat)'
-test "block_token_get" "$(dfx --identity alice canister call core block_token_get "(1:nat64)" --output json 2>&1)" 'Only Maintainers are allowed to query data'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" --output json 2>&1)" 'invalid block height'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" --output json 2>&1)" 'invalid block height'
+test "block_token_get" "$(dfx --identity alice canister call core block_token_get "(1:nat64)" 2>&1)" 'Only Maintainers are allowed to query data'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" 'invalid block height'
 test "token_deposit" "$(dfx --identity default canister call core token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=5_000_000_000_000_000_000: nat }, null)" 2>&1)" '(variant { Ok = 4 : nat })'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" --output json 2>&1)" '{ "Block": { "parent_hash": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], "timestamp": "' '", "transaction": { "created": [], "memo": [], "operation": { "Deposit": { "amount": "5_000_000_000_000_000_000", "from": { ' "\"owner\": \"$DEFAULT\"" ', "subaccount": [] }, "token": "ss2fx-dyaaa-aaaar-qacoq-cai" } } } } }'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" "( variant { Block = record { transaction = record { created = null; memo = null; operation = variant { Deposit = record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \"\"; } }, )"
 
 blue "\n🚩 1.2 business tokens balance of"
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(4_999_994_000_000_000_000 : nat)'
@@ -298,7 +298,9 @@ test "tokens_balance_of" "$(dfx --identity default canister call core tokens_bal
 
 blue "\n🚩 1.3 business tokens withdraw"
 test "token_withdraw" "$(dfx --identity default canister call core token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=15_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 5_000_000_000_000_000_000 : nat; } } }, )'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
 test "token_withdraw" "$(dfx --identity default canister call core token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=999_998_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 5 : nat })'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" "( variant { Block = record { transaction = record { created = null; memo = null; operation = variant { Withdraw = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
 
 blue "\n🚩 1.4 business tokens balance of"
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(5_999_992_000_000_000_000 : nat)'

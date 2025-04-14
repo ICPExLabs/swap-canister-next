@@ -103,17 +103,17 @@ impl Business for InnerState {
         self.business_certified_data_refresh(); // set certified data
         Ok(())
     }
-    // fn business_token_withdraw(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<WithdrawToken>,
-    // ) -> Result<(), BusinessError> {
-    //     let mut balance_guard = self.token_balances.be_guard(&locks.0);
-    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     balance_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(())
-    // }
+    fn business_token_withdraw(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<WithdrawToken>,
+    ) -> Result<(), BusinessError> {
+        let mut balance_guard = self.token_balances.be_guard(&locks.0);
+        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+        balance_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
+        self.business_certified_data_refresh(); // set certified data
+        Ok(())
+    }
     // fn business_token_transfer(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),
