@@ -19,7 +19,7 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
-    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
+    fn business_queryable(&self, caller: &UserId) -> Result<(), String> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
@@ -109,8 +109,8 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
-    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
-        self.get().business_maintainer(caller)
+    fn business_queryable(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_queryable(caller)
     }
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
         self.get().business_blocks_append_authorized(caller)

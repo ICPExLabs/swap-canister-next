@@ -9,7 +9,7 @@ use crate::stable::*;
 use crate::types::*;
 
 /// 本罐子存储的 Block，参数是对应的 height
-#[ic_cdk::query(guard = "has_business_maintaining")]
+#[ic_cdk::query(guard = "has_business_queryable")]
 fn get_blocks(args: GetBlocksArgs) -> GetTokenBlocksResult {
     inner_get_blocks(args).into()
 }
@@ -30,7 +30,7 @@ fn inner_get_blocks(args: GetBlocksArgs) -> Result<TokenBlockRange, GetBlocksErr
 }
 
 /// 本罐子存储的 Block，参数是对应的 height
-#[ic_cdk::query(guard = "has_business_maintaining")]
+#[ic_cdk::query(guard = "has_business_queryable")]
 fn get_encoded_blocks(args: GetBlocksArgs) -> GetEncodedBlocksResult {
     inner_get_encoded_blocks(args).into()
 }

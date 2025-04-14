@@ -2,16 +2,16 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
-    fn business_maintainer(&self, caller: &UserId) -> Result<(), String> {
+    fn business_queryable(&self, caller: &UserId) -> Result<(), String> {
         if self
             .business_data
             .maintainers
             .as_ref()
-            .is_some_and(|maintainers| !maintainers.contains(caller))
+            .is_none_or(|maintainers| maintainers.contains(caller))
         {
-            return Err("Only Maintainers are allowed to query data".into());
+            return Ok(());
         }
-        Ok(())
+        Err("Only Maintainers are allowed to query data".into())
     }
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
         if self
