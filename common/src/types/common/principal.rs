@@ -23,6 +23,11 @@ impl SelfCanister {
 pub struct Caller(UserId);
 
 impl Caller {
+    /// get
+    pub fn get() -> Self {
+        Self(ic_canister_kit::identity::caller())
+    }
+
     /// id
     #[allow(unused)]
     pub fn id(&self) -> UserId {

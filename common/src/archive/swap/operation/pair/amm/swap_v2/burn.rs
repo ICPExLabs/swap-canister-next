@@ -12,9 +12,9 @@ use crate::{proto, types::TokenPairAmm};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2BurnToken {
     /// 池子
-    pub pair_amm: TokenPairAmm,
+    pub pa: TokenPairAmm,
     /// 操作账户
-    pub account: Account,
+    pub from: Account,
 
     // pay
     /// token
@@ -37,8 +37,8 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
     type Error = candid::Error;
 
     fn try_from(value: SwapV2BurnToken) -> Result<Self, Self::Error> {
-        let pair_amm = value.pair_amm.into();
-        let account = value.account.into();
+        let pa = value.pa.into();
+        let from = value.from.into();
         let token = value.token.into();
         let amount = value.amount.try_into()?;
         let token0 = value.token0.into();
@@ -47,8 +47,8 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
         let amount1 = value.amount1.try_into()?;
 
         Ok(Self {
-            pair_amm: Some(pair_amm),
-            account: Some(account),
+            pa: Some(pa),
+            from: Some(from),
             token: Some(token),
             amount: Some(amount),
             token0: Some(token0),
@@ -63,13 +63,13 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
     type Error = String;
 
     fn try_from(value: proto::SwapV2BurnToken) -> Result<Self, Self::Error> {
-        let pair_amm = value
-            .pair_amm
-            .ok_or_else(|| "pair_amm of swap v2 burn token can not be none".to_string())?
+        let pa = value
+            .pa
+            .ok_or_else(|| "pa of swap v2 burn token can not be none".to_string())?
             .try_into()?;
-        let account = value
-            .account
-            .ok_or_else(|| "account of swap v2 burn token can not be none".to_string())?
+        let from = value
+            .from
+            .ok_or_else(|| "from of swap v2 burn token can not be none".to_string())?
             .try_into()?;
         let token = value
             .token
@@ -101,8 +101,8 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             .map_err(|_| "restore amount1 a of swap v2 burn token failed".to_string())?;
 
         Ok(Self {
-            pair_amm,
-            account,
+            pa,
+            from,
             token,
             amount,
             token0,

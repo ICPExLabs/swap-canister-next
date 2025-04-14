@@ -89,7 +89,7 @@ pub struct SwapBlockChainLock;
 
 impl Drop for SwapBlockChainLock {
     fn drop(&mut self) {
-        with_mut_state_without_record(|s| s.business_token_block_chain_unlock())
+        with_mut_state_without_record(|s| s.business_swap_block_chain_unlock())
     }
 }
 

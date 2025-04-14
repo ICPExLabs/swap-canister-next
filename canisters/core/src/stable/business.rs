@@ -36,7 +36,7 @@ pub trait Business:
 
     // ======================== locks ========================
 
-    // token balance lock
+    // token balance
     fn business_token_balance_lock(
         &mut self,
         fee_to: Vec<CanisterId>,
@@ -48,7 +48,7 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // token block chain lock
+    // token block chain
     fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -56,7 +56,7 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // swap block chain lock
+    // swap block chain
     fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -110,15 +110,23 @@ pub trait Business:
     // ======================== token pair swap ========================
 
     // ======================== query ========================
+
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    // ======================== create ========================
+
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // // pair liquidity
     // fn business_token_pair_liquidity_add(
@@ -261,7 +269,7 @@ impl Business for State {
 
     // ======================== locks ========================
 
-    // token balance lock
+    // token balance
     fn business_token_balance_lock(
         &mut self,
         fee_to: Vec<CanisterId>,
@@ -273,7 +281,7 @@ impl Business for State {
         self.get_mut().business_token_balance_unlock(locked)
     }
 
-    // token block chain lock
+    // token block chain
     fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
         self.get_mut().business_token_block_chain_lock()
     }
@@ -281,7 +289,7 @@ impl Business for State {
         self.get_mut().business_token_block_chain_unlock()
     }
 
-    // swap block chain lock
+    // swap block chain
     fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
         self.get_mut().business_swap_block_chain_lock()
     }
@@ -335,15 +343,23 @@ impl Business for State {
     // ======================== token pair swap ========================
 
     // ======================== query ========================
+
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.get().business_token_pair_pools_query()
     }
-    // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     self.get().business_token_pair_pool_maker_get(pa)
-    // }
-    // fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
-    //     self.get_mut().business_token_pair_pool_create(pa)
-    // }
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+        self.get().business_token_pair_pool_get(pa)
+    }
+
+    // ======================== create ========================
+
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<(), BusinessError> {
+        self.get_mut().business_token_pair_pool_create(lock, arg)
+    }
 
     // // pair liquidity
     // fn business_token_pair_liquidity_add(

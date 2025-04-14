@@ -24,12 +24,13 @@ message TokenPairAmm {
 
 // create
 message PairCreate {
-    TokenPairAmm pair_amm = 1;
+    TokenPairAmm pa = 1;
+    common.UserId creator = 2;
 }
 
 // swap
 message PairSwapToken {
-    // which token pair
+    // which token pair, token_a -> token_b
     common.CanisterId token_a = 1;
     common.CanisterId token_b = 2;
     string amm = 3;
@@ -48,9 +49,9 @@ message PairSwapToken {
 // mint
 message SwapV2MintToken {
     // which token pair
-    TokenPairAmm pair_amm = 1;
+    TokenPairAmm pa = 1;
     // which account
-    common.Account account = 2;
+    common.Account from = 2;
     // token transfer in
     common.CanisterId token0 = 3;
     common.CanisterId token1 = 4;
@@ -64,9 +65,9 @@ message SwapV2MintToken {
 // burn
 message SwapV2BurnToken {
     // which token pair
-    TokenPairAmm pair_amm = 1;
+    TokenPairAmm pa = 1;
     // which account
-    common.Account account = 2;
+    common.Account from = 2;
     // lp token burn
     common.CanisterId token = 3;
     common.Nat amount = 4;

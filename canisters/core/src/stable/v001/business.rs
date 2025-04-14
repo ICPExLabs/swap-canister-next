@@ -25,7 +25,7 @@ impl Business for InnerState {
 
     // ======================== locks ========================
 
-    // token balance lock
+    // token balance
     fn business_token_balance_lock(
         &mut self,
         fee_to: Vec<CanisterId>,
@@ -49,7 +49,7 @@ impl Business for InnerState {
         self.token_balances.unlock(locked)
     }
 
-    // token block chain lock
+    // token block chain
     fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
         self.token_block_chain.lock()
     }
@@ -57,7 +57,7 @@ impl Business for InnerState {
         self.token_block_chain.unlock()
     }
 
-    // swap block chain lock
+    // swap block chain
     fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
         self.swap_block_chain.lock()
     }
@@ -134,30 +134,41 @@ impl Business for InnerState {
     // ======================== token pair swap ========================
 
     // ======================== query ========================
+
     fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
         self.business_data.token_pairs.query_token_pair_pools()
     }
-    // fn business_token_pair_pool_maker_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     self.business_data.token_pairs.get_token_pair_pool_maker(pa)
-    // }
-    // fn business_token_pair_pool_create(&mut self, pa: TokenPairAmm) -> Result<(), BusinessError> {
-    //     let token0 = TOKENS
-    //         .get(&pa.pair.token0)
-    //         .ok_or(BusinessError::NotSupportedToken(pa.pair.token0))?;
-    //     let token1 = TOKENS
-    //         .get(&pa.pair.token1)
-    //         .ok_or(BusinessError::NotSupportedToken(pa.pair.token1))?;
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+        self.business_data.token_pairs.get_token_pair_pool(pa)
+    }
 
-    //     let (subaccount, dummy_canister_id) = pa.get_subaccount_and_dummy_canister_id();
+    // ======================== create ========================
 
-    //     self.business_data.token_pairs.create_token_pair_pool(
-    //         pa,
-    //         subaccount,
-    //         dummy_canister_id,
-    //         token0,
-    //         token1,
-    //     )
-    // }
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<(), BusinessError> {
+        let token0 = TOKENS
+            .get(&arg.arg.pair.token0)
+            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
+        let token1 = TOKENS
+            .get(&arg.arg.pair.token1)
+            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
+        let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
+
+        let mut swap_guard = self.swap_block_chain.be_guard(lock);
+        self.business_data.token_pairs.create_token_pair_pool(
+            &mut swap_guard,
+            arg,
+            subaccount,
+            dummy_canister_id,
+            token0,
+            token1,
+        )?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(())
+    }
 
     // // pair liquidity
     // fn business_token_pair_liquidity_add(

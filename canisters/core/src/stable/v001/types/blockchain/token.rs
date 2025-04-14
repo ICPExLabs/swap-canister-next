@@ -41,7 +41,7 @@ impl TokenBlockChain {
         let block = self.cached.get(&block_height).map(QueryBlockResult::Block);
         trap(block.ok_or("invalid block height"))
     }
-    
+
     pub fn set_archive_maintainers(&mut self, maintainers: Option<Vec<UserId>>) {
         self.block_chain.set_archive_maintainers(maintainers);
     }

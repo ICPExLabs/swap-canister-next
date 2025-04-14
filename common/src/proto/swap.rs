@@ -19,12 +19,14 @@ pub struct TokenPairAmm {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PairCreate {
     #[prost(message, optional, tag = "1")]
-    pub pair_amm: ::core::option::Option<TokenPairAmm>,
+    pub pa: ::core::option::Option<TokenPairAmm>,
+    #[prost(message, optional, tag = "2")]
+    pub creator: ::core::option::Option<super::common::UserId>,
 }
 /// swap
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PairSwapToken {
-    /// which token pair
+    /// which token pair, token_a -> token_b
     #[prost(message, optional, tag = "1")]
     pub token_a: ::core::option::Option<super::common::CanisterId>,
     #[prost(message, optional, tag = "2")]
@@ -49,10 +51,10 @@ pub struct PairSwapToken {
 pub struct SwapV2MintToken {
     /// which token pair
     #[prost(message, optional, tag = "1")]
-    pub pair_amm: ::core::option::Option<TokenPairAmm>,
+    pub pa: ::core::option::Option<TokenPairAmm>,
     /// which account
     #[prost(message, optional, tag = "2")]
-    pub account: ::core::option::Option<super::common::Account>,
+    pub from: ::core::option::Option<super::common::Account>,
     /// token transfer in
     #[prost(message, optional, tag = "3")]
     pub token0: ::core::option::Option<super::common::CanisterId>,
@@ -73,10 +75,10 @@ pub struct SwapV2MintToken {
 pub struct SwapV2BurnToken {
     /// which token pair
     #[prost(message, optional, tag = "1")]
-    pub pair_amm: ::core::option::Option<TokenPairAmm>,
+    pub pa: ::core::option::Option<TokenPairAmm>,
     /// which account
     #[prost(message, optional, tag = "2")]
-    pub account: ::core::option::Option<super::common::Account>,
+    pub from: ::core::option::Option<super::common::Account>,
     /// lp token burn
     #[prost(message, optional, tag = "3")]
     pub token: ::core::option::Option<super::common::CanisterId>,

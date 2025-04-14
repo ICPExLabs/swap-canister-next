@@ -23,7 +23,10 @@ pub use business::*;
 // ==================== ::common ====================
 
 #[allow(unused)]
-pub use ::common::archive::swap::{QuerySwapBlockResult, SwapBlock, SwapV2MintToken};
+pub use ::common::archive::swap::{
+    PairCreate, PairOperation, QuerySwapBlockResult, SwapBlock, SwapOperation, SwapTransaction,
+    SwapV2MintToken,
+};
 #[allow(unused)]
 pub use ::common::archive::token::{
     DepositToken, GetTokenBlocksResult, QueryTokenBlockResult, TokenBlock, TokenBlockRange,

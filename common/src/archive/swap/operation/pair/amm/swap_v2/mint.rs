@@ -12,9 +12,9 @@ use crate::{proto, types::TokenPairAmm};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2MintToken {
     /// 池子
-    pub pair_amm: TokenPairAmm,
+    pub pa: TokenPairAmm,
     /// 操作账户
-    pub account: Account,
+    pub from: Account,
 
     // pay
     /// token0
@@ -37,8 +37,8 @@ impl TryFrom<SwapV2MintToken> for proto::SwapV2MintToken {
     type Error = candid::Error;
 
     fn try_from(value: SwapV2MintToken) -> Result<Self, Self::Error> {
-        let pair_amm = value.pair_amm.into();
-        let account = value.account.into();
+        let pa = value.pa.into();
+        let from = value.from.into();
         let token0 = value.token0.into();
         let token1 = value.token1.into();
         let amount0 = value.amount0.try_into()?;
@@ -47,8 +47,8 @@ impl TryFrom<SwapV2MintToken> for proto::SwapV2MintToken {
         let amount = value.amount.try_into()?;
 
         Ok(Self {
-            pair_amm: Some(pair_amm),
-            account: Some(account),
+            pa: Some(pa),
+            from: Some(from),
             token0: Some(token0),
             token1: Some(token1),
             amount0: Some(amount0),
@@ -63,13 +63,13 @@ impl TryFrom<proto::SwapV2MintToken> for SwapV2MintToken {
     type Error = String;
 
     fn try_from(value: proto::SwapV2MintToken) -> Result<Self, Self::Error> {
-        let pair_amm = value
-            .pair_amm
-            .ok_or_else(|| "pair_amm of swap v2 mint token can not be none".to_string())?
+        let pa = value
+            .pa
+            .ok_or_else(|| "pa of swap v2 mint token can not be none".to_string())?
             .try_into()?;
-        let account = value
-            .account
-            .ok_or_else(|| "account of swap v2 mint token can not be none".to_string())?
+        let from = value
+            .from
+            .ok_or_else(|| "from of swap v2 mint token can not be none".to_string())?
             .try_into()?;
         let token0 = value
             .token0
@@ -100,8 +100,8 @@ impl TryFrom<proto::SwapV2MintToken> for SwapV2MintToken {
             .map_err(|_| "restore amount a of swap v2 mint token failed".to_string())?;
 
         Ok(Self {
-            pair_amm,
-            account,
+            pa,
+            from,
             token0,
             token1,
             amount0,

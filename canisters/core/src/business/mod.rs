@@ -58,6 +58,23 @@ fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>
 
 #[allow(unused)]
 #[inline(always)]
+fn lock_swap_block_chain(retries: u8) -> Result<LockResult<SwapBlockChainLock>, BusinessError> {
+    assert!(retries < 10, "Too many retries");
+
+    match with_mut_state_without_record(|s| s.business_swap_block_chain_lock()) {
+        Some(lock) => Ok(LockResult::Locked(lock)),
+        None => {
+            if 0 < retries {
+                Ok(LockResult::Retry(retries - 1))
+            } else {
+                Err(BusinessError::SwapBlockChainLocked)
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+#[inline(always)]
 fn lock_token_balances_and_token_block_chain(
     fee_to: Vec<CanisterId>,
     required: Vec<TokenAccount>,

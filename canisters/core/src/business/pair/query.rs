@@ -27,10 +27,10 @@ fn pair_query(pool: TokenPairPool) -> Option<MarketMakerView> {
     let pair = TokenPair::new(pool.token0, pool.token1);
     let amm: Amm = pool.amm.as_ref().try_into().ok()?; // parse amm
 
+    let pa = TokenPairAmm { pair, amm };
+
     with_state(|s| {
-        s.business_token_pair_pools_query()
-            .into_iter()
-            .find(|(p, a, _maker)| **p == pair && **a == amm)
-            .map(|(_p, _a, maker)| maker.clone().into())
+        s.business_token_pair_pool_get(&pa)
+            .map(|maker| maker.clone().into())
     })
 }

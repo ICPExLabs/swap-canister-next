@@ -14,6 +14,7 @@ workspace = true
 default = []
 archive-token = []
 archive-swap = []
+full = ["archive-token", "archive-swap"]
 
 [dependencies]
 candid = { workspace = true }

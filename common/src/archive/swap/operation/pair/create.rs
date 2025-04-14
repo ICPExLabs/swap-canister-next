@@ -1,4 +1,5 @@
 use candid::CandidType;
+use ic_canister_kit::types::UserId;
 use serde::{Deserialize, Serialize};
 
 use crate::{proto, types::TokenPairAmm};
@@ -8,15 +9,19 @@ use crate::{proto, types::TokenPairAmm};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct PairCreate {
     /// 代币对和算法
-    pub pair_amm: TokenPairAmm,
+    pub pa: TokenPairAmm,
+    /// 创建者
+    pub creator: UserId,
 }
 
 impl From<PairCreate> for proto::PairCreate {
     fn from(value: PairCreate) -> Self {
-        let pair_amm = value.pair_amm.into();
+        let pa = value.pa.into();
+        let creator = value.creator.into();
 
         Self {
-            pair_amm: Some(pair_amm),
+            pa: Some(pa),
+            creator: Some(creator),
         }
     }
 }
@@ -25,11 +30,15 @@ impl TryFrom<proto::PairCreate> for PairCreate {
     type Error = String;
 
     fn try_from(value: proto::PairCreate) -> Result<Self, Self::Error> {
-        let pair_amm = value
-            .pair_amm
-            .ok_or_else(|| "pair_amm of pair create can not be none".to_string())?
+        let pa = value
+            .pa
+            .ok_or_else(|| "pa of pair create can not be none".to_string())?
             .try_into()?;
+        let creator = value
+            .creator
+            .ok_or_else(|| "creator of pair create can not be none".to_string())?
+            .into();
 
-        Ok(Self { pair_amm })
+        Ok(Self { pa, creator })
     }
 }

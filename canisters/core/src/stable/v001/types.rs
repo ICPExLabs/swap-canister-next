@@ -39,10 +39,10 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, Nat, QueryBlockResult, QuerySwapBlockResult,
-    QueryTokenBlockResult, SelfCanister, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
-    TokenPair, TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken,
-    proto,
+    DummyCanisterId, EncodedBlock, Nat, PairCreate, PairOperation, QueryBlockResult,
+    QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock, SwapOperation,
+    SwapTransaction, TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair,
+    TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken, proto,
 };
 
 mod amm;

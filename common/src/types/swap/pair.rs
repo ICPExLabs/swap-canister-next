@@ -10,7 +10,7 @@ use crate::{
 
 use super::{Amm, AmmText};
 
-/// 代币对
+/// 有顺序的代币对
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenPair {
     /// small one
@@ -27,8 +27,7 @@ impl TokenPair {
     }
 }
 
-/// 代币对和算法
-
+/// 有顺序的代币对和算法
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TokenPairAmm {
     /// 代币对
