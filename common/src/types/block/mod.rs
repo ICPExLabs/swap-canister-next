@@ -7,5 +7,9 @@ pub use hash::*;
 mod block;
 pub use block::*;
 
+/// query
+mod query;
+pub use query::*;
+
 /// 记录每笔交易 id
 pub type BlockIndex = u64;

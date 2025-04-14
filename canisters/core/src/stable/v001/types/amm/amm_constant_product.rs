@@ -101,7 +101,7 @@ impl SwapV2MarketMaker {
     fn quote(amount_a: &Nat, reserve_a: &Nat, reserve_b: &Nat) -> Nat {
         assert!(*amount_a > *ZERO, "INSUFFICIENT_AMOUNT");
         assert!(*reserve_a > *ZERO, "INSUFFICIENT_LIQUIDITY");
-        assert!(*reserve_a > *ZERO, "INSUFFICIENT_LIQUIDITY");
+        assert!(*reserve_b > *ZERO, "INSUFFICIENT_LIQUIDITY");
         amount_a.to_owned() * reserve_b.to_owned() / reserve_a.to_owned()
     }
 

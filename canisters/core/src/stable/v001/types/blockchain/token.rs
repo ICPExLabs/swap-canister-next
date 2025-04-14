@@ -1,8 +1,11 @@
 use common::{
     archive::token::{TokenBlock, TokenTransaction},
-    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, TimestampNanos},
+    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, QueryBlockResult, TimestampNanos},
 };
-use ic_canister_kit::{common::trap, types::StableBTreeMap};
+use ic_canister_kit::{
+    common::trap,
+    types::{StableBTreeMap, UserId},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Business, BusinessError, with_mut_state_without_record};
@@ -28,6 +31,21 @@ impl Default for TokenBlockChain {
 }
 
 impl TokenBlockChain {
+    pub fn queryable(&self, caller: &UserId) -> bool {
+        self.block_chain.queryable(caller)
+    }
+    pub fn query(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        if let Some(canister_id) = self.block_chain.query(block_height) {
+            return QueryBlockResult::Archive(canister_id);
+        }
+        let block = self.cached.get(&block_height).map(QueryBlockResult::Block);
+        trap(block.ok_or("invalid block height"))
+    }
+    
+    pub fn set_archive_maintainers(&mut self, maintainers: Option<Vec<UserId>>) {
+        self.block_chain.set_archive_maintainers(maintainers);
+    }
+
     // locks
     pub fn lock(&mut self) -> Option<TokenBlockChainLock> {
         let mut locked = trap(self.block_chain.locked.write()); // ! what if failed ?
@@ -54,7 +72,7 @@ impl TokenBlockChain {
 
         // 2. do unlock
         *locked = false;
-        ic_cdk::println!("🔒 Locked token block chain.");
+        ic_cdk::println!("🔐 Unlock token block chain.");
     }
 
     pub fn be_guard<'a>(&'a mut self, lock: &'a TokenBlockChainLock) -> TokenBlockChainGuard<'a> {

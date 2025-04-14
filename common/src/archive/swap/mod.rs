@@ -9,3 +9,7 @@ pub use transaction::*;
 /// 块
 mod block;
 pub use block::*;
+
+/// 查询
+mod query;
+pub use query::*;

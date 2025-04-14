@@ -39,8 +39,9 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, Nat, SelfCanister, TimestampNanos, TokenAccount, TokenBlock,
-    TokenOperation, TokenPair, TokenPairAmm, TokenTransaction, TransferToken, WithdrawToken, proto,
+    DummyCanisterId, EncodedBlock, Nat, QueryBlockResult, QuerySwapBlockResult,
+    QueryTokenBlockResult, SelfCanister, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
+    TokenPair, TokenPairAmm, TokenTransaction, TransferToken, UserId, WithdrawToken, proto,
 };
 
 mod amm;
@@ -268,8 +269,12 @@ impl Storable for ExampleVec {
 }
 
 impl InnerState {
-    pub fn do_init(&mut self, _arg: InitArg) {
-        // maybe do something
+    pub fn do_init(&mut self, arg: InitArg) {
+        let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
+            vec![ic_canister_kit::identity::caller()] // 默认调用者为维护人员
+        });
+        self.token_block_chain
+            .set_archive_maintainers(Some(maintainers));
     }
 
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {

@@ -171,6 +171,22 @@ pub trait Business:
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
 
+    // ======================== blocks query ========================
+
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -389,6 +405,22 @@ impl Business for State {
     //     self.get_mut()
     //         .business_token_pair_swap_by_loan(balance_lock, self_canister, args, pas)
     // }
+
+    // ======================== blocks query ========================
+
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_token_queryable(caller)
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_swap_queryable(caller)
+    }
+
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.get().business_token_block_get(block_height)
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.get().business_swap_block_get(block_height)
+    }
 
     fn business_example_query(&self) -> String {
         self.get().business_example_query()

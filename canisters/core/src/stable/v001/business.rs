@@ -15,7 +15,12 @@ impl Business for InnerState {
     // set_certified_data
     fn business_certified_data_refresh(&self) {
         let token_hash = self.token_block_chain.get_latest_hash();
-        ic_cdk::api::set_certified_data(token_hash); // TODO with swap hash?
+        let swap_hash = self.swap_block_chain.get_latest_hash();
+        let mut data = Vec::with_capacity(token_hash.len() + swap_hash.len());
+        data.extend_from_slice(token_hash);
+        data.extend_from_slice(swap_hash);
+        let hash = common::utils::hash::hash_sha256(&data);
+        ic_cdk::api::set_certified_data(&hash);
     }
 
     // ======================== locks ========================
@@ -237,6 +242,28 @@ impl Business for InnerState {
     //         .token_pairs
     //         .swap_by_loan(&mut guard, self_canister, args, pas)
     // }
+
+    // ======================== blocks query ========================
+
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.token_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.swap_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
+
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.token_block_chain.query(block_height)
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.swap_block_chain.query(block_height)
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

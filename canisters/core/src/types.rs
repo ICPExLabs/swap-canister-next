@@ -23,17 +23,19 @@ pub use business::*;
 // ==================== ::common ====================
 
 #[allow(unused)]
+pub use ::common::archive::swap::{QuerySwapBlockResult, SwapBlock, SwapV2MintToken};
+#[allow(unused)]
 pub use ::common::archive::token::{
-    DepositToken, GetTokenBlocksResult, TokenBlock, TokenBlockRange, TokenOperation,
-    TokenTransaction, TransferFee, TransferToken, WithdrawToken,
+    DepositToken, GetTokenBlocksResult, QueryTokenBlockResult, TokenBlock, TokenBlockRange,
+    TokenOperation, TokenTransaction, TransferFee, TransferToken, WithdrawToken,
 };
 #[allow(unused)]
 pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::types::{
     Amm, AmmText, BlockIndex, BusinessError, Caller, DoHash, DummyCanisterId, EncodedBlock,
-    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, SelfCanister, TimestampNanos,
-    TokenAccount, TokenPair, TokenPairAmm, check_caller,
+    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, QueryBlockResult, SelfCanister,
+    TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, check_caller,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

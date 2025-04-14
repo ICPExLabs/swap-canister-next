@@ -1,8 +1,11 @@
 use common::{
     archive::swap::{SwapBlock, SwapTransaction},
-    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, TimestampNanos},
+    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, QueryBlockResult, TimestampNanos},
 };
-use ic_canister_kit::{common::trap, types::StableBTreeMap};
+use ic_canister_kit::{
+    common::trap,
+    types::{StableBTreeMap, UserId},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Business, BusinessError, with_mut_state_without_record};
@@ -28,6 +31,17 @@ impl Default for SwapBlockChain {
 }
 
 impl SwapBlockChain {
+    pub fn queryable(&self, caller: &UserId) -> bool {
+        self.block_chain.queryable(caller)
+    }
+    pub fn query(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        if let Some(canister_id) = self.block_chain.query(block_height) {
+            return QueryBlockResult::Archive(canister_id);
+        }
+        let block = self.cached.get(&block_height).map(QueryBlockResult::Block);
+        trap(block.ok_or("invalid block height"))
+    }
+
     // locks
     pub fn lock(&mut self) -> Option<SwapBlockChainLock> {
         let mut locked = trap(self.block_chain.locked.write()); // ! what if failed ?
@@ -54,7 +68,7 @@ impl SwapBlockChain {
 
         // 2. do unlock
         *locked = false;
-        ic_cdk::println!("🔒 Locked swap block chain.");
+        ic_cdk::println!("🔐 Unlock swap block chain.");
     }
 
     pub fn be_guard<'a>(&'a mut self, lock: &'a SwapBlockChainLock) -> SwapBlockChainGuard<'a> {

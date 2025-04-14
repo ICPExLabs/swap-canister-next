@@ -94,10 +94,7 @@ impl TryFrom<EncodedBlock> for SwapBlock {
     type Error = String;
     fn try_from(value: EncodedBlock) -> Result<Self, Self::Error> {
         let bytes = value.0;
-        ic_cdk::println!("bytes: {:?}", bytes);
-        ic_cdk::println!("bytes: {:?}", hex::encode(&bytes));
         let block: proto::SwapBlock = from_proto_bytes(&bytes)?;
-        ic_cdk::println!("bytes: {:?}", block);
         block.try_into()
     }
 }
