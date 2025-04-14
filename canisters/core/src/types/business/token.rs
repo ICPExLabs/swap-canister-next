@@ -51,6 +51,7 @@ pub struct TokenTransferArgs {
     pub from: Account,
     pub amount_without_fee: candid::Nat,
     pub to: Account,
+    pub fee: Option<candid::Nat>,
 
     pub memo: Option<Vec<u8>>,
     pub created: Option<TimestampNanos>,

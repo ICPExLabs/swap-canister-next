@@ -13,6 +13,7 @@ type BusinessError = variant {
   TokenPairAmmExist : record { TokenPair; text };
   InvalidCreated : text;
   InvalidAmm : text;
+  InvalidTransferFee : record { principal; nat };
   SwapBlockChainLocked;
   TokenBlockChainError : text;
   TransferFromError : TransferFromError;
@@ -179,6 +180,15 @@ type TokenTransaction = record {
   memo : opt blob;
   operation : TokenOperation;
 };
+type TokenTransferArgs = record {
+  to : Account;
+  fee : opt nat;
+  created : opt nat64;
+  token : principal;
+  from : Account;
+  amount_without_fee : nat;
+  memo : opt blob;
+};
 type TokenWithdrawArgs = record {
   to : Account;
   created : opt nat64;
@@ -267,6 +277,7 @@ service : (opt InitArgs) -> {
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
+  token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
   token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenChangedResult);
   tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;

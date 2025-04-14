@@ -310,7 +310,10 @@ test "tokens_balance_of" "$(dfx --identity default canister call core tokens_bal
 
 blue "\n🚩 1.5 business tokens transfer"
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
+test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=1_000_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 4_000_000_000_000_000_000 : nat; } } }, )'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" 'invalid block height'
 test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=1_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '(variant { Ok = 1_000_000_000_000_000_000 : nat })'
+test "block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" "( variant { Block = record { transaction = record { created = null; memo = null; operation = variant { Transfer = record { to = record { owner = principal \"$ALICE\"; subaccount = null; }; fee = null; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
 test "token_balance_of" "$(dfx --identity default canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(3_000_000_000_000_000_000 : nat)'
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(1_000_000_000_000_000_000 : nat)'
 

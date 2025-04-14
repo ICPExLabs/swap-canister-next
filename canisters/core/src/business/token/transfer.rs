@@ -25,6 +25,16 @@ impl CheckArgs for TokenTransferArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check fee
+        if let Some(fee) = &self.fee {
+            if *fee != token.fee {
+                return Err(BusinessError::InvalidTransferFee((
+                    token.canister_id,
+                    token.fee,
+                )));
+            }
+        }
+
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(token.canister_id, self.from));
         let amount = self.amount_without_fee.clone() + token.fee.clone();
@@ -85,7 +95,7 @@ async fn inner_token_transfer(
                 .map(|token_account| token_account.account);
 
             // ? 1. transfer
-            let changed = with_mut_state_without_record(|s| {
+            with_mut_state_without_record(|s| {
                 s.business_token_transfer(
                     &locks,
                     ArgWithMeta {
@@ -105,9 +115,7 @@ async fn inner_token_transfer(
                         created: args.created,
                     },
                 )
-            })?;
-
-            changed
+            })?
         }
     };
 

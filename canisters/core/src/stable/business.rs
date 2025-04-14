@@ -64,7 +64,9 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // ======================== tokens query ========================
+    // ======================== token block chain ========================
+
+    // ======================== query ========================
 
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
@@ -79,7 +81,7 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // ======================== token block chain ========================
+    // ======================== update ========================
 
     fn business_token_deposit(
         &mut self,
@@ -95,13 +97,13 @@ pub trait Business:
     ) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // // pair
     // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
@@ -283,7 +285,9 @@ impl Business for State {
         self.get_mut().business_swap_block_chain_unlock()
     }
 
-    // ======================== tokens query ========================
+    // ======================== token block chain ========================
+
+    // ======================== query ========================
 
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
         self.get().business_tokens_query()
@@ -298,7 +302,7 @@ impl Business for State {
         self.get().business_token_balance_of(token, account)
     }
 
-    // ======================== token block chain ========================
+    // ======================== update ========================
 
     fn business_token_deposit(
         &mut self,
@@ -314,13 +318,13 @@ impl Business for State {
     ) -> Result<(), BusinessError> {
         self.get_mut().business_token_withdraw(locks, arg)
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     self.get_mut().business_token_transfer(locks, arg)
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        self.get_mut().business_token_transfer(locks, arg)
+    }
 
     // // pair
     // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {

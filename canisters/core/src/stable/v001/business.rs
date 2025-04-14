@@ -65,7 +65,9 @@ impl Business for InnerState {
         self.swap_block_chain.unlock()
     }
 
-    // ======================== tokens query ========================
+    // ======================== token block chain ========================
+
+    // ======================== query ========================
 
     // tokens query
     fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
@@ -91,7 +93,8 @@ impl Business for InnerState {
         ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
     }
 
-    // ======================== token block chain ========================
+    // ======================== update ========================
+
     fn business_token_deposit(
         &mut self,
         locks: &(TokenBalancesLock, TokenBlockChainLock),
@@ -114,17 +117,17 @@ impl Business for InnerState {
         self.business_certified_data_refresh(); // set certified data
         Ok(())
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     let mut balance_guard = self.token_balances.be_guard(&locks.0);
-    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     let changed = balance_guard.token_transfer(&mut token_guard, arg)?; // do transfer
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(changed)
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        let mut balance_guard = self.token_balances.be_guard(&locks.0);
+        let mut token_guard = self.token_block_chain.be_guard(&locks.1);
+        let changed = balance_guard.token_transfer(&mut token_guard, arg)?; // do transfer
+        self.business_certified_data_refresh(); // set certified data
+        Ok(changed)
+    }
 
     // // pair
     // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {

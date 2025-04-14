@@ -30,6 +30,8 @@ pub enum BusinessError {
     TransferError(TransferError),
     /// 提现余额不足
     InsufficientBalance((CanisterId, Nat)),
+    /// 错误的转账费用
+    InvalidTransferFee((CanisterId, Nat)),
 
     // ================= 代币错误 =================
     /// 不支持的代币罐子
