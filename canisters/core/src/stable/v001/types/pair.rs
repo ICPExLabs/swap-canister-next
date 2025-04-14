@@ -69,7 +69,7 @@ impl TokenPairs {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, block_hash) = guard.push_swap_transaction(arg.now, transaction)?;
+        let (encoded_block, block_hash) = guard.get_next_swap_block(arg.now, transaction)?;
         // 2. do create
         let TokenPairAmm { pair, amm } = arg.arg;
         let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);

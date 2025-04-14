@@ -105,7 +105,7 @@ pub struct TokenBlockChainGuard<'a> {
 }
 
 impl TokenBlockChainGuard<'_> {
-    pub fn push_token_transaction(
+    pub fn get_next_token_block(
         &self,
         now: TimestampNanos,
         transaction: TokenTransaction,

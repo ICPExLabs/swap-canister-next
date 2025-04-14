@@ -304,7 +304,7 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, block_hash) = guard.push_token_transaction(arg.now, transaction)?;
+        let (encoded_block, block_hash) = guard.get_next_token_block(arg.now, transaction)?;
         // 2. do deposit
         self.do_token_deposit(arg.arg.token, arg.arg.from, arg.arg.amount)?;
         // 3. push block
@@ -323,7 +323,7 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, hash) = guard.push_token_transaction(arg.now, transaction)?;
+        let (encoded_block, hash) = guard.get_next_token_block(arg.now, transaction)?;
         // 2. do withdraw
         self.do_token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)?;
         // 3. push block
@@ -342,7 +342,7 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, hash) = guard.push_token_transaction(arg.now, transaction)?;
+        let (encoded_block, hash) = guard.get_next_token_block(arg.now, transaction)?;
         // 2. do withdraw
         let changed = self.do_token_transfer(
             arg.arg.token,

@@ -101,7 +101,7 @@ pub struct SwapBlockChainGuard<'a> {
 }
 
 impl SwapBlockChainGuard<'_> {
-    pub fn push_swap_transaction(
+    pub fn get_next_swap_block(
         &self,
         now: TimestampNanos,
         transaction: SwapTransaction,
