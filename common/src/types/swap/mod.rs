@@ -12,7 +12,7 @@ pub use pair::*;
 
 // =================== token pair pool ===================
 
-/// (token_0, token1, amm)
+/// (token0, token1, amm)
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairPool {
     /// 代币 0

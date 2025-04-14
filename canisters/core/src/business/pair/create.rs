@@ -18,7 +18,7 @@ impl CheckArgs for TokenPairCreateArgs {
             token0: token_a,
             token1: token_b,
             amm,
-        } = &self.0;
+        } = &self.pool;
         let pair = TokenPair::new(*token_a, *token_b);
         pair.check_args()?; // check supported token
         let amm: Amm = amm.as_ref().try_into()?; // parse amm
@@ -39,8 +39,8 @@ impl CheckArgs for TokenPairCreateArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_create")]
-async fn pair_create(args: TokenPairPool) -> BusinessResult {
-    inner_pair_create(args.into()).await.into()
+async fn pair_create(args: TokenPairCreateArgs) -> BusinessResult {
+    inner_pair_create(args).await.into()
 }
 async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<(), BusinessError> {
     // 1. check args
@@ -64,8 +64,8 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<(), BusinessErro
                         now,
                         caller,
                         arg: pa,
-                        memo: None,
-                        created: None,
+                        memo: args.memo,
+                        created: args.created,
                     },
                 )
             })?;
