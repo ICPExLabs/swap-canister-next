@@ -88,10 +88,10 @@ if [ -z "$archive_token" ]; then
 fi
 
 blue "\n🚩 1 business"
-test "get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
+test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
 test "get_block_pb" "$(dfx canister call archive_token get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_token remaining_capacity 2>&1)" '(10_737_418_240 : nat64)'
-test "append_blocks" "$(dfx --identity alice canister call archive_token append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'
+test "❎ append_blocks" "$(dfx --identity alice canister call archive_token append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'
 test "append_blocks" "$(dfx canister call archive_token append_blocks "(vec { blob \"\0a\22\0a\20\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\1a\19\0a\17\0a\15\0a\0c\0a\0a\00\00\00\00\00\00\00\02\01\01\12\00\1a\03\0a\01\64\" })" 2>&1)" '()'
 test "get_block_pb" "$(dfx canister call archive_token get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 65, 10, 63, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 25, 10, 23, 10, 21, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100 ]'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_token remaining_capacity 2>&1)" '(10_737_418_177 : nat64)'
@@ -228,7 +228,7 @@ test "tokens_balance_of user bob    " "$(dfx --identity bob canister call archiv
 
 blue "\n🚩 3 business config fee to"
 blue "\n🚩 3.1 business config fee to update"
-test "config_fee_to_query" "$(dfx --identity bob canister call archive_token config_fee_to_query 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
+test "🙈 config_fee_to_query" "$(dfx --identity bob canister call archive_token config_fee_to_query 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
 test "config_fee_to_query" "$(dfx --identity default canister call archive_token config_fee_to_query 2>&1)" '(null)'
 test "config_fee_to_replace" "$(dfx --identity default canister call archive_token config_fee_to_replace "(opt record {owner=principal \"$BOB\"})" 2>&1)" '(null)'
 test "config_fee_to_query" "$(dfx --identity default canister call archive_token config_fee_to_query 2>&1)" "( opt record { owner = principal \"$BOB\"; subaccount = null; }, )"
@@ -259,7 +259,7 @@ test "permission_query" "$(dfx --identity alice canister call archive_token perm
 test "permission_query" "$(dfx canister call archive_token permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_update" "$(dfx --identity bob canister call archive_token permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "'PermissionUpdate' is required"
 test "permission_update" "$(dfx canister call archive_token permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "()"
-test "permission_query" "$(dfx --identity alice canister call archive_token permission_query 2>&1)" "'PermissionQuery' is required"
+test "🙈 permission_query" "$(dfx --identity alice canister call archive_token permission_query 2>&1)" "'PermissionQuery' is required"
 test "permission_query" "$(dfx canister call archive_token permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_find_by_user" "$(dfx canister call archive_token permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionUpdate"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_update" "$(dfx --identity alice canister call archive_token permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"

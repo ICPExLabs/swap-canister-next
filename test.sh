@@ -284,15 +284,15 @@ test "token_deposit" "$(dfx --identity default canister call core token_deposit 
 test "icrc2_approve token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc2_approve "(record { spender=record{owner=principal \"$core\";}; amount=10_000_000_000_000_000_000:nat })" 2>&1)" '(variant { Ok = 3 : nat })'
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(9_999_996_000_000_000_000 : nat)'
 test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_000_000_000_000_000 : nat)'
-test "request_trace_index_get" "$(dfx --identity alice canister call core request_trace_index_get 2>&1)" "Permission 'PauseReplace' is required"
+test "🙈 request_trace_index_get" "$(dfx --identity alice canister call core request_trace_index_get 2>&1)" "Permission 'PauseReplace' is required"
 test "request_trace_index_get" "$(dfx --identity default canister call core request_trace_index_get 2>&1)" '(0 : nat64, 0 : nat64)'
-test "request_trace_get" "$(dfx --identity default canister call core request_trace_get "(0:nat64)" 2>&1)" '(null)'
-test "block_token_get" "$(dfx --identity alice canister call core block_token_get "(1:nat64)" 2>&1)" 'Only Maintainers are allowed to query data'
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(0:nat64)" 2>&1)" '(null)'
+test "🙈 block_token_get" "$(dfx --identity alice canister call core block_token_get "(1:nat64)" 2>&1)" 'Only Maintainers are allowed to query data'
 test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" 'invalid block height'
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" 'invalid block height'
 test "token_deposit" "$(dfx --identity default canister call core token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=5_000_000_000_000_000_000: nat }, null)" 2>&1)" '(variant { Ok = 4 : nat })'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { deposit = record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \"\"; } }, )"
-test "request_trace_get" "$(dfx --identity default canister call core request_trace_get "(0:nat64)" 2>&1)" "( opt record { args = variant { token_deposit = record { arg = record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; }; now = " " : nat64; created = null; memo = null; caller = principal \"$DEFAULT\"; } }; done = opt record { " " : nat64; variant { Ok = \"4\" }; }; traces = vec { record { " " : nat64; \"Deposit 5_000_000_000_000_000_000 Token: [ss2fx-dyaaa-aaaar-qacoq-cai] From: ($DEFAULT.) With Height: 4.\"; }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; account = record { owner = principal \"$DEFAULT\"; subaccount = null; }; }; }; }; index = 0 : nat64; }, )"
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(0:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { deposit = record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \"\"; } }, )"
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(0:nat64)" 2>&1)" "( opt record { args = variant { token_deposit = record { arg = record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; }; now = " " : nat64; created = null; memo = null; caller = principal \"$DEFAULT\"; } }; done = opt record { " " : nat64; variant { Ok = \"4\" }; }; traces = vec { record { " " : nat64; \"Deposit 5_000_000_000_000_000_000 Token: [ss2fx-dyaaa-aaaar-qacoq-cai] From: ($DEFAULT.) With Height: 4.\"; }; record { " " : nat64; \"Done\" }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; account = record { owner = principal \"$DEFAULT\"; subaccount = null; }; }; }; }; index = 0 : nat64; }, )"
 
 blue "\n🚩 1.2 business tokens balance of"
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(4_999_994_000_000_000_000 : nat)'
@@ -302,11 +302,11 @@ test "tokens_balance_of" "$(dfx --identity default canister call core tokens_bal
 
 blue "\n🚩 1.3 business tokens withdraw"
 test "token_withdraw" "$(dfx --identity default canister call core token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=15_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 5_000_000_000_000_000_000 : nat; } } }, )'
-test "request_trace_get" "$(dfx --identity default canister call core request_trace_get "(1:nat64)" 2>&1)" '(null)'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(1:nat64)" 2>&1)" '(null)'
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
 test "token_withdraw" "$(dfx --identity default canister call core token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; amount_without_fee=999_998_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 5 : nat })'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { withdraw = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
-test "request_trace_get" "$(dfx --identity default canister call core request_trace_get "(1:nat64)" 2>&1)" "( opt record { args = variant { token_withdraw = record { arg = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = " " : nat64; created = null; memo = null; caller = principal \"$DEFAULT\"; } }; done = opt record { " " : nat64; variant { Ok = \"5\" }; }; traces = vec { record { " " : nat64; \"Withdraw 1_000_000_000_000_000_000 Token: [ss2fx-dyaaa-aaaar-qacoq-cai] To: ($DEFAULT.) With Height: 5.\"; }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; account = record { owner = principal \"$DEFAULT\"; subaccount = null; }; }; }; }; index = 1 : nat64; }, )"
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { withdraw = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(1:nat64)" 2>&1)" "( opt record { args = variant { token_withdraw = record { arg = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = " " : nat64; created = null; memo = null; caller = principal \"$DEFAULT\"; } }; done = opt record { " " : nat64; variant { Ok = \"5\" }; }; traces = vec { record { " " : nat64; \"Withdraw 1_000_000_000_000_000_000 Token: [ss2fx-dyaaa-aaaar-qacoq-cai] To: ($DEFAULT.) With Height: 5.\"; }; record { " " : nat64; \"Done\" }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; account = record { owner = principal \"$DEFAULT\"; subaccount = null; }; }; }; }; index = 1 : nat64; }, )"
 
 blue "\n🚩 1.4 business tokens balance of"
 test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(5_999_992_000_000_000_000 : nat)'
@@ -317,9 +317,11 @@ test "tokens_balance_of" "$(dfx --identity default canister call core tokens_bal
 blue "\n🚩 1.5 business tokens transfer"
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
 test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=1_000_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 4_000_000_000_000_000_000 : nat; } } }, )'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" 'invalid block height'
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(2:nat64)" 2>&1)" '(null)'
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" 'invalid block height'
 test "token_transfer" "$(dfx --identity default canister call core token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; amount_without_fee=1_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '(variant { Ok = 1_000_000_000_000_000_000 : nat })'
-test "block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" "( variant { Block = record { transaction = record { created = null; memo = null; operation = variant { Transfer = record { to = record { owner = principal \"$ALICE\"; subaccount = null; }; fee = null; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(2:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { transfer = record { to = record { owner = principal \"$ALICE\"; subaccount = null; }; fee = null; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
+test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(2:nat64)" 2>&1)" '( opt record { args = variant { token_transfer = record { arg = record { to = record { owner = principal "'"$ALICE"'"; subaccount = null; }; fee = null; token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; from = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { ' ' : nat64; variant { Ok = "1_000_000_000_000_000_000" }; }; traces = vec { record { ' ' : nat64; "Transfer 1_000_000_000_000_000_000 Token: [ss2fx-dyaaa-aaaar-qacoq-cai] From ('"$DEFAULT"'.) To: ('"$ALICE"'.) With Changed: 1_000_000_000_000_000_000."; }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; }; record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$ALICE"'"; subaccount = null; }; }; }; }; index = 2 : nat64; }, )'
 test "token_balance_of" "$(dfx --identity default canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(3_000_000_000_000_000_000 : nat)'
 test "token_balance_of" "$(dfx --identity alice canister call core token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(1_000_000_000_000_000_000 : nat)'
 
@@ -412,8 +414,9 @@ test "tokens_balance_of user bob    " "$(dfx --identity bob canister call core t
 
 blue "\n🚩 3 business config fee to"
 blue "\n🚩 3.1 business config fee to update"
-test "config_fee_to_query" "$(dfx --identity bob canister call core config_fee_to_query 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
+test "🙈 config_fee_to_query" "$(dfx --identity bob canister call core config_fee_to_query 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
 test "config_fee_to_query" "$(dfx --identity default canister call core config_fee_to_query 2>&1)" '(null)'
+test "❎ config_fee_to_replace" "$(dfx --identity bob canister call core config_fee_to_replace "(opt record {owner=principal \"$BOB\"})" 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
 test "config_fee_to_replace" "$(dfx --identity default canister call core config_fee_to_replace "(opt record {owner=principal \"$BOB\"})" 2>&1)" '(null)'
 test "config_fee_to_query" "$(dfx --identity default canister call core config_fee_to_query 2>&1)" "( opt record { owner = principal \"$BOB\"; subaccount = null; }, )"
 
@@ -443,7 +446,7 @@ test "permission_query" "$(dfx --identity alice canister call core permission_qu
 test "permission_query" "$(dfx canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_update" "$(dfx --identity bob canister call core permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "'PermissionUpdate' is required"
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "()"
-test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" "'PermissionQuery' is required"
+test "🙈 permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" "'PermissionQuery' is required"
 test "permission_query" "$(dfx canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_find_by_user" "$(dfx canister call core permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionUpdate"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_update" "$(dfx --identity alice canister call core permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
@@ -455,8 +458,8 @@ test "permission_query" "$(dfx canister call core permission_query 2>&1)" '( vec
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
 test "permission_find_by_user" "$(dfx canister call core permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "RecordFind"; "RecordMigrate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; "BusinessExampleSet";}, )'
 test "permission_find_by_user" "$(dfx canister call core permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
-test "permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" "'PermissionFind' is required"
-test "permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$ALICE\")" 2>&1)" "'PermissionFind' is required"
+test "🙈 permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" "'PermissionFind' is required"
+test "🙈 permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$ALICE\")" 2>&1)" "'PermissionFind' is required"
 
 blue "\n🚩 1.3 permission roles"
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; "BusinessExampleQuery"; }, )'
@@ -478,35 +481,35 @@ test "pause_query" "$(dfx --identity alice canister call core pause_query 2>&1)"
 test "pause_query_reason" "$(dfx --identity alice canister call core pause_query_reason 2>&1)" "message = \"reason\""
 
 blue "\n🚩 2.3 pause no permission"
-test "pause_replace" "$(dfx --identity alice canister call core pause_replace "(null)" 2>&1)" "'PauseReplace' is required"
+test "🙈 pause_replace" "$(dfx --identity alice canister call core pause_replace "(null)" 2>&1)" "'PauseReplace' is required"
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PauseReplace\";\"PauseQuery\" } } } })" 2>&1)" "()"
 test "pause_replace" "$(dfx --identity alice canister call core pause_replace "(null)" 2>&1)" "()"
-test "pause_query" "$(dfx --identity alice canister call core pause_query 2>&1)" "'PauseQuery' is required"
-test "pause_query_reason" "$(dfx --identity alice canister call core pause_query_reason 2>&1)" "'PauseQuery' is required"
+test "🙈 pause_query" "$(dfx --identity alice canister call core pause_query 2>&1)" "'PauseQuery' is required"
+test "🙈 pause_query_reason" "$(dfx --identity alice canister call core pause_query_reason 2>&1)" "'PauseQuery' is required"
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(false)"
 test "pause_query_reason" "$(dfx canister call core pause_query_reason 2>&1)" "(null)"
 
 blue "\n🚩 3 record no permission"
-test "record_topics" "$(dfx --identity alice canister call core record_topics 2>&1)" "'RecordFind' is required"
+test "🙈 record_topics" "$(dfx --identity alice canister call core record_topics 2>&1)" "'RecordFind' is required"
 test "record_topics" "$(dfx canister call core record_topics 2>&1)" '"Example"' '"CyclesCharge"'
 test "record_find_by_page" "$(dfx canister call core record_find_by_page "(record{page=1:nat64;size=1:nat32},opt record{topic=opt vec{\"Pause\"}})" 2>&1)" "record { total = "
 test "record_migrate" "$(dfx canister call core record_migrate "(1:nat32)" 2>&1)" "removed = 0"
 
 blue "\n🚩 4 schedule"
-test "schedule_find" "$(dfx --identity alice canister call core schedule_find 2>&1)" "'ScheduleFind' is required"
+test "🙈 schedule_find" "$(dfx --identity alice canister call core schedule_find 2>&1)" "'ScheduleFind' is required"
 test "schedule_find" "$(dfx canister call core schedule_find 2>&1)" "(null)"
-test "schedule_replace" "$(dfx --identity alice canister call core schedule_replace "(opt (1000000000:nat64))" 2>&1)" "'ScheduleReplace' is required"
+test "🙈 schedule_replace" "$(dfx --identity alice canister call core schedule_replace "(opt (1000000000:nat64))" 2>&1)" "'ScheduleReplace' is required"
 test "schedule_replace" "$(dfx canister call core schedule_replace "(opt (1000000000:nat64))" 2>&1)" "()"
 sleep 3
 test "schedule_replace" "$(dfx canister call core schedule_replace "(null)" 2>&1)" "()"
 sleep 2
-test "schedule_trigger" "$(dfx --identity alice canister call core schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
+test "🙈 schedule_trigger" "$(dfx --identity alice canister call core schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
 test "schedule_trigger" "$(dfx canister call core schedule_trigger 2>&1)" "()"
 
 blue "\n🚩 5 example business"
 test "business_example_query" "$(dfx --identity alice canister call core business_example_query 2>&1)" "\"\""
 test "business_example_query" "$(dfx canister call core business_example_query 2>&1)" "\"\""
-test "business_example_set" "$(dfx --identity alice canister call core business_example_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
+test "🙈 business_example_set" "$(dfx --identity alice canister call core business_example_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
 test "business_example_set" "$(dfx canister call core business_example_set "(\"test string\")" 2>&1)" "()"
 test "business_example_query" "$(dfx --identity alice canister call core business_example_query 2>&1)" "test string"
 test "business_example_query" "$(dfx canister call core business_example_query 2>&1)" "test string"
@@ -522,7 +525,7 @@ test "business_example_query" "$(dfx canister call core business_example_query 2
 blue "\n🚩 7 test core cell"
 test "business_example_cell_query" "$(dfx --identity alice canister call core business_example_cell_query 2>&1)" "\"\""
 test "business_example_cell_query" "$(dfx canister call core business_example_cell_query 2>&1)" "\"\""
-test "business_example_cell_set" "$(dfx --identity alice canister call core business_example_cell_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
+test "🙈 business_example_cell_set" "$(dfx --identity alice canister call core business_example_cell_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
 test "business_example_cell_set" "$(dfx canister call core business_example_cell_set "(\"test string\")" 2>&1)" "()"
 test "business_example_cell_query" "$(dfx --identity alice canister call core business_example_cell_query 2>&1)" "test string"
 test "business_example_cell_query" "$(dfx canister call core business_example_cell_query 2>&1)" "test string"
@@ -530,13 +533,13 @@ test "business_example_cell_query" "$(dfx canister call core business_example_ce
 blue "\n🚩 8 test core vec"
 test "business_example_vec_query" "$(dfx --identity alice canister call core business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call core business_example_vec_query 2>&1)" "(vec {})"
-test "business_example_vec_pop" "$(dfx --identity alice canister call core business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
+test "🙈 business_example_vec_pop" "$(dfx --identity alice canister call core business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
 test "business_example_vec_pop" "$(dfx canister call core business_example_vec_pop "()" 2>&1)" "(null)"
 test "business_example_vec_push" "$(dfx --identity alice canister call core business_example_vec_push "(5: nat64)" 2>&1)" "'BusinessExampleSet' is required"
 test "business_example_vec_push" "$(dfx canister call core business_example_vec_push "(5: nat64)" 2>&1)" "()"
 test "business_example_vec_query" "$(dfx --identity alice canister call core business_example_vec_query 2>&1)" "(vec { record { vec_data = 5 : nat64 } })"
 test "business_example_vec_query" "$(dfx canister call core business_example_vec_query 2>&1)" "(vec { record { vec_data = 5 : nat64 } })"
-test "business_example_vec_pop" "$(dfx --identity alice canister call core business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
+test "🙈 business_example_vec_pop" "$(dfx --identity alice canister call core business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
 test "business_example_vec_pop" "$(dfx canister call core business_example_vec_pop "()" 2>&1)" "(opt record { vec_data = 5 : nat64 })"
 test "business_example_vec_query" "$(dfx --identity alice canister call core business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call core business_example_vec_query 2>&1)" "(vec {})"

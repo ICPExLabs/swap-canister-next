@@ -3,7 +3,7 @@ use common::types::BusinessError;
 
 use super::super::{
     ArgWithMeta, DepositToken, RequestTraceGuard, TokenBalancesGuard, TokenBlockChainGuard,
-    WithdrawToken,
+    TransferToken, WithdrawToken, display_account,
 };
 
 pub struct TokenGuard<'a> {
@@ -31,9 +31,10 @@ impl<'a> TokenGuard<'a> {
         height: Nat,
     ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
-            |_trace| {
+            |trace| {
                 self.balances_guard
                     .token_deposit(&mut self.token_guard, arg)?; // do deposit
+                trace.trace("Done".into());
                 Ok(height)
             },
             |data| data.to_string(),
@@ -46,10 +47,33 @@ impl<'a> TokenGuard<'a> {
         height: Nat,
     ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
-            |_trace| {
+            |trace| {
                 self.balances_guard
                     .token_withdraw(&mut self.token_guard, arg)?; // do withdraw
+                trace.trace("Done".into());
                 Ok(height)
+            },
+            |data| data.to_string(),
+        )
+    }
+
+    pub fn token_transfer(
+        &mut self,
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        self.trace_guard.handle(
+            |trace| {
+                let changed = self
+                    .balances_guard
+                    .token_transfer(&mut self.token_guard, arg.clone())?; // do transfer
+                trace.trace(format!(
+                    "Transfer {} Token: [{}] From ({}) To: ({}) With Changed: {changed}.",
+                    arg.arg.amount,
+                    arg.arg.token.to_text(),
+                    display_account(&arg.arg.from),
+                    display_account(&arg.arg.to)
+                ));
+                Ok(changed)
             },
             |data| data.to_string(),
         )

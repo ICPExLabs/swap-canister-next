@@ -288,4 +288,25 @@ impl InnerState {
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
         // maybe do something
     }
+
+    pub fn get_token_guard<'a, T>(
+        &'a mut self,
+        locks: &'a (TokenBalancesLock, TokenBlockChainLock),
+        arg: T,
+        trace: Option<String>,
+    ) -> Result<TokenGuard<'a>, BusinessError>
+    where
+        T: Into<RequestArgs>,
+    {
+        let balances_guard = self.token_balances.be_guard(&locks.0);
+        let token_guard = self.token_block_chain.be_guard(&locks.1);
+        let trace_guard = self.request_traces.be_guard(
+            arg.into(),
+            Some(&balances_guard),
+            Some(&token_guard),
+            None,
+            trace,
+        )?;
+        Ok(TokenGuard::new(trace_guard, balances_guard, token_guard))
+    }
 }

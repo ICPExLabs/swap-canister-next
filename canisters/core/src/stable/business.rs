@@ -102,13 +102,13 @@ pub trait Business:
     ) -> Result<Nat, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // ======================== swap block chain ========================
 
@@ -346,13 +346,13 @@ impl Business for State {
     ) -> Result<Nat, BusinessError> {
         self.get_mut().business_token_withdraw(locks, arg, height)
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     self.get_mut().business_token_transfer(locks, arg)
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        self.get_mut().business_token_transfer(locks, arg)
+    }
 
     // // ======================== swap block chain ========================
 

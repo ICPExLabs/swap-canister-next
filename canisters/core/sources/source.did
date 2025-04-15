@@ -146,6 +146,7 @@ type RejectionCode = variant {
 type RequestArgs = variant {
   token_deposit : TokenDepositArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
+  token_transfer : TokenTransferArgWithMeta;
   token_withdraw : TokenWithdrawArgWithMeta;
 };
 type RequestTrace = record {
@@ -232,6 +233,22 @@ type TokenTransaction = record {
   created : opt nat64;
   memo : opt blob;
   operation : TokenOperation;
+};
+type TokenTransferArgWithMeta = record {
+  arg : TransferToken;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
+type TokenTransferArgs = record {
+  to : Account;
+  fee : opt nat;
+  created : opt nat64;
+  token : principal;
+  from : Account;
+  amount_without_fee : nat;
+  memo : opt blob;
 };
 type TokenWithdrawArgWithMeta = record {
   arg : WithdrawToken;
@@ -328,6 +345,7 @@ service : (opt InitArgs) -> {
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
+  token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
   token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenChangedResult);
   tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;

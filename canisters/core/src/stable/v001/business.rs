@@ -106,13 +106,9 @@ impl Business for InnerState {
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
-        let balances_guard = self.token_balances.be_guard(&locks.0);
-        let token_guard = self.token_block_chain.be_guard(&locks.1);
-        let trace_guard = self.request_traces.be_guard(
-            arg.clone().into(),
-            Some(&balances_guard),
-            Some(&token_guard),
-            None,
+        let mut guard = self.get_token_guard(
+            locks,
+            arg.clone(),
             Some(format!(
                 "Deposit {} Token: [{}] From: ({}) With Height: {height}.",
                 arg.arg.amount,
@@ -120,7 +116,6 @@ impl Business for InnerState {
                 display_account(&arg.arg.from)
             )),
         )?;
-        let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
         let height = guard.token_deposit(arg, height)?; // do deposit
         self.business_certified_data_refresh(); // set certified data
         Ok(height)
@@ -131,13 +126,9 @@ impl Business for InnerState {
         arg: ArgWithMeta<WithdrawToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
-        let balances_guard = self.token_balances.be_guard(&locks.0);
-        let token_guard = self.token_block_chain.be_guard(&locks.1);
-        let trace_guard = self.request_traces.be_guard(
-            arg.clone().into(),
-            Some(&balances_guard),
-            Some(&token_guard),
-            None,
+        let mut guard = self.get_token_guard(
+            locks,
+            arg.clone(),
             Some(format!(
                 "Withdraw {} Token: [{}] To: ({}) With Height: {height}.",
                 arg.arg.amount,
@@ -145,22 +136,20 @@ impl Business for InnerState {
                 display_account(&arg.arg.to)
             )),
         )?;
-        let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
         let height = guard.token_withdraw(arg, height)?; // do withdraw
         self.business_certified_data_refresh(); // set certified data
         Ok(height)
     }
-    // fn business_token_transfer(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<TransferToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     let mut balances_guard = self.token_balances.be_guard(&locks.0);
-    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     let changed = balances_guard.token_transfer(&mut token_guard, arg)?; // do transfer
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(changed)
-    // }
+    fn business_token_transfer(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        let mut guard = self.get_token_guard(locks, arg.clone(), None)?;
+        let changed = guard.token_transfer(arg)?; // do transfer
+        self.business_certified_data_refresh(); // set certified data
+        Ok(changed)
+    }
 
     // // ======================== swap block chain ========================
 
