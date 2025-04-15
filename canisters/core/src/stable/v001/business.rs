@@ -100,12 +100,12 @@ impl Business for InnerState {
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         self.business_tokens_query()
             .get(token)
-            .map(|info| info.clone())
+            .cloned()
             .or_else(|| self.business_dummy_tokens_query().remove(token))
     }
-    // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-    //     ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
-    // }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
+    }
 
     // // ======================== update ========================
 

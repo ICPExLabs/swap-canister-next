@@ -89,9 +89,9 @@ pub trait Business:
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // // ======================== update ========================
 
@@ -328,9 +328,9 @@ impl Business for State {
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         self.get().business_token_query(token)
     }
-    // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-    //     self.get().business_token_balance_of(token, account)
-    // }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        self.get().business_token_balance_of(token, account)
+    }
 
     // // ======================== update ========================
 

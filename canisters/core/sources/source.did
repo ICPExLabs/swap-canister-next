@@ -1,3 +1,4 @@
+type Account = record { owner : principal; subaccount : opt blob };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -108,7 +109,13 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
+  token_balance : (principal, opt blob) -> (nat) query;
+  token_balance_by : (principal, Account) -> (nat) query;
+  token_balance_of : (principal, Account) -> (nat) query;
   token_query : (principal) -> (opt TokenInfo) query;
+  tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
+  tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
+  tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
