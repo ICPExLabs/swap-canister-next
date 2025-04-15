@@ -1,4 +1,4 @@
-use common::archive::token::TransferFee;
+use ::common::archive::token::TransferFee;
 use ic_canister_kit::common::trap;
 use serde::{Deserialize, Serialize};
 use std::{

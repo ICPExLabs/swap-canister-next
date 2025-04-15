@@ -8,7 +8,7 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-// mod query;
+mod query;
 
 // mod deposit;
 

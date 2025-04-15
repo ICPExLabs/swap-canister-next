@@ -13,7 +13,9 @@ impl AsRef<str> for AmmText {
 }
 
 /// Amm 算法
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, CandidType)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
+)]
 pub enum Amm {
     /// fee 0.05%
     #[serde(rename = "swap_v2_0.05%")]

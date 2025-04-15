@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use common::utils::principal::sort_tokens;
+use ::common::utils::principal::sort_tokens;
 
 use super::*;
 
@@ -14,90 +14,101 @@ use super::{
     TokenPairSwapTokensSuccess,
 };
 
-#[derive(Serialize, Deserialize, Default)]
-pub struct TokenPairs(HashMap<TokenPair, HashMap<Amm, MarketMaker>>);
+#[derive(Serialize, Deserialize)]
+pub struct TokenPairs {
+    #[serde(skip, default = "init_token_pairs")]
+    pairs: StableBTreeMap<TokenPairAmm, MarketMaker>,
+}
+
+impl Default for TokenPairs {
+    fn default() -> Self {
+        Self {
+            pairs: init_token_pairs(),
+        }
+    }
+}
 
 impl TokenPairs {
-    pub fn query_token_pair_pools(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-        self.0
-            .iter()
-            .flat_map(|(pair, makers)| makers.iter().map(move |(amm, maker)| (pair, amm, maker)))
+    pub fn query_all_token_pairs(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
+        self.pairs
+            .keys()
+            .filter_map(|pa| self.pairs.get(&pa).map(|maker| (pa, maker)))
             .collect()
     }
 
-    pub fn business_dummy_tokens_query(
+    pub fn query_dummy_tokens(
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
     ) -> HashMap<CanisterId, TokenInfo> {
-        self.query_token_pair_pools()
+        self.query_all_token_pairs()
             .into_iter()
-            .flat_map(|(pair, amm, maker)| maker.dummy_tokens(tokens, pair, (*amm).into()))
+            .flat_map(|(pa, maker)| maker.dummy_tokens(tokens, &pa))
             .map(|info| (info.canister_id, info))
             .collect()
     }
 
-    /// 查询该币对池子涉及的账户
-    pub fn get_token_pair_pool(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-        let TokenPairAmm { pair, amm } = pa;
-        self.0.get(pair).and_then(|makers| makers.get(amm))
-    }
+    // /// 查询该币对池子涉及的账户
+    // pub fn get_token_pair_pool(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
+    //     let TokenPairAmm { pair, amm } = pa;
+    //     self.0.get(pair).and_then(|makers| makers.get(amm))
+    // }
 
-    // ============================= create pair pool =============================
+    // // ============================= create pair pool =============================
 
-    pub fn create_token_pair_pool(
-        &mut self,
-        guard: &mut SwapBlockChainGuard,
-        arg: ArgWithMeta<TokenPairAmm>,
-        subaccount: Subaccount,
-        dummy_canister_id: DummyCanisterId,
-        token0: &TokenInfo,
-        token1: &TokenInfo,
-    ) -> Result<(), BusinessError> {
-        if self.get_token_pair_pool(&arg.arg).is_some() {
-            return Err(BusinessError::TokenPairAmmExist((
-                arg.arg.pair,
-                arg.arg.amm.into(),
-            )));
-        }
+    // pub fn create_token_pair_pool(
+    //     &mut self,
+    //     guard: &mut SwapBlockChainGuard,
+    //     arg: ArgWithMeta<TokenPairAmm>,
+    //     subaccount: Subaccount,
+    //     dummy_canister_id: DummyCanisterId,
+    //     token0: &TokenInfo,
+    //     token1: &TokenInfo,
+    // ) -> Result<(), BusinessError> {
+    //     if self.get_token_pair_pool(&arg.arg).is_some() {
+    //         return Err(BusinessError::TokenPairAmmExist((
+    //             arg.arg.pair,
+    //             arg.arg.amm.into(),
+    //         )));
+    //     }
 
-        // 1. get token block
-        let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
-                pa: arg.arg.clone(),
-                creator: arg.caller.id(),
-            })),
-            memo: arg.memo,
-            created: arg.created,
-        };
-        let (encoded_block, block_hash) = guard.get_next_swap_block(arg.now, transaction)?;
-        // 2. do create
-        let TokenPairAmm { pair, amm } = arg.arg;
-        let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);
-        let makers = self.0.entry(pair).or_default();
-        makers.entry(amm).or_insert(maker);
-        // 3. push block
-        guard.push_block(encoded_block, block_hash);
-        Ok(())
-    }
+    //     // 1. get token block
+    //     let transaction = SwapTransaction {
+    //         operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
+    //             pa: arg.arg.clone(),
+    //             creator: arg.caller.id(),
+    //         })),
+    //         memo: arg.memo,
+    //         created: arg.created,
+    //     };
+    //     let (encoded_block, block_hash) = guard.get_next_swap_block(arg.now, transaction)?;
+    //     // 2. do create
+    //     let TokenPairAmm { pair, amm } = arg.arg;
+    //     let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);
+    //     let makers = self.0.entry(pair).or_default();
+    //     makers.entry(amm).or_insert(maker);
+    //     // 3. push block
+    //     guard.push_block(encoded_block, block_hash);
+    //     Ok(())
+    // }
 
-    // ============================= liquidity =============================
+    // // ============================= liquidity =============================
 
-    fn get_maker_mut(&mut self, pa: &TokenPairAmm) -> Result<&mut MarketMaker, BusinessError> {
-        self.0
-            .get_mut(&pa.pair)
-            .and_then(|makers| makers.get_mut(&pa.amm))
-            .ok_or_else(|| pa.not_exist())
-    }
+    // fn get_maker_mut(&mut self, pa: &TokenPairAmm) -> Result<&mut MarketMaker, BusinessError> {
+    //     self.0
+    //         .get_mut(&pa.pair)
+    //         .and_then(|makers| makers.get_mut(&pa.amm))
+    //         .ok_or_else(|| pa.not_exist())
+    // }
 
-    pub fn add_liquidity(
-        &mut self,
-        guard: &mut TokenPairGuard<'_>,
-        fee_to: Option<Account>,
-        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
-    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        let maker = self.get_maker_mut(&arg.arg.pa)?;
-        maker.add_liquidity(guard, fee_to, arg)
-    }
+    // pub fn add_liquidity(
+    //     &mut self,
+    //     guard: &mut TokenPairGuard<'_>,
+    //     fee_to: Option<Account>,
+    //     arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+    //     let maker = self.get_maker_mut(&arg.arg.pa)?;
+    //     maker.add_liquidity(guard, fee_to, arg)
+    // }
 
     // pub fn check_liquidity_removable(
     //     &self,

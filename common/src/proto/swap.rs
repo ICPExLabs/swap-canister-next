@@ -46,6 +46,20 @@ pub struct PairSwapToken {
     #[prost(message, optional, tag = "7")]
     pub amount_b: ::core::option::Option<super::common::Nat>,
 }
+/// cumulative price
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PairCumulativePrice {
+    #[prost(message, optional, tag = "1")]
+    pub pa: ::core::option::Option<TokenPairAmm>,
+    #[prost(uint64, tag = "2")]
+    pub timestamp: u64,
+    #[prost(uint32, tag = "3")]
+    pub exponent: u32,
+    #[prost(message, optional, tag = "4")]
+    pub price0: ::core::option::Option<super::common::Nat>,
+    #[prost(message, optional, tag = "5")]
+    pub price1: ::core::option::Option<super::common::Nat>,
+}
 /// mint
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SwapV2MintToken {
@@ -114,7 +128,7 @@ pub mod swap_v2_operation {
 /// pair operation
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PairOperation {
-    #[prost(oneof = "pair_operation::PairOperation", tags = "1, 2, 10")]
+    #[prost(oneof = "pair_operation::PairOperation", tags = "1, 2, 3, 10")]
     pub pair_operation: ::core::option::Option<pair_operation::PairOperation>,
 }
 /// Nested message and enum types in `PairOperation`.
@@ -126,9 +140,11 @@ pub mod pair_operation {
         Create(super::PairCreate),
         #[prost(message, tag = "2")]
         Swap(super::PairSwapToken),
+        #[prost(message, tag = "3")]
+        CumulativePrice(super::PairCumulativePrice),
         /// swap v2
         ///
-        /// start by 10
+        /// start at 10
         #[prost(message, tag = "10")]
         SwapV2(super::SwapV2Operation),
     }

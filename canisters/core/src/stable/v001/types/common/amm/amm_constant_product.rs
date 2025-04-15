@@ -7,7 +7,7 @@
 ///   - Uniswap V3 引入「集中流动性」，允许 LP 设定价格区间，提升资本效率。
 use std::collections::HashMap;
 
-use common::utils::principal::sort_tokens;
+use ::common::utils::principal::sort_tokens;
 use num_bigint::BigUint;
 
 use super::*;
@@ -76,10 +76,9 @@ impl SwapV2MarketMaker {
     pub fn dummy_tokens(
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
-        pair: &TokenPair,
-        amm: &AmmText,
+        pa: &TokenPairAmm,
     ) -> Vec<TokenInfo> {
-        self.lp.dummy_tokens(tokens, pair, amm)
+        self.lp.dummy_tokens(tokens, pa)
     }
 
     pub fn accounts(&self, self_canister: &SelfCanister) -> Vec<Account> {

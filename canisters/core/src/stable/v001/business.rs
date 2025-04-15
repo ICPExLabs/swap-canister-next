@@ -74,30 +74,35 @@ impl Business for InnerState {
     //     self.get_mut().business_request_trace(index, trace)
     // }
 
-    // // ======================== token block chain ========================
+    // ======================== token block chain ========================
 
-    // // ======================== query ========================
+    // ======================== query ========================
 
-    // // tokens query
-    // fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-    //     &TOKENS
-    // }
-    // fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-    //     self.business_data
-    //         .token_pairs
-    //         .business_dummy_tokens_query(self.business_tokens_query())
-    // }
-    // fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-    //     self.business_tokens_query()
-    //         .iter()
-    //         .map(|(token, info)| (*token, Cow::Borrowed(info)))
-    //         .chain(
-    //             self.business_dummy_tokens_query()
-    //                 .into_iter()
-    //                 .map(|(token, info)| (token, Cow::Owned(info))),
-    //         )
-    //         .collect()
-    // }
+    // tokens query
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        &TOKENS
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.token_pairs
+            .query_dummy_tokens(self.business_tokens_query())
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.business_tokens_query()
+            .iter()
+            .map(|(token, info)| (*token, Cow::Borrowed(info)))
+            .chain(
+                self.business_dummy_tokens_query()
+                    .into_iter()
+                    .map(|(token, info)| (token, Cow::Owned(info))),
+            )
+            .collect()
+    }
+    fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
+        self.business_tokens_query()
+            .get(token)
+            .map(|info| info.clone())
+            .or_else(|| self.business_dummy_tokens_query().remove(token))
+    }
     // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
     //     ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
     // }

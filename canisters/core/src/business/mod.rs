@@ -10,7 +10,7 @@ use crate::types::*;
 
 // pub mod config;
 
-// pub mod token;
+pub mod token;
 
 // pub mod pair;
 

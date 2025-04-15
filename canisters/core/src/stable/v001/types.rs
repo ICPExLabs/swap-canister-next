@@ -45,31 +45,23 @@ pub use crate::types::{
     TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken, proto,
 };
 
-mod amm;
+mod common;
+#[allow(unused)]
+pub use common::*;
+
 mod balance;
 mod blockchain;
-mod guard;
-mod lp;
 mod pair;
 mod request;
-mod token;
 
-#[allow(unused)]
-pub use amm::*;
 #[allow(unused)]
 pub use balance::*;
 #[allow(unused)]
 pub use blockchain::*;
 #[allow(unused)]
-pub use guard::*;
-#[allow(unused)]
-pub use lp::*;
-#[allow(unused)]
 pub use pair::*;
 #[allow(unused)]
 pub use request::*;
-#[allow(unused)]
-pub use token::*;
 
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, EnumIter, EnumString, strum_macros::Display)]
@@ -119,7 +111,6 @@ pub struct CanisterKit {
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {
     pub fee_to: Option<Account>, // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
-    pub token_pairs: TokenPairs, // 所有交易对池子
 }
 
 // 能序列化的和不能序列化的放在一起
@@ -134,13 +125,12 @@ pub struct InnerState {
     // 业务数据
     pub business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
 
-    pub request_traces: RequestTraces, // 业务数据 // ? 堆内存 序列化 稳定内存
+    pub request_traces: RequestTraces, // 业务数据, 记录请求步骤 // ? 堆内存 序列化 稳定内存
+    pub token_block_chain: TokenBlockChain, // 业务数据, 记录 Token 块数据 // ? 堆内存 序列化 稳定内存
+    pub swap_block_chain: SwapBlockChain, // 业务数据, 记录 Swap 块数据 // ? 堆内存 序列化 稳定内存
 
-    pub token_balances: TokenBalances, // 业务数据 // ? 堆内存 序列化 稳定内存
-
-    pub token_block_chain: TokenBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
-
-    pub swap_block_chain: SwapBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
+    pub token_pairs: TokenPairs, // 业务数据, 记录交易对数据 // ? 堆内存 序列化 稳定内存
+    pub token_balances: TokenBalances, // 业务数据, 记录账户余额数据 // ? 堆内存 序列化 稳定内存
 
     pub example_data: String, // 样例数据 // ? 堆内存 序列化
 
@@ -166,12 +156,11 @@ impl Default for InnerState {
             business_data: Default::default(),
 
             request_traces: Default::default(),
-
-            token_balances: Default::default(),
-
             token_block_chain: Default::default(),
-
             swap_block_chain: Default::default(),
+
+            token_pairs: Default::default(),
+            token_balances: Default::default(),
 
             example_data: Default::default(),
 
@@ -188,10 +177,11 @@ use candid::CandidType;
 use ic_canister_kit::stable;
 
 // stable memory
-const MEMORY_ID_REQUEST_TRACES: MemoryId = MemoryId::new(0); // token balances
-const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
+const MEMORY_ID_REQUEST_TRACES: MemoryId = MemoryId::new(0); // request traces
 const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(1); // token blocks
 const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
+const MEMORY_ID_TOKEN_PAIRS: MemoryId = MemoryId::new(16); // token pairs
+const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(17); // token balances
 
 // example
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
@@ -204,17 +194,18 @@ const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试
 fn init_request_traces() -> StableBTreeMap<RequestIndex, RequestTrace> {
     stable::init_map_data(MEMORY_ID_REQUEST_TRACES)
 }
-
-fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
-    stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
-}
-
 fn init_token_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
     stable::init_map_data(MEMORY_ID_TOKEN_BLOCKS)
 }
-
 fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
     stable::init_map_data(MEMORY_ID_SWAP_BLOCKS)
+}
+
+fn init_token_pairs() -> StableBTreeMap<TokenPairAmm, MarketMaker> {
+    stable::init_map_data(MEMORY_ID_TOKEN_PAIRS)
+}
+fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
+    stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)
 }
 
 // fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {

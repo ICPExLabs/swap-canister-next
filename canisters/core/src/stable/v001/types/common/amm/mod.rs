@@ -24,7 +24,22 @@ pub use pmm_v1::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MarketMaker {
+    #[serde(rename = "swap_v2")]
     SwapV2(SwapV2MarketMaker),
+}
+
+impl Storable for MarketMaker {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        use ic_canister_kit::common::trap;
+        Cow::Owned(trap(ic_canister_kit::functions::stable::to_bytes(self)))
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        use ic_canister_kit::common::trap;
+        trap(ic_canister_kit::functions::stable::from_bytes(&bytes))
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 impl MarketMaker {
@@ -64,11 +79,10 @@ impl MarketMaker {
     pub fn dummy_tokens(
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
-        pair: &TokenPair,
-        amm: AmmText,
+        pa: &TokenPairAmm,
     ) -> Vec<TokenInfo> {
         match self {
-            MarketMaker::SwapV2(value) => value.dummy_tokens(tokens, pair, &amm),
+            MarketMaker::SwapV2(value) => value.dummy_tokens(tokens, pa),
         }
     }
 
@@ -185,6 +199,7 @@ fn new_swap_v2_market_maker(
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum MarketMakerView {
+    #[serde(rename = "swap_v2")]
     SwapV2(SwapV2MarketMakerView),
 }
 

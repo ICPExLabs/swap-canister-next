@@ -73,19 +73,22 @@ pub trait Business:
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
 
-    // // ======================== token block chain ========================
+    // ======================== token block chain ========================
 
-    // // ======================== query ========================
+    // ======================== query ========================
 
-    // fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
@@ -309,19 +312,22 @@ impl Business for State {
     //     self.get_mut().business_request_trace(index, trace)
     // }
 
-    // // ======================== token block chain ========================
+    // ======================== token block chain ========================
 
-    // // ======================== query ========================
+    // ======================== query ========================
 
-    // fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-    //     self.get().business_tokens_query()
-    // }
-    // fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-    //     self.get().business_dummy_tokens_query()
-    // }
-    // fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-    //     self.get().business_all_tokens_query()
-    // }
+    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        self.get().business_tokens_query()
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.get().business_dummy_tokens_query()
+    }
+    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.get().business_all_tokens_query()
+    }
+    fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
+        self.get().business_token_query(token)
+    }
     // fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
     //     self.get().business_token_balance_of(token, account)
     // }

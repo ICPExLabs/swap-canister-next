@@ -13,8 +13,10 @@ pub use burn::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum SwapV2Operation {
     /// 添加流动性
+    #[serde(rename = "mint")]
     Mint(SwapV2MintToken),
     /// 移除流动性
+    #[serde(rename = "burn")]
     Burn(SwapV2BurnToken),
 }
 

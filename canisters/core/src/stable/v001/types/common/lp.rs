@@ -16,11 +16,10 @@ impl PoolLp {
     pub fn dummy_tokens(
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
-        pair: &TokenPair,
-        amm: &AmmText,
+        pa: &TokenPairAmm,
     ) -> Vec<TokenInfo> {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pair, amm),
+            PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pa),
             PoolLp::OuterLP(_outer_lp) => vec![],
         }
     }
@@ -93,10 +92,11 @@ impl InnerLP {
     pub fn dummy_tokens(
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
-        pair: &TokenPair,
-        amm: &AmmText,
+        pa: &TokenPairAmm,
     ) -> Vec<TokenInfo> {
         use ic_canister_kit::common::trap;
+        let TokenPairAmm { pair, amm } = pa;
+        let amm: AmmText = amm.clone().into();
         let token0 = trap(tokens.get(&pair.token0).ok_or("can not be"));
         let token1 = trap(tokens.get(&pair.token1).ok_or("can not be"));
         vec![TokenInfo {

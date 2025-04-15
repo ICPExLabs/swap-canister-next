@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use crate::{proto, types::Amm};
 
 /// 创建池子
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct PairSwapToken {
     /// 支付代币

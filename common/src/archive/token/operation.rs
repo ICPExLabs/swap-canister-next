@@ -20,10 +20,13 @@ pub use transfer::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum TokenOperation {
     /// 存入
+    #[serde(rename = "deposit")]
     Deposit(DepositToken),
     /// 提取
+    #[serde(rename = "withdraw")]
     Withdraw(WithdrawToken),
     /// 转移
+    #[serde(rename = "transfer")]
     Transfer(TransferToken),
 }
 
