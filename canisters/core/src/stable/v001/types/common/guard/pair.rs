@@ -120,19 +120,21 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
 
     pub fn mint_cumulative_price(
         &mut self,
-        exponent: u8,
-        price0: Nat,
-        price1: Nat,
+        price_cumulative_exponent: u8,
+        price0_cumulative: Nat,
+        price1_cumulative: Nat,
     ) -> Result<(), BusinessError> {
         // cumulative price
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::CumulativePrice(PairCumulativePrice {
-                pa: self.pa.clone(),
-                timestamp: self.arg.now,
-                exponent,
-                price0: price0.clone(),
-                price1: price1.clone(),
-            })),
+            operation: SwapOperation::Pair(PairOperation::SwapV2(
+                SwapV2Operation::CumulativePrice(PairCumulativePrice {
+                    pa: self.pa.clone(),
+                    block_timestamp: self.arg.now,
+                    price_cumulative_exponent,
+                    price0_cumulative: price0_cumulative.clone(),
+                    price1_cumulative: price1_cumulative.clone(),
+                }),
+            )),
             memo: None,
             created: None,
         };
@@ -141,7 +143,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "Mark Pair Cumulative Price. TokenPairAmm: {} Timestamp: {} Exponent: {exponent} Price0: {price0} Price1: {price1}.",
+            "Mark Pair Cumulative Price. TokenPairAmm: {} Timestamp: {} Exponent: {price_cumulative_exponent} Price0: {price0_cumulative} Price1: {price1_cumulative}.",
             self.pa,
             self.arg.now.into_inner(),
         )); // * trace

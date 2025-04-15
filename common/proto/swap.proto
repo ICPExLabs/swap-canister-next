@@ -44,14 +44,6 @@ message PairSwapToken {
     common.Nat amount_b = 7;
 }
 
-// cumulative price
-message PairCumulativePrice {
-    TokenPairAmm pa = 1;
-    uint64 timestamp = 2;
-    uint32 exponent = 3;
-    common.Nat price0 = 4;
-    common.Nat price1 = 5;
-}
 
 // ========================= basic operation pair swap v2 =========================
 
@@ -102,12 +94,23 @@ message SwapV2MintFeeToken {
     common.Account to = 4;
 }
 
+
+// cumulative price
+message PairCumulativePrice {
+    TokenPairAmm pa = 1;
+    uint64 block_timestamp = 2;
+    uint32 price_cumulative_exponent = 3;
+    common.Nat price0_cumulative = 4;
+    common.Nat price1_cumulative = 5;
+}
+
 // swap v2 operation
 message SwapV2Operation {
     oneof swap_v2_operation {
         SwapV2MintToken mint = 1;
         SwapV2BurnToken burn = 2;
         SwapV2MintFeeToken mint_fee = 3;
+        PairCumulativePrice cumulative_price = 4;
     }
 }
 
@@ -118,7 +121,6 @@ message PairOperation {
     oneof pair_operation {
         PairCreate create = 1;
         PairSwapToken swap = 2;
-        PairCumulativePrice cumulative_price = 3;
         // swap v2
         SwapV2Operation swap_v2 = 10; // start at 10
     }

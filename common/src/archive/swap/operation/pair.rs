@@ -12,9 +12,6 @@ pub use create::*;
 mod swap;
 pub use swap::*;
 
-mod cumulative;
-pub use cumulative::*;
-
 mod amm;
 pub use amm::*;
 
@@ -27,9 +24,6 @@ pub enum PairOperation {
     /// swap
     #[serde(rename = "swap")]
     Swap(PairSwapToken),
-    /// cumulative price
-    #[serde(rename = "cumulative_price")]
-    CumulativePrice(PairCumulativePrice),
     /// swap v2
     #[serde(rename = "swap_v2")]
     SwapV2(SwapV2Operation),
@@ -44,7 +38,6 @@ impl TryFrom<PairOperation> for proto::PairOperation {
         let pair_operation = match value {
             PairOperation::Create(value) => Create(value.into()),
             PairOperation::Swap(value) => Swap(value.try_into()?),
-            PairOperation::CumulativePrice(value) => CumulativePrice(value.try_into()?),
             PairOperation::SwapV2(value) => SwapV2(value.try_into()?),
         };
 
@@ -67,7 +60,6 @@ impl TryFrom<proto::PairOperation> for PairOperation {
         let value = match value {
             Create(value) => PairOperation::Create(value.try_into()?),
             Swap(value) => PairOperation::Swap(value.try_into()?),
-            CumulativePrice(value) => PairOperation::CumulativePrice(value.try_into()?),
             SwapV2(value) => PairOperation::SwapV2(value.try_into()?),
         };
 

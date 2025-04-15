@@ -134,53 +134,56 @@ async fn retry_pair_liquidity_add(
     return service_swap.pair_liquidity_add(args, Some(retries)).await;
 }
 
-// // ========================== remove ==========================
+// ========================== remove ==========================
 
-// // liquidity remove
-// impl CheckArgs for TokenPairLiquidityRemoveArgs {
-//     type Result = (
-//         TimestampNanos,
-//         Vec<CanisterId>,
-//         Vec<TokenAccount>,
-//         SelfCanister,
-//         Caller,
-//         TokenPairLiquidityRemoveArg,
-//     );
-//     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-//         // check owner
-//         let (self_canister, caller) = check_caller(&self.from.owner)?;
+// liquidity remove
+impl CheckArgs for TokenPairLiquidityRemoveArgs {
+    type Result = (
+        TimestampNanos,
+        Vec<CanisterId>,
+        Vec<TokenAccount>,
+        SelfCanister,
+        Caller,
+        TokenPairLiquidityRemoveArg,
+    );
+    fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // check owner
+        let (self_canister, caller) = check_caller(&self.from.owner)?;
 
-//         // check pool
-//         let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
+        // check pool
+        let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
 
-//         let arg = TokenPairLiquidityRemoveArg {
-//             self_canister,
-//             pa,
-//             from: self.from,
-//             token_a: self.swap_pair.token.0,
-//             token_b: self.swap_pair.token.1,
-//             liquidity: self.liquidity.clone(),
-//             amount_a_min: self.amount_min.0.clone(),
-//             amount_b_min: self.amount_min.1.clone(),
-//             to: self.to,
-//         };
+        let arg = TokenPairLiquidityRemoveArg {
+            self_canister,
+            pa: pa.clone(),
+            from: self.from,
+            token_a: self.swap_pair.token.0,
+            token_b: self.swap_pair.token.1,
+            liquidity: self.liquidity.clone(),
+            amount_a_min: self.amount_min.0.clone(),
+            amount_b_min: self.amount_min.1.clone(),
+            to: self.to,
+        };
 
-//         // check amount
-//         arg.check_args()?;
+        // check amount
+        arg.check_args()?;
 
-//         // check liquidity balance
-//         with_state(|s| {
-//             s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity)
-//         })?;
+        // check liquidity balance
+        with_state(|s| {
+            s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity)
+        })?;
 
-//         // check deadline
-//         if let Some(deadline) = &self.deadline {
-//             deadline.check_args()?;
-//         }
+        // check deadline
+        if let Some(deadline) = &self.deadline {
+            deadline.check_args()?;
+        }
 
-//         Ok((fee_to, required, self_canister, caller, pa, arg))
-//     }
-// }
+        // check meta
+        let now = check_meta(&self.memo, &self.created)?;
+
+        Ok((now, fee_to, required, self_canister, caller, arg))
+    }
+}
 
 // // check forbidden
 // #[ic_cdk::update(guard = "has_business_token_pair_liquidity_remove")]
