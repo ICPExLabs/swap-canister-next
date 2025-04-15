@@ -114,13 +114,13 @@ pub trait Business:
 
     // ======================== token pair swap ========================
 
-    // // query
-    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // query
+    fn business_token_pair_pools_query(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // // create
     // fn business_token_pair_pool_create(
     //     &mut self,
@@ -354,17 +354,17 @@ impl Business for State {
         self.get_mut().business_token_transfer(locks, arg)
     }
 
-    // // ======================== swap block chain ========================
+    // ======================== swap block chain ========================
 
-    // // ======================== token pair swap ========================
+    // ======================== token pair swap ========================
 
-    // // query
-    // fn business_token_pair_pools_query(&self) -> Vec<(&TokenPair, &Amm, &MarketMaker)> {
-    //     self.get().business_token_pair_pools_query()
-    // }
-    // fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     self.get().business_token_pair_pool_get(pa)
-    // }
+    // query
+    fn business_token_pair_pools_query(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
+        self.get().business_token_pair_pools_query()
+    }
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
+        self.get().business_token_pair_pool_get(pa)
+    }
     // // create
     // fn business_token_pair_pool_create(
     //     &mut self,

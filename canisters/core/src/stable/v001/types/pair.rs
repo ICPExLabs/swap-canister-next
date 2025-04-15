@@ -29,7 +29,7 @@ impl Default for TokenPairs {
 }
 
 impl TokenPairs {
-    pub fn query_all_token_pairs(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
+    pub fn query_all_token_pair_pools(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
         self.pairs
             .keys()
             .filter_map(|pa| self.pairs.get(&pa).map(|maker| (pa, maker)))
@@ -40,18 +40,17 @@ impl TokenPairs {
         &self,
         tokens: &HashMap<CanisterId, TokenInfo>,
     ) -> HashMap<CanisterId, TokenInfo> {
-        self.query_all_token_pairs()
+        self.query_all_token_pair_pools()
             .into_iter()
             .flat_map(|(pa, maker)| maker.dummy_tokens(tokens, &pa))
             .map(|info| (info.canister_id, info))
             .collect()
     }
 
-    // /// 查询该币对池子涉及的账户
-    // pub fn get_token_pair_pool(&self, pa: &TokenPairAmm) -> Option<&MarketMaker> {
-    //     let TokenPairAmm { pair, amm } = pa;
-    //     self.0.get(pair).and_then(|makers| makers.get(amm))
-    // }
+    /// 查询该币对池子涉及的账户
+    pub fn get_token_pair_pool(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
+        self.pairs.get(pa)
+    }
 
     // // ============================= create pair pool =============================
 

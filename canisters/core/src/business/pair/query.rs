@@ -16,7 +16,7 @@ fn pairs_query() -> Vec<(TokenPairPool, MarketMakerView)> {
     with_state(|s| {
         s.business_token_pair_pools_query()
             .into_iter()
-            .map(|(pair, amm, maker)| (pair.to_pool(*amm), maker.clone().into()))
+            .map(|(pa, maker)| (pa.into(), maker.clone().into()))
             .collect()
     })
 }

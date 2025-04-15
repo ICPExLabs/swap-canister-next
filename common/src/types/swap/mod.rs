@@ -23,13 +23,12 @@ pub struct TokenPairPool {
     pub amm: AmmText,
 }
 
-impl TokenPair {
-    /// 代币对池子
-    pub fn to_pool(&self, amm: Amm) -> TokenPairPool {
-        TokenPairPool {
-            token0: self.token0,
-            token1: self.token1,
-            amm: amm.into(),
+impl From<TokenPairAmm> for TokenPairPool {
+    fn from(value: TokenPairAmm) -> Self {
+        Self {
+            token0: value.pair.token0,
+            token1: value.pair.token1,
+            amm: value.amm.into(),
         }
     }
 }

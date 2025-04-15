@@ -10,7 +10,7 @@ use crate::{
     utils::{hash::hash_sha256, principal::sort_tokens},
 };
 
-use super::{Amm, AmmText};
+use super::{Amm, AmmText, TokenPairPool};
 
 /// 有顺序的代币对
 #[derive(
