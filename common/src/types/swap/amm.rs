@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::BusinessError;
 
 /// amm 算法
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq, Hash)]
 pub struct AmmText(String);
 impl AsRef<str> for AmmText {
     fn as_ref(&self) -> &str {

@@ -25,7 +25,7 @@ pub use business::*;
 #[allow(unused)]
 pub use ::common::archive::swap::{
     PairCreate, PairCumulativePrice, PairOperation, QuerySwapBlockResult, SwapBlock, SwapOperation,
-    SwapTransaction, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation,
+    SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation,
 };
 #[allow(unused)]
 pub use ::common::archive::token::{
@@ -38,7 +38,7 @@ pub use ::common::proto;
 pub use ::common::types::{
     Amm, AmmText, BlockIndex, BusinessError, Caller, DoHash, DummyCanisterId, EncodedBlock,
     GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, QueryBlockResult, SelfCanister,
-    TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, TokenPairPool, SwapTokenPair,
+    SwapTokenPair, TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, TokenPairPool,
     check_caller, display_account,
 };
 #[allow(unused)]

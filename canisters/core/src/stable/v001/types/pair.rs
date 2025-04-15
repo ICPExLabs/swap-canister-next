@@ -138,22 +138,13 @@ impl TokenPairs {
         maker.check_liquidity_removable(token_balances, from, liquidity)
     }
 
-    // pub fn remove_liquidity(
-    //     &mut self,
-    //     fee_to: Option<Account>,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     pa: TokenPairAmm,
-    //     arg: TokenPairLiquidityRemoveArg,
-    // ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-    //     let maker = self
-    //         .0
-    //         .get_mut(&pa.pair)
-    //         .and_then(|makers| makers.get_mut(&pa.amm))
-    //         .ok_or_else(|| pa.not_exist())?;
-
-    //     maker.remove_liquidity(fee_to, guard, self_canister, arg)
-    // }
+    pub fn remove_liquidity(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
+        pa: TokenPairAmm,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        self.handle_maker(pa, |maker| maker.remove_liquidity(guard))
+    }
 
     // // ============================= swap =============================
 

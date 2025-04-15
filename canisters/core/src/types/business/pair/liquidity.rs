@@ -4,7 +4,7 @@ use super::super::*;
 
 // ========================= liquidity add =========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddArgs {
     pub from: Account,
 
@@ -18,7 +18,7 @@ pub struct TokenPairLiquidityAddArgs {
     pub created: Option<TimestampNanos>,
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddSuccess {
     pub amount: (Nat, Nat),
     pub liquidity: Nat,
@@ -95,7 +95,7 @@ impl CheckArgs for TokenPairLiquidityAddArg {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddSuccessView {
     pub amount: (String, String),
     pub liquidity: String,
@@ -111,7 +111,7 @@ impl From<&TokenPairLiquidityAddSuccess> for TokenPairLiquidityAddSuccessView {
 
 // ========================= liquidity remove =========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityRemoveArgs {
     pub from: Account,
 
@@ -125,7 +125,7 @@ pub struct TokenPairLiquidityRemoveArgs {
     pub created: Option<TimestampNanos>,
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityRemoveSuccess {
     pub amount: (Nat, Nat),
 }
@@ -149,10 +149,11 @@ impl From<TokenPairLiquidityRemoveResult>
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityRemoveArg {
     pub self_canister: SelfCanister,
     pub pa: TokenPairAmm,
-    
+
     pub from: Account,
     pub token_a: CanisterId,
     pub token_b: CanisterId,
@@ -173,5 +174,17 @@ impl CheckArgs for TokenPairLiquidityRemoveArg {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct TokenPairLiquidityRemoveSuccessView {
+    pub amount: (String, String),
+}
+impl From<&TokenPairLiquidityRemoveSuccess> for TokenPairLiquidityRemoveSuccessView {
+    fn from(value: &TokenPairLiquidityRemoveSuccess) -> Self {
+        Self {
+            amount: (value.amount.0.to_string(), value.amount.1.to_string()),
+        }
     }
 }

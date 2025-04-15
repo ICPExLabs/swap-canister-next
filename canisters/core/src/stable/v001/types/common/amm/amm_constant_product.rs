@@ -143,9 +143,9 @@ impl SwapV2MarketMaker {
         }
     }
 
-    fn mint_fee(
+    fn mint_fee<T>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         _reserve0: &Nat,
         _reserve1: &Nat,
     ) -> Result<bool, BusinessError> {
@@ -256,21 +256,15 @@ impl SwapV2MarketMaker {
         };
 
         // do mint，为用户铸造 LP 代币
-        self.lp.mint(
-            guard,
-            amount_a,
-            amount_b,
-            guard.arg.arg.to,
-            liquidity.clone(),
-        )?;
+        let arg = &guard.arg.arg;
+        self.lp
+            .mint(guard, amount_a, amount_b, arg.to, liquidity.clone())?;
 
         // 更新当前余额
         self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
         if fee_on {
             self.k_last = self.reserve0.clone() * self.reserve1.clone(); // 记录当前 k
         }
-
-        // ! push log
 
         Ok(liquidity)
     }
@@ -302,7 +296,7 @@ impl SwapV2MarketMaker {
         guard.trace(format!(
             "Pending | amount_a: {amount_a} amount_b: {amount_b}",
         )); // * trace
-        // 池子接收账户
+        // 池子接收代币账户
         let arg = &guard.arg.arg;
         let pool_account = Account {
             owner: arg.self_canister.id(),
@@ -344,87 +338,110 @@ impl SwapV2MarketMaker {
 
     fn burn(
         &mut self,
-        fee_to: Option<Account>,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
         pool_account: &Account,
-        arg: TokenPairLiquidityRemoveArg,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        todo!()
-        // let (token0, token1) = (self.token0, self.token1);
+        let arg = &guard.arg.arg;
+        let (token0, token1) = (self.token0, self.token1);
 
-        // let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
-        // let _token0 = token0;
-        // let _token1 = token1;
-        // let balance0 = guard.token_balance_of(_token0, *pool_account)?;
-        // let balance1 = guard.token_balance_of(_token1, *pool_account)?;
-        // let liquidity = arg.liquidity;
+        let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
+        let _token0 = token0;
+        let _token1 = token1;
+        let balance0 = guard.token_balance_of(_token0, *pool_account)?;
+        let balance1 = guard.token_balance_of(_token1, *pool_account)?;
+        let liquidity = arg.liquidity.clone();
 
-        // let fee_on = self.mint_fee(fee_to, guard, &_reserve0, &_reserve1)?;
-        // let _total_supply = self.lp.get_total_supply();
-        // let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
-        // let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
+        let fee_on = self.mint_fee(guard, &_reserve0, &_reserve1)?;
+        let _total_supply = self.lp.get_total_supply();
+        let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
+        let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
 
-        // // ! check amount before change data
-        // if amount0 == *ZERO || amount1 == *ZERO {
-        //     return Err(BusinessError::Liquidity(
-        //         "INSUFFICIENT_LIQUIDITY_BURNED".into(),
-        //     ));
-        // }
-        // let (amount_a, amount_b) = if arg.token_a == token0 {
-        //     (amount0.clone(), amount1.clone())
-        // } else {
-        //     (amount1.clone(), amount0.clone())
-        // };
-        // if amount_a < arg.amount_a_min {
-        //     return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
-        // }
-        // if amount_b < arg.amount_b_min {
-        //     return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
-        // }
+        // ! check amount before change data
+        let arg = &guard.arg.arg;
+        if amount0 == *ZERO || amount1 == *ZERO {
+            return Err(BusinessError::Liquidity(
+                "INSUFFICIENT_LIQUIDITY_BURNED".into(),
+            ));
+        }
+        let (amount_a, amount_b) = if arg.token_a == token0 {
+            (amount0.clone(), amount1.clone())
+        } else {
+            (amount1.clone(), amount0.clone())
+        };
+        if amount_a < arg.amount_a_min {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
+        }
+        if amount_b < arg.amount_b_min {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
+        }
 
-        // // do burn
-        // self.lp.burn(guard, arg.from, liquidity.clone())?;
+        // do burn，为用户销毁 LP 代币
+        let arg = &guard.arg.arg;
+        self.lp
+            .burn(guard, &amount_a, &amount_b, arg.from, liquidity.clone())?;
 
-        // // return token
-        // guard.token_transfer(_token0, *pool_account, arg.to, amount0)?;
-        // guard.token_transfer(_token1, *pool_account, arg.to, amount1)?;
+        // return token
+        let arg = &guard.arg.arg;
+        guard.token_transfer(TransferToken {
+            token: _token0,
+            from: *pool_account,
+            amount: amount0,
+            to: arg.to,
+            fee: None,
+        })?; // * transfer and trace
+        let arg = &guard.arg.arg;
+        guard.token_transfer(TransferToken {
+            token: _token1,
+            from: *pool_account,
+            amount: amount1,
+            to: arg.to,
+            fee: None,
+        })?; // * transfer and trace
 
-        // let balance0 = guard.token_balance_of(_token0, *pool_account)?;
-        // let balance1 = guard.token_balance_of(_token1, *pool_account)?;
+        let balance0 = guard.token_balance_of(_token0, *pool_account)?;
+        let balance1 = guard.token_balance_of(_token1, *pool_account)?;
 
-        // self.update(balance0, balance1, _reserve0, _reserve1);
-        // if fee_on {
-        //     self.k_last = self.reserve0.clone() * self.reserve1.clone();
-        // }
+        // 更新当前余额
+        self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
+        if fee_on {
+            self.k_last = self.reserve0.clone() * self.reserve1.clone();
+        }
 
-        // // ! push log
-
-        // Ok(TokenPairLiquidityRemoveSuccess {
-        //     amount: (amount_a, amount_b),
-        // })
+        Ok(TokenPairLiquidityRemoveSuccess {
+            amount: (amount_a, amount_b),
+        })
     }
 
     pub fn remove_liquidity(
         &mut self,
-        fee_to: Option<Account>,
-        guard: &mut TokenBalancesGuard,
-        self_canister: &SelfCanister,
-        arg: TokenPairLiquidityRemoveArg,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         // ! check balance
         {
+            let arg = &guard.arg.arg;
             self.lp.check_liquidity_removable(
                 |token| guard.token_balance_of(token, arg.from),
                 &arg.liquidity,
             )?;
+            guard.trace(format!(
+                "Remove Liquidity | TokenA: [{}] TokenB: [{}] Amm: {} | Liquidity: {} | {} <= amount_a and {} <= amount_b",
+                arg.token_a.to_text(),
+                arg.token_b.to_text(),
+                arg.pa.amm.into_text().as_ref(),
+                arg.liquidity,
+                arg.amount_a_min,
+                arg.amount_b_min,
+            )); // * trace
         }
 
+        // 池子转出代币账户
+        let arg = &guard.arg.arg;
         let pool_account = Account {
-            owner: self_canister.id(),
+            owner: arg.self_canister.id(),
             subaccount: Some(self.subaccount),
         };
 
-        self.burn(fee_to, guard, &pool_account, arg)
+        self.burn(guard, &pool_account)
     }
 
     fn check_k_on_calculate_amount(

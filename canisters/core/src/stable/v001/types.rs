@@ -41,10 +41,10 @@ pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
     DummyCanisterId, EncodedBlock, Nat, PairCreate, PairCumulativePrice, PairOperation,
     QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock,
-    SwapOperation, SwapTransaction, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation,
-    TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair, TokenPairAmm,
-    TokenPairLiquidityAddSuccessView, TokenPairPool, TokenTransaction, TransferToken, UserId,
-    WithdrawToken, display_account, proto,
+    SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken,
+    SwapV2Operation, TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair,
+    TokenPairAmm, TokenPairLiquidityAddSuccessView, TokenPairPool, TokenTransaction, TransferToken,
+    UserId, WithdrawToken, display_account, proto,
 };
 
 mod common;

@@ -1,7 +1,7 @@
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct SwapRatio {
     pub numerator: u32,
     pub denominator: u32,
@@ -27,7 +27,7 @@ impl SwapRatio {
 
 // ========================== view ==========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct SwapRatioView(String);
 
 impl From<SwapRatio> for SwapRatioView {

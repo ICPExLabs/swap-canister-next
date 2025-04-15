@@ -3,7 +3,8 @@ use common::types::TokenPairAmm;
 use serde::{Deserialize, Serialize};
 
 use super::super::{
-    ArgWithMeta, DepositToken, TokenPairLiquidityAddArg, TransferToken, WithdrawToken,
+    ArgWithMeta, DepositToken, TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg,
+    TransferToken, WithdrawToken,
 };
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
@@ -21,6 +22,8 @@ pub enum RequestArgs {
     // pair liquidity
     #[serde(rename = "pair_liquidity_add")]
     PairLiquidityAdd(Box<PairLiquidityAddArgWithMeta>),
+    #[serde(rename = "pair_liquidity_remove")]
+    PairLiquidityRemove(Box<PairLiquidityRemoveArgWithMeta>),
 }
 
 // ============================= wrap =============================
@@ -38,6 +41,8 @@ pub struct PairLiquidityCreateArgWithMeta(ArgWithMeta<TokenPairAmm>);
 // pair liquidity
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct PairLiquidityAddArgWithMeta(ArgWithMeta<TokenPairLiquidityAddArg>);
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct PairLiquidityRemoveArgWithMeta(ArgWithMeta<TokenPairLiquidityRemoveArg>);
 
 // ============================= from =============================
 
@@ -69,5 +74,10 @@ impl From<ArgWithMeta<TokenPairAmm>> for RequestArgs {
 impl From<ArgWithMeta<TokenPairLiquidityAddArg>> for RequestArgs {
     fn from(value: ArgWithMeta<TokenPairLiquidityAddArg>) -> Self {
         Self::PairLiquidityAdd(Box::new(PairLiquidityAddArgWithMeta(value)))
+    }
+}
+impl From<ArgWithMeta<TokenPairLiquidityRemoveArg>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenPairLiquidityRemoveArg>) -> Self {
+        Self::PairLiquidityRemove(Box::new(PairLiquidityRemoveArgWithMeta(value)))
     }
 }

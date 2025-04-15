@@ -43,9 +43,9 @@ impl PoolLp {
         }
     }
 
-    pub fn mint_fee(
+    pub fn mint_fee<T>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
@@ -71,12 +71,14 @@ impl PoolLp {
 
     pub fn burn(
         &mut self,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
+        amount_a: &Nat,
+        amount_b: &Nat,
         from: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, from, amount),
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, amount_a, amount_b, from, amount),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -131,9 +133,9 @@ impl InnerLP {
         vec![self.dummy_canister_id.id()]
     }
 
-    pub fn mint_fee(
+    pub fn mint_fee<T>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
@@ -163,17 +165,24 @@ impl InnerLP {
 
     pub fn burn(
         &mut self,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
+        amount_a: &Nat,
+        amount_b: &Nat,
         from: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        todo!()
-        // guard.token_withdraw(self.dummy_canister_id.id(), from, amount.clone())?;
-        // if self.total_supply < amount {
-        //     return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
-        // }
-        // self.total_supply -= amount; // 如果变成负值会 panic
-        // Ok(())
+        guard.token_burn(
+            amount_a,
+            amount_b,
+            self.dummy_canister_id.id(),
+            from,
+            amount.clone(),
+        )?;
+        if self.total_supply < amount {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
+        }
+        self.total_supply -= amount; // 如果变成负值会 panic
+        Ok(())
     }
 
     pub fn check_liquidity_removable<F>(

@@ -195,22 +195,16 @@ impl Business for InnerState {
         self.token_pairs
             .check_liquidity_removable(&self.token_balances, pa, from, liquidity)
     }
-    // fn business_token_pair_liquidity_remove(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     pa: TokenPairAmm,
-    //     arg: TokenPairLiquidityRemoveArg,
-    // ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-    //     let mut guard = self.token_balances.be_guard(balance_lock);
-    //     self.business_data.token_pairs.remove_liquidity(
-    //         self.business_data.fee_to,
-    //         &mut guard,
-    //         self_canister,
-    //         pa,
-    //         arg,
-    //     )
-    // }
+    fn business_token_pair_liquidity_remove(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairLiquidityRemoveArg>,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        let mut guard = self.get_pair_swap_guard(locks, arg.clone(), None)?;
+        let success = guard.remove_liquidity(arg)?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(success)
+    }
 
     // // pair swap
     // fn business_token_pair_swap_exact_tokens_for_tokens(

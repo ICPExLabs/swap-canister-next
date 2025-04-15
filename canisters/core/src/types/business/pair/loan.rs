@@ -2,7 +2,7 @@ use super::super::*;
 
 // ========================= swap by loan =========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapByLoanArgs {
     pub from: Account,            // only for marking caller
     pub loan: Nat,                // pay loaned token

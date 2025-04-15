@@ -1,6 +1,6 @@
 use super::super::*;
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapTokensSuccess {
     pub amounts: Vec<Nat>,
 }
@@ -22,7 +22,7 @@ impl From<TokenPairSwapTokensResult> for Result<TokenPairSwapTokensSuccess, Busi
 
 // ========================= swap by pay exact tokens =========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapExactTokensForTokensArgs {
     pub from: Account,
     pub amount_in: Nat,      // pay
@@ -34,7 +34,7 @@ pub struct TokenPairSwapExactTokensForTokensArgs {
 
 // ========================= swap by got exact tokens =========================
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapTokensForExactTokensArgs {
     pub from: Account,
     pub amount_out: Nat,    // got

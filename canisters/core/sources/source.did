@@ -93,10 +93,10 @@ type PageData = record {
 type PairCreate = record { pa : TokenPairAmm; creator : principal };
 type PairCumulativePrice = record {
   pa : TokenPairAmm;
-  exponent : nat8;
-  timestamp : nat64;
-  price0 : nat;
-  price1 : nat;
+  price_cumulative_exponent : nat8;
+  price0_cumulative : nat;
+  block_timestamp : nat64;
+  price1_cumulative : nat;
 };
 type PairLiquidityAddArgWithMeta = record {
   arg : TokenPairLiquidityAddArg;
@@ -112,11 +112,17 @@ type PairLiquidityCreateArgWithMeta = record {
   memo : opt blob;
   caller : principal;
 };
+type PairLiquidityRemoveArgWithMeta = record {
+  arg : TokenPairLiquidityRemoveArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type PairOperation = variant {
   swap : PairSwapToken;
   swap_v2 : SwapV2Operation;
   create : PairCreate;
-  cumulative_price : PairCumulativePrice;
 };
 type PairSwapToken = record {
   to : Account;
@@ -176,6 +182,7 @@ type RequestArgs = variant {
   token_deposit : TokenDepositArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
+  pair_liquidity_remove : PairLiquidityRemoveArgWithMeta;
   token_withdraw : TokenDepositArgWithMeta;
 };
 type RequestTrace = record {
@@ -237,6 +244,7 @@ type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
   mint : SwapV2BurnToken;
   mint_fee : SwapV2MintFeeToken;
+  cumulative_price : PairCumulativePrice;
 };
 type TokenAccount = record { token : principal; account : Account };
 type TokenBlock = record {
@@ -313,6 +321,32 @@ type TokenPairLiquidityAddSuccess = record {
   liquidity : nat;
   amount : record { nat; nat };
 };
+type TokenPairLiquidityRemoveArg = record {
+  pa : TokenPairAmm;
+  to : Account;
+  amount_a_min : nat;
+  token_a : principal;
+  token_b : principal;
+  self_canister : principal;
+  from : Account;
+  liquidity : nat;
+  amount_b_min : nat;
+};
+type TokenPairLiquidityRemoveArgs = record {
+  to : Account;
+  created : opt nat64;
+  from : Account;
+  memo : opt blob;
+  liquidity : nat;
+  deadline : opt nat64;
+  amount_min : record { nat; nat };
+  swap_pair : SwapTokenPair;
+};
+type TokenPairLiquidityRemoveResult = variant {
+  Ok : TokenPairLiquidityRemoveSuccess;
+  Err : BusinessError;
+};
+type TokenPairLiquidityRemoveSuccess = record { amount : record { nat; nat } };
 type TokenPairPool = record {
   amm : text;
   token0 : principal;
@@ -398,6 +432,9 @@ service : (opt InitArgs) -> {
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
+    );
+  pair_liquidity_remove : (TokenPairLiquidityRemoveArgs, opt nat8) -> (
+      TokenPairLiquidityRemoveResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;

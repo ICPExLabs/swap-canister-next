@@ -1,13 +1,15 @@
 use candid::Nat;
+use common::types::SelfCanister;
 use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 
 use super::super::{
     ArgWithMeta, BusinessError, DepositToken, PairCumulativePrice, PairOperation,
-    RequestTraceGuard, SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2MintFeeToken,
-    SwapV2MintToken, SwapV2Operation, TimestampNanos, TokenBalancesGuard, TokenBlockChainGuard,
+    RequestTraceGuard, SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken,
+    SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard,
     TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityAddSuccessView, TokenPairs, TransferToken, display_account,
+    TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+    TokenPairLiquidityRemoveSuccessView, TokenPairs, TransferToken, WithdrawToken, display_account,
 };
 
 pub struct TokenPairSwapGuard<'a> {
@@ -44,12 +46,14 @@ impl<'a> TokenPairSwapGuard<'a> {
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         self.trace_guard.handle(
             |trace| {
+                let self_canister = arg.arg.self_canister;
                 let pa = arg.arg.pa.clone();
                 let mut inner = InnerTokenPairSwapGuard {
                     trace_guard: trace,
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
+                    self_canister,
                     pa: pa.clone(),
                     fee_to: self.fee_to,
                     arg,
@@ -64,6 +68,35 @@ impl<'a> TokenPairSwapGuard<'a> {
             },
         )
     }
+
+    pub fn remove_liquidity(
+        &mut self,
+        arg: ArgWithMeta<TokenPairLiquidityRemoveArg>,
+    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+        self.trace_guard.handle(
+            |trace| {
+                let self_canister = arg.arg.self_canister;
+                let pa = arg.arg.pa.clone();
+                let mut inner = InnerTokenPairSwapGuard {
+                    trace_guard: trace,
+                    balances_guard: &mut self.balances_guard,
+                    token_guard: &mut self.token_guard,
+                    swap_guard: &mut self.swap_guard,
+                    self_canister,
+                    pa: pa.clone(),
+                    fee_to: self.fee_to,
+                    arg,
+                };
+                let data = self.token_pairs.remove_liquidity(&mut inner, pa)?;
+                trace.trace("Token Pair Remove liquidity Done.".into());
+                Ok(data)
+            },
+            |data| {
+                let view: TokenPairLiquidityRemoveSuccessView = data.into();
+                serde_json::to_string(&view).unwrap_or_default()
+            },
+        )
+    }
 }
 
 pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
@@ -71,6 +104,7 @@ pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
     balances_guard: &'a mut TokenBalancesGuard<'b>,
     token_guard: &'a mut TokenBlockChainGuard<'b>,
     swap_guard: &'a mut SwapBlockChainGuard<'b>,
+    self_canister: SelfCanister,
     pa: TokenPairAmm,
     pub fee_to: Option<Account>,
     pub arg: ArgWithMeta<T>,
@@ -118,6 +152,60 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         Ok(())
     }
 
+    pub fn token_mint_fee(
+        &mut self,
+        token: CanisterId,
+        to: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        // mint fee
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::MintFee(
+                SwapV2MintFeeToken {
+                    pa: self.pa.clone(),
+                    to,
+                    token,
+                    amount: amount.clone(),
+                },
+            ))),
+            memo: None,
+            created: None,
+        };
+        // 为手续费账户铸币，产生 DepositToken 事件
+        let arg = ArgWithMeta::simple(
+            self.arg.now,
+            self.arg.caller,
+            DepositToken {
+                token,
+                from: Account {
+                    owner: self.self_canister.id(),
+                    subaccount: None,
+                },
+                amount: amount.clone(),
+                to,
+            },
+        );
+        self.swap_guard.mint_block(self.arg.now, transaction, || {
+            self.balances_guard
+                .token_deposit(self.token_guard, arg.clone())?;
+            self.trace_guard.trace(format!(
+                "Mint Fee. Deposit {} Token: [{}] From: ({}) To: ({}).",
+                arg.arg.amount,
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.from),
+                display_account(&arg.arg.to),
+            )); // * trace
+            Ok(())
+        })?;
+        self.trace(format!(
+            "Mint Fee. Mint {} Token: [{}] To: ({}).",
+            amount,
+            token.to_text(),
+            display_account(&to),
+        )); // * trace
+        Ok(())
+    }
+
     pub fn mint_cumulative_price(
         &mut self,
         price_cumulative_exponent: u8,
@@ -152,60 +240,6 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
 }
 
 impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
-    pub fn token_mint_fee(
-        &mut self,
-        token: CanisterId,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
-        // mint fee
-        let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::MintFee(
-                SwapV2MintFeeToken {
-                    pa: self.arg.arg.pa.clone(),
-                    to,
-                    token,
-                    amount: amount.clone(),
-                },
-            ))),
-            memo: None,
-            created: None,
-        };
-        // 为手续费账户铸币，产生 DepositToken 事件
-        let arg = ArgWithMeta::simple(
-            self.arg.now,
-            self.arg.caller,
-            DepositToken {
-                token,
-                from: Account {
-                    owner: self.arg.arg.self_canister.id(),
-                    subaccount: None,
-                },
-                amount: amount.clone(),
-                to,
-            },
-        );
-        self.swap_guard.mint_block(self.arg.now, transaction, || {
-            self.balances_guard
-                .token_deposit(self.token_guard, arg.clone())?;
-            self.trace_guard.trace(format!(
-                "Mint Fee. Deposit {} Token: [{}] From: ({}) To: ({}).",
-                arg.arg.amount,
-                arg.arg.token.to_text(),
-                display_account(&arg.arg.from),
-                display_account(&arg.arg.to),
-            )); // * trace
-            Ok(())
-        })?;
-        self.trace(format!(
-            "Mint Fee. Mint {} Token: [{}] To: ({}).",
-            amount,
-            token.to_text(),
-            display_account(&to),
-        )); // * trace
-        Ok(())
-    }
-
     pub fn token_mint(
         &mut self,
         amount_a: &Nat,
@@ -274,6 +308,80 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             amount,
             token.to_text(),
             display_account(&to),
+        )); // * trace
+        Ok(())
+    }
+}
+
+impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
+    pub fn token_burn(
+        &mut self,
+        amount_a: &Nat,
+        amount_b: &Nat,
+        token: CanisterId,
+        from: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        // burn
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Burn(
+                if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
+                    SwapV2BurnToken {
+                        pa: self.arg.arg.pa.clone(),
+                        from,
+                        token0: self.arg.arg.token_a,
+                        token1: self.arg.arg.token_b,
+                        amount0: amount_a.clone(),
+                        amount1: amount_b.clone(),
+                        token,
+                        amount: amount.clone(),
+                        to: self.arg.arg.to,
+                    }
+                } else {
+                    SwapV2BurnToken {
+                        pa: self.arg.arg.pa.clone(),
+                        from,
+                        token0: self.arg.arg.token_b,
+                        token1: self.arg.arg.token_a,
+                        amount0: amount_b.clone(),
+                        amount1: amount_a.clone(),
+                        token,
+                        amount: amount.clone(),
+                        to: self.arg.arg.to,
+                    }
+                },
+            ))),
+            memo: self.arg.memo.clone(),
+            created: self.arg.created,
+        };
+        // 为用户销毁，产生 WithdrawToken 事件
+        let arg = ArgWithMeta::simple(
+            self.arg.now,
+            self.arg.caller,
+            WithdrawToken {
+                token,
+                from,
+                amount: amount.clone(),
+                to: self.arg.arg.to,
+            },
+        );
+        self.swap_guard.mint_block(self.arg.now, transaction, || {
+            self.balances_guard
+                .token_withdraw(self.token_guard, arg.clone())?;
+            self.trace_guard.trace(format!(
+                "Burn Liquidity. Withdraw {} Token: [{}] From: ({}) To: ({}).",
+                arg.arg.amount,
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.from),
+                display_account(&arg.arg.to),
+            )); // * trace
+            Ok(())
+        })?;
+        self.trace(format!(
+            "Burn Liquidity. Burn {} Token: [{}] From: ({}).",
+            amount,
+            token.to_text(),
+            display_account(&from),
         )); // * trace
         Ok(())
     }

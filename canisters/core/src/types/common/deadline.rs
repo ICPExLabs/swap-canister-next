@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::CheckArgs;
 
-#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct Deadline(u64);
 
 impl CheckArgs for Deadline {
