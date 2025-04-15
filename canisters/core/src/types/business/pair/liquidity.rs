@@ -39,7 +39,7 @@ impl From<TokenPairLiquidityAddResult> for Result<TokenPairLiquidityAddSuccess, 
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddArg {
     pub self_canister: SelfCanister,
     pub pa: TokenPairAmm,

@@ -102,9 +102,7 @@ async fn inner_token_deposit(
                     },
                     height.clone(),
                 )
-            })?;
-
-            height
+            })?
         }
     };
 

@@ -14,7 +14,7 @@ pub mod token;
 
 // pub mod pair;
 
-// pub mod archive;
+pub mod archive;
 
 // pub mod test;
 

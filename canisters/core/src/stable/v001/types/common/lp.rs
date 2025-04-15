@@ -8,7 +8,9 @@ use super::{AmmText, BusinessError, DummyCanisterId, TokenInfo, TokenPair};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
+    #[serde(rename = "inner")]
     InnerLP(InnerLP),
+    #[serde(rename = "outer")]
     OuterLP(OuterLP),
 }
 

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use super::BusinessError;
 
 /// 罐子自身
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct SelfCanister(CanisterId);
 
 impl SelfCanister {
@@ -19,7 +19,7 @@ impl SelfCanister {
 }
 
 /// 调用者
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct Caller(UserId);
 
 impl Caller {

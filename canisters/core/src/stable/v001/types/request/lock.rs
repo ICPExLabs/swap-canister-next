@@ -1,9 +1,10 @@
+use candid::CandidType;
 use common::types::TokenAccount;
 use serde::{Deserialize, Serialize};
 
 use super::{SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct BusinessLocks {
     /// 是否有余额锁
     balances: Option<Vec<TokenAccount>>,

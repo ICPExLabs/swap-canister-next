@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use candid::CandidType;
 use common::types::TimestampNanos;
 use ic_canister_kit::types::{Bound, Storable};
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,7 @@ use super::{
     TokenBlockChainGuard,
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct RequestTrace {
     index: RequestIndex,
     args: RequestArgs,

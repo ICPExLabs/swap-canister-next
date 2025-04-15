@@ -1,7 +1,7 @@
 use std::sync::RwLock;
 
 use common::types::BusinessError;
-use ic_canister_kit::types::StableBTreeMap;
+use ic_canister_kit::{common::trap, types::StableBTreeMap};
 use serde::{Deserialize, Serialize};
 
 mod index;
@@ -37,6 +37,22 @@ impl Default for RequestTraces {
 }
 
 impl RequestTraces {
+    fn get_start_request_index(&self, length: Option<u64>) -> RequestIndex {
+        let length = length.unwrap_or_else(|| self.traces.len());
+        trap(self.next_index.read()).previous(length)
+    }
+
+    pub fn get_request_index(&self) -> (RequestIndex, u64) {
+        let length = self.traces.len();
+        (self.get_start_request_index(Some(length)), length)
+    }
+    pub fn get_request_trace(&self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.traces.get(index)
+    }
+    pub fn remove_request_trace(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.traces.remove(index)
+    }
+
     pub fn be_guard<'a>(
         &'a mut self,
         args: RequestArgs,
@@ -53,6 +69,8 @@ impl RequestTraces {
         let trace = RequestTrace::new(index, args, balances, token, swap, trace);
         self.traces.insert(index, trace); // insert
         let lock = RequestTraceLock { index };
+        ic_cdk::println!("🔒 Locked request index: {}", index.as_ref());
+
         Ok(RequestTraceGuard {
             traces: &mut self.traces,
             lock,

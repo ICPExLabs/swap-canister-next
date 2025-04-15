@@ -1,10 +1,25 @@
 use std::borrow::Cow;
 
-use ic_canister_kit::types::{Bound, Storable};
+use candid::CandidType;
+use ic_canister_kit::{
+    common::trap,
+    types::{Bound, Storable},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    CandidType,
 )]
 pub struct RequestIndex(u64);
 
@@ -24,6 +39,14 @@ impl Storable for RequestIndex {
 }
 
 impl RequestIndex {
+    pub(super) fn previous(&self, length: u64) -> Self {
+        let previous = trap(self.0.checked_sub(length).ok_or(format!(
+            "can not get previous request index by next: {} and length: {length}",
+            self.0
+        )));
+        Self(previous)
+    }
+
     pub(super) fn next(&mut self) -> Self {
         let current = self.0;
         self.0 += 1;

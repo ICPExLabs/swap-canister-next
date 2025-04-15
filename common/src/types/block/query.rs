@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub enum QueryBlockResult<T> {
     /// 块内内容
+    #[serde(rename = "block")]
     Block(T),
     /// 罐子
+    #[serde(rename = "archive")]
     Archive(CanisterId),
 }

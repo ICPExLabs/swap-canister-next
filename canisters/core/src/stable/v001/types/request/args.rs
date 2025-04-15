@@ -1,8 +1,9 @@
+use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 use super::super::{ArgWithMeta, DepositToken, TokenPairLiquidityAddArg};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, CandidType)]
 pub enum RequestArgs {
     // token
     #[serde(rename = "token_deposit")]

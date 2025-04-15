@@ -27,13 +27,18 @@ impl<'a> TokenGuard<'a> {
         }
     }
 
-    pub fn token_deposit(&mut self, arg: ArgWithMeta<DepositToken>) -> Result<(), BusinessError> {
+    pub fn token_deposit(
+        &mut self,
+        arg: ArgWithMeta<DepositToken>,
+        height: Nat,
+    ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |_trace| {
                 self.balances_guard
-                    .token_deposit(&mut self.token_guard, arg) // do deposit
+                    .token_deposit(&mut self.token_guard, arg)?; // do deposit
+                Ok(height)
             },
-            |_data| "".into(),
+            |data| data.to_string(),
         )
     }
 }

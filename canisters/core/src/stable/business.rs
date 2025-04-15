@@ -91,7 +91,7 @@ pub trait Business:
         locks: &(TokenBalancesLock, TokenBlockChainLock),
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<Nat, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     // fn business_token_withdraw(
@@ -183,21 +183,33 @@ pub trait Business:
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
 
-    // // ======================== blocks query ========================
+    // ======================== blocks query ========================
 
-    // fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
-    // fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    // ======================== request ========================
+
+    fn business_request_index_get(&self) -> (RequestIndex, u64) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_request_trace_get(&self, index: &RequestIndex) -> Option<RequestTrace> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
@@ -322,14 +334,14 @@ impl Business for State {
         locks: &(TokenBalancesLock, TokenBlockChainLock),
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<Nat, BusinessError> {
         self.get_mut().business_token_deposit(locks, arg, height)
     }
     // fn business_token_withdraw(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),
     //     arg: ArgWithMeta<WithdrawToken>,
-    // ) -> Result<(), BusinessError> {
+    // ) -> Result<Nat, BusinessError> {
     //     self.get_mut().business_token_withdraw(locks, arg)
     // }
     // fn business_token_transfer(
@@ -429,21 +441,33 @@ impl Business for State {
     // //         .business_token_pair_swap_by_loan(balance_lock, self_canister, args, pas)
     // // }
 
-    // // ======================== blocks query ========================
+    // ======================== blocks query ========================
 
-    // fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     self.get().business_token_queryable(caller)
-    // }
-    // fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     self.get().business_swap_queryable(caller)
-    // }
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_token_queryable(caller)
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        self.get().business_swap_queryable(caller)
+    }
 
-    // fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     self.get().business_token_block_get(block_height)
-    // }
-    // fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     self.get().business_swap_block_get(block_height)
-    // }
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.get().business_token_block_get(block_height)
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.get().business_swap_block_get(block_height)
+    }
+
+    // ======================== request ========================
+
+    fn business_request_index_get(&self) -> (RequestIndex, u64) {
+        self.get().business_request_index_get()
+    }
+    fn business_request_trace_get(&self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.get().business_request_trace_get(index)
+    }
+    fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.get_mut().business_request_trace_remove(index)
+    }
 
     fn business_example_query(&self) -> String {
         self.get().business_example_query()

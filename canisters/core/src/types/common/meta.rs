@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use candid::CandidType;
 use common::types::{BusinessError, Caller, TimestampNanos};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,7 @@ pub fn check_meta(
     Ok(now)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct ArgWithMeta<T> {
     pub now: TimestampNanos,
     pub caller: Caller,

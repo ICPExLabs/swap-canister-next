@@ -121,16 +121,16 @@ pub use super::super::v000::types::{
 };
 
 // 业务权限
-// pub fn has_business_token_queryable() -> Result<(), String> {
-//     use super::super::Business;
-//     let caller = ic_canister_kit::identity::caller();
-//     crate::types::with_state(|s| s.business_token_queryable(&caller))
-// }
-// pub fn has_business_swap_queryable() -> Result<(), String> {
-//     use super::super::Business;
-//     let caller = ic_canister_kit::identity::caller();
-//     crate::types::with_state(|s| s.business_swap_queryable(&caller))
-// }
+pub fn has_business_token_queryable() -> Result<(), String> {
+    use super::super::Business;
+    let caller = ic_canister_kit::identity::caller();
+    crate::types::with_state(|s| s.business_token_queryable(&caller))
+}
+pub fn has_business_swap_queryable() -> Result<(), String> {
+    use super::super::Business;
+    let caller = ic_canister_kit::identity::caller();
+    crate::types::with_state(|s| s.business_swap_queryable(&caller))
+}
 
 // config
 #[allow(unused)]

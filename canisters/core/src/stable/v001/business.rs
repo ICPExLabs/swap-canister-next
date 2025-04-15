@@ -105,7 +105,7 @@ impl Business for InnerState {
         locks: &(TokenBalancesLock, TokenBlockChainLock),
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<Nat, BusinessError> {
         let balances_guard = self.token_balances.be_guard(&locks.0);
         let token_guard = self.token_block_chain.be_guard(&locks.1);
         let trace_guard = self.request_traces.be_guard(
@@ -114,14 +114,14 @@ impl Business for InnerState {
             Some(&token_guard),
             None,
             Some(format!(
-                "Token[{}] height: {height}",
+                "Token: [{}] Transfer height: {height}.",
                 arg.arg.token.to_text(),
             )),
         )?;
         let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
-        guard.token_deposit(arg)?; // do deposit
+        let height = guard.token_deposit(arg, height)?; // do deposit
         self.business_certified_data_refresh(); // set certified data
-        Ok(())
+        Ok(height)
     }
     // fn business_token_withdraw(
     //     &mut self,
@@ -275,27 +275,39 @@ impl Business for InnerState {
     //         .swap_by_loan(&mut guard, self_canister, args, pas)
     // }
 
-    // // ======================== blocks query ========================
+    // ======================== blocks query ========================
 
-    // fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     if self.token_block_chain.queryable(caller) {
-    //         return Ok(());
-    //     }
-    //     Err("Only Maintainers are allowed to query data".into())
-    // }
-    // fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
-    //     if self.swap_block_chain.queryable(caller) {
-    //         return Ok(());
-    //     }
-    //     Err("Only Maintainers are allowed to query data".into())
-    // }
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.token_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.swap_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
 
-    // fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     self.token_block_chain.query(block_height)
-    // }
-    // fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-    //     self.swap_block_chain.query(block_height)
-    // }
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.token_block_chain.query(block_height)
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.swap_block_chain.query(block_height)
+    }
+
+    // ======================== request ========================
+
+    fn business_request_index_get(&self) -> (RequestIndex, u64) {
+        self.request_traces.get_request_index()
+    }
+    fn business_request_trace_get(&self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.request_traces.get_request_trace(index)
+    }
+    fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.request_traces.remove_request_trace(index)
+    }
 
     fn business_example_query(&self) -> String {
         self.example_data.clone()

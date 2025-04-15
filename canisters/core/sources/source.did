@@ -1,4 +1,19 @@
 type Account = record { owner : principal; subaccount : opt blob };
+type Amm = variant { "swap_v2_1%"; "swap_v2_0.05%"; "swap_v2_0.3%" };
+type ArgWithMeta = record {
+  arg : DepositToken;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
+type ArgWithMeta_1 = record {
+  arg : TokenPairLiquidityAddArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
   TokenBlockChainLocked;
@@ -24,6 +39,11 @@ type BusinessError = variant {
   Liquidity : text;
   Expired : nat64;
 };
+type BusinessLocks = record {
+  token : opt bool;
+  swap : opt bool;
+  balances : opt vec TokenAccount;
+};
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -44,6 +64,7 @@ type DefiniteCanisterSettings = record {
   memory_allocation : nat;
   compute_allocation : nat;
 };
+type DepositToken = record { token : principal; from : Account; amount : nat };
 type ExampleVec = record { vec_data : nat64 };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
@@ -63,6 +84,29 @@ type PageData = record {
   page : nat64;
   size : nat32;
 };
+type PairCreate = record { pa : TokenPairAmm; creator : principal };
+type PairCumulativePrice = record {
+  pa : TokenPairAmm;
+  exponent : nat8;
+  timestamp : nat64;
+  price0 : nat;
+  price1 : nat;
+};
+type PairOperation = variant {
+  swap : PairSwapToken;
+  swap_v2 : SwapV2Operation;
+  create : PairCreate;
+  cumulative_price : PairCumulativePrice;
+};
+type PairSwapToken = record {
+  to : Account;
+  amm : Amm;
+  token_a : principal;
+  token_b : principal;
+  from : Account;
+  amount_a : nat;
+  amount_b : nat;
+};
 type PauseReason = record { timestamp_nanos : int; message : text };
 type Permission = variant { Permitted : text; Forbidden : text };
 type PermissionUpdatedArg = variant {
@@ -76,6 +120,11 @@ type QueryStats = record {
   num_instructions_total : nat;
   num_calls_total : nat;
   request_payload_bytes_total : nat;
+};
+type QuerySwapBlockResult = variant { archive : principal; block : SwapBlock };
+type QueryTokenBlockResult = variant {
+  archive : principal;
+  block : TokenBlock;
 };
 type Record = record {
   id : nat64;
@@ -101,7 +150,49 @@ type RejectionCode = variant {
   SysFatal;
   CanisterReject;
 };
+type RequestArgs = variant {
+  token_deposit : ArgWithMeta;
+  pair_liquidity_add : ArgWithMeta_1;
+};
+type RequestTrace = record {
+  args : RequestArgs;
+  done : opt record { nat64; Result };
+  traces : vec record { nat64; text };
+  locks : BusinessLocks;
+  index : nat64;
+};
+type Result = variant { Ok : text; Err : text };
+type SwapBlock = record {
+  transaction : SwapTransaction;
+  timestamp : nat64;
+  parent_hash : blob;
+};
+type SwapOperation = variant { pair : PairOperation };
+type SwapTransaction = record {
+  created : opt nat64;
+  memo : opt blob;
+  operation : SwapOperation;
+};
+type SwapV2BurnToken = record {
+  pa : TokenPairAmm;
+  token : principal;
+  from : Account;
+  amount0 : nat;
+  amount1 : nat;
+  token0 : principal;
+  token1 : principal;
+  amount : nat;
+};
+type SwapV2Operation = variant {
+  burn : SwapV2BurnToken;
+  mint : SwapV2BurnToken;
+};
 type TokenAccount = record { token : principal; account : Account };
+type TokenBlock = record {
+  transaction : TokenTransaction;
+  timestamp : nat64;
+  parent_hash : blob;
+};
 type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
 type TokenDepositArgs = record {
   created : opt nat64;
@@ -117,7 +208,30 @@ type TokenInfo = record {
   canister_id : principal;
   symbol : text;
 };
+type TokenOperation = variant {
+  withdraw : WithdrawToken;
+  deposit : DepositToken;
+  transfer : TransferToken;
+};
 type TokenPair = record { token0 : principal; token1 : principal };
+type TokenPairAmm = record { amm : Amm; pair : TokenPair };
+type TokenPairLiquidityAddArg = record {
+  pa : TokenPairAmm;
+  to : Account;
+  amount_a_min : nat;
+  token_a : principal;
+  token_b : principal;
+  self_canister : principal;
+  from : Account;
+  amount_b_desired : nat;
+  amount_a_desired : nat;
+  amount_b_min : nat;
+};
+type TokenTransaction = record {
+  created : opt nat64;
+  memo : opt blob;
+  operation : TokenOperation;
+};
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -128,6 +242,7 @@ type TransferError = variant {
   TooOld;
   InsufficientFunds : record { balance : nat };
 };
+type TransferFee = record { fee : nat; fee_to : Account };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -139,8 +254,23 @@ type TransferFromError = variant {
   TooOld;
   InsufficientFunds : record { balance : nat };
 };
+type TransferToken = record {
+  to : Account;
+  fee : opt TransferFee;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
+type WithdrawToken = record {
+  to : Account;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
+  block_swap_get : (nat64) -> (QuerySwapBlockResult) query;
+  block_token_get : (nat64) -> (QueryTokenBlockResult) query;
   business_example_cell_query : () -> (text) query;
   business_example_cell_set : (text) -> ();
   business_example_log_query : () -> (vec text) query;
@@ -171,6 +301,9 @@ service : (opt InitArgs) -> {
   record_find_by_page : (QueryPage, opt RecordSearchArg) -> (PageData) query;
   record_migrate : (nat32) -> (MigratedRecords);
   record_topics : () -> (vec text) query;
+  request_trace_get : (nat64) -> (opt RequestTrace);
+  request_trace_index_get : () -> (nat64, nat64);
+  request_trace_remove : (nat64) -> (opt RequestTrace);
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
