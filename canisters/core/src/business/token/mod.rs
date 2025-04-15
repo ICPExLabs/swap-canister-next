@@ -8,10 +8,10 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-mod query;
+// mod query;
 
-mod deposit;
+// mod deposit;
 
-mod withdraw;
+// mod withdraw;
 
-mod transfer;
+// mod transfer;

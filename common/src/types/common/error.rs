@@ -40,6 +40,8 @@ pub enum BusinessError {
     InvalidTokenPair((CanisterId, CanisterId)),
 
     // ================= 并发错误 =================
+    /// 申请新的 Request Index 错误
+    RequestTraceLocked(String),
     /// 用户操作涉及到的账户被锁定，无法执行操作
     TokenAccountsLocked(Vec<TokenAccount>),
     /// 用户操作涉及到的 Token Blockchain 被锁定，无法执行操作

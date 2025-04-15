@@ -14,11 +14,10 @@ use crate::types::*;
 impl CheckArgs for TokenPairCreateArgs {
     type Result = (TimestampNanos, Caller, TokenPairAmm);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-        let TokenPairPool {
-            token0: token_a,
-            token1: token_b,
+        let TokenPairSwap {
+            token: (token_a, token_b),
             amm,
-        } = &self.pool;
+        } = &self.pair_amm;
         let pair = TokenPair::new(*token_a, *token_b);
         pair.check_args()?; // check supported token
         let amm: Amm = amm.as_ref().try_into()?; // parse amm
@@ -31,7 +30,7 @@ impl CheckArgs for TokenPairCreateArgs {
         }
 
         // check meta
-        let now = check_meta(&None, &None)?;
+        let now = check_meta(&self.memo, &self.created)?;
 
         Ok((now, Caller::get(), pa))
     }

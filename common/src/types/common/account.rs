@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
 use candid::{CandidType, Principal};
 use ic_canister_kit::types::{Bound, CanisterId, Storable};
@@ -16,6 +16,18 @@ pub struct TokenAccount {
     pub token: CanisterId,
     /// 账户
     pub account: Account,
+}
+
+impl Display for TokenAccount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "[{}]({}.{})",
+            self.token.to_text(),
+            self.account.owner.to_text(),
+            self.account.subaccount.map(hex::encode).unwrap_or_default()
+        )
+    }
 }
 
 impl TokenAccount {

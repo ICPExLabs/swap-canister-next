@@ -1,26 +1,28 @@
-use common::types::{Amm, BusinessError, SelfCanister, TokenAccount, TokenPair, TokenPairAmm};
+use common::types::{
+    Amm, BusinessError, SelfCanister, TokenAccount, TokenPair, TokenPairAmm, TokenPairSwap,
+};
 use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 
-use crate::types::{Business, CheckArgs, TokenPairPool, with_state};
+use crate::types::{Business, CheckArgs, with_state};
 
 // for pool exist checking and lock accounts
 pub fn check_pool(
-    pool: &TokenPairPool,
+    pair_amm: &TokenPairSwap,
     self_canister: &SelfCanister,
     liquidity: Option<&Account>,
 ) -> Result<(TokenPairAmm, Vec<CanisterId>, Vec<TokenAccount>), BusinessError> {
-    let TokenPairPool {
-        pair: (token_a, token_b),
+    let TokenPairSwap {
+        token: (token_a, token_b),
         amm,
-    } = pool;
+    } = pair_amm;
     let pair = TokenPair::new(*token_a, *token_b);
     pair.check_args()?; // check supported token
     let amm: Amm = amm.as_ref().try_into()?; // parse amm
     let pa = TokenPairAmm { pair, amm };
     // check pool exist
     let (required, dummy_tokens) = with_state(|s| {
-        s.business_token_pair_pool_maker_get(&pa)
+        s.business_token_pair_pool_get(&pa)
             .map(|maker| (maker.accounts(self_canister), maker.dummy_canisters()))
     })
     .ok_or(pa.not_exist())?;

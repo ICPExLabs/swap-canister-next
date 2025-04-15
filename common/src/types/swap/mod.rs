@@ -41,10 +41,8 @@ impl TokenPair {
 /// (token_a, token_b, amm)
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwap {
-    /// 代币 a
-    pub token_a: CanisterId,
-    /// 代币 b
-    pub token_b: CanisterId,
+    /// 代币 a, 代币 b
+    pub token: (CanisterId, CanisterId),
     /// amm 算法
     pub amm: AmmText,
 }

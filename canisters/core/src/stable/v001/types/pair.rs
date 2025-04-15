@@ -80,24 +80,24 @@ impl TokenPairs {
         Ok(())
     }
 
-    // // ============================= liquidity =============================
+    // ============================= liquidity =============================
 
-    // pub fn add_liquidity(
-    //     &mut self,
-    //     fee_to: Option<Account>,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     pa: TokenPairAmm,
-    //     arg: TokenPairLiquidityAddArg,
-    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    //     let maker = self
-    //         .0
-    //         .get_mut(&pa.pair)
-    //         .and_then(|makers| makers.get_mut(&pa.amm))
-    //         .ok_or_else(|| pa.not_exist())?;
+    fn get_maker_mut(&mut self, pa: &TokenPairAmm) -> Result<&mut MarketMaker, BusinessError> {
+        self.0
+            .get_mut(&pa.pair)
+            .and_then(|makers| makers.get_mut(&pa.amm))
+            .ok_or_else(|| pa.not_exist())
+    }
 
-    //     maker.add_liquidity(fee_to, guard, self_canister, arg)
-    // }
+    pub fn add_liquidity(
+        &mut self,
+        guard: &mut TokenPairGuard<'_>,
+        fee_to: Option<Account>,
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        let maker = self.get_maker_mut(&arg.arg.pa)?;
+        maker.add_liquidity(guard, fee_to, arg)
+    }
 
     // pub fn check_liquidity_removable(
     //     &self,

@@ -7,11 +7,15 @@ use super::super::*;
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairLiquidityAddArgs {
     pub from: Account,
-    pub pool: TokenPairPool,
+
+    pub pair_amm: TokenPairSwap,
     pub amount_desired: (Nat, Nat),
     pub amount_min: (Nat, Nat),
     pub to: Account,
     pub deadline: Option<Deadline>,
+
+    pub memo: Option<Vec<u8>>,
+    pub created: Option<TimestampNanos>,
 }
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
@@ -35,7 +39,11 @@ impl From<TokenPairLiquidityAddResult> for Result<TokenPairLiquidityAddSuccess, 
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TokenPairLiquidityAddArg {
+    pub self_canister: SelfCanister,
+    pub pa: TokenPairAmm,
+
     pub from: Account,
     pub token_a: CanisterId,
     pub token_b: CanisterId,

@@ -8,15 +8,15 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-pub mod config;
+// pub mod config;
 
-pub mod token;
+// pub mod token;
 
-pub mod pair;
+// pub mod pair;
 
-pub mod archive;
+// pub mod archive;
 
-pub mod test;
+// pub mod test;
 
 #[allow(unused)]
 #[inline(always)]
@@ -94,6 +94,39 @@ fn lock_token_balances_and_token_block_chain(
     };
 
     Ok(LockResult::Locked((balances_lock, token_lock)))
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_token_balances_and_token_block_chain_and_swap_block_chain(
+    fee_to: Vec<CanisterId>,
+    required: Vec<TokenAccount>,
+    retries: u8,
+) -> Result<LockResult<(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock)>, BusinessError>
+{
+    let balances_lock = match lock_token_balances(fee_to, required, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
+    };
+
+    let token_lock = match lock_token_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(balances_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    let swap_lock = match lock_swap_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(balances_lock); // ! must drop before retry
+            drop(token_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    Ok(LockResult::Locked((balances_lock, token_lock, swap_lock)))
 }
 
 // 查询

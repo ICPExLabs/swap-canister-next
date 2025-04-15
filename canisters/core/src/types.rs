@@ -38,7 +38,8 @@ pub use ::common::proto;
 pub use ::common::types::{
     Amm, AmmText, BlockIndex, BusinessError, Caller, DoHash, DummyCanisterId, EncodedBlock,
     GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, QueryBlockResult, SelfCanister,
-    TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, TokenPairPool, check_caller,
+    TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, TokenPairPool, TokenPairSwap,
+    check_caller,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

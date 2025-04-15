@@ -164,16 +164,7 @@ impl Drop for TokenBalancesLock {
         with_mut_state_without_record(|s| {
             s.get_mut().business_token_balance_unlock(&self.locked);
             for account in &self.required {
-                ic_cdk::println!(
-                    "🔐 Unlock token account: [{}]({}.{})",
-                    account.token.to_text(),
-                    account.account.owner.to_text(),
-                    account
-                        .account
-                        .subaccount
-                        .map(hex::encode)
-                        .unwrap_or_default()
-                );
+                ic_cdk::println!("🔐 Unlock token account: {}", account);
             }
         })
     }
@@ -193,6 +184,10 @@ pub struct TokenBalancesGuard<'a> {
 }
 
 impl TokenBalancesGuard<'_> {
+    pub fn get_locked_balances(&self) -> Vec<TokenAccount> {
+        self.lock.required.clone()
+    }
+
     #[inline]
     fn inner_do_token_deposit(&mut self, token_account: TokenAccount, amount: Nat) {
         let balance = self.balances.get(&token_account).unwrap_or_default();

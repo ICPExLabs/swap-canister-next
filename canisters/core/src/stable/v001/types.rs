@@ -48,8 +48,10 @@ pub use crate::types::{
 mod amm;
 mod balance;
 mod blockchain;
+mod guard;
 mod lp;
 mod pair;
+mod request;
 mod token;
 
 #[allow(unused)]
@@ -59,9 +61,13 @@ pub use balance::*;
 #[allow(unused)]
 pub use blockchain::*;
 #[allow(unused)]
+pub use guard::*;
+#[allow(unused)]
 pub use lp::*;
 #[allow(unused)]
 pub use pair::*;
+#[allow(unused)]
+pub use request::*;
 #[allow(unused)]
 pub use token::*;
 
@@ -128,6 +134,8 @@ pub struct InnerState {
     // 业务数据
     pub business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
 
+    pub request_traces: RequestTraces, // 业务数据 // ? 堆内存 序列化 稳定内存
+
     pub token_balances: TokenBalances, // 业务数据 // ? 堆内存 序列化 稳定内存
 
     pub token_block_chain: TokenBlockChain, // 业务数据 // ? 堆内存 序列化 稳定内存
@@ -157,6 +165,8 @@ impl Default for InnerState {
             // 业务数据
             business_data: Default::default(),
 
+            request_traces: Default::default(),
+
             token_balances: Default::default(),
 
             token_block_chain: Default::default(),
@@ -177,7 +187,8 @@ impl Default for InnerState {
 use candid::CandidType;
 use ic_canister_kit::stable;
 
-// Token
+// stable memory
+const MEMORY_ID_REQUEST_TRACES: MemoryId = MemoryId::new(0); // token balances
 const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(0); // token balances
 const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(1); // token blocks
 const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
@@ -189,6 +200,10 @@ const MEMORY_ID_EXAMPLE_MAP: MemoryId = MemoryId::new(102); // 测试 Map
 const MEMORY_ID_EXAMPLE_LOG_INDEX: MemoryId = MemoryId::new(103); // 测试 Log
 const MEMORY_ID_EXAMPLE_LOG_DATA: MemoryId = MemoryId::new(104); // 测试 Log
 const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试 PriorityQueue
+
+fn init_request_traces() -> StableBTreeMap<RequestIndex, RequestTrace> {
+    stable::init_map_data(MEMORY_ID_REQUEST_TRACES)
+}
 
 fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
     stable::init_map_data(MEMORY_ID_TOKEN_BALANCES)

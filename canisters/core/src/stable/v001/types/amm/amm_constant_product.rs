@@ -104,6 +104,7 @@ impl SwapV2MarketMaker {
         }
     }
 
+    /// 计算另一个代币所需的数量
     fn quote(amount_a: &Nat, reserve_a: &Nat, reserve_b: &Nat) -> Nat {
         assert!(*amount_a > *ZERO, "INSUFFICIENT_AMOUNT");
         assert!(*reserve_a > *ZERO, "INSUFFICIENT_LIQUIDITY");
@@ -111,6 +112,7 @@ impl SwapV2MarketMaker {
         amount_a.to_owned() * reserve_b.to_owned() / reserve_a.to_owned()
     }
 
+    /// 计算添加流动性所需的代币数量
     fn inner_add_liquidity(
         &self,
         arg: &TokenPairLiquidityAddArg,
@@ -118,17 +120,23 @@ impl SwapV2MarketMaker {
         let (reserve_a, reserve_b) = self.get_reserves(arg.token_a, arg.token_b);
 
         if reserve_a == *ZERO && reserve_b == *ZERO {
-            Ok((arg.amount_a_desired.clone(), arg.amount_b_desired.clone()))
+            Ok((arg.amount_a_desired.clone(), arg.amount_b_desired.clone())) // 第一次添加无需计算
         } else {
-            let amount_b_optimal = Self::quote(&arg.amount_a_desired, &reserve_a, &reserve_b);
+            let amount_b_optimal = Self::quote(&arg.amount_a_desired, &reserve_a, &reserve_b); // 以 a 计算 b 的数量
             if amount_b_optimal <= arg.amount_b_desired {
                 if amount_b_optimal < arg.amount_b_min {
+                    // 以 a 数量所需的 b 太少，小于最少的 b
                     return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
                 }
                 Ok((arg.amount_a_desired.clone(), amount_b_optimal))
             } else {
-                let amount_a_optimal = Self::quote(&arg.amount_b_desired, &reserve_b, &reserve_a);
-                if arg.amount_a_desired < amount_a_optimal || amount_a_optimal < arg.amount_a_min {
+                // 以 a 数量所需的 b 太多，大于最大的 b
+
+                // 切换另一个代币计算
+                let amount_a_optimal = Self::quote(&arg.amount_b_desired, &reserve_b, &reserve_a); // 以 b 计算 a 的数量
+                if amount_a_optimal > arg.amount_a_desired || amount_a_optimal < arg.amount_a_min {
+                    // 以 b 数量所需的 a 太多，大于最大的 a
+                    // 以 b 数量所需的 a 太少，小于最少的 a
                     return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
                 }
                 Ok((amount_a_optimal, arg.amount_b_desired.clone()))
@@ -214,13 +222,18 @@ impl SwapV2MarketMaker {
     ) -> Result<Nat, BusinessError> {
         let (token0, token1) = (self.token0, self.token1);
 
+        // 获取当前持有
         let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
+        // 获取当前余额
         let balance0 = guard.token_balance_of(token0, *pool_account)?;
         let balance1 = guard.token_balance_of(token1, *pool_account)?;
+        // 计算增加额度
         let amount0 = balance0.clone() - _reserve0.clone();
         let amount1 = balance1.clone() - _reserve1.clone();
 
+        // 收取手续费，铸造成 LP 代币，然后才能计算新增流动性
         let fee_on = self.mint_fee(fee_to, guard, &_reserve0, &_reserve1)?;
+        // 计算增加的流动性
         let _total_supply = self.lp.get_total_supply();
         let liquidity = if _total_supply == *ZERO {
             Nat::from((amount0 * amount1).0.sqrt())
@@ -230,12 +243,13 @@ impl SwapV2MarketMaker {
             liquidity0.min(liquidity1)
         };
 
-        // do mint
+        // do mint，为用户铸造 LP 代币
         self.lp.mint(guard, arg.to, liquidity.clone())?;
 
+        // 更新当前余额
         self.update(balance0, balance1, _reserve0, _reserve1);
         if fee_on {
-            self.k_last = self.reserve0.clone() * self.reserve1.clone();
+            self.k_last = self.reserve0.clone() * self.reserve1.clone(); // 记录当前 k
         }
 
         // ! push log
@@ -245,33 +259,25 @@ impl SwapV2MarketMaker {
 
     pub fn add_liquidity(
         &mut self,
+        guard: &mut TokenPairGuard<'_>,
         fee_to: Option<Account>,
-        guard: &mut TokenBalancesGuard,
-        self_canister: &SelfCanister,
-        arg: TokenPairLiquidityAddArg,
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        // ! check balance
+        {
+            let arg = &arg.arg;
+            guard.assert_token_balance(arg.token_a, arg.from, &arg.amount_a_desired)?;
+            guard.assert_token_balance(arg.token_b, arg.from, &arg.amount_b_desired)?;
+        }
+
+        // calculate amount
+        let (amount_a, amount_b) = self.inner_add_liquidity(&arg.arg)?;
+        // 池子接收账户
+        let pool_account = Account {
+            owner: arg.arg.self_canister.id(),
+            subaccount: Some(self.subaccount),
+        };
         todo!()
-
-        // // ! check balance
-        // {
-        //     let balance_a = guard.token_balance_of(arg.token_a, arg.from)?;
-        //     if balance_a < arg.amount_a_desired {
-        //         return Err(BusinessError::InsufficientBalance((arg.token_a, balance_a)));
-        //     }
-        // }
-        // {
-        //     let balance_b = guard.token_balance_of(arg.token_b, arg.from)?;
-        //     if balance_b < arg.amount_b_desired {
-        //         return Err(BusinessError::InsufficientBalance((arg.token_b, balance_b)));
-        //     }
-        // }
-
-        // // calculate amount
-        // let (amount_a, amount_b) = self.inner_add_liquidity(&arg)?;
-        // let pool_account = Account {
-        //     owner: self_canister.id(),
-        //     subaccount: Some(self.subaccount),
-        // };
         // guard.token_transfer(arg.token_a, arg.from, pool_account, amount_a.clone())?;
         // guard.token_transfer(arg.token_b, arg.from, pool_account, amount_b.clone())?;
         // let liquidity = self.mint(fee_to, guard, &pool_account, arg)?;
