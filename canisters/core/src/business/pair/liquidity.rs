@@ -25,14 +25,14 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, fee_to, required) = check_pool(&self.pair_amm, &self_canister, Some(&self.to))?;
+        let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityAddArg {
             self_canister,
             pa,
             from: self.from,
-            token_a: self.pair_amm.token.0,
-            token_b: self.pair_amm.token.1,
+            token_a: self.swap_pair.token.0,
+            token_b: self.swap_pair.token.1,
             amount_a_desired: self.amount_desired.0.clone(),
             amount_b_desired: self.amount_desired.1.clone(),
             amount_a_min: self.amount_min.0.clone(),
@@ -139,11 +139,11 @@ async fn retry_pair_liquidity_add(
 // // liquidity remove
 // impl CheckArgs for TokenPairLiquidityRemoveArgs {
 //     type Result = (
+//         TimestampNanos,
 //         Vec<CanisterId>,
 //         Vec<TokenAccount>,
 //         SelfCanister,
 //         Caller,
-//         PairAmm,
 //         TokenPairLiquidityRemoveArg,
 //     );
 //     fn check_args(&self) -> Result<Self::Result, BusinessError> {
@@ -151,12 +151,14 @@ async fn retry_pair_liquidity_add(
 //         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
 //         // check pool
-//         let (pa, fee_to, required) = check_pool(&self.pool, &self_canister, Some(&self.from))?;
+//         let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
 
 //         let arg = TokenPairLiquidityRemoveArg {
+//             self_canister,
+//             pa,
 //             from: self.from,
-//             token_a: self.pool.pair.0,
-//             token_b: self.pool.pair.1,
+//             token_a: self.swap_pair.token.0,
+//             token_b: self.swap_pair.token.1,
 //             liquidity: self.liquidity.clone(),
 //             amount_a_min: self.amount_min.0.clone(),
 //             amount_b_min: self.amount_min.1.clone(),

@@ -8,7 +8,6 @@ use crate::{proto, types::TokenPairAmm};
 // ==================== swap v2 mint ====================
 
 /// SwapV2 Mint
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2MintToken {
     /// 池子
@@ -31,6 +30,9 @@ pub struct SwapV2MintToken {
     pub token: CanisterId,
     /// amount
     pub amount: Nat,
+
+    /// 操作账户
+    pub to: Account,
 }
 
 impl TryFrom<SwapV2MintToken> for proto::SwapV2MintToken {
@@ -45,6 +47,7 @@ impl TryFrom<SwapV2MintToken> for proto::SwapV2MintToken {
         let amount1 = value.amount1.try_into()?;
         let token = value.token.into();
         let amount = value.amount.try_into()?;
+        let to = value.to.into();
 
         Ok(Self {
             pa: Some(pa),
@@ -55,6 +58,7 @@ impl TryFrom<SwapV2MintToken> for proto::SwapV2MintToken {
             amount1: Some(amount1),
             token: Some(token),
             amount: Some(amount),
+            to: Some(to),
         })
     }
 }
@@ -98,6 +102,10 @@ impl TryFrom<proto::SwapV2MintToken> for SwapV2MintToken {
             .ok_or_else(|| "amount of swap v2 mint token can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount a of swap v2 mint token failed".to_string())?;
+        let to = value
+            .to
+            .ok_or_else(|| "to of swap v2 mint token can not be none".to_string())?
+            .try_into()?;
 
         Ok(Self {
             pa,
@@ -108,6 +116,7 @@ impl TryFrom<proto::SwapV2MintToken> for SwapV2MintToken {
             amount1,
             token,
             amount,
+            to,
         })
     }
 }

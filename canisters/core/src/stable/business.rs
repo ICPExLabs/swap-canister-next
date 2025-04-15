@@ -129,22 +129,22 @@ pub trait Business:
     ) -> Result<MarketMaker, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // // liquidity
-    // fn business_token_pair_liquidity_add(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
-    //     arg: ArgWithMeta<TokenPairLiquidityAddArg>,
-    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_token_pair_check_liquidity_removable(
-    //     &self,
-    //     pa: &TokenPairAmm,
-    //     from: &Account,
-    //     liquidity: &Nat,
-    // ) -> Result<(), BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // liquidity
+    fn business_token_pair_liquidity_add(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &TokenPairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // fn business_token_pair_liquidity_remove(
     //     &mut self,
     //     balance_lock: &TokenBalancesLock,
@@ -373,23 +373,23 @@ impl Business for State {
     ) -> Result<MarketMaker, BusinessError> {
         self.get_mut().business_token_pair_pool_create(lock, arg)
     }
-    // // liquidity
-    // fn business_token_pair_liquidity_add(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
-    //     arg: ArgWithMeta<TokenPairLiquidityAddArg>,
-    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    //     self.get_mut().business_token_pair_liquidity_add(locks, arg)
-    // }
-    // // fn business_token_pair_check_liquidity_removable(
-    // //     &self,
-    // //     pa: &TokenPairAmm,
-    // //     from: &Account,
-    // //     liquidity: &Nat,
-    // // ) -> Result<(), BusinessError> {
-    // //     self.get()
-    // //         .business_token_pair_check_liquidity_removable(pa, from, liquidity)
-    // // }
+    // liquidity
+    fn business_token_pair_liquidity_add(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        self.get_mut().business_token_pair_liquidity_add(locks, arg)
+    }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &TokenPairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        self.get()
+            .business_token_pair_check_liquidity_removable(pa, from, liquidity)
+    }
     // // fn business_token_pair_liquidity_remove(
     // //     &mut self,
     // //     balance_lock: &TokenBalancesLock,

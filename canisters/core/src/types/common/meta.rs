@@ -38,3 +38,15 @@ pub struct ArgWithMeta<T> {
     pub memo: Option<Vec<u8>>,
     pub created: Option<TimestampNanos>,
 }
+
+impl<T> ArgWithMeta<T> {
+    pub fn simple(now: TimestampNanos, caller: Caller, arg: T) -> Self {
+        Self {
+            now,
+            caller,
+            arg,
+            memo: None,
+            created: None,
+        }
+    }
+}

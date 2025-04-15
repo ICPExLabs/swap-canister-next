@@ -39,7 +39,7 @@ impl From<TokenPairAmm> for TokenPairPool {
 /// token_a -> token_b
 /// (token_a, token_b, amm)
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenPairSwap {
+pub struct SwapTokenPair {
     /// 代币 a, 代币 b
     pub token: (CanisterId, CanisterId),
     /// amm 算法

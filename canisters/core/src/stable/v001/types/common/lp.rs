@@ -4,7 +4,10 @@ use super::*;
 
 use crate::utils::math::zero;
 
-use super::{AmmText, BusinessError, DummyCanisterId, TokenInfo, TokenPair};
+use super::{
+    AmmText, BusinessError, DummyCanisterId, InnerTokenPairSwapGuard, RequestTraceGuard, TokenInfo,
+    TokenPair,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -40,14 +43,28 @@ impl PoolLp {
         }
     }
 
-    pub fn mint(
+    pub fn mint_fee(
         &mut self,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.mint(guard, to, amount),
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint_fee(guard, to, amount),
+            PoolLp::OuterLP(_outer_lp) => unimplemented!(),
+        }
+    }
+
+    pub fn mint(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        amount_a: &Nat,
+        amount_b: &Nat,
+        to: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint(guard, amount_a, amount_b, to, amount),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -114,16 +131,34 @@ impl InnerLP {
         vec![self.dummy_canister_id.id()]
     }
 
-    pub fn mint(
+    pub fn mint_fee(
         &mut self,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        todo!()
-        // guard.token_deposit(self.dummy_canister_id.id(), to, amount.clone())?;
-        // self.total_supply += amount; // Nat 不会超出精度
-        // Ok(())
+        guard.token_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
+        self.total_supply += amount; // Nat 不会超出精度
+        Ok(())
+    }
+
+    pub fn mint(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        amount_a: &Nat,
+        amount_b: &Nat,
+        to: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        guard.token_mint(
+            amount_a,
+            amount_b,
+            self.dummy_canister_id.id(),
+            to,
+            amount.clone(),
+        )?;
+        self.total_supply += amount; // Nat 不会超出精度
+        Ok(())
     }
 
     pub fn burn(

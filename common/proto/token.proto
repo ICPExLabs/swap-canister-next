@@ -11,6 +11,7 @@ message DepositToken {
     common.CanisterId token = 1;
     common.Account from = 2;
     common.Nat amount = 3;
+    common.Account to = 4;
 }
 
 // withdraw

@@ -145,11 +145,11 @@ impl SwapV2MarketMaker {
 
     fn mint_fee(
         &mut self,
-        fee_to: Option<Account>,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
         _reserve0: &Nat,
         _reserve1: &Nat,
     ) -> Result<bool, BusinessError> {
+        let fee_to = guard.fee_to;
         let fee_on =
             fee_to.is_some() && self.protocol_fee.as_ref().is_some_and(|fee| !fee.is_zero());
 
@@ -182,7 +182,7 @@ impl SwapV2MarketMaker {
                         let denominator = (d - n.clone()) * root_k + n * root_k_last;
                         let liquidity = numerator / denominator;
                         if liquidity > *ZERO {
-                            self.lp.mint(guard, fee_to, liquidity)?;
+                            self.lp.mint_fee(guard, fee_to, liquidity)?;
                         }
                     }
                 }
@@ -194,8 +194,15 @@ impl SwapV2MarketMaker {
         Ok(fee_on)
     }
 
-    fn update(&mut self, balance0: Nat, balance1: Nat, _reserve0: Nat, _reserve1: Nat) {
-        let block_timestamp = ic_canister_kit::times::now().into_inner() as u64;
+    fn update<T>(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+        balance0: Nat,
+        balance1: Nat,
+        _reserve0: Nat,
+        _reserve1: Nat,
+    ) -> Result<(), BusinessError> {
+        let block_timestamp = guard.arg.now.into_inner();
         let time_elapsed = block_timestamp - self.block_timestamp_last;
         if time_elapsed > 0 && _reserve0 > *ZERO && _reserve1 > *ZERO {
             let e = Nat::from(time_elapsed);
@@ -204,20 +211,26 @@ impl SwapV2MarketMaker {
                 e.clone() * _reserve1.clone() * price_cumulative_unit.clone() / _reserve0.clone();
             self.price1_cumulative_last +=
                 e.clone() * _reserve0.clone() * price_cumulative_unit.clone() / _reserve1.clone();
+
+            guard.mint_cumulative_price(
+                self.price_cumulative_exponent,
+                self.price0_cumulative_last.clone(),
+                self.price1_cumulative_last.clone(),
+            )?;
         }
         self.reserve0 = balance0;
         self.reserve1 = balance1;
         self.block_timestamp_last = block_timestamp;
-
-        // ! push log for record cumulative price
+        Ok(())
     }
 
+    /// 铸造流动性
     fn mint(
         &mut self,
-        fee_to: Option<Account>,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        amount_a: &Nat,
+        amount_b: &Nat,
         pool_account: &Account,
-        arg: TokenPairLiquidityAddArg,
     ) -> Result<Nat, BusinessError> {
         let (token0, token1) = (self.token0, self.token1);
 
@@ -231,7 +244,7 @@ impl SwapV2MarketMaker {
         let amount1 = balance1.clone() - _reserve1.clone();
 
         // 收取手续费，铸造成 LP 代币，然后才能计算新增流动性
-        let fee_on = self.mint_fee(fee_to, guard, &_reserve0, &_reserve1)?;
+        let fee_on = self.mint_fee(guard, &_reserve0, &_reserve1)?;
         // 计算增加的流动性
         let _total_supply = self.lp.get_total_supply();
         let liquidity = if _total_supply == *ZERO {
@@ -243,10 +256,16 @@ impl SwapV2MarketMaker {
         };
 
         // do mint，为用户铸造 LP 代币
-        self.lp.mint(guard, arg.to, liquidity.clone())?;
+        self.lp.mint(
+            guard,
+            amount_a,
+            amount_b,
+            guard.arg.arg.to,
+            liquidity.clone(),
+        )?;
 
         // 更新当前余额
-        self.update(balance0, balance1, _reserve0, _reserve1);
+        self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
         if fee_on {
             self.k_last = self.reserve0.clone() * self.reserve1.clone(); // 记录当前 k
         }
@@ -258,32 +277,57 @@ impl SwapV2MarketMaker {
 
     pub fn add_liquidity(
         &mut self,
-        guard: &mut TokenPairGuard<'_>,
-        fee_to: Option<Account>,
-        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         // ! check balance
         {
-            let arg = &arg.arg;
+            let arg = &guard.arg.arg;
             guard.assert_token_balance(arg.token_a, arg.from, &arg.amount_a_desired)?;
             guard.assert_token_balance(arg.token_b, arg.from, &arg.amount_b_desired)?;
+            guard.trace(format!(
+                "Add Liquidity | TokenA: [{}] TokenB: [{}] Amm: {} | {} <= amount_a <= {} and {} <= amount_b <= {}",
+                arg.token_a.to_text(),
+                arg.token_b.to_text(),
+                arg.pa.amm.into_text().as_ref(),
+                arg.amount_a_min,
+                arg.amount_a_desired,
+                arg.amount_b_min,
+                arg.amount_b_desired,
+            )); // * trace
         }
 
         // calculate amount
-        let (amount_a, amount_b) = self.inner_add_liquidity(&arg.arg)?;
+        let arg = &guard.arg.arg;
+        let (amount_a, amount_b) = self.inner_add_liquidity(arg)?;
+        guard.trace(format!(
+            "Pending | amount_a: {amount_a} amount_b: {amount_b}",
+        )); // * trace
         // 池子接收账户
+        let arg = &guard.arg.arg;
         let pool_account = Account {
-            owner: arg.arg.self_canister.id(),
+            owner: arg.self_canister.id(),
             subaccount: Some(self.subaccount),
         };
-        todo!()
-        // guard.token_transfer(arg.token_a, arg.from, pool_account, amount_a.clone())?;
-        // guard.token_transfer(arg.token_b, arg.from, pool_account, amount_b.clone())?;
-        // let liquidity = self.mint(fee_to, guard, &pool_account, arg)?;
-        // Ok(TokenPairLiquidityAddSuccess {
-        //     amount: (amount_a, amount_b),
-        //     liquidity,
-        // })
+        guard.token_transfer(TransferToken {
+            token: arg.token_a,
+            from: arg.from,
+            amount: amount_a.clone(),
+            to: pool_account,
+            fee: None,
+        })?; // * transfer and trace
+        let arg = &guard.arg.arg;
+        guard.token_transfer(TransferToken {
+            token: arg.token_b,
+            from: arg.from,
+            amount: amount_b.clone(),
+            to: pool_account,
+            fee: None,
+        })?; // * transfer and trace
+        let liquidity = self.mint(guard, &amount_a, &amount_b, &pool_account)?;
+        Ok(TokenPairLiquidityAddSuccess {
+            amount: (amount_a, amount_b),
+            liquidity,
+        })
     }
 
     pub fn check_liquidity_removable(

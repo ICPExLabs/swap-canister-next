@@ -39,11 +39,12 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, Nat, PairCreate, PairOperation, QueryBlockResult,
-    QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock, SwapOperation,
-    SwapTransaction, TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair,
-    TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken,
-    display_account, proto,
+    DummyCanisterId, EncodedBlock, Nat, PairCreate, PairCumulativePrice, PairOperation,
+    QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock,
+    SwapOperation, SwapTransaction, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation,
+    TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair, TokenPairAmm,
+    TokenPairLiquidityAddSuccessView, TokenPairPool, TokenTransaction, TransferToken, UserId,
+    WithdrawToken, display_account, proto,
 };
 
 mod common;
@@ -308,5 +309,34 @@ impl InnerState {
             trace,
         )?;
         Ok(TokenGuard::new(trace_guard, balances_guard, token_guard))
+    }
+
+    pub fn get_pair_swap_guard<'a, T>(
+        &'a mut self,
+        locks: &'a (TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: T,
+        trace: Option<String>,
+    ) -> Result<TokenPairSwapGuard<'a>, BusinessError>
+    where
+        T: Into<RequestArgs>,
+    {
+        let balances_guard = self.token_balances.be_guard(&locks.0);
+        let token_guard = self.token_block_chain.be_guard(&locks.1);
+        let swap_guard = self.swap_block_chain.be_guard(&locks.2);
+        let trace_guard = self.request_traces.be_guard(
+            arg.into(),
+            Some(&balances_guard),
+            Some(&token_guard),
+            Some(&swap_guard),
+            trace,
+        )?;
+        Ok(TokenPairSwapGuard::new(
+            trace_guard,
+            balances_guard,
+            token_guard,
+            swap_guard,
+            &mut self.token_pairs,
+            self.business_data.fee_to,
+        ))
     }
 }

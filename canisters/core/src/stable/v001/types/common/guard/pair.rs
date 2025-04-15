@@ -1,29 +1,82 @@
 use candid::Nat;
-use common::types::BusinessError;
 use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 
-use crate::types::{SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard};
+use super::super::{
+    ArgWithMeta, BusinessError, DepositToken, PairCumulativePrice, PairOperation,
+    RequestTraceGuard, SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2MintFeeToken,
+    SwapV2MintToken, SwapV2Operation, TimestampNanos, TokenBalancesGuard, TokenBlockChainGuard,
+    TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityAddSuccessView, TokenPairs, TransferToken, display_account,
+};
 
-pub struct TokenPairGuard<'a> {
+pub struct TokenPairSwapGuard<'a> {
+    trace_guard: RequestTraceGuard<'a>,
     balances_guard: TokenBalancesGuard<'a>,
     token_guard: TokenBlockChainGuard<'a>,
     swap_guard: SwapBlockChainGuard<'a>,
+    token_pairs: &'a mut TokenPairs,
+    fee_to: Option<Account>,
 }
 
-impl<'a> TokenPairGuard<'a> {
+impl<'a> TokenPairSwapGuard<'a> {
     pub fn new(
+        trace_guard: RequestTraceGuard<'a>,
         balances_guard: TokenBalancesGuard<'a>,
         token_guard: TokenBlockChainGuard<'a>,
         swap_guard: SwapBlockChainGuard<'a>,
+        token_pairs: &'a mut TokenPairs,
+        fee_to: Option<Account>,
     ) -> Self {
         Self {
+            trace_guard,
             balances_guard,
             token_guard,
             swap_guard,
+            token_pairs,
+            fee_to,
         }
     }
 
+    pub fn add_liquidity(
+        &mut self,
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        self.trace_guard.handle(
+            |trace| {
+                let pa = arg.arg.pa.clone();
+                let mut inner = InnerTokenPairSwapGuard {
+                    trace_guard: trace,
+                    balances_guard: &mut self.balances_guard,
+                    token_guard: &mut self.token_guard,
+                    swap_guard: &mut self.swap_guard,
+                    pa: pa.clone(),
+                    fee_to: self.fee_to,
+                    arg,
+                };
+                let data = self.token_pairs.add_liquidity(&mut inner, pa)?;
+                trace.trace("Token Pair Add liquidity Done.".into());
+                Ok(data)
+            },
+            |data| {
+                let view: TokenPairLiquidityAddSuccessView = data.into();
+                serde_json::to_string(&view).unwrap_or_default()
+            },
+        )
+    }
+}
+
+pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
+    trace_guard: &'a mut RequestTraceGuard<'c>,
+    balances_guard: &'a mut TokenBalancesGuard<'b>,
+    token_guard: &'a mut TokenBlockChainGuard<'b>,
+    swap_guard: &'a mut SwapBlockChainGuard<'b>,
+    pa: TokenPairAmm,
+    pub fee_to: Option<Account>,
+    pub arg: ArgWithMeta<T>,
+}
+
+impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     pub fn token_balance_of(
         &self,
         token: CanisterId,
@@ -43,6 +96,183 @@ impl<'a> TokenPairGuard<'a> {
         if balance < *desired {
             return Err(BusinessError::InsufficientBalance((token, balance)));
         }
+        Ok(())
+    }
+
+    pub fn trace(&mut self, trace: String) {
+        self.trace_guard.trace(trace);
+    }
+
+    pub fn token_transfer(&mut self, arg: TransferToken) -> Result<(), BusinessError> {
+        let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
+        let changed = self
+            .balances_guard
+            .token_transfer(self.token_guard, arg.clone())?; // do transfer
+        self.trace_guard.trace(format!(
+            "Transfer {} Token: [{}] From ({}) To: ({}) Done: {changed}.",
+            arg.arg.amount,
+            arg.arg.token.to_text(),
+            display_account(&arg.arg.from),
+            display_account(&arg.arg.to),
+        )); // * trace
+        Ok(())
+    }
+
+    pub fn mint_cumulative_price(
+        &mut self,
+        exponent: u8,
+        price0: Nat,
+        price1: Nat,
+    ) -> Result<(), BusinessError> {
+        // cumulative price
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::CumulativePrice(PairCumulativePrice {
+                pa: self.pa.clone(),
+                timestamp: self.arg.now,
+                exponent,
+                price0: price0.clone(),
+                price1: price1.clone(),
+            })),
+            memo: None,
+            created: None,
+        };
+        self.swap_guard.mint_block(self.arg.now, transaction, || {
+            // do nothing
+            Ok(())
+        })?;
+        self.trace(format!(
+            "Mark Pair Cumulative Price. TokenPairAmm: {} Timestamp: {} Exponent: {exponent} Price0: {price0} Price1: {price1}.",
+            self.pa,
+            self.arg.now.into_inner(),
+        )); // * trace
+        Ok(())
+    }
+}
+
+impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
+    pub fn token_mint_fee(
+        &mut self,
+        token: CanisterId,
+        to: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        // mint fee
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::MintFee(
+                SwapV2MintFeeToken {
+                    pa: self.arg.arg.pa.clone(),
+                    to,
+                    token,
+                    amount: amount.clone(),
+                },
+            ))),
+            memo: None,
+            created: None,
+        };
+        // 为手续费账户铸币，产生 DepositToken 事件
+        let arg = ArgWithMeta::simple(
+            self.arg.now,
+            self.arg.caller,
+            DepositToken {
+                token,
+                from: Account {
+                    owner: self.arg.arg.self_canister.id(),
+                    subaccount: None,
+                },
+                amount: amount.clone(),
+                to,
+            },
+        );
+        self.swap_guard.mint_block(self.arg.now, transaction, || {
+            self.balances_guard
+                .token_deposit(self.token_guard, arg.clone())?;
+            self.trace_guard.trace(format!(
+                "Mint Fee. Deposit {} Token: [{}] From: ({}) To: ({}).",
+                arg.arg.amount,
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.from),
+                display_account(&arg.arg.to),
+            )); // * trace
+            Ok(())
+        })?;
+        self.trace(format!(
+            "Mint Fee. Mint {} Token: [{}] To: ({}).",
+            amount,
+            token.to_text(),
+            display_account(&to),
+        )); // * trace
+        Ok(())
+    }
+
+    pub fn token_mint(
+        &mut self,
+        amount_a: &Nat,
+        amount_b: &Nat,
+        token: CanisterId,
+        to: Account,
+        amount: Nat,
+    ) -> Result<(), BusinessError> {
+        // mint
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Mint(
+                if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
+                    SwapV2MintToken {
+                        pa: self.arg.arg.pa.clone(),
+                        from: self.arg.arg.from,
+                        token0: self.arg.arg.token_a,
+                        token1: self.arg.arg.token_b,
+                        amount0: amount_a.clone(),
+                        amount1: amount_b.clone(),
+                        token,
+                        amount: amount.clone(),
+                        to,
+                    }
+                } else {
+                    SwapV2MintToken {
+                        pa: self.arg.arg.pa.clone(),
+                        from: self.arg.arg.from,
+                        token0: self.arg.arg.token_b,
+                        token1: self.arg.arg.token_a,
+                        amount0: amount_b.clone(),
+                        amount1: amount_a.clone(),
+                        token,
+                        amount: amount.clone(),
+                        to,
+                    }
+                },
+            ))),
+            memo: self.arg.memo.clone(),
+            created: self.arg.created,
+        };
+        // 为用户铸币，产生 DepositToken 事件
+        let arg = ArgWithMeta::simple(
+            self.arg.now,
+            self.arg.caller,
+            DepositToken {
+                token,
+                from: self.arg.arg.from,
+                amount: amount.clone(),
+                to,
+            },
+        );
+        self.swap_guard.mint_block(self.arg.now, transaction, || {
+            self.balances_guard
+                .token_deposit(self.token_guard, arg.clone())?;
+            self.trace_guard.trace(format!(
+                "Mint Liquidity. Deposit {} Token: [{}] From: ({}) To: ({}).",
+                arg.arg.amount,
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.from),
+                display_account(&arg.arg.to),
+            )); // * trace
+            Ok(())
+        })?;
+        self.trace(format!(
+            "Mint Liquidity. Mint {} Token: [{}] To: ({}).",
+            amount,
+            token.to_text(),
+            display_account(&to),
+        )); // * trace
         Ok(())
     }
 }

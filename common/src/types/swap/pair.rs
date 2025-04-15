@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
 use candid::CandidType;
 use ic_canister_kit::types::{Bound, CanisterId, Storable};
@@ -10,7 +10,7 @@ use crate::{
     utils::{hash::hash_sha256, principal::sort_tokens},
 };
 
-use super::{Amm, AmmText, TokenPairPool};
+use super::{Amm, AmmText};
 
 /// 有顺序的代币对
 #[derive(
@@ -77,5 +77,17 @@ impl TokenPairAmm {
     /// not exist
     pub fn not_exist(&self) -> BusinessError {
         BusinessError::TokenPairAmmNotExist((self.pair, self.amm.into()))
+    }
+}
+
+impl Display for TokenPairAmm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "({},{},{})",
+            self.pair.token0.to_text(),
+            self.pair.token1.to_text(),
+            self.amm.into_text().as_ref()
+        )
     }
 }

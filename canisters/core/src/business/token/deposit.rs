@@ -74,7 +74,7 @@ async fn inner_token_deposit(
                     from: args.from,
                     spender_subaccount: None, // approve subaccount
                     to: self_account,         // * to self
-                    amount: args.amount_without_fee.clone(),
+                    amount: args.deposit_amount_without_fee.clone(),
                     fee: None, // deposit action doesn't care fee
                     memo: None,
                     created_at_time: None,
@@ -85,7 +85,7 @@ async fn inner_token_deposit(
                 .map_err(BusinessError::TransferFromError)?;
 
             // ? 2. record changed
-            let amount = args.amount_without_fee; // ! Actual deposit
+            let amount = args.deposit_amount_without_fee; // ! Actual deposit
             with_mut_state_without_record(|s| {
                 s.business_token_deposit(
                     &locks,
@@ -96,6 +96,7 @@ async fn inner_token_deposit(
                             token: args.token,
                             from: args.from,
                             amount,
+                            to: args.to,
                         },
                         memo: args.memo,
                         created: args.created,

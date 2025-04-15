@@ -18,7 +18,7 @@ impl CheckArgs for TokenPairCreateArgs {
             token0: token_a,
             token1: token_b,
             amm,
-        } = &self.pair_pool;
+        } = &self.pool;
         let pair = TokenPair::new(*token_a, *token_b);
         pair.check_args()?; // check supported token
         let amm: Amm = amm.as_ref().try_into()?; // parse amm

@@ -32,9 +32,16 @@ impl<'a> TokenGuard<'a> {
     ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
+                trace.trace(format!(
+                    "Deposit {} Token: [{}] From: ({}) To: ({}) With Height: {height}.",
+                    arg.arg.amount,
+                    arg.arg.token.to_text(),
+                    display_account(&arg.arg.from),
+                    display_account(&arg.arg.to),
+                )); // * trace
                 self.balances_guard
                     .token_deposit(&mut self.token_guard, arg)?; // do deposit
-                trace.trace("Deposit Done".into());
+                trace.trace("Deposit Done.".into()); // * trace
                 Ok(height)
             },
             |data| data.to_string(),
@@ -48,9 +55,15 @@ impl<'a> TokenGuard<'a> {
     ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
+                trace.trace(format!(
+                    "Withdraw {} Token: [{}] To: ({}) With Height: {height}.",
+                    arg.arg.amount,
+                    arg.arg.token.to_text(),
+                    display_account(&arg.arg.to)
+                )); // * trace
                 self.balances_guard
                     .token_withdraw(&mut self.token_guard, arg)?; // do withdraw
-                trace.trace("Withdraw Done".into());
+                trace.trace("Withdraw Done.".into()); // * trace
                 Ok(height)
             },
             |data| data.to_string(),
@@ -63,16 +76,17 @@ impl<'a> TokenGuard<'a> {
     ) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
-                let changed = self
-                    .balances_guard
-                    .token_transfer(&mut self.token_guard, arg.clone())?; // do transfer
                 trace.trace(format!(
-                    "Transfer {} Token: [{}] From ({}) To: ({}) With Changed: {changed}.",
+                    "Transfer {} Token: [{}] From ({}) To: ({}).",
                     arg.arg.amount,
                     arg.arg.token.to_text(),
                     display_account(&arg.arg.from),
                     display_account(&arg.arg.to)
-                ));
+                )); // * trace
+                let changed = self
+                    .balances_guard
+                    .token_transfer(&mut self.token_guard, arg.clone())?; // do transfer
+                trace.trace(format!("Transfer Done: {changed}.",)); // * trace
                 Ok(changed)
             },
             |data| data.to_string(),

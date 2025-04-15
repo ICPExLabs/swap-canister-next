@@ -8,7 +8,6 @@ use crate::{proto, types::TokenPairAmm};
 // ==================== swap v2 burn ====================
 
 /// SwapV2 Burn
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2BurnToken {
     /// 池子
@@ -31,6 +30,9 @@ pub struct SwapV2BurnToken {
     pub amount0: Nat,
     /// amount1
     pub amount1: Nat,
+
+    /// 操作账户
+    pub to: Account,
 }
 
 impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
@@ -45,6 +47,7 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
         let token1 = value.token1.into();
         let amount0 = value.amount0.try_into()?;
         let amount1 = value.amount1.try_into()?;
+        let to = value.to.into();
 
         Ok(Self {
             pa: Some(pa),
@@ -55,6 +58,7 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
             token1: Some(token1),
             amount0: Some(amount0),
             amount1: Some(amount1),
+            to: Some(to),
         })
     }
 }
@@ -80,7 +84,6 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             .ok_or_else(|| "amount of swap v2 burn token can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount a of swap v2 burn token failed".to_string())?;
-
         let token0 = value
             .token0
             .ok_or_else(|| "token0 of swap v2 burn token can not be none".to_string())?
@@ -99,6 +102,10 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             .ok_or_else(|| "amount1 of swap v2 burn token can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount1 a of swap v2 burn token failed".to_string())?;
+        let to = value
+            .to
+            .ok_or_else(|| "to of swap v2 burn token can not be none".to_string())?
+            .try_into()?;
 
         Ok(Self {
             pa,
@@ -109,6 +116,7 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             token1,
             amount0,
             amount1,
+            to,
         })
     }
 }

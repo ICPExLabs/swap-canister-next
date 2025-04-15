@@ -50,7 +50,12 @@ type DefiniteCanisterSettings = record {
   memory_allocation : nat;
   compute_allocation : nat;
 };
-type DepositToken = record { token : principal; from : Account; amount : nat };
+type DepositToken = record {
+  to : Account;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
 type ExampleVec = record { vec_data : nat64 };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
@@ -171,7 +176,7 @@ type RequestArgs = variant {
   token_deposit : TokenDepositArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
-  token_withdraw : TokenWithdrawArgWithMeta;
+  token_withdraw : TokenDepositArgWithMeta;
 };
 type RequestTrace = record {
   args : RequestArgs;
@@ -187,6 +192,10 @@ type SwapBlock = record {
   parent_hash : blob;
 };
 type SwapOperation = variant { pair : PairOperation };
+type SwapTokenPair = record {
+  amm : text;
+  token : record { principal; principal };
+};
 type SwapTransaction = record {
   created : opt nat64;
   memo : opt blob;
@@ -194,6 +203,7 @@ type SwapTransaction = record {
 };
 type SwapV2BurnToken = record {
   pa : TokenPairAmm;
+  to : Account;
   token : principal;
   from : Account;
   amount0 : nat;
@@ -217,9 +227,16 @@ type SwapV2MarketMakerView = record {
   protocol_fee : opt text;
   price0_cumulative_last : text;
 };
+type SwapV2MintFeeToken = record {
+  pa : TokenPairAmm;
+  to : Account;
+  token : principal;
+  amount : nat;
+};
 type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
   mint : SwapV2BurnToken;
+  mint_fee : SwapV2MintFeeToken;
 };
 type TokenAccount = record { token : principal; account : Account };
 type TokenBlock = record {
@@ -236,11 +253,12 @@ type TokenDepositArgWithMeta = record {
   caller : principal;
 };
 type TokenDepositArgs = record {
+  to : Account;
   created : opt nat64;
   token : principal;
   from : Account;
-  amount_without_fee : nat;
   memo : opt blob;
+  deposit_amount_without_fee : nat;
 };
 type TokenInfo = record {
   fee : nat;
@@ -250,7 +268,7 @@ type TokenInfo = record {
   symbol : text;
 };
 type TokenOperation = variant {
-  withdraw : WithdrawToken;
+  withdraw : DepositToken;
   deposit : DepositToken;
   transfer : TransferToken;
 };
@@ -259,7 +277,7 @@ type TokenPairAmm = record { amm : Amm; pair : TokenPair };
 type TokenPairCreateArgs = record {
   created : opt nat64;
   memo : opt blob;
-  pair_pool : TokenPairPool;
+  pool : TokenPairPool;
 };
 type TokenPairCreateResult = variant {
   Ok : MarketMakerView;
@@ -276,6 +294,24 @@ type TokenPairLiquidityAddArg = record {
   amount_b_desired : nat;
   amount_a_desired : nat;
   amount_b_min : nat;
+};
+type TokenPairLiquidityAddArgs = record {
+  to : Account;
+  created : opt nat64;
+  from : Account;
+  memo : opt blob;
+  deadline : opt nat64;
+  amount_desired : record { nat; nat };
+  amount_min : record { nat; nat };
+  swap_pair : SwapTokenPair;
+};
+type TokenPairLiquidityAddResult = variant {
+  Ok : TokenPairLiquidityAddSuccess;
+  Err : BusinessError;
+};
+type TokenPairLiquidityAddSuccess = record {
+  liquidity : nat;
+  amount : record { nat; nat };
 };
 type TokenPairPool = record {
   amm : text;
@@ -300,23 +336,16 @@ type TokenTransferArgs = record {
   created : opt nat64;
   token : principal;
   from : Account;
-  amount_without_fee : nat;
   memo : opt blob;
-};
-type TokenWithdrawArgWithMeta = record {
-  arg : WithdrawToken;
-  now : nat64;
-  created : opt nat64;
-  memo : opt blob;
-  caller : principal;
+  transfer_amount_without_fee : nat;
 };
 type TokenWithdrawArgs = record {
   to : Account;
   created : opt nat64;
   token : principal;
   from : Account;
-  amount_without_fee : nat;
   memo : opt blob;
+  withdraw_amount_without_fee : nat;
 };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -347,12 +376,6 @@ type TransferToken = record {
   from : Account;
   amount : nat;
 };
-type WithdrawToken = record {
-  to : Account;
-  token : principal;
-  from : Account;
-  amount : nat;
-};
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   block_swap_get : (nat64) -> (QuerySwapBlockResult) query;
@@ -373,6 +396,9 @@ service : (opt InitArgs) -> {
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
+  pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
+      TokenPairLiquidityAddResult,
+    );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;

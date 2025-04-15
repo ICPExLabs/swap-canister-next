@@ -69,6 +69,10 @@ mod tests {
                     },
                     token: CanisterId::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
                     amount: candid::Nat::from(100_u64),
+                    to: Account {
+                        owner: user_id,
+                        subaccount: None,
+                    },
                 }),
                 memo: None,
                 created: None,

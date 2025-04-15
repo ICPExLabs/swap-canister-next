@@ -66,7 +66,7 @@ pub struct SwapV2MintToken {
     /// which token pair
     #[prost(message, optional, tag = "1")]
     pub pa: ::core::option::Option<TokenPairAmm>,
-    /// which account
+    /// from account
     #[prost(message, optional, tag = "2")]
     pub from: ::core::option::Option<super::common::Account>,
     /// token transfer in
@@ -83,6 +83,9 @@ pub struct SwapV2MintToken {
     pub token: ::core::option::Option<super::common::CanisterId>,
     #[prost(message, optional, tag = "8")]
     pub amount: ::core::option::Option<super::common::Nat>,
+    /// to account
+    #[prost(message, optional, tag = "9")]
+    pub to: ::core::option::Option<super::common::Account>,
 }
 /// burn
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -90,7 +93,7 @@ pub struct SwapV2BurnToken {
     /// which token pair
     #[prost(message, optional, tag = "1")]
     pub pa: ::core::option::Option<TokenPairAmm>,
-    /// which account
+    /// from account
     #[prost(message, optional, tag = "2")]
     pub from: ::core::option::Option<super::common::Account>,
     /// lp token burn
@@ -107,11 +110,29 @@ pub struct SwapV2BurnToken {
     pub amount0: ::core::option::Option<super::common::Nat>,
     #[prost(message, optional, tag = "8")]
     pub amount1: ::core::option::Option<super::common::Nat>,
+    /// to account
+    #[prost(message, optional, tag = "9")]
+    pub to: ::core::option::Option<super::common::Account>,
+}
+/// mint fee
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SwapV2MintFeeToken {
+    /// which token pair
+    #[prost(message, optional, tag = "1")]
+    pub pa: ::core::option::Option<TokenPairAmm>,
+    /// lp token mint
+    #[prost(message, optional, tag = "2")]
+    pub token: ::core::option::Option<super::common::CanisterId>,
+    #[prost(message, optional, tag = "3")]
+    pub amount: ::core::option::Option<super::common::Nat>,
+    /// to account
+    #[prost(message, optional, tag = "4")]
+    pub to: ::core::option::Option<super::common::Account>,
 }
 /// swap v2 operation
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SwapV2Operation {
-    #[prost(oneof = "swap_v2_operation::SwapV2Operation", tags = "1, 2")]
+    #[prost(oneof = "swap_v2_operation::SwapV2Operation", tags = "1, 2, 3")]
     pub swap_v2_operation: ::core::option::Option<swap_v2_operation::SwapV2Operation>,
 }
 /// Nested message and enum types in `SwapV2Operation`.
@@ -123,6 +144,8 @@ pub mod swap_v2_operation {
         Mint(super::SwapV2MintToken),
         #[prost(message, tag = "2")]
         Burn(super::SwapV2BurnToken),
+        #[prost(message, tag = "3")]
+        MintFee(super::SwapV2MintFeeToken),
     }
 }
 /// pair operation

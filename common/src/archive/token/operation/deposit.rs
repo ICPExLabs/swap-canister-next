@@ -14,6 +14,8 @@ pub struct DepositToken {
     pub from: Account,
     /// 转入数量，实际转入数量，转入过程中代币罐子扣除的手续费不计入
     pub amount: Nat,
+    /// 目标账户
+    pub to: Account,
 }
 
 impl TryFrom<DepositToken> for proto::DepositToken {
@@ -23,10 +25,12 @@ impl TryFrom<DepositToken> for proto::DepositToken {
         let token = value.token.into();
         let from = value.from.into();
         let amount = value.amount.try_into()?;
+        let to = value.to.into();
         Ok(Self {
             token: Some(token),
             from: Some(from),
             amount: Some(amount),
+            to: Some(to),
         })
     }
 }
@@ -48,11 +52,16 @@ impl TryFrom<proto::DepositToken> for DepositToken {
             .ok_or_else(|| "amount of deposit can not be none".to_string())?
             .try_into()
             .map_err(|_| "restore amount of deposit failed".to_string())?;
+        let to = value
+            .to
+            .ok_or_else(|| "to of deposit can not be none".to_string())?
+            .try_into()?;
 
         Ok(Self {
             token,
             from,
             amount,
+            to,
         })
     }
 }

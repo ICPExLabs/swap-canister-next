@@ -1,5 +1,5 @@
 use common::types::{
-    Amm, BusinessError, SelfCanister, TokenAccount, TokenPair, TokenPairAmm, TokenPairSwap,
+    Amm, BusinessError, SelfCanister, SwapTokenPair, TokenAccount, TokenPair, TokenPairAmm,
 };
 use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
@@ -8,14 +8,14 @@ use crate::types::{Business, CheckArgs, with_state};
 
 // for pool exist checking and lock accounts
 pub fn check_pool(
-    pair_amm: &TokenPairSwap,
+    swap_pair: &SwapTokenPair,
     self_canister: &SelfCanister,
     liquidity: Option<&Account>,
 ) -> Result<(TokenPairAmm, Vec<CanisterId>, Vec<TokenAccount>), BusinessError> {
-    let TokenPairSwap {
+    let SwapTokenPair {
         token: (token_a, token_b),
         amm,
-    } = pair_amm;
+    } = swap_pair;
     let pair = TokenPair::new(*token_a, *token_b);
     pair.check_args()?; // check supported token
     let amm: Amm = amm.as_ref().try_into()?; // parse amm

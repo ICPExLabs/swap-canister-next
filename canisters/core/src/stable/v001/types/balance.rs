@@ -299,11 +299,10 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, block_hash) = guard.get_next_token_block(arg.now, transaction)?;
-        // 2. do deposit
-        self.do_token_deposit(arg.arg.token, arg.arg.from, arg.arg.amount)?;
-        // 3. push block
-        guard.push_block(encoded_block, block_hash);
+        // 2. do deposit and mint block
+        guard.mint_block(arg.now, transaction, || {
+            self.do_token_deposit(arg.arg.token, arg.arg.to, arg.arg.amount)
+        })?;
         Ok(())
     }
     // withdraw token
@@ -318,11 +317,10 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, hash) = guard.get_next_token_block(arg.now, transaction)?;
-        // 2. do withdraw
-        self.do_token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)?;
-        // 3. push block
-        guard.push_block(encoded_block, hash);
+        // 2. do withdraw and mint block
+        guard.mint_block(arg.now, transaction, || {
+            self.do_token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)
+        })?;
         Ok(())
     }
     // transfer token
@@ -337,17 +335,16 @@ impl TokenBalancesGuard<'_> {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, hash) = guard.get_next_token_block(arg.now, transaction)?;
-        // 2. do withdraw
-        let changed = self.do_token_transfer(
-            arg.arg.token,
-            arg.arg.from,
-            arg.arg.amount,
-            arg.arg.to,
-            arg.arg.fee,
-        )?;
-        // 3. push block
-        guard.push_block(encoded_block, hash);
+        // 2. do transfer and mint block
+        let changed = guard.mint_block(arg.now, transaction, || {
+            self.do_token_transfer(
+                arg.arg.token,
+                arg.arg.from,
+                arg.arg.amount,
+                arg.arg.to,
+                arg.arg.fee,
+            )
+        })?;
         Ok(changed)
     }
     // // transfer token

@@ -100,12 +100,10 @@ impl MarketMaker {
 
     pub fn add_liquidity(
         &mut self,
-        guard: &mut TokenPairGuard<'_>,
-        fee_to: Option<Account>,
-        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         match self {
-            MarketMaker::SwapV2(value) => value.add_liquidity(guard, fee_to, arg),
+            MarketMaker::SwapV2(value) => value.add_liquidity(guard ),
         }
     }
 

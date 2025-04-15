@@ -12,7 +12,7 @@ mod query;
 
 mod create;
 
-// mod liquidity;
+mod liquidity;
 
 // mod swap;
 

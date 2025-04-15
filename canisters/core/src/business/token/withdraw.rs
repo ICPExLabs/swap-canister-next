@@ -24,7 +24,7 @@ impl CheckArgs for TokenWithdrawArgs {
 
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(self.token, self.from));
-        let amount = self.amount_without_fee.clone() + token.fee.clone();
+        let amount = self.withdraw_amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
             return Err(BusinessError::InsufficientBalance((self.token, balance)));
         }
@@ -76,7 +76,7 @@ async fn inner_token_withdraw(
                 .icrc_1_transfer(crate::services::icrc2::TransferArg {
                     from_subaccount: None,
                     to: args.to,
-                    amount: args.amount_without_fee.clone(),
+                    amount: args.withdraw_amount_without_fee.clone(),
                     fee: Some(token.fee.clone()), // withdraw action should care fee
                     memo: None,
                     created_at_time: None,
@@ -87,7 +87,7 @@ async fn inner_token_withdraw(
                 .map_err(BusinessError::TransferError)?;
 
             // ? 2. record changed
-            let amount = args.amount_without_fee + token.fee; // Total withdrawal
+            let amount = args.withdraw_amount_without_fee + token.fee; // Total withdrawal
             with_mut_state_without_record(|s| {
                 s.business_token_withdraw(
                     &locks,

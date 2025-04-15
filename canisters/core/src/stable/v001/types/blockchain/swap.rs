@@ -101,7 +101,7 @@ pub struct SwapBlockChainGuard<'a> {
 }
 
 impl SwapBlockChainGuard<'_> {
-    pub fn get_next_swap_block(
+    fn get_next_swap_block(
         &self,
         now: TimestampNanos,
         transaction: SwapTransaction,
@@ -136,11 +136,26 @@ impl SwapBlockChainGuard<'_> {
         Ok((encoded_block, hash))
     }
 
-    pub fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<SwapBlock>) {
+    fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<SwapBlock>) {
         let block_height = self.swap_block_chain.block_chain.next_block_index;
         self.swap_block_chain
             .cached
             .insert(block_height, encoded_block);
         self.swap_block_chain.block_chain.next_block(block_hash);
+    }
+
+    pub fn mint_block<T, F>(
+        &mut self,
+        now: TimestampNanos,
+        transaction: SwapTransaction,
+        handle: F,
+    ) -> Result<T, BusinessError>
+    where
+        F: FnOnce() -> Result<T, BusinessError>,
+    {
+        let (encoded_block, hash) = self.get_next_swap_block(now, transaction)?;
+        let data = handle()?;
+        self.push_block(encoded_block, hash);
+        Ok(data)
     }
 }

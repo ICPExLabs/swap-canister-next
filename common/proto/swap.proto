@@ -59,7 +59,7 @@ message PairCumulativePrice {
 message SwapV2MintToken {
     // which token pair
     TokenPairAmm pa = 1;
-    // which account
+    // from account
     common.Account from = 2;
     // token transfer in
     common.CanisterId token0 = 3;
@@ -69,13 +69,15 @@ message SwapV2MintToken {
     // lp token mint
     common.CanisterId token = 7;
     common.Nat amount = 8;
+    // to account
+    common.Account to = 9;
 }
 
 // burn
 message SwapV2BurnToken {
     // which token pair
     TokenPairAmm pa = 1;
-    // which account
+    // from account
     common.Account from = 2;
     // lp token burn
     common.CanisterId token = 3;
@@ -85,6 +87,19 @@ message SwapV2BurnToken {
     common.CanisterId token1 = 6;
     common.Nat amount0 = 7;
     common.Nat amount1 = 8;
+    // to account
+    common.Account to = 9;
+}
+
+// mint fee
+message SwapV2MintFeeToken {
+    // which token pair
+    TokenPairAmm pa = 1;
+    // lp token mint
+    common.CanisterId token = 2;
+    common.Nat amount = 3;
+    // to account
+    common.Account to = 4;
 }
 
 // swap v2 operation
@@ -92,6 +107,7 @@ message SwapV2Operation {
     oneof swap_v2_operation {
         SwapV2MintToken mint = 1;
         SwapV2BurnToken burn = 2;
+        SwapV2MintFeeToken mint_fee = 3;
     }
 }
 

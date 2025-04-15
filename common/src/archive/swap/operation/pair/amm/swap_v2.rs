@@ -9,6 +9,9 @@ pub use mint::*;
 mod burn;
 pub use burn::*;
 
+mod fee;
+pub use fee::*;
+
 /// swap v2
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum SwapV2Operation {
@@ -18,6 +21,9 @@ pub enum SwapV2Operation {
     /// 移除流动性
     #[serde(rename = "burn")]
     Burn(SwapV2BurnToken),
+    /// 费用流动性
+    #[serde(rename = "mint_fee")]
+    MintFee(SwapV2MintFeeToken),
 }
 
 impl TryFrom<SwapV2Operation> for proto::SwapV2Operation {
@@ -29,6 +35,7 @@ impl TryFrom<SwapV2Operation> for proto::SwapV2Operation {
         let swap_v2_operation = match value {
             SwapV2Operation::Mint(value) => Mint(value.try_into()?),
             SwapV2Operation::Burn(value) => Burn(value.try_into()?),
+            SwapV2Operation::MintFee(value) => MintFee(value.try_into()?),
         };
 
         Ok(Self {
@@ -50,6 +57,7 @@ impl TryFrom<proto::SwapV2Operation> for SwapV2Operation {
         let value = match value {
             Mint(value) => SwapV2Operation::Mint(value.try_into()?),
             Burn(value) => SwapV2Operation::Burn(value.try_into()?),
+            MintFee(value) => SwapV2Operation::MintFee(value.try_into()?),
         };
 
         Ok(value)

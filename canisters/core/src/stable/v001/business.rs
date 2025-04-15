@@ -106,16 +106,7 @@ impl Business for InnerState {
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
-        let mut guard = self.get_token_guard(
-            locks,
-            arg.clone(),
-            Some(format!(
-                "Deposit {} Token: [{}] From: ({}) With Height: {height}.",
-                arg.arg.amount,
-                arg.arg.token.to_text(),
-                display_account(&arg.arg.from)
-            )),
-        )?;
+        let mut guard = self.get_token_guard(locks, arg.clone(), None)?;
         let height = guard.token_deposit(arg, height)?; // do deposit
         self.business_certified_data_refresh(); // set certified data
         Ok(height)
@@ -126,16 +117,7 @@ impl Business for InnerState {
         arg: ArgWithMeta<WithdrawToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
-        let mut guard = self.get_token_guard(
-            locks,
-            arg.clone(),
-            Some(format!(
-                "Withdraw {} Token: [{}] To: ({}) With Height: {height}.",
-                arg.arg.amount,
-                arg.arg.token.to_text(),
-                display_account(&arg.arg.to)
-            )),
-        )?;
+        let mut guard = self.get_token_guard(locks, arg.clone(), None)?;
         let height = guard.token_withdraw(arg, height)?; // do withdraw
         self.business_certified_data_refresh(); // set certified data
         Ok(height)
@@ -193,37 +175,26 @@ impl Business for InnerState {
         self.business_certified_data_refresh(); // set certified data
         Ok(maker)
     }
-    // // liquidity
-    // fn business_token_pair_liquidity_add(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
-    //     arg: ArgWithMeta<TokenPairLiquidityAddArg>,
-    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    //     let balances_guard = self.token_balances.be_guard(&locks.0);
-    //     let token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     let swap_guard = self.swap_block_chain.be_guard(&locks.2);
-    //     let mut guard = TokenPairGuard::new(balances_guard, token_guard, swap_guard);
-    //     let success = self.business_data.token_pairs.add_liquidity(
-    //         &mut guard,
-    //         self.business_data.fee_to,
-    //         arg,
-    //     )?;
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(success)
-    // }
-    // fn business_token_pair_check_liquidity_removable(
-    //     &self,
-    //     pa: &TokenPairAmm,
-    //     from: &Account,
-    //     liquidity: &Nat,
-    // ) -> Result<(), BusinessError> {
-    //     self.business_data.token_pairs.check_liquidity_removable(
-    //         &self.token_balances,
-    //         pa,
-    //         from,
-    //         liquidity,
-    //     )
-    // }
+    // liquidity
+    fn business_token_pair_liquidity_add(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairLiquidityAddArg>,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        let mut guard = self.get_pair_swap_guard(locks, arg.clone(), None)?;
+        let success = guard.add_liquidity(arg)?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(success)
+    }
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &TokenPairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        self.token_pairs
+            .check_liquidity_removable(&self.token_balances, pa, from, liquidity)
+    }
     // fn business_token_pair_liquidity_remove(
     //     &mut self,
     //     balance_lock: &TokenBalancesLock,

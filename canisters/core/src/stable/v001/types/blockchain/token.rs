@@ -105,7 +105,7 @@ pub struct TokenBlockChainGuard<'a> {
 }
 
 impl TokenBlockChainGuard<'_> {
-    pub fn get_next_token_block(
+    fn get_next_token_block(
         &self,
         now: TimestampNanos,
         transaction: TokenTransaction,
@@ -140,11 +140,26 @@ impl TokenBlockChainGuard<'_> {
         Ok((encoded_block, hash))
     }
 
-    pub fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<TokenBlock>) {
+    fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<TokenBlock>) {
         let block_height = self.token_block_chain.block_chain.next_block_index;
         self.token_block_chain
             .cached
             .insert(block_height, encoded_block);
         self.token_block_chain.block_chain.next_block(block_hash);
+    }
+
+    pub fn mint_block<T, F>(
+        &mut self,
+        now: TimestampNanos,
+        transaction: TokenTransaction,
+        handle: F,
+    ) -> Result<T, BusinessError>
+    where
+        F: FnOnce() -> Result<T, BusinessError>,
+    {
+        let (encoded_block, hash) = self.get_next_token_block(now, transaction)?;
+        let data = handle()?;
+        self.push_block(encoded_block, hash);
+        Ok(data)
     }
 }

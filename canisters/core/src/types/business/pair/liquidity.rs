@@ -8,7 +8,7 @@ use super::super::*;
 pub struct TokenPairLiquidityAddArgs {
     pub from: Account,
 
-    pub pair_amm: TokenPairSwap,
+    pub swap_pair: SwapTokenPair,
     pub amount_desired: (Nat, Nat),
     pub amount_min: (Nat, Nat),
     pub to: Account,
@@ -39,7 +39,7 @@ impl From<TokenPairLiquidityAddResult> for Result<TokenPairLiquidityAddSuccess, 
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddArg {
     pub self_canister: SelfCanister,
     pub pa: TokenPairAmm,
@@ -95,16 +95,34 @@ impl CheckArgs for TokenPairLiquidityAddArg {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
+pub struct TokenPairLiquidityAddSuccessView {
+    pub amount: (String, String),
+    pub liquidity: String,
+}
+impl From<&TokenPairLiquidityAddSuccess> for TokenPairLiquidityAddSuccessView {
+    fn from(value: &TokenPairLiquidityAddSuccess) -> Self {
+        Self {
+            amount: (value.amount.0.to_string(), value.amount.1.to_string()),
+            liquidity: value.liquidity.to_string(),
+        }
+    }
+}
+
 // ========================= liquidity remove =========================
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct TokenPairLiquidityRemoveArgs {
     pub from: Account,
-    pub pool: TokenPairPool,
+
+    pub swap_pair: SwapTokenPair,
     pub liquidity: Nat,
     pub amount_min: (Nat, Nat),
     pub to: Account,
     pub deadline: Option<Deadline>,
+
+    pub memo: Option<Vec<u8>>,
+    pub created: Option<TimestampNanos>,
 }
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
@@ -132,6 +150,9 @@ impl From<TokenPairLiquidityRemoveResult>
 }
 
 pub struct TokenPairLiquidityRemoveArg {
+    pub self_canister: SelfCanister,
+    pub pa: TokenPairAmm,
+    
     pub from: Account,
     pub token_a: CanisterId,
     pub token_b: CanisterId,

@@ -24,7 +24,8 @@ impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
 pub struct TokenDepositArgs {
     pub token: CanisterId,
     pub from: Account,
-    pub amount_without_fee: candid::Nat,
+    pub deposit_amount_without_fee: candid::Nat,
+    pub to: Account,
 
     pub memo: Option<Vec<u8>>,
     pub created: Option<TimestampNanos>,
@@ -36,7 +37,7 @@ pub struct TokenDepositArgs {
 pub struct TokenWithdrawArgs {
     pub token: CanisterId,
     pub from: Account,
-    pub amount_without_fee: candid::Nat,
+    pub withdraw_amount_without_fee: candid::Nat,
     pub to: Account,
 
     pub memo: Option<Vec<u8>>,
@@ -49,7 +50,7 @@ pub struct TokenWithdrawArgs {
 pub struct TokenTransferArgs {
     pub token: CanisterId,
     pub from: Account,
-    pub amount_without_fee: candid::Nat,
+    pub transfer_amount_without_fee: candid::Nat,
     pub to: Account,
     pub fee: Option<candid::Nat>,
 

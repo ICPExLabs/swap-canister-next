@@ -8,6 +8,8 @@ pub struct DepositToken {
     pub from: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "3")]
     pub amount: ::core::option::Option<super::common::Nat>,
+    #[prost(message, optional, tag = "4")]
+    pub to: ::core::option::Option<super::common::Account>,
 }
 /// withdraw
 #[derive(Clone, PartialEq, ::prost::Message)]

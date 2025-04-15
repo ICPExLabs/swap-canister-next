@@ -37,7 +37,7 @@ impl CheckArgs for TokenTransferArgs {
 
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(token.canister_id, self.from));
-        let amount = self.amount_without_fee.clone() + token.fee.clone();
+        let amount = self.transfer_amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
             return Err(BusinessError::InsufficientBalance((
                 token.canister_id,
@@ -104,7 +104,7 @@ async fn inner_token_transfer(
                         arg: TransferToken {
                             token: args.token,
                             from: args.from,
-                            amount: args.amount_without_fee,
+                            amount: args.transfer_amount_without_fee,
                             to: args.to,
                             fee: fee_to.map(|fee_to| TransferFee {
                                 fee: token.fee,

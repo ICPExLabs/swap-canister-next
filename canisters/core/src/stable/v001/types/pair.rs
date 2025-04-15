@@ -7,11 +7,11 @@ use super::*;
 use crate::utils::math::zero;
 
 use super::{
-    Amm, BusinessError, MarketMaker, SelfCanister, TokenBalances, TokenInfo, TokenPair,
-    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
-    TokenPairLiquidityRemoveSuccess, TokenPairPool, TokenPairSwapByLoanArgs,
-    TokenPairSwapExactTokensForTokensArgs, TokenPairSwapTokensForExactTokensArgs,
-    TokenPairSwapTokensSuccess,
+    Amm, BusinessError, InnerTokenPairSwapGuard, MarketMaker, SelfCanister, TokenBalances,
+    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairPool,
+    TokenPairSwapByLoanArgs, TokenPairSwapExactTokensForTokensArgs,
+    TokenPairSwapTokensForExactTokensArgs, TokenPairSwapTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -78,68 +78,65 @@ impl TokenPairs {
             memo: arg.memo,
             created: arg.created,
         };
-        let (encoded_block, block_hash) = swap_guard.get_next_swap_block(arg.now, transaction)?;
-        // 2. do create
-        let TokenPairAmm { amm, .. } = &arg.arg;
-        let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
-        let maker = MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
-        let maker = trace_guard.handle(
-            |trace| {
-                self.pairs.insert(arg.arg.clone(), maker.clone()); // do insert token pair pool
-                trace.trace(format!(
-                    "Token0: [{}] Token1: [{}] Amm: {} Subaccount: ({}) DummyCanisterId: [{}]",
-                    arg.arg.pair.token0.to_text(),
-                    arg.arg.pair.token1.to_text(),
-                    arg.arg.amm.into_text().as_ref(),
-                    hex::encode(subaccount),
-                    dummy_canister_id.id().to_text()
-                ));
-                Ok(maker)
-            },
-            |data| {
-                let view: MarketMakerView = data.clone().into();
-                serde_json::to_string(&view).unwrap_or_default()
-            },
-        )?;
-        // 3. push block
-        swap_guard.push_block(encoded_block, block_hash);
+        // 2. do create and mint block
+        let maker = swap_guard.mint_block(arg.now, transaction, || {
+            let TokenPairAmm { amm, .. } = &arg.arg;
+            let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
+            let maker =
+                MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
+            let maker = trace_guard.handle(
+                |trace| {
+                    self.pairs.insert(arg.arg.clone(), maker.clone()); // do insert token pair pool
+                    trace.trace(format!(
+                        "Token0: [{}] Token1: [{}] Amm: {} Subaccount: ({}) DummyCanisterId: [{}]",
+                        arg.arg.pair.token0.to_text(),
+                        arg.arg.pair.token1.to_text(),
+                        arg.arg.amm.into_text().as_ref(),
+                        hex::encode(subaccount),
+                        dummy_canister_id.id().to_text()
+                    ));
+                    Ok(maker)
+                },
+                |data| {
+                    let view: MarketMakerView = data.clone().into();
+                    serde_json::to_string(&view).unwrap_or_default()
+                },
+            )?;
+            Ok(maker)
+        })?;
         Ok(maker)
     }
 
-    // // ============================= liquidity =============================
+    // ============================= liquidity =============================
 
-    // fn get_maker_mut(&mut self, pa: &TokenPairAmm) -> Result<&mut MarketMaker, BusinessError> {
-    //     self.0
-    //         .get_mut(&pa.pair)
-    //         .and_then(|makers| makers.get_mut(&pa.amm))
-    //         .ok_or_else(|| pa.not_exist())
-    // }
+    fn handle_maker<T, F>(&mut self, pa: TokenPairAmm, handle: F) -> Result<T, BusinessError>
+    where
+        F: FnOnce(&mut MarketMaker) -> Result<T, BusinessError>,
+    {
+        let mut maker = self.pairs.get(&pa).ok_or_else(|| pa.not_exist())?;
+        let result = handle(&mut maker);
+        self.pairs.insert(pa, maker);
+        result
+    }
 
-    // pub fn add_liquidity(
-    //     &mut self,
-    //     guard: &mut TokenPairGuard<'_>,
-    //     fee_to: Option<Account>,
-    //     arg: ArgWithMeta<TokenPairLiquidityAddArg>,
-    // ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-    //     let maker = self.get_maker_mut(&arg.arg.pa)?;
-    //     maker.add_liquidity(guard, fee_to, arg)
-    // }
+    pub fn add_liquidity(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
+        pa: TokenPairAmm,
+    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+        self.handle_maker(pa, |maker| maker.add_liquidity(guard))
+    }
 
-    // pub fn check_liquidity_removable(
-    //     &self,
-    //     token_balances: &TokenBalances,
-    //     pa: &TokenPairAmm,
-    //     from: &Account,
-    //     liquidity: &Nat,
-    // ) -> Result<(), BusinessError> {
-    //     let maker = self
-    //         .0
-    //         .get(&pa.pair)
-    //         .and_then(|makers| makers.get(&pa.amm))
-    //         .ok_or_else(|| pa.not_exist())?;
-
-    //     maker.check_liquidity_removable(token_balances, from, liquidity)
-    // }
+    pub fn check_liquidity_removable(
+        &self,
+        token_balances: &TokenBalances,
+        pa: &TokenPairAmm,
+        from: &Account,
+        liquidity: &Nat,
+    ) -> Result<(), BusinessError> {
+        let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
+        maker.check_liquidity_removable(token_balances, from, liquidity)
+    }
 
     // pub fn remove_liquidity(
     //     &mut self,
