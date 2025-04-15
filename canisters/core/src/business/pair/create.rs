@@ -14,10 +14,11 @@ use crate::types::*;
 impl CheckArgs for TokenPairCreateArgs {
     type Result = (TimestampNanos, Caller, TokenPairAmm);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-        let TokenPairSwap {
-            token: (token_a, token_b),
+        let TokenPairPool {
+            token0: token_a,
+            token1: token_b,
             amm,
-        } = &self.pair_amm;
+        } = &self.pair_pool;
         let pair = TokenPair::new(*token_a, *token_b);
         pair.check_args()?; // check supported token
         let amm: Amm = amm.as_ref().try_into()?; // parse amm
@@ -38,16 +39,16 @@ impl CheckArgs for TokenPairCreateArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_create")]
-async fn pair_create(args: TokenPairCreateArgs) -> BusinessResult {
-    inner_pair_create(args).await.into()
+async fn pair_create(args: TokenPairCreateArgs) -> TokenPairCreateResult {
+    inner_pair_create(args).await.map(|m| m.into()).into()
 }
-async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<(), BusinessError> {
+async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<MarketMaker, BusinessError> {
     // 1. check args
     let (now, caller, pa) = args.check_args()?;
 
     // 2. some value
 
-    {
+    let maker = {
         // 3. lock
         let lock = match super::super::lock_swap_block_chain(0)? {
             LockResult::Locked(lock) => lock,
@@ -67,11 +68,11 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<(), BusinessErro
                         created: args.created,
                     },
                 )
-            })?;
+            })?
         }
-    }
+    };
 
     // TODO 异步触发同步任务
 
-    Ok(())
+    Ok(maker)
 }

@@ -121,14 +121,14 @@ pub trait Business:
     fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // // create
-    // fn business_token_pair_pool_create(
-    //     &mut self,
-    //     lock: &SwapBlockChainLock,
-    //     arg: ArgWithMeta<TokenPairAmm>,
-    // ) -> Result<(), BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // create
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<MarketMaker, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // // liquidity
     // fn business_token_pair_liquidity_add(
     //     &mut self,
@@ -365,14 +365,14 @@ impl Business for State {
     fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
         self.get().business_token_pair_pool_get(pa)
     }
-    // // create
-    // fn business_token_pair_pool_create(
-    //     &mut self,
-    //     lock: &SwapBlockChainLock,
-    //     arg: ArgWithMeta<TokenPairAmm>,
-    // ) -> Result<(), BusinessError> {
-    //     self.get_mut().business_token_pair_pool_create(lock, arg)
-    // }
+    // create
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<MarketMaker, BusinessError> {
+        self.get_mut().business_token_pair_pool_create(lock, arg)
+    }
     // // liquidity
     // fn business_token_pair_liquidity_add(
     //     &mut self,

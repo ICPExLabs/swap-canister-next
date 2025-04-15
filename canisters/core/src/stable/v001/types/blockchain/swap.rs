@@ -51,7 +51,7 @@ impl SwapBlockChain {
         }
 
         *locked = true;
-        ic_cdk::println!("🔒 Locked token block chain.");
+        ic_cdk::println!("🔒 Locked swap block chain.");
 
         Some(SwapBlockChainLock)
     }

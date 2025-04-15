@@ -34,7 +34,7 @@ impl<'a> TokenGuard<'a> {
             |trace| {
                 self.balances_guard
                     .token_deposit(&mut self.token_guard, arg)?; // do deposit
-                trace.trace("Done".into());
+                trace.trace("Deposit Done".into());
                 Ok(height)
             },
             |data| data.to_string(),
@@ -50,7 +50,7 @@ impl<'a> TokenGuard<'a> {
             |trace| {
                 self.balances_guard
                     .token_withdraw(&mut self.token_guard, arg)?; // do withdraw
-                trace.trace("Done".into());
+                trace.trace("Withdraw Done".into());
                 Ok(height)
             },
             |data| data.to_string(),

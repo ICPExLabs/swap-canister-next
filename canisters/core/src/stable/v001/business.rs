@@ -162,32 +162,37 @@ impl Business for InnerState {
     fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
         self.token_pairs.get_token_pair_pool(pa)
     }
-    // // create
-    // fn business_token_pair_pool_create(
-    //     &mut self,
-    //     lock: &SwapBlockChainLock,
-    //     arg: ArgWithMeta<TokenPairAmm>,
-    // ) -> Result<(), BusinessError> {
-    //     let token0 = TOKENS
-    //         .get(&arg.arg.pair.token0)
-    //         .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
-    //     let token1 = TOKENS
-    //         .get(&arg.arg.pair.token1)
-    //         .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
-    //     let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
+    // create
+    fn business_token_pair_pool_create(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<MarketMaker, BusinessError> {
+        let token0 = TOKENS
+            .get(&arg.arg.pair.token0)
+            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
+        let token1 = TOKENS
+            .get(&arg.arg.pair.token1)
+            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
 
-    //     let mut swap_guard = self.swap_block_chain.be_guard(lock);
-    //     self.business_data.token_pairs.create_token_pair_pool(
-    //         &mut swap_guard,
-    //         arg,
-    //         subaccount,
-    //         dummy_canister_id,
-    //         token0,
-    //         token1,
-    //     )?;
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(())
-    // }
+        let mut swap_guard = self.swap_block_chain.be_guard(lock);
+        let mut trace_guard = self.request_traces.be_guard(
+            arg.clone().into(),
+            None,
+            None,
+            Some(&swap_guard),
+            None,
+        )?;
+        let maker = self.token_pairs.create_token_pair_pool(
+            &mut swap_guard,
+            &mut trace_guard,
+            arg,
+            token0,
+            token1,
+        )?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(maker)
+    }
     // // liquidity
     // fn business_token_pair_liquidity_add(
     //     &mut self,

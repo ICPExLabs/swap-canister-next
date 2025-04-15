@@ -52,43 +52,59 @@ impl TokenPairs {
         self.pairs.get(pa)
     }
 
-    // // ============================= create pair pool =============================
+    // ============================= create pair pool =============================
 
-    // pub fn create_token_pair_pool(
-    //     &mut self,
-    //     guard: &mut SwapBlockChainGuard,
-    //     arg: ArgWithMeta<TokenPairAmm>,
-    //     subaccount: Subaccount,
-    //     dummy_canister_id: DummyCanisterId,
-    //     token0: &TokenInfo,
-    //     token1: &TokenInfo,
-    // ) -> Result<(), BusinessError> {
-    //     if self.get_token_pair_pool(&arg.arg).is_some() {
-    //         return Err(BusinessError::TokenPairAmmExist((
-    //             arg.arg.pair,
-    //             arg.arg.amm.into(),
-    //         )));
-    //     }
+    pub fn create_token_pair_pool(
+        &mut self,
+        swap_guard: &mut SwapBlockChainGuard,
+        trace_guard: &mut RequestTraceGuard,
+        arg: ArgWithMeta<TokenPairAmm>,
+        token0: &TokenInfo,
+        token1: &TokenInfo,
+    ) -> Result<MarketMaker, BusinessError> {
+        if self.get_token_pair_pool(&arg.arg).is_some() {
+            return Err(BusinessError::TokenPairAmmExist((
+                arg.arg.pair,
+                arg.arg.amm.into(),
+            )));
+        }
 
-    //     // 1. get token block
-    //     let transaction = SwapTransaction {
-    //         operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
-    //             pa: arg.arg.clone(),
-    //             creator: arg.caller.id(),
-    //         })),
-    //         memo: arg.memo,
-    //         created: arg.created,
-    //     };
-    //     let (encoded_block, block_hash) = guard.get_next_swap_block(arg.now, transaction)?;
-    //     // 2. do create
-    //     let TokenPairAmm { pair, amm } = arg.arg;
-    //     let maker = MarketMaker::new_by_pair(&amm, subaccount, dummy_canister_id, token0, token1);
-    //     let makers = self.0.entry(pair).or_default();
-    //     makers.entry(amm).or_insert(maker);
-    //     // 3. push block
-    //     guard.push_block(encoded_block, block_hash);
-    //     Ok(())
-    // }
+        // 1. get token block
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
+                pa: arg.arg.clone(),
+                creator: arg.caller.id(),
+            })),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        let (encoded_block, block_hash) = swap_guard.get_next_swap_block(arg.now, transaction)?;
+        // 2. do create
+        let TokenPairAmm { amm, .. } = &arg.arg;
+        let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
+        let maker = MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
+        let maker = trace_guard.handle(
+            |trace| {
+                self.pairs.insert(arg.arg.clone(), maker.clone()); // do insert token pair pool
+                trace.trace(format!(
+                    "Token0: [{}] Token1: [{}] Amm: {} Subaccount: ({}) DummyCanisterId: [{}]",
+                    arg.arg.pair.token0.to_text(),
+                    arg.arg.pair.token1.to_text(),
+                    arg.arg.amm.into_text().as_ref(),
+                    hex::encode(subaccount),
+                    dummy_canister_id.id().to_text()
+                ));
+                Ok(maker)
+            },
+            |data| {
+                let view: MarketMakerView = data.clone().into();
+                serde_json::to_string(&view).unwrap_or_default()
+            },
+        )?;
+        // 3. push block
+        swap_guard.push_block(encoded_block, block_hash);
+        Ok(maker)
+    }
 
     // // ============================= liquidity =============================
 

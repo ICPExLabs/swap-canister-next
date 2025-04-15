@@ -100,6 +100,13 @@ type PairLiquidityAddArgWithMeta = record {
   memo : opt blob;
   caller : principal;
 };
+type PairLiquidityCreateArgWithMeta = record {
+  arg : TokenPairAmm;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type PairOperation = variant {
   swap : PairSwapToken;
   swap_v2 : SwapV2Operation;
@@ -160,6 +167,7 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type RequestArgs = variant {
+  pair_liquidity_create : PairLiquidityCreateArgWithMeta;
   token_deposit : TokenDepositArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
@@ -198,16 +206,16 @@ type SwapV2MarketMakerView = record {
   lp : PoolLp;
   price_cumulative_exponent : nat8;
   block_timestamp_last : nat64;
-  reserve0 : nat;
-  reserve1 : nat;
+  reserve0 : text;
+  reserve1 : text;
   subaccount : text;
-  price1_cumulative_last : nat;
+  price1_cumulative_last : text;
   token0 : text;
   token1 : text;
   fee_rate : text;
-  k_last : nat;
+  k_last : text;
   protocol_fee : opt text;
-  price0_cumulative_last : nat;
+  price0_cumulative_last : text;
 };
 type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
@@ -248,6 +256,15 @@ type TokenOperation = variant {
 };
 type TokenPair = record { token0 : principal; token1 : principal };
 type TokenPairAmm = record { amm : Amm; pair : TokenPair };
+type TokenPairCreateArgs = record {
+  created : opt nat64;
+  memo : opt blob;
+  pair_pool : TokenPairPool;
+};
+type TokenPairCreateResult = variant {
+  Ok : MarketMakerView;
+  Err : BusinessError;
+};
 type TokenPairLiquidityAddArg = record {
   pa : TokenPairAmm;
   to : Account;
@@ -355,6 +372,7 @@ service : (opt InitArgs) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
+  pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;

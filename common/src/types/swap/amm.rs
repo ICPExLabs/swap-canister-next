@@ -57,3 +57,10 @@ impl From<Amm> for String {
         amm.0
     }
 }
+
+impl Amm {
+    /// to text
+    pub fn into_text(self) -> AmmText {
+        self.into()
+    }
+}
