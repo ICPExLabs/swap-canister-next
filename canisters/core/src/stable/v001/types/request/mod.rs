@@ -37,19 +37,20 @@ impl Default for RequestTraces {
 }
 
 impl RequestTraces {
-    fn new_guard<'a>(
+    pub fn be_guard<'a>(
         &'a mut self,
         args: RequestArgs,
         balances: Option<&TokenBalancesGuard<'_>>,
         token: Option<&TokenBlockChainGuard<'_>>,
         swap: Option<&SwapBlockChainGuard<'_>>,
+        trace: Option<String>,
     ) -> Result<RequestTraceGuard<'a>, BusinessError> {
         let mut next_index = self
             .next_index
             .write()
             .map_err(|err| BusinessError::RequestTraceLocked(format!("{err}")))?;
         let index = next_index.next();
-        let trace = RequestTrace::new(index, args, balances, token, swap);
+        let trace = RequestTrace::new(index, args, balances, token, swap, trace);
         self.traces.insert(index, trace); // insert
         let lock = RequestTraceLock { index };
         Ok(RequestTraceGuard {
@@ -106,5 +107,24 @@ impl RequestTraceGuard<'_> {
 
     fn failed(&mut self, failed: String) {
         self.do_trace(|request_trace| request_trace.failed(failed));
+    }
+
+    pub fn handle<T, F, D>(&mut self, handle: F, success: D) -> Result<T, BusinessError>
+    where
+        F: FnOnce(&mut RequestTraceGuard<'_>) -> Result<T, BusinessError>,
+        D: FnOnce(&T) -> String,
+    {
+        let result = handle(self);
+        match &result {
+            Ok(data) => {
+                let success = success(data);
+                self.success(success);
+            }
+            Err(err) => {
+                let failed = format!("Got Error: {err:?}");
+                self.failed(failed);
+            }
+        }
+        result
     }
 }

@@ -100,6 +100,7 @@ async fn inner_token_deposit(
                         memo: args.memo,
                         created: args.created,
                     },
+                    height.clone(),
                 )
             })?;
 

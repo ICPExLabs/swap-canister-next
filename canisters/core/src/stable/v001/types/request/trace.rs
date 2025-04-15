@@ -39,14 +39,19 @@ impl RequestTrace {
         balances: Option<&TokenBalancesGuard<'_>>,
         token: Option<&TokenBlockChainGuard<'_>>,
         swap: Option<&SwapBlockChainGuard<'_>>,
+        trace: Option<String>,
     ) -> Self {
-        Self {
+        let mut request_trace = Self {
             index,
             args,
             locks: BusinessLocks::new(balances, token, swap),
             traces: vec![],
             done: None,
+        };
+        if let Some(trace) = trace {
+            request_trace.trace(trace);
         }
+        request_trace
     }
 
     pub fn trace(&mut self, trace: String) {

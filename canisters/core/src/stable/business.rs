@@ -19,7 +19,7 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
-    // // ======================== config ========================
+    // ======================== config ========================
 
     // // fee to
     // fn business_config_fee_to_query(&self) -> Option<&Account> {
@@ -29,12 +29,12 @@ pub trait Business:
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
 
-    // // set_certified_data
-    // fn business_certified_data_refresh(&self) {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
-    // // ======================== locks ========================
+    // ======================== locks ========================
 
     // token balances
     fn business_token_balance_lock(
@@ -64,15 +64,6 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // // ======================== request trace ========================
-
-    // fn business_request_index(&mut self, args: RequestArgs) -> Result<RequestIndex, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_request_trace(&mut self, index: RequestIndex, trace: String) {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-
     // ======================== token block chain ========================
 
     // ======================== query ========================
@@ -93,15 +84,16 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // // ======================== update ========================
+    // ======================== update ========================
 
-    // fn business_token_deposit(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<DepositToken>,
-    // ) -> Result<(), BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_deposit(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
+        height: Nat,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // fn business_token_withdraw(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),
@@ -191,21 +183,21 @@ pub trait Business:
     //     ic_cdk::trap("Not supported operation by this version.")
     // }
 
-    // ======================== blocks query ========================
+    // // ======================== blocks query ========================
 
-    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
-    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
+    // fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+    //     ic_cdk::trap("Not supported operation by this version.")
+    // }
+    // fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+    //     ic_cdk::trap("Not supported operation by this version.")
+    // }
 
-    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
-    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
+    // fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+    //     ic_cdk::trap("Not supported operation by this version.")
+    // }
+    // fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+    //     ic_cdk::trap("Not supported operation by this version.")
+    // }
 
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
@@ -258,7 +250,7 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
-    // // ======================== config ========================
+    // ======================== config ========================
 
     // // fee to
     // fn business_config_fee_to_query(&self) -> Option<&Account> {
@@ -268,49 +260,40 @@ impl Business for State {
     //     self.get_mut().business_config_fee_to_replace(fee_to)
     // }
 
-    // // set_certified_data
-    // fn business_certified_data_refresh(&self) {
-    //     self.get().business_certified_data_refresh()
-    // }
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        self.get().business_certified_data_refresh()
+    }
 
-    // // ======================== locks ========================
+    // ======================== locks ========================
 
-    // // token balance
-    // fn business_token_balance_lock(
-    //     &mut self,
-    //     fee_to: Vec<CanisterId>,
-    //     required: Vec<TokenAccount>,
-    // ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
-    //     self.get_mut().business_token_balance_lock(fee_to, required)
-    // }
-    // fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
-    //     self.get_mut().business_token_balance_unlock(locked)
-    // }
+    // token balance
+    fn business_token_balance_lock(
+        &mut self,
+        fee_to: Vec<CanisterId>,
+        required: Vec<TokenAccount>,
+    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+        self.get_mut().business_token_balance_lock(fee_to, required)
+    }
+    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
+        self.get_mut().business_token_balance_unlock(locked)
+    }
 
-    // // token block chain
-    // fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
-    //     self.get_mut().business_token_block_chain_lock()
-    // }
-    // fn business_token_block_chain_unlock(&mut self) {
-    //     self.get_mut().business_token_block_chain_unlock()
-    // }
+    // token block chain
+    fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
+        self.get_mut().business_token_block_chain_lock()
+    }
+    fn business_token_block_chain_unlock(&mut self) {
+        self.get_mut().business_token_block_chain_unlock()
+    }
 
-    // // swap block chain
-    // fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
-    //     self.get_mut().business_swap_block_chain_lock()
-    // }
-    // fn business_swap_block_chain_unlock(&mut self) {
-    //     self.get_mut().business_swap_block_chain_unlock()
-    // }
-
-    // // ======================== request trace ========================
-
-    // fn business_request_index(&mut self, args: RequestArgs) -> Result<RequestIndex, BusinessError> {
-    //     self.get_mut().business_request_index(args)
-    // }
-    // fn business_request_trace(&mut self, index: RequestIndex, trace: String) {
-    //     self.get_mut().business_request_trace(index, trace)
-    // }
+    // swap block chain
+    fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
+        self.get_mut().business_swap_block_chain_lock()
+    }
+    fn business_swap_block_chain_unlock(&mut self) {
+        self.get_mut().business_swap_block_chain_unlock()
+    }
 
     // ======================== token block chain ========================
 
@@ -332,15 +315,16 @@ impl Business for State {
         self.get().business_token_balance_of(token, account)
     }
 
-    // // ======================== update ========================
+    // ======================== update ========================
 
-    // fn business_token_deposit(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<DepositToken>,
-    // ) -> Result<(), BusinessError> {
-    //     self.get_mut().business_token_deposit(locks, arg)
-    // }
+    fn business_token_deposit(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
+        height: Nat,
+    ) -> Result<(), BusinessError> {
+        self.get_mut().business_token_deposit(locks, arg, height)
+    }
     // fn business_token_withdraw(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),

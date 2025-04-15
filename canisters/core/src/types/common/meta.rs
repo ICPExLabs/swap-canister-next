@@ -29,7 +29,7 @@ pub fn check_meta(
     Ok(now)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArgWithMeta<T> {
     pub now: TimestampNanos,
     pub caller: Caller,

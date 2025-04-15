@@ -10,7 +10,7 @@ use crate::types::*;
 
 mod query;
 
-// mod deposit;
+mod deposit;
 
 // mod withdraw;
 

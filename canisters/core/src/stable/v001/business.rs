@@ -2,7 +2,7 @@ use super::super::business::*;
 use super::types::*;
 
 impl Business for InnerState {
-    // // ======================== config ========================
+    // ======================== config ========================
 
     // // fee to
     // fn business_config_fee_to_query(&self) -> Option<&Account> {
@@ -12,67 +12,58 @@ impl Business for InnerState {
     //     std::mem::replace(&mut self.business_data.fee_to, fee_to)
     // }
 
-    // // set_certified_data
-    // fn business_certified_data_refresh(&self) {
-    //     let token_hash = self.token_block_chain.get_latest_hash();
-    //     let swap_hash = self.swap_block_chain.get_latest_hash();
-    //     let mut data = Vec::with_capacity(token_hash.len() + swap_hash.len());
-    //     data.extend_from_slice(token_hash);
-    //     data.extend_from_slice(swap_hash);
-    //     let hash = common::utils::hash::hash_sha256(&data);
-    //     ic_cdk::api::set_certified_data(&hash);
-    // }
+    // set_certified_data
+    fn business_certified_data_refresh(&self) {
+        let token_hash = self.token_block_chain.get_latest_hash();
+        let swap_hash = self.swap_block_chain.get_latest_hash();
+        let mut data = Vec::with_capacity(token_hash.len() + swap_hash.len());
+        data.extend_from_slice(token_hash);
+        data.extend_from_slice(swap_hash);
+        let hash = common::utils::hash::hash_sha256(&data);
+        ic_cdk::api::set_certified_data(&hash);
+    }
 
-    // // ======================== locks ========================
+    // ======================== locks ========================
 
-    // // token balance
-    // fn business_token_balance_lock(
-    //     &mut self,
-    //     fee_to: Vec<CanisterId>,
-    //     required: Vec<TokenAccount>,
-    // ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
-    //     self.token_balances.lock(
-    //         self.business_data
-    //             .fee_to
-    //             .as_ref()
-    //             .map(|account| {
-    //                 fee_to
-    //                     .into_iter()
-    //                     .map(|token| TokenAccount::new(token, *account))
-    //                     .collect()
-    //             })
-    //             .unwrap_or_default(),
-    //         required,
-    //     )
-    // }
-    // fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
-    //     self.token_balances.unlock(locked)
-    // }
+    // token balance
+    fn business_token_balance_lock(
+        &mut self,
+        fee_to: Vec<CanisterId>,
+        required: Vec<TokenAccount>,
+    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+        self.token_balances.lock(
+            self.business_data
+                .fee_to
+                .as_ref()
+                .map(|account| {
+                    fee_to
+                        .into_iter()
+                        .map(|token| TokenAccount::new(token, *account))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            required,
+        )
+    }
+    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
+        self.token_balances.unlock(locked)
+    }
 
-    // // token block chain
-    // fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
-    //     self.token_block_chain.lock()
-    // }
-    // fn business_token_block_chain_unlock(&mut self) {
-    //     self.token_block_chain.unlock()
-    // }
+    // token block chain
+    fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
+        self.token_block_chain.lock()
+    }
+    fn business_token_block_chain_unlock(&mut self) {
+        self.token_block_chain.unlock()
+    }
 
-    // // swap block chain
-    // fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
-    //     self.swap_block_chain.lock()
-    // }
-    // fn business_swap_block_chain_unlock(&mut self) {
-    //     self.swap_block_chain.unlock()
-    // }
-
-    // // ======================== request trace ========================
-
-    // fn business_request_index(&mut self, args: RequestArgs) -> Result<RequestIndex, BusinessError> {
-    //     self.get_mut().business_request_index(args)
-    // }
-    // fn business_request_trace(&mut self, index: RequestIndex, trace: String) {
-    //     self.get_mut().business_request_trace(index, trace)
-    // }
+    // swap block chain
+    fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
+        self.swap_block_chain.lock()
+    }
+    fn business_swap_block_chain_unlock(&mut self) {
+        self.swap_block_chain.unlock()
+    }
 
     // ======================== token block chain ========================
 
@@ -107,19 +98,31 @@ impl Business for InnerState {
         ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
     }
 
-    // // ======================== update ========================
+    // ======================== update ========================
 
-    // fn business_token_deposit(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<DepositToken>,
-    // ) -> Result<(), BusinessError> {
-    //     let mut balances_guard = self.token_balances.be_guard(&locks.0);
-    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     balances_guard.token_deposit(&mut token_guard, arg)?; // do deposit
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(())
-    // }
+    fn business_token_deposit(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<DepositToken>,
+        height: Nat,
+    ) -> Result<(), BusinessError> {
+        let balances_guard = self.token_balances.be_guard(&locks.0);
+        let token_guard = self.token_block_chain.be_guard(&locks.1);
+        let trace_guard = self.request_traces.be_guard(
+            arg.clone().into(),
+            Some(&balances_guard),
+            Some(&token_guard),
+            None,
+            Some(format!(
+                "Token[{}] height: {height}",
+                arg.arg.token.to_text(),
+            )),
+        )?;
+        let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
+        guard.token_deposit(arg)?; // do deposit
+        self.business_certified_data_refresh(); // set certified data
+        Ok(())
+    }
     // fn business_token_withdraw(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),

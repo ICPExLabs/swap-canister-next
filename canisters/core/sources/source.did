@@ -1,4 +1,29 @@
 type Account = record { owner : principal; subaccount : opt blob };
+type BusinessError = variant {
+  InvalidTokenPair : record { principal; principal };
+  TokenBlockChainLocked;
+  TransferError : TransferError;
+  NotSupportedToken : principal;
+  Swap : text;
+  TokenPairAmmNotExist : record { TokenPair; text };
+  TokenAccountsLocked : vec TokenAccount;
+  MemoTooLong;
+  InsufficientBalance : record { principal; nat };
+  TokenPairAmmExist : record { TokenPair; text };
+  RequestTraceLocked : text;
+  InvalidCreated : text;
+  InvalidAmm : text;
+  InvalidTransferFee : record { principal; nat };
+  SwapBlockChainLocked;
+  TokenBlockChainError : text;
+  TransferFromError : TransferFromError;
+  TokenAccountsUnlocked : vec TokenAccount;
+  NotOwner : principal;
+  SwapBlockChainError : text;
+  CallCanisterError : record { RejectionCode; text };
+  Liquidity : text;
+  Expired : nat64;
+};
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -67,12 +92,52 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type TokenAccount = record { token : principal; account : Account };
+type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
+type TokenDepositArgs = record {
+  created : opt nat64;
+  token : principal;
+  from : Account;
+  amount_without_fee : nat;
+  memo : opt blob;
+};
 type TokenInfo = record {
   fee : nat;
   decimals : nat8;
   name : text;
   canister_id : principal;
   symbol : text;
+};
+type TokenPair = record { token0 : principal; token1 : principal };
+type TransferError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type TransferFromError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  InsufficientAllowance : record { allowance : nat };
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
 };
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
@@ -112,6 +177,7 @@ service : (opt InitArgs) -> {
   token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;
   token_balance_of : (principal, Account) -> (nat) query;
+  token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
   tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
