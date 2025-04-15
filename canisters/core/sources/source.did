@@ -1,19 +1,5 @@
 type Account = record { owner : principal; subaccount : opt blob };
 type Amm = variant { "swap_v2_1%"; "swap_v2_0.05%"; "swap_v2_0.3%" };
-type ArgWithMeta = record {
-  arg : DepositToken;
-  now : nat64;
-  created : opt nat64;
-  memo : opt blob;
-  caller : principal;
-};
-type ArgWithMeta_1 = record {
-  arg : TokenPairLiquidityAddArg;
-  now : nat64;
-  created : opt nat64;
-  memo : opt blob;
-  caller : principal;
-};
 type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
   TokenBlockChainLocked;
@@ -92,6 +78,13 @@ type PairCumulativePrice = record {
   price0 : nat;
   price1 : nat;
 };
+type PairLiquidityAddArgWithMeta = record {
+  arg : TokenPairLiquidityAddArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type PairOperation = variant {
   swap : PairSwapToken;
   swap_v2 : SwapV2Operation;
@@ -151,8 +144,9 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type RequestArgs = variant {
-  token_deposit : ArgWithMeta;
-  pair_liquidity_add : ArgWithMeta_1;
+  token_deposit : TokenDepositArgWithMeta;
+  pair_liquidity_add : PairLiquidityAddArgWithMeta;
+  token_withdraw : TokenWithdrawArgWithMeta;
 };
 type RequestTrace = record {
   args : RequestArgs;
@@ -194,6 +188,13 @@ type TokenBlock = record {
   parent_hash : blob;
 };
 type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
+type TokenDepositArgWithMeta = record {
+  arg : DepositToken;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type TokenDepositArgs = record {
   created : opt nat64;
   token : principal;
@@ -231,6 +232,21 @@ type TokenTransaction = record {
   created : opt nat64;
   memo : opt blob;
   operation : TokenOperation;
+};
+type TokenWithdrawArgWithMeta = record {
+  arg : WithdrawToken;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
+type TokenWithdrawArgs = record {
+  to : Account;
+  created : opt nat64;
+  token : principal;
+  from : Account;
+  amount_without_fee : nat;
+  memo : opt blob;
 };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -312,6 +328,7 @@ service : (opt InitArgs) -> {
   token_balance_of : (principal, Account) -> (nat) query;
   token_deposit : (TokenDepositArgs, opt nat8) -> (TokenChangedResult);
   token_query : (principal) -> (opt TokenInfo) query;
+  token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenChangedResult);
   tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;

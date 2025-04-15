@@ -18,14 +18,22 @@ pub struct TokenAccount {
     pub account: Account,
 }
 
+/// 显示 Account
+pub fn display_account(account: &Account) -> String {
+    format!(
+        "{}.{}",
+        account.owner.to_text(),
+        account.subaccount.map(hex::encode).unwrap_or_default()
+    )
+}
+
 impl Display for TokenAccount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[{}]({}.{})",
+            "[{}]({})",
             self.token.to_text(),
-            self.account.owner.to_text(),
-            self.account.subaccount.map(hex::encode).unwrap_or_default()
+            display_account(&self.account)
         )
     }
 }

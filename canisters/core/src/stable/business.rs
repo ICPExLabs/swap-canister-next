@@ -94,13 +94,14 @@ pub trait Business:
     ) -> Result<Nat, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    // fn business_token_withdraw(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<WithdrawToken>,
-    // ) -> Result<(), BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    fn business_token_withdraw(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<WithdrawToken>,
+        height: Nat,
+    ) -> Result<Nat, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     // fn business_token_transfer(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),
@@ -337,13 +338,14 @@ impl Business for State {
     ) -> Result<Nat, BusinessError> {
         self.get_mut().business_token_deposit(locks, arg, height)
     }
-    // fn business_token_withdraw(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<WithdrawToken>,
-    // ) -> Result<Nat, BusinessError> {
-    //     self.get_mut().business_token_withdraw(locks, arg)
-    // }
+    fn business_token_withdraw(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<WithdrawToken>,
+        height: Nat,
+    ) -> Result<Nat, BusinessError> {
+        self.get_mut().business_token_withdraw(locks, arg, height)
+    }
     // fn business_token_transfer(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),

@@ -114,8 +114,10 @@ impl Business for InnerState {
             Some(&token_guard),
             None,
             Some(format!(
-                "Token: [{}] Transfer height: {height}.",
+                "Deposit {} Token: [{}] From: ({}) With Height: {height}.",
+                arg.arg.amount,
                 arg.arg.token.to_text(),
+                display_account(&arg.arg.from)
             )),
         )?;
         let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
@@ -123,17 +125,31 @@ impl Business for InnerState {
         self.business_certified_data_refresh(); // set certified data
         Ok(height)
     }
-    // fn business_token_withdraw(
-    //     &mut self,
-    //     locks: &(TokenBalancesLock, TokenBlockChainLock),
-    //     arg: ArgWithMeta<WithdrawToken>,
-    // ) -> Result<(), BusinessError> {
-    //     let mut balances_guard = self.token_balances.be_guard(&locks.0);
-    //     let mut token_guard = self.token_block_chain.be_guard(&locks.1);
-    //     balances_guard.token_withdraw(&mut token_guard, arg)?; // do withdraw
-    //     self.business_certified_data_refresh(); // set certified data
-    //     Ok(())
-    // }
+    fn business_token_withdraw(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        arg: ArgWithMeta<WithdrawToken>,
+        height: Nat,
+    ) -> Result<Nat, BusinessError> {
+        let balances_guard = self.token_balances.be_guard(&locks.0);
+        let token_guard = self.token_block_chain.be_guard(&locks.1);
+        let trace_guard = self.request_traces.be_guard(
+            arg.clone().into(),
+            Some(&balances_guard),
+            Some(&token_guard),
+            None,
+            Some(format!(
+                "Withdraw {} Token: [{}] To: ({}) With Height: {height}.",
+                arg.arg.amount,
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.to)
+            )),
+        )?;
+        let mut guard = TokenGuard::new(trace_guard, balances_guard, token_guard);
+        let height = guard.token_withdraw(arg, height)?; // do withdraw
+        self.business_certified_data_refresh(); // set certified data
+        Ok(height)
+    }
     // fn business_token_transfer(
     //     &mut self,
     //     locks: &(TokenBalancesLock, TokenBlockChainLock),

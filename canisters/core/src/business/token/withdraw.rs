@@ -103,10 +103,9 @@ async fn inner_token_withdraw(
                         memo: args.memo,
                         created: args.created,
                     },
+                    height,
                 )
-            })?;
-
-            height
+            })?
         }
     };
 

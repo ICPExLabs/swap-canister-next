@@ -42,7 +42,8 @@ pub use crate::types::{
     DummyCanisterId, EncodedBlock, Nat, PairCreate, PairOperation, QueryBlockResult,
     QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock, SwapOperation,
     SwapTransaction, TimestampNanos, TokenAccount, TokenBlock, TokenOperation, TokenPair,
-    TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken, proto,
+    TokenPairAmm, TokenPairPool, TokenTransaction, TransferToken, UserId, WithdrawToken,
+    display_account, proto,
 };
 
 mod common;
