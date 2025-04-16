@@ -282,7 +282,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     }
 }
 
-impl<T: Clone> InnerTokenPairSwapGuard<'_, '_, '_, T> {
+impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     pub fn mint_swap_block<R, F>(
         &mut self,
         now: TimestampNanos,
@@ -291,7 +291,7 @@ impl<T: Clone> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         trace: String,
     ) -> Result<R, BusinessError>
     where
-        F: FnOnce(&mut InnerTokenPairSwapGuard<'_, '_, '_, T>) -> Result<R, BusinessError>,
+        F: FnOnce(&mut InnerTokenPairSwapGuard<'_, '_, '_, &T>) -> Result<R, BusinessError>,
     {
         let result = self.swap_guard.mint_block(now, transaction, |swap_guard| {
             let mut inner = InnerTokenPairSwapGuard {
@@ -300,7 +300,13 @@ impl<T: Clone> InnerTokenPairSwapGuard<'_, '_, '_, T> {
                 token_guard: self.token_guard,
                 swap_guard,
                 fee_to: self.fee_to,
-                arg: self.arg.clone(),
+                arg: ArgWithMeta {
+                    now: self.arg.now,
+                    caller: self.arg.caller,
+                    arg: &self.arg.arg,
+                    memo: self.arg.memo.clone(),
+                    created: self.arg.created,
+                },
             };
             handle(&mut inner)
         })?;
