@@ -4,13 +4,13 @@ use super::types::*;
 impl Business for InnerState {
     // ======================== config ========================
 
-    // // fee to
-    // fn business_config_fee_to_query(&self) -> Option<&Account> {
-    //     self.business_data.fee_to.as_ref()
-    // }
-    // fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
-    //     std::mem::replace(&mut self.business_data.fee_to, fee_to)
-    // }
+    // fee to
+    fn business_config_fee_to_query(&self) -> Option<&Account> {
+        self.business_data.fee_to.as_ref()
+    }
+    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
+        std::mem::replace(&mut self.business_data.fee_to, fee_to)
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {

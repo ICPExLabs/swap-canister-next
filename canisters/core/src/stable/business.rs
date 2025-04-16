@@ -21,13 +21,13 @@ pub trait Business:
 {
     // ======================== config ========================
 
-    // // fee to
-    // fn business_config_fee_to_query(&self) -> Option<&Account> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // fee to
+    fn business_config_fee_to_query(&self) -> Option<&Account> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {
@@ -257,13 +257,13 @@ pub trait Business:
 impl Business for State {
     // ======================== config ========================
 
-    // // fee to
-    // fn business_config_fee_to_query(&self) -> Option<&Account> {
-    //     self.get().business_config_fee_to_query()
-    // }
-    // fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
-    //     self.get_mut().business_config_fee_to_replace(fee_to)
-    // }
+    // fee to
+    fn business_config_fee_to_query(&self) -> Option<&Account> {
+        self.get().business_config_fee_to_query()
+    }
+    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
+        self.get_mut().business_config_fee_to_replace(fee_to)
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {

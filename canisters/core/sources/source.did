@@ -513,6 +513,8 @@ service : (opt InitArgs) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
+  config_fee_to_query : () -> (opt Account);
+  config_fee_to_replace : (opt Account) -> (opt Account);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
@@ -554,6 +556,7 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
+  test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;
   token_balance_of : (principal, Account) -> (nat) query;

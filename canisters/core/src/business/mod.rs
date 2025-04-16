@@ -8,7 +8,7 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-// pub mod config;
+pub mod config;
 
 pub mod token;
 
@@ -16,7 +16,7 @@ pub mod pair;
 
 pub mod archive;
 
-// pub mod test;
+pub mod test;
 
 #[allow(unused)]
 #[inline(always)]
