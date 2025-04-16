@@ -18,8 +18,8 @@ pub enum RequestArgs {
     #[serde(rename = "token_transfer")]
     TokenTransfer(Box<TokenTransferArgWithMeta>),
     // pair create
-    #[serde(rename = "pair_liquidity_create")]
-    PairLiquidityCreate(Box<PairLiquidityCreateArgWithMeta>),
+    #[serde(rename = "pair_create")]
+    PairCreate(Box<PairCreateArgWithMeta>),
     // pair liquidity
     #[serde(rename = "pair_liquidity_add")]
     PairLiquidityAdd(Box<PairLiquidityAddArgWithMeta>),
@@ -45,7 +45,7 @@ pub struct TokenWithdrawArgWithMeta(ArgWithMeta<WithdrawToken>);
 pub struct TokenTransferArgWithMeta(ArgWithMeta<TransferToken>);
 // pair create
 #[derive(Debug, Serialize, Deserialize, CandidType)]
-pub struct PairLiquidityCreateArgWithMeta(ArgWithMeta<TokenPairAmm>);
+pub struct PairCreateArgWithMeta(ArgWithMeta<TokenPairAmm>);
 // pair liquidity
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct PairLiquidityAddArgWithMeta(ArgWithMeta<TokenPairLiquidityAddArg>);
@@ -85,7 +85,7 @@ impl From<ArgWithMeta<TransferToken>> for RequestArgs {
 // pair create
 impl From<ArgWithMeta<TokenPairAmm>> for RequestArgs {
     fn from(value: ArgWithMeta<TokenPairAmm>) -> Self {
-        Self::PairLiquidityCreate(Box::new(PairLiquidityCreateArgWithMeta(value)))
+        Self::PairCreate(Box::new(PairCreateArgWithMeta(value)))
     }
 }
 

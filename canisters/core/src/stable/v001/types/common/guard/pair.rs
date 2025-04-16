@@ -335,7 +335,7 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Pair Cumulative Price* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0:{price0_cumulative}, price1:{price1_cumulative}`",
+            "*Pair Cumulative Price* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
             self.arg.arg.get_pa(),
             self.arg.now.into_inner(),
         )); // * trace

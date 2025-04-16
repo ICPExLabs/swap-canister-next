@@ -91,6 +91,13 @@ type PageData = record {
   size : nat32;
 };
 type PairCreate = record { pa : TokenPairAmm; creator : principal };
+type PairCreateArgWithMeta = record {
+  arg : TokenPairAmm;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type PairCumulativePrice = record {
   pa : TokenPairAmm;
   price_cumulative_exponent : nat8;
@@ -100,13 +107,6 @@ type PairCumulativePrice = record {
 };
 type PairLiquidityAddArgWithMeta = record {
   arg : TokenPairLiquidityAddArg;
-  now : nat64;
-  created : opt nat64;
-  memo : opt blob;
-  caller : principal;
-};
-type PairLiquidityCreateArgWithMeta = record {
-  arg : TokenPairAmm;
   now : nat64;
   created : opt nat64;
   memo : opt blob;
@@ -199,8 +199,8 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type RequestArgs = variant {
-  pair_liquidity_create : PairLiquidityCreateArgWithMeta;
   token_deposit : TokenDepositArgWithMeta;
+  pair_create : PairCreateArgWithMeta;
   pair_swap_exact_tokens_for_tokens : PairSwapExactTokensForTokensArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;

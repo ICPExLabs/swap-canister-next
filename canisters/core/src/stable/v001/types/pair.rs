@@ -229,7 +229,7 @@ impl TokenPairs {
     }
 
     // 固定输入，计算每一个币对的中间数量
-    fn get_amounts_out(
+    pub fn get_amounts_out(
         &self,
         self_canister: &SelfCanister,
         amount_in: &Nat,
@@ -268,7 +268,7 @@ impl TokenPairs {
     }
 
     // 固定输出，计算每一个币对的中间数量
-    fn get_amounts_in(
+    pub fn get_amounts_in(
         &self,
         self_canister: &SelfCanister,
         amount_out: &Nat,
