@@ -16,4 +16,4 @@ mod liquidity;
 
 mod swap;
 
-// mod loan;
+mod loan;

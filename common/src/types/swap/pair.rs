@@ -33,7 +33,7 @@ impl TokenPair {
 
 /// 有顺序的代币对和算法
 #[derive(
-    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]
 pub struct TokenPairAmm {
     /// 代币对
@@ -76,7 +76,7 @@ impl TokenPairAmm {
 
     /// not exist
     pub fn not_exist(&self) -> BusinessError {
-        BusinessError::TokenPairAmmNotExist(self.clone())
+        BusinessError::TokenPairAmmNotExist(*self)
     }
 }
 

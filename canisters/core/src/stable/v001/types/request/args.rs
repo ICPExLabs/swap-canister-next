@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use super::super::{
     ArgWithMeta, DepositToken, TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg,
-    TransferToken, WithdrawToken,
+    TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
+    TokenPairSwapTokensForExactTokensArg, TransferToken, WithdrawToken,
 };
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
@@ -24,6 +25,13 @@ pub enum RequestArgs {
     PairLiquidityAdd(Box<PairLiquidityAddArgWithMeta>),
     #[serde(rename = "pair_liquidity_remove")]
     PairLiquidityRemove(Box<PairLiquidityRemoveArgWithMeta>),
+    // pair swap
+    #[serde(rename = "pair_swap_exact_tokens_for_tokens")]
+    PairSwapExactTokensForTokens(Box<PairSwapExactTokensForTokensArgWithMeta>),
+    #[serde(rename = "pair_swap_tokens_for_exact_tokens")]
+    PairSwapTokensForExactTokens(Box<PairSwapTokensForExactTokensArgWithMeta>),
+    #[serde(rename = "pair_swap_by_loan")]
+    PairSwapByLoan(Box<PairSwapByLoanArgWithMeta>),
 }
 
 // ============================= wrap =============================
@@ -43,6 +51,17 @@ pub struct PairLiquidityCreateArgWithMeta(ArgWithMeta<TokenPairAmm>);
 pub struct PairLiquidityAddArgWithMeta(ArgWithMeta<TokenPairLiquidityAddArg>);
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct PairLiquidityRemoveArgWithMeta(ArgWithMeta<TokenPairLiquidityRemoveArg>);
+// pair swap
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct PairSwapExactTokensForTokensArgWithMeta(
+    ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
+);
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct PairSwapTokensForExactTokensArgWithMeta(
+    ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
+);
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct PairSwapByLoanArgWithMeta(ArgWithMeta<TokenPairSwapByLoanArg>);
 
 // ============================= from =============================
 
@@ -79,5 +98,22 @@ impl From<ArgWithMeta<TokenPairLiquidityAddArg>> for RequestArgs {
 impl From<ArgWithMeta<TokenPairLiquidityRemoveArg>> for RequestArgs {
     fn from(value: ArgWithMeta<TokenPairLiquidityRemoveArg>) -> Self {
         Self::PairLiquidityRemove(Box::new(PairLiquidityRemoveArgWithMeta(value)))
+    }
+}
+
+// pair swap
+impl From<ArgWithMeta<TokenPairSwapExactTokensForTokensArg>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>) -> Self {
+        Self::PairSwapExactTokensForTokens(Box::new(PairSwapExactTokensForTokensArgWithMeta(value)))
+    }
+}
+impl From<ArgWithMeta<TokenPairSwapTokensForExactTokensArg>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>) -> Self {
+        Self::PairSwapTokensForExactTokens(Box::new(PairSwapTokensForExactTokensArgWithMeta(value)))
+    }
+}
+impl From<ArgWithMeta<TokenPairSwapByLoanArg>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenPairSwapByLoanArg>) -> Self {
+        Self::PairSwapByLoan(Box::new(PairSwapByLoanArgWithMeta(value)))
     }
 }

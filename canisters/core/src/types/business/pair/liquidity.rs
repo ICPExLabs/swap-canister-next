@@ -95,6 +95,18 @@ impl CheckArgs for TokenPairLiquidityAddArg {
     }
 }
 
+impl SelfCanisterArg for TokenPairLiquidityAddArg {
+    fn get_self_canister(&self) -> SelfCanister {
+        self.self_canister
+    }
+}
+
+impl TokenPairArg for TokenPairLiquidityAddArg {
+    fn get_pa(&self) -> &TokenPairAmm {
+        &self.pa
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddSuccessView {
     pub amount: (String, String),
@@ -174,6 +186,18 @@ impl CheckArgs for TokenPairLiquidityRemoveArg {
         }
 
         Ok(())
+    }
+}
+
+impl SelfCanisterArg for TokenPairLiquidityRemoveArg {
+    fn get_self_canister(&self) -> SelfCanister {
+        self.self_canister
+    }
+}
+
+impl TokenPairArg for TokenPairLiquidityRemoveArg {
+    fn get_pa(&self) -> &TokenPairAmm {
+        &self.pa
     }
 }
 

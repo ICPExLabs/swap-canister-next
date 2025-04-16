@@ -5,9 +5,9 @@ use super::*;
 use crate::types::PoolLp;
 
 use super::{
-    Amm, AmmText, BusinessError, DummyCanisterId, SelfCanister, SwapRatio, TokenBalances,
-    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+    Amm, BusinessError, DummyCanisterId, SelfCanister, SwapRatio, TokenBalances, TokenInfo,
+    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
+    TokenPairLiquidityRemoveSuccess,
 };
 
 /// Automated Market Maker 自动化做市商
@@ -157,9 +157,9 @@ impl MarketMaker {
         }
     }
 
-    pub fn swap(
+    pub fn swap<T: TokenPairArg>(
         &mut self,
-        guard: &mut TokenBalancesGuard,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         self_canister: &SelfCanister,
         amount0_out: Nat,
         amount1_out: Nat,

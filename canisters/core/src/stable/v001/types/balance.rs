@@ -300,7 +300,7 @@ impl TokenBalancesGuard<'_> {
             created: arg.created,
         };
         // 2. do deposit and mint block
-        guard.mint_block(arg.now, transaction, || {
+        guard.mint_block(arg.now, transaction, |_| {
             self.do_token_deposit(arg.arg.token, arg.arg.to, arg.arg.amount)
         })?;
         Ok(())
@@ -318,7 +318,7 @@ impl TokenBalancesGuard<'_> {
             created: arg.created,
         };
         // 2. do withdraw and mint block
-        guard.mint_block(arg.now, transaction, || {
+        guard.mint_block(arg.now, transaction, |_| {
             self.do_token_withdraw(arg.arg.token, arg.arg.from, arg.arg.amount)
         })?;
         Ok(())
@@ -336,7 +336,7 @@ impl TokenBalancesGuard<'_> {
             created: arg.created,
         };
         // 2. do transfer and mint block
-        let changed = guard.mint_block(arg.now, transaction, || {
+        let changed = guard.mint_block(arg.now, transaction, |_| {
             self.do_token_transfer(
                 arg.arg.token,
                 arg.arg.from,

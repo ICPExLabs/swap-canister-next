@@ -155,10 +155,10 @@ impl TokenBlockChainGuard<'_> {
         handle: F,
     ) -> Result<T, BusinessError>
     where
-        F: FnOnce() -> Result<T, BusinessError>,
+        F: FnOnce(&mut Self) -> Result<T, BusinessError>,
     {
         let (encoded_block, hash) = self.get_next_token_block(now, transaction)?;
-        let data = handle()?;
+        let data = handle(self)?;
         self.push_block(encoded_block, hash);
         Ok(data)
     }

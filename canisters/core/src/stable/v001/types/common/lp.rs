@@ -4,10 +4,7 @@ use super::*;
 
 use crate::utils::math::zero;
 
-use super::{
-    AmmText, BusinessError, DummyCanisterId, InnerTokenPairSwapGuard, RequestTraceGuard, TokenInfo,
-    TokenPair,
-};
+use super::{AmmText, BusinessError, DummyCanisterId, InnerTokenPairSwapGuard, TokenInfo};
 
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub enum PoolLp {
@@ -43,7 +40,7 @@ impl PoolLp {
         }
     }
 
-    pub fn mint_fee<T>(
+    pub fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         to: Account,
@@ -133,13 +130,13 @@ impl InnerLP {
         vec![self.dummy_canister_id.id()]
     }
 
-    pub fn mint_fee<T>(
+    pub fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        guard.token_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
+        guard.token_liquidity_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
         self.total_supply += amount; // Nat 不会超出精度
         Ok(())
     }
@@ -152,7 +149,7 @@ impl InnerLP {
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        guard.token_mint(
+        guard.token_liquidity_mint(
             amount_a,
             amount_b,
             self.dummy_canister_id.id(),
@@ -171,7 +168,7 @@ impl InnerLP {
         from: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        guard.token_burn(
+        guard.token_liquidity_burn(
             amount_a,
             amount_b,
             self.dummy_canister_id.id(),

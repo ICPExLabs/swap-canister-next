@@ -206,49 +206,37 @@ impl Business for InnerState {
         Ok(success)
     }
 
-    // // pair swap
-    // fn business_token_pair_swap_exact_tokens_for_tokens(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapExactTokensForTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     let mut guard = self.token_balances.be_guard(balance_lock);
-    //     self.business_data.token_pairs.swap_exact_tokens_for_tokens(
-    //         &mut guard,
-    //         self_canister,
-    //         args,
-    //         pas,
-    //     )
-    // }
-    // fn business_token_pair_swap_tokens_for_exact_tokens(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapTokensForExactTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     let mut guard = self.token_balances.be_guard(balance_lock);
-    //     self.business_data.token_pairs.swap_tokens_for_exact_tokens(
-    //         &mut guard,
-    //         self_canister,
-    //         args,
-    //         pas,
-    //     )
-    // }
-    // fn business_token_pair_swap_by_loan(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapByLoanArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     let mut guard = self.token_balances.be_guard(balance_lock);
-    //     self.business_data
-    //         .token_pairs
-    //         .swap_by_loan(&mut guard, self_canister, args, pas)
-    // }
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let mut guard = self.get_pair_swap_guard(locks, arg.clone(), None)?;
+        let success = guard.swap_exact_tokens_for_tokens(arg)?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(success)
+    }
+    fn business_token_pair_swap_tokens_for_exact_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let mut guard = self.get_pair_swap_guard(locks, arg.clone(), None)?;
+        let success = guard.swap_tokens_for_exact_tokens(arg)?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(success)
+    }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapByLoanArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let mut guard = self.get_pair_swap_guard(locks, arg.clone(), None)?;
+        let success = guard.swap_by_loan(arg)?;
+        self.business_certified_data_refresh(); // set certified data
+        Ok(success)
+    }
 
     // ======================== blocks query ========================
 

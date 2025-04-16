@@ -155,7 +155,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
 
         let arg = TokenPairLiquidityRemoveArg {
             self_canister,
-            pa: pa.clone(),
+            pa,
             from: self.from,
             token_a: self.swap_pair.token.0,
             token_b: self.swap_pair.token.1,

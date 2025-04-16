@@ -116,7 +116,7 @@ pub enum BusinessError {
     SwapBlockChainError(String),
 }
 
-fn display_token_accounts(accounts: &Vec<TokenAccount>) -> String {
+fn display_token_accounts(accounts: &[TokenAccount]) -> String {
     format!(
         "[{}]",
         accounts

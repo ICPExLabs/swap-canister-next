@@ -153,34 +153,28 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
-    // // pair swap
-    // fn business_token_pair_swap_exact_tokens_for_tokens(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapExactTokensForTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_token_pair_swap_tokens_for_exact_tokens(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapTokensForExactTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
-    // fn business_token_pair_swap_by_loan(
-    //     &mut self,
-    //     balance_lock: &TokenBalancesLock,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapByLoanArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     ic_cdk::trap("Not supported operation by this version.")
-    // }
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_pair_swap_tokens_for_exact_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapByLoanArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // ======================== blocks query ========================
 
@@ -397,47 +391,30 @@ impl Business for State {
             .business_token_pair_liquidity_remove(locks, arg)
     }
 
-    // // // pair swap
-    // // fn business_token_pair_swap_exact_tokens_for_tokens(
-    // //     &mut self,
-    // //     balance_lock: &TokenBalancesLock,
-    // //     self_canister: &SelfCanister,
-    // //     args: TokenPairSwapExactTokensForTokensArgs,
-    // //     pas: Vec<TokenPairAmm>,
-    // // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    // //     self.get_mut()
-    // //         .business_token_pair_swap_exact_tokens_for_tokens(
-    // //             balance_lock,
-    // //             self_canister,
-    // //             args,
-    // //             pas,
-    // //         )
-    // // }
-    // // fn business_token_pair_swap_tokens_for_exact_tokens(
-    // //     &mut self,
-    // //     balance_lock: &TokenBalancesLock,
-    // //     self_canister: &SelfCanister,
-    // //     args: TokenPairSwapTokensForExactTokensArgs,
-    // //     pas: Vec<TokenPairAmm>,
-    // // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    // //     self.get_mut()
-    // //         .business_token_pair_swap_tokens_for_exact_tokens(
-    // //             balance_lock,
-    // //             self_canister,
-    // //             args,
-    // //             pas,
-    // //         )
-    // // }
-    // // fn business_token_pair_swap_by_loan(
-    // //     &mut self,
-    // //     balance_lock: &TokenBalancesLock,
-    // //     self_canister: &SelfCanister,
-    // //     args: TokenPairSwapByLoanArgs,
-    // //     pas: Vec<TokenPairAmm>,
-    // // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    // //     self.get_mut()
-    // //         .business_token_pair_swap_by_loan(balance_lock, self_canister, args, pas)
-    // // }
+    // pair swap
+    fn business_token_pair_swap_exact_tokens_for_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.get_mut()
+            .business_token_pair_swap_exact_tokens_for_tokens(locks, arg)
+    }
+    fn business_token_pair_swap_tokens_for_exact_tokens(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.get_mut()
+            .business_token_pair_swap_tokens_for_exact_tokens(locks, arg)
+    }
+    fn business_token_pair_swap_by_loan(
+        &mut self,
+        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        arg: ArgWithMeta<TokenPairSwapByLoanArg>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        self.get_mut().business_token_pair_swap_by_loan(locks, arg)
+    }
 
     // ======================== blocks query ========================
 

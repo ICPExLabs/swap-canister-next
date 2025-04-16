@@ -4,6 +4,7 @@ mod hash;
 pub use hash::*;
 
 /// block
+#[allow(clippy::module_inception)]
 mod block;
 pub use block::*;
 

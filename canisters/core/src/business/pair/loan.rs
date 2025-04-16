@@ -13,42 +13,16 @@ use crate::types::*;
 // pay loan tokens
 impl CheckArgs for TokenPairSwapByLoanArgs {
     type Result = (
+        TimestampNanos,
         Vec<CanisterId>,
         Vec<TokenAccount>,
         SelfCanister,
         Caller,
-        Vec<PairAmm>,
+        TokenPairSwapByLoanArg,
     );
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
-
-        // check path
-        if self.path.is_empty() {
-            return Err(BusinessError::Swap("INVALID_PATH".into()));
-        }
-        if 1 < self.path.len() {
-            // 循环检查代币是否相连
-            let mut i = 1;
-            loop {
-                if self.path.len() <= i {
-                    break;
-                }
-
-                let path0 = &self.path[i - 1];
-                let path1 = &self.path[i];
-
-                if path0.pair.1 != path1.pair.0 {
-                    return Err(BusinessError::Swap("INVALID_PATH".into()));
-                }
-
-                i += 1;
-            }
-        }
-        // ! 检查代币首尾是否一致
-        if self.path[0].pair.0 != self.path[self.path.len() - 1].pair.1 {
-            return Err(BusinessError::Swap("INVALID_PATH".into()));
-        }
 
         // check pools
         let mut pas = vec![];
@@ -61,12 +35,32 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
             required.extend(_required);
         }
 
+        let arg = TokenPairSwapByLoanArg {
+            self_canister,
+            pas,
+            from: self.from,
+            loan: self.loan.clone(),
+            path: self.path.clone(),
+            to: self.to,
+        };
+
+        // check path
+        check_path(&arg.path)?;
+
+        // ! 检查代币首尾是否一致
+        if self.path[0].token.0 != self.path[self.path.len() - 1].token.1 {
+            return Err(BusinessError::Swap("INVALID_PATH".into()));
+        }
+
         // check deadline
         if let Some(deadline) = &self.deadline {
             deadline.check_args()?;
         }
 
-        Ok((fee_to, required, self_canister, caller, pas))
+        // check meta
+        let now = check_meta(&self.memo, &self.created)?;
+
+        Ok((now, fee_to, required, self_canister, caller, arg))
     }
 }
 
@@ -84,34 +78,55 @@ async fn inner_pair_swap_by_loan(
     retries: Option<u8>,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     // 1. check args
-    let (fee_to, mut required, self_canister, _caller, pas) = args.check_args()?;
+    let (now, fee_to, mut required, self_canister, caller, arg) = args.check_args()?;
 
     // 2. some value
     // let fee_to = fee_to;
-    let token_account_out = TokenAccount::new(args.path[args.path.len() - 1].pair.1, args.to);
+    let token_account_out = TokenAccount::new(args.path[args.path.len() - 1].token.1, args.to);
     required.push(token_account_out);
 
-    // 3. lock
-    let balance_lock =
-        match super::super::lock_token_balances(fee_to, required, retries.unwrap_or_default())? {
-            LockBalanceResult::Lock(guard) => guard,
-            LockBalanceResult::Retry(retries) => {
-                // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
-                let service_swap = crate::services::swap::Service(self_canister.id());
-                return service_swap
-                    .pair_swap_by_loan(args_clone, Some(retries))
-                    .await;
-            }
-        };
+    let success = {
+        // 3. lock
+        let locks =
+            match super::super::lock_token_balances_and_token_block_chain_and_swap_block_chain(
+                fee_to,
+                required,
+                retries.unwrap_or_default(),
+            )? {
+                LockResult::Locked(locks) => locks,
+                LockResult::Retry(retries) => {
+                    return retry_pair_swap_by_loan(self_canister.id(), args, retries).await;
+                }
+            };
 
-    // * 4. do business
-    {
-        let success = with_mut_state_without_record(|s| {
-            s.business_token_pair_swap_by_loan(&balance_lock, &self_canister, args, pas)
-        })?;
+        // * 4. do business
+        {
+            with_mut_state_without_record(|s| {
+                s.business_token_pair_swap_by_loan(
+                    &locks,
+                    ArgWithMeta {
+                        now,
+                        caller,
+                        arg,
+                        memo: args.memo,
+                        created: args.created,
+                    },
+                )
+            })?
+        }
+    };
 
-        // ! push log
+    // TODO 异步触发同步任务
 
-        Ok(success)
-    }
+    Ok(success)
+}
+// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+#[inline]
+async fn retry_pair_swap_by_loan(
+    self_canister_id: CanisterId,
+    args: TokenPairSwapByLoanArgs,
+    retries: u8,
+) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    let service_swap = crate::services::swap::Service(self_canister_id);
+    return service_swap.pair_swap_by_loan(args, Some(retries)).await;
 }

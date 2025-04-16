@@ -1,17 +1,15 @@
 use std::collections::HashMap;
 
-use ::common::utils::principal::sort_tokens;
+use ::common::{types::SwapTokenPair, utils::principal::sort_tokens};
 
 use super::*;
 
 use crate::utils::math::zero;
 
 use super::{
-    Amm, BusinessError, InnerTokenPairSwapGuard, MarketMaker, SelfCanister, TokenBalances,
-    TokenInfo, TokenPair, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairPool,
-    TokenPairSwapByLoanArgs, TokenPairSwapExactTokensForTokensArgs,
-    TokenPairSwapTokensForExactTokensArgs, TokenPairSwapTokensSuccess,
+    BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairSwapToken, SelfCanister,
+    TokenBalances, TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairSwapTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -69,21 +67,21 @@ impl TokenPairs {
         // 1. get token block
         let transaction = SwapTransaction {
             operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
-                pa: arg.arg.clone(),
+                pa: arg.arg,
                 creator: arg.caller.id(),
             })),
             memo: arg.memo,
             created: arg.created,
         };
         // 2. do create and mint block
-        let maker = swap_guard.mint_block(arg.now, transaction, || {
+        let maker = swap_guard.mint_block(arg.now, transaction, |_| {
             let TokenPairAmm { amm, .. } = &arg.arg;
             let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
             let maker =
                 MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
             let maker = trace_guard.handle(
                 |trace| {
-                    self.pairs.insert(arg.arg.clone(), maker.clone()); // do insert token pair pool
+                    self.pairs.insert(arg.arg, maker.clone()); // do insert token pair pool
                     trace.trace(format!(
                         "*CreateTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
                         arg.arg.pair.token0.to_text(),
@@ -143,245 +141,309 @@ impl TokenPairs {
         self.handle_maker(pa, |maker| maker.remove_liquidity(guard))
     }
 
-    // // ============================= swap =============================
+    // ============================= swap =============================
 
-    // #[allow(clippy::too_many_arguments)]
-    // fn swap(
-    //     &mut self,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     amounts: &[Nat],
-    //     path: &[TokenPairPool],
-    //     pas: &[TokenPairAmm],
-    //     pool_accounts: &[Account],
-    //     _to: Account,
-    // ) -> Result<(), BusinessError> {
-    //     for (i, (pool, pa)) in path.iter().zip(pas.iter()).enumerate() {
-    //         let (input, output) = pool.pair;
-    //         let (token0, _) = sort_tokens(input, output);
-    //         let amount_out = amounts[i + 1].clone();
-    //         let (amount0_out, amount1_out) = if input == token0 {
-    //             (zero(), amount_out)
-    //         } else {
-    //             (amount_out, zero())
-    //         };
-    //         let to = if i < path.len() - 1 {
-    //             pool_accounts[i + 1]
-    //         } else {
-    //             _to
-    //         };
+    fn swap<T: SelfCanisterArg + TokenPairSwapArg + Clone>(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+        amounts: &[Nat],
+        pool_accounts: &[Account],
+        _from: Account,
+        _from_amount: Nat,
+        _to: Account,
+    ) -> Result<(), BusinessError> {
+        let self_canister = guard.arg.arg.get_self_canister();
+        let path = guard.arg.arg.get_path().to_vec();
+        let pas = guard.arg.arg.get_pas().to_vec();
+        let mut last_from = _from;
+        let mut last_from_amount = _from_amount;
+        for (i, (pool, pa)) in path.iter().zip(pas.into_iter()).enumerate() {
+            let (input, output) = pool.token;
+            let (token0, _) = sort_tokens(input, output);
+            let amount_out = amounts[i + 1].clone();
+            let (amount0_out, amount1_out) = if input == token0 {
+                (zero(), amount_out.clone())
+            } else {
+                (amount_out.clone(), zero())
+            };
+            let to = if i < path.len() - 1 {
+                pool_accounts[i + 1]
+            } else {
+                _to
+            };
 
-    //         let maker = self
-    //             .0
-    //             .get_mut(&pa.pair)
-    //             .and_then(|makers| makers.get_mut(&pa.amm))
-    //             .ok_or_else(|| pa.not_exist())?;
-    //         maker.swap(guard, self_canister, amount0_out, amount1_out, to)?;
-    //     }
-    //     Ok(())
-    // }
+            let transaction = SwapTransaction {
+                operation: SwapOperation::Pair(PairOperation::Swap(PairSwapToken {
+                    token_a: input,
+                    token_b: output,
+                    amm: pa.amm,
+                    from: last_from,
+                    to,
+                    amount_a: last_from_amount.clone(),
+                    amount_b: amount_out.clone(),
+                })),
+                memo: guard.arg.memo.clone(),
+                created: guard.arg.created,
+            };
 
-    // fn get_amounts_out(
-    //     &self,
-    //     self_canister: &SelfCanister,
-    //     amount_in: &Nat,
-    //     amount_out_min: &Nat,
-    //     path: &[TokenPairPool],
-    //     pas: &[TokenPairAmm],
-    // ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
-    //     let mut amounts = Vec::with_capacity(path.len() + 1);
-    //     amounts.push(amount_in.clone());
-    //     let mut last_amount_in = amount_in.clone();
+            guard.mint_swap_block(
+                guard.arg.now,
+                transaction,
+                |guard| {
+                    struct WrappedPairAmm {
+                        pa: TokenPairAmm,
+                    }
+                    impl TokenPairArg for WrappedPairAmm {
+                        fn get_pa(&self) -> &TokenPairAmm {
+                            &self.pa
+                        }
+                    }
+                    let wpa = ArgWithMeta {
+                        now: guard.arg.now,
+                        caller: guard.arg.caller,
+                        arg: WrappedPairAmm { pa },
+                        memo: guard.arg.memo.clone(),
+                        created: guard.arg.created,
+                    };
+                    self.handle_maker(pa, |maker| {
+                        guard.handle_guard(wpa, |guard| {
+                            maker.swap(guard, &self_canister, amount0_out, amount1_out, to)
+                        })
+                    })
+                },
+                format!("*Pair Swap Token* `swap_pair:([{}],[{}],{}), from:({}), to:({}), pay_amount:{}, got_amount:{}`",
+                    input.to_text(),
+                    output.to_text(),
+                    pa.amm.into_text().as_ref(),
+                    display_account(&last_from),
+                    display_account(&to),
+                    last_from_amount,
+                    amount_out,
+                ),
+            )?;
 
-    //     assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
+            last_from = to;
+            last_from_amount = amount_out;
+        }
+        Ok(())
+    }
 
-    //     let mut pool_accounts = vec![];
-    //     for (pool, pa) in path.iter().zip(pas.iter()) {
-    //         let maker = self
-    //             .0
-    //             .get(&pa.pair)
-    //             .and_then(|makers| makers.get(&pa.amm))
-    //             .ok_or_else(|| pa.not_exist())?;
+    // 固定输入，计算每一个币对的中间数量
+    fn get_amounts_out(
+        &self,
+        self_canister: &SelfCanister,
+        amount_in: &Nat,
+        amount_out_min: &Nat,
+        path: &[SwapTokenPair],
+        pas: &[TokenPairAmm],
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
+        let mut amounts = Vec::with_capacity(path.len() + 1);
+        amounts.push(amount_in.clone());
+        let mut last_amount_in = amount_in.clone();
 
-    //         let (pool_account, amount) =
-    //             maker.get_amount_out(self_canister, &last_amount_in, pool.pair.0, pool.pair.1)?;
-    //         last_amount_in = amount.clone();
+        assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
 
-    //         amounts.push(amount);
-    //         pool_accounts.push(pool_account);
-    //     }
+        let mut pool_accounts = vec![];
+        for (pool, pa) in path.iter().zip(pas.iter()) {
+            // 获取下一个币对
+            let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
+            // 计算该币对池子能得到的输出
+            let (pool_account, amount) =
+                maker.get_amount_out(self_canister, &last_amount_in, pool.token.0, pool.token.1)?;
+            last_amount_in = amount.clone(); // 保存输出数量，在下个循环就是输入数量
 
-    //     if amounts[amounts.len() - 1] < *amount_out_min {
-    //         return Err(BusinessError::Swap(format!(
-    //             "INSUFFICIENT_OUTPUT_AMOUNT: {}",
-    //             amounts[amounts.len() - 1]
-    //         )));
-    //     }
+            amounts.push(amount);
+            pool_accounts.push(pool_account);
+        }
 
-    //     Ok((amounts, pool_accounts))
-    // }
+        // 判断输出数量是否满足要求
+        if amounts[amounts.len() - 1] < *amount_out_min {
+            return Err(BusinessError::Swap(format!(
+                "INSUFFICIENT_OUTPUT_AMOUNT: {}",
+                amounts[amounts.len() - 1]
+            )));
+        }
 
-    // fn get_amounts_in(
-    //     &self,
-    //     self_canister: &SelfCanister,
-    //     amount_out: &Nat,
-    //     amount_in_max: &Nat,
-    //     path: &[TokenPairPool],
-    //     pas: &[TokenPairAmm],
-    // ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
-    //     let mut amounts = Vec::with_capacity(path.len() + 1);
-    //     amounts.push(amount_out.clone());
-    //     let mut last_amount_out = amount_out.clone();
+        Ok((amounts, pool_accounts))
+    }
 
-    //     assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
+    // 固定输出，计算每一个币对的中间数量
+    fn get_amounts_in(
+        &self,
+        self_canister: &SelfCanister,
+        amount_out: &Nat,
+        amount_in_max: &Nat,
+        path: &[SwapTokenPair],
+        pas: &[TokenPairAmm],
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
+        let mut amounts = Vec::with_capacity(path.len() + 1);
+        amounts.push(amount_out.clone());
+        let mut last_amount_out = amount_out.clone();
 
-    //     let mut pool_accounts = vec![];
-    //     for (pool, pa) in path.iter().zip(pas.iter()).rev() {
-    //         let maker = self
-    //             .0
-    //             .get(&pa.pair)
-    //             .and_then(|makers| makers.get(&pa.amm))
-    //             .ok_or_else(|| pa.not_exist())?;
+        assert_eq!(path.len(), pas.len(), "path.len() != pas.len()");
 
-    //         let (pool_account, amount) =
-    //             maker.get_amount_in(self_canister, &last_amount_out, pool.pair.0, pool.pair.1)?;
-    //         last_amount_out = amount.clone();
+        let mut pool_accounts = vec![];
+        for (pool, pa) in path.iter().zip(pas.iter()).rev() {
+            // 获取下一个币对
+            let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
+            // 计算该币对池子能得到的输入
+            let (pool_account, amount) =
+                maker.get_amount_in(self_canister, &last_amount_out, pool.token.0, pool.token.1)?;
+            last_amount_out = amount.clone(); // 保存输入数量，在下个循环就是输出数量
 
-    //         amounts.push(amount);
-    //         pool_accounts.push(pool_account);
-    //     }
+            amounts.push(amount);
+            pool_accounts.push(pool_account);
+        }
 
-    //     // 逆序
-    //     amounts.reverse();
-    //     pool_accounts.reverse();
+        // 逆序
+        amounts.reverse();
+        pool_accounts.reverse();
 
-    //     // check amount in
-    //     if *amount_in_max < amounts[0] {
-    //         return Err(BusinessError::Swap(format!(
-    //             "EXCESSIVE_INPUT_AMOUNT: {}",
-    //             amounts[0]
-    //         )));
-    //     }
+        // 判断输入数量是否满足要求
+        if *amount_in_max < amounts[0] {
+            return Err(BusinessError::Swap(format!(
+                "EXCESSIVE_INPUT_AMOUNT: {}",
+                amounts[0]
+            )));
+        }
 
-    //     Ok((amounts, pool_accounts))
-    // }
+        Ok((amounts, pool_accounts))
+    }
 
-    // // pair swap pay extra tokens
-    // pub fn swap_exact_tokens_for_tokens(
-    //     &mut self,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapExactTokensForTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     todo!()
+    // pair swap pay extra tokens
+    pub fn swap_exact_tokens_for_tokens(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairSwapExactTokensForTokensArg>,
+        pas: Vec<TokenPairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let arg = &guard.arg.arg;
+        let (amounts, pool_accounts) = self.get_amounts_out(
+            &arg.self_canister,
+            &arg.amount_in,
+            &arg.amount_out_min,
+            &arg.path,
+            &pas,
+        )?;
 
-    //     // let (amounts, pool_accounts) = self.get_amounts_out(
-    //     //     self_canister,
-    //     //     &args.amount_in,
-    //     //     &args.amount_out_min,
-    //     //     &args.path,
-    //     //     &pas,
-    //     // )?;
+        // transfer first
+        guard.token_transfer(TransferToken {
+            token: arg.path[0].token.0,
+            from: arg.from,
+            amount: amounts[0].clone(),
+            to: pool_accounts[0],
+            fee: None,
+        })?;
 
-    //     // // transfer first
-    //     // guard.token_transfer(
-    //     //     args.path[0].pair.0,
-    //     //     args.from,
-    //     //     pool_accounts[0],
-    //     //     amounts[0].clone(),
-    //     // )?;
+        // do swap
+        let arg = &guard.arg.arg;
+        self.swap(
+            guard,
+            &amounts,
+            &pool_accounts,
+            arg.from,
+            amounts[0].clone(),
+            arg.to,
+        )?;
 
-    //     // self.swap(
-    //     //     guard,
-    //     //     self_canister,
-    //     //     &amounts,
-    //     //     &args.path,
-    //     //     &pas,
-    //     //     &pool_accounts,
-    //     //     args.to,
-    //     // )?;
+        Ok(TokenPairSwapTokensSuccess { amounts })
+    }
 
-    //     // Ok(TokenPairSwapTokensSuccess { amounts })
-    // }
+    // pair swap got extra tokens
+    pub fn swap_tokens_for_exact_tokens(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairSwapTokensForExactTokensArg>,
+        pas: Vec<TokenPairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let arg = &guard.arg.arg;
+        let (amounts, pool_accounts) = self.get_amounts_in(
+            &arg.self_canister,
+            &arg.amount_out,
+            &arg.amount_in_max,
+            &arg.path,
+            &pas,
+        )?;
 
-    // // pair swap got extra tokens
-    // pub fn swap_tokens_for_exact_tokens(
-    //     &mut self,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapTokensForExactTokensArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     todo!()
+        // ! check balance in
+        let balance_in = guard.token_balance_of(arg.path[0].token.0, arg.from)?;
+        if balance_in < amounts[0] {
+            return Err(BusinessError::insufficient_balance(
+                arg.path[0].token.0,
+                balance_in,
+            ));
+        }
 
-    //     // let (amounts, pool_accounts) = self.get_amounts_in(
-    //     //     self_canister,
-    //     //     &args.amount_out,
-    //     //     &args.amount_in_max,
-    //     //     &args.path,
-    //     //     &pas,
-    //     // )?;
+        // transfer first
+        guard.token_transfer(TransferToken {
+            token: arg.path[0].token.0,
+            from: arg.from,
+            amount: amounts[0].clone(),
+            to: pool_accounts[0],
+            fee: None,
+        })?;
 
-    //     // // check balance in
-    //     // let balance_in = guard.token_balance_of(args.path[0].pair.0, args.from)?;
-    //     // if balance_in < amounts[0] {
-    //     //     return Err(BusinessError::insufficient_balance((
-    //     //         args.path[0].pair.0,
-    //     //         balance_in,
-    //     //     )));
-    //     // }
+        // do swap
+        let arg = &guard.arg.arg;
+        self.swap(
+            guard,
+            &amounts,
+            &pool_accounts,
+            arg.from,
+            amounts[0].clone(),
+            arg.to,
+        )?;
 
-    //     // // transfer first
-    //     // guard.token_transfer(
-    //     //     args.path[0].pair.0,
-    //     //     args.from,
-    //     //     pool_accounts[0],
-    //     //     amounts[0].clone(),
-    //     // )?;
+        Ok(TokenPairSwapTokensSuccess { amounts })
+    }
 
-    //     // self.swap(
-    //     //     guard,
-    //     //     self_canister,
-    //     //     &amounts,
-    //     //     &args.path,
-    //     //     &pas,
-    //     //     &pool_accounts,
-    //     //     args.to,
-    //     // )?;
+    // pair swap by loan
+    pub fn swap_by_loan(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairSwapByLoanArg>,
+        pas: Vec<TokenPairAmm>,
+    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+        let arg = &guard.arg.arg;
+        let (amounts, pool_accounts) = self.get_amounts_out(
+            &arg.self_canister,
+            &arg.loan, // 输入是借贷数量
+            &arg.loan, // 输出必须不小于借贷数量
+            &arg.path,
+            &pas,
+        )?;
 
-    //     // Ok(TokenPairSwapTokensSuccess { amounts })
-    // }
+        // 借贷人，也就是罐子自身
+        let loaner = Account {
+            owner: arg.self_canister.id(),
+            subaccount: None,
+        };
 
-    // // pair swap by loan
-    // pub fn swap_by_loan(
-    //     &mut self,
-    //     guard: &mut TokenBalancesGuard,
-    //     self_canister: &SelfCanister,
-    //     args: TokenPairSwapByLoanArgs,
-    //     pas: Vec<TokenPairAmm>,
-    // ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-    //     todo!()
+        // ! loan token // transfer first
+        guard.token_loan(DepositToken {
+            token: arg.path[0].token.0,
+            from: loaner,
+            amount: arg.loan.clone(),
+            to: pool_accounts[0],
+        })?;
 
-    //     // let (amounts, pool_accounts) =
-    //     //     self.get_amounts_out(self_canister, &args.loan, &args.loan, &args.path, &pas)?;
+        // do swap
+        let arg = &guard.arg.arg;
+        self.swap(
+            guard,
+            &amounts,
+            &pool_accounts,
+            loaner,
+            arg.loan.clone(),
+            arg.to,
+        )?;
 
-    //     // // ! loan token // transfer first
-    //     // guard.token_deposit(args.path[0].pair.0, pool_accounts[0], args.loan.clone())?;
+        // ! return loan
+        let arg = &guard.arg.arg;
+        guard.token_repay(WithdrawToken {
+            token: arg.path[0].token.0,
+            from: arg.to,
+            amount: arg.loan.clone(),
+            to: loaner,
+        })?;
 
-    //     // self.swap(
-    //     //     guard,
-    //     //     self_canister,
-    //     //     &amounts,
-    //     //     &args.path,
-    //     //     &pas,
-    //     //     &pool_accounts,
-    //     //     args.to,
-    //     // )?;
-
-    //     // // ! return loan
-    //     // guard.token_withdraw(args.path[0].pair.0, args.to, args.loan.clone())?;
-
-    //     // Ok(TokenPairSwapTokensSuccess { amounts })
-    // }
+        Ok(TokenPairSwapTokensSuccess { amounts })
+    }
 }

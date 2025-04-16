@@ -124,6 +124,20 @@ type PairOperation = variant {
   swap_v2 : SwapV2Operation;
   create : PairCreate;
 };
+type PairSwapByLoanArgWithMeta = record {
+  arg : TokenPairSwapByLoanArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
+type PairSwapExactTokensForTokensArgWithMeta = record {
+  arg : TokenPairSwapExactTokensForTokensArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type PairSwapToken = record {
   to : Account;
   amm : Amm;
@@ -132,6 +146,13 @@ type PairSwapToken = record {
   from : Account;
   amount_a : nat;
   amount_b : nat;
+};
+type PairSwapTokensForExactTokensArgWithMeta = record {
+  arg : TokenPairSwapTokensForExactTokensArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
 };
 type PauseReason = record { timestamp_nanos : int; message : text };
 type Permission = variant { Permitted : text; Forbidden : text };
@@ -180,9 +201,12 @@ type RejectionCode = variant {
 type RequestArgs = variant {
   pair_liquidity_create : PairLiquidityCreateArgWithMeta;
   token_deposit : TokenDepositArgWithMeta;
+  pair_swap_exact_tokens_for_tokens : PairSwapExactTokensForTokensArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
+  pair_swap_by_loan : PairSwapByLoanArgWithMeta;
   pair_liquidity_remove : PairLiquidityRemoveArgWithMeta;
+  pair_swap_tokens_for_exact_tokens : PairSwapTokensForExactTokensArgWithMeta;
   token_withdraw : TokenDepositArgWithMeta;
 };
 type RequestTrace = record {
@@ -352,6 +376,66 @@ type TokenPairPool = record {
   token0 : principal;
   token1 : principal;
 };
+type TokenPairSwapByLoanArg = record {
+  to : Account;
+  pas : vec TokenPairAmm;
+  self_canister : principal;
+  from : Account;
+  loan : nat;
+  path : vec SwapTokenPair;
+};
+type TokenPairSwapByLoanArgs = record {
+  to : Account;
+  created : opt nat64;
+  from : Account;
+  loan : nat;
+  memo : opt blob;
+  path : vec SwapTokenPair;
+  deadline : opt nat64;
+};
+type TokenPairSwapExactTokensForTokensArg = record {
+  to : Account;
+  pas : vec TokenPairAmm;
+  self_canister : principal;
+  amount_out_min : nat;
+  from : Account;
+  path : vec SwapTokenPair;
+  amount_in : nat;
+};
+type TokenPairSwapExactTokensForTokensArgs = record {
+  to : Account;
+  created : opt nat64;
+  amount_out_min : nat;
+  from : Account;
+  memo : opt blob;
+  path : vec SwapTokenPair;
+  deadline : opt nat64;
+  amount_in : nat;
+};
+type TokenPairSwapTokensForExactTokensArg = record {
+  to : Account;
+  pas : vec TokenPairAmm;
+  self_canister : principal;
+  from : Account;
+  path : vec SwapTokenPair;
+  amount_out : nat;
+  amount_in_max : nat;
+};
+type TokenPairSwapTokensForExactTokensArgs = record {
+  to : Account;
+  created : opt nat64;
+  from : Account;
+  memo : opt blob;
+  path : vec SwapTokenPair;
+  deadline : opt nat64;
+  amount_out : nat;
+  amount_in_max : nat;
+};
+type TokenPairSwapTokensResult = variant {
+  Ok : TokenPairSwapTokensSuccess;
+  Err : BusinessError;
+};
+type TokenPairSwapTokensSuccess = record { amounts : vec nat };
 type TokenTransaction = record {
   created : opt nat64;
   memo : opt blob;
@@ -437,6 +521,17 @@ service : (opt InitArgs) -> {
       TokenPairLiquidityRemoveResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
+  pair_swap_by_loan : (TokenPairSwapByLoanArgs, opt nat8) -> (
+      TokenPairSwapTokensResult,
+    );
+  pair_swap_exact_tokens_for_tokens : (
+      TokenPairSwapExactTokensForTokensArgs,
+      opt nat8,
+    ) -> (TokenPairSwapTokensResult);
+  pair_swap_tokens_for_exact_tokens : (
+      TokenPairSwapTokensForExactTokensArgs,
+      opt nat8,
+    ) -> (TokenPairSwapTokensResult);
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
