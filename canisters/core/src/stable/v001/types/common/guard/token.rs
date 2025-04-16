@@ -33,11 +33,11 @@ impl<'a> TokenGuard<'a> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
-                    "Deposit {} Token: [{}] From: ({}) To: ({}) With Height: {height}.",
-                    arg.arg.amount,
+                    "*Deposit* `token:[{}], from:({}), to:({}), amount:{}, height:{height}`",
                     arg.arg.token.to_text(),
                     display_account(&arg.arg.from),
                     display_account(&arg.arg.to),
+                    arg.arg.amount,
                 )); // * trace
                 self.balances_guard
                     .token_deposit(&mut self.token_guard, arg)?; // do deposit
@@ -56,10 +56,10 @@ impl<'a> TokenGuard<'a> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
-                    "Withdraw {} Token: [{}] To: ({}) With Height: {height}.",
-                    arg.arg.amount,
+                    "*Withdraw* `token:[{}], to:({}), amount:{}, height:{height}`",
                     arg.arg.token.to_text(),
-                    display_account(&arg.arg.to)
+                    display_account(&arg.arg.to),
+                    arg.arg.amount,
                 )); // * trace
                 self.balances_guard
                     .token_withdraw(&mut self.token_guard, arg)?; // do withdraw
@@ -77,11 +77,11 @@ impl<'a> TokenGuard<'a> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
-                    "Transfer {} Token: [{}] From ({}) To: ({}).",
-                    arg.arg.amount,
+                    "*Transfer* `token:[{}], from:({}), to:({}), amount:{}`",
                     arg.arg.token.to_text(),
                     display_account(&arg.arg.from),
-                    display_account(&arg.arg.to)
+                    display_account(&arg.arg.to),
+                    arg.arg.amount,
                 )); // * trace
                 let changed = self
                     .balances_guard

@@ -279,7 +279,7 @@ impl SwapV2MarketMaker {
             guard.assert_token_balance(arg.token_a, arg.from, &arg.amount_a_desired)?;
             guard.assert_token_balance(arg.token_b, arg.from, &arg.amount_b_desired)?;
             guard.trace(format!(
-                "Add Liquidity | TokenA: [{}] TokenB: [{}] Amm: {} | {} <= amount_a <= {} and {} <= amount_b <= {}",
+                "*Add Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, required: {} <= amount_a <= {} && {} <= amount_b <= {}`",
                 arg.token_a.to_text(),
                 arg.token_b.to_text(),
                 arg.pa.amm.into_text().as_ref(),
@@ -294,7 +294,7 @@ impl SwapV2MarketMaker {
         let arg = &guard.arg.arg;
         let (amount_a, amount_b) = self.inner_add_liquidity(arg)?;
         guard.trace(format!(
-            "Pending | amount_a: {amount_a} amount_b: {amount_b}",
+            "*Add Liquidity* `amount_a:{amount_a}, amount_b:{amount_b}`",
         )); // * trace
         // 池子接收代币账户
         let arg = &guard.arg.arg;
@@ -424,7 +424,7 @@ impl SwapV2MarketMaker {
                 &arg.liquidity,
             )?;
             guard.trace(format!(
-                "Remove Liquidity | TokenA: [{}] TokenB: [{}] Amm: {} | Liquidity: {} | {} <= amount_a and {} <= amount_b",
+                "*Remove Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity:{}, required: {} <= amount_a && {} <= amount_b`",
                 arg.token_a.to_text(),
                 arg.token_b.to_text(),
                 arg.pa.amm.into_text().as_ref(),

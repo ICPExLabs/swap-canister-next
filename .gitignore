@@ -3,3 +3,4 @@ target/
 .dfx/
 source_opt.wasm
 deploy.sh
+test-replace.sh

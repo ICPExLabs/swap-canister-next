@@ -88,7 +88,7 @@ impl TokenPairs {
                 |trace| {
                     self.pairs.insert(arg.arg.clone(), maker.clone()); // do insert token pair pool
                     trace.trace(format!(
-                        "Token0: [{}] Token1: [{}] Amm: {} Subaccount: ({}) DummyCanisterId: [{}]",
+                        "*CreateTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
                         arg.arg.pair.token0.to_text(),
                         arg.arg.pair.token1.to_text(),
                         arg.arg.amm.into_text().as_ref(),
