@@ -32,7 +32,12 @@ type DefiniteCanisterSettings = record {
   memory_allocation : nat;
   compute_allocation : nat;
 };
-type DepositToken = record { token : principal; from : Account; amount : nat };
+type DepositToken = record {
+  to : Account;
+  token : principal;
+  from : Account;
+  amount : nat;
+};
 type ExampleVec = record { vec_data : nat64 };
 type GetBlocksArgs = record { start : nat64; length : nat64 };
 type GetBlocksError = variant {
@@ -124,9 +129,9 @@ type TokenBlock = record {
 };
 type TokenBlockRange = record { blocks : vec TokenBlock };
 type TokenOperation = variant {
-  Withdraw : WithdrawToken;
-  Deposit : DepositToken;
-  Transfer : TransferToken;
+  withdraw : DepositToken;
+  deposit : DepositToken;
+  transfer : TransferToken;
 };
 type TokenTransaction = record {
   created : opt nat64;
@@ -137,12 +142,6 @@ type TransferFee = record { fee : nat; fee_to : Account };
 type TransferToken = record {
   to : Account;
   fee : opt TransferFee;
-  token : principal;
-  from : Account;
-  amount : nat;
-};
-type WithdrawToken = record {
-  to : Account;
   token : principal;
   from : Account;
   amount : nat;

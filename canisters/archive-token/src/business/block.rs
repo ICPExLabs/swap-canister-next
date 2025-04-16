@@ -80,7 +80,7 @@ mod tests {
         });
         let proto_block: proto::TokenBlock = block.clone().try_into().unwrap();
         let bytes = to_proto_bytes(&proto_block).unwrap();
-        assert_eq!(hex::encode(&bytes), "0a220a2000000000000000000000000000000000000000000000000000000000000000001a190a170a150a0c0a0a0000000000000002010112001a030a0164".to_string());
+        assert_eq!(hex::encode(&bytes), "0a220a2000000000000000000000000000000000000000000000000000000000000000001a1b0a190a170a0c0a0a0000000000000002010112001a030a01642200".to_string());
         let proto_block2: proto::TokenBlock = from_proto_bytes(&bytes).unwrap();
         assert_eq!(proto_block, proto_block2);
         let block2: TokenBlock = proto_block2.try_into().unwrap();
