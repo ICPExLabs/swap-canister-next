@@ -63,10 +63,7 @@ impl TokenPairs {
         token1: &TokenInfo,
     ) -> Result<MarketMaker, BusinessError> {
         if self.get_token_pair_pool(&arg.arg).is_some() {
-            return Err(BusinessError::TokenPairAmmExist((
-                arg.arg.pair,
-                arg.arg.amm.into(),
-            )));
+            return Err(BusinessError::TokenPairAmmExist(arg.arg));
         }
 
         // 1. get token block
@@ -329,7 +326,7 @@ impl TokenPairs {
     //     // // check balance in
     //     // let balance_in = guard.token_balance_of(args.path[0].pair.0, args.from)?;
     //     // if balance_in < amounts[0] {
-    //     //     return Err(BusinessError::InsufficientBalance((
+    //     //     return Err(BusinessError::insufficient_balance((
     //     //         args.path[0].pair.0,
     //     //         balance_in,
     //     //     )));

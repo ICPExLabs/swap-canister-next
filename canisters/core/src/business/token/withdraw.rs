@@ -26,7 +26,7 @@ impl CheckArgs for TokenWithdrawArgs {
         let balance = with_state(|s| s.business_token_balance_of(self.token, self.from));
         let amount = self.withdraw_amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
-            return Err(BusinessError::InsufficientBalance((self.token, balance)));
+            return Err(BusinessError::insufficient_balance(self.token, balance));
         }
 
         // check meta
@@ -81,10 +81,8 @@ async fn inner_token_withdraw(
                     memo: None,
                     created_at_time: None,
                 })
-                .await
-                .map_err(BusinessError::CallCanisterError)?
-                .0
-                .map_err(BusinessError::TransferError)?;
+                .await?
+                .0?;
 
             // ? 2. record changed
             let amount = args.withdraw_amount_without_fee + token.fee; // Total withdrawal

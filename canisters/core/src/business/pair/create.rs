@@ -27,7 +27,7 @@ impl CheckArgs for TokenPairCreateArgs {
 
         // check exist
         if with_state(|s| s.business_token_pair_pool_get(&pa).is_some()) {
-            return Err(BusinessError::TokenPairAmmExist((pair, amm.into())));
+            return Err(BusinessError::TokenPairAmmExist(pa));
         }
 
         // check meta

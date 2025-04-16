@@ -79,10 +79,8 @@ async fn inner_token_deposit(
                     memo: None,
                     created_at_time: None,
                 })
-                .await
-                .map_err(BusinessError::CallCanisterError)?
-                .0
-                .map_err(BusinessError::TransferFromError)?;
+                .await?
+                .0?;
 
             // ? 2. record changed
             let amount = args.deposit_amount_without_fee; // ! Actual deposit

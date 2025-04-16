@@ -6,15 +6,15 @@ type BusinessError = variant {
   TransferError : TransferError;
   NotSupportedToken : principal;
   Swap : text;
-  TokenPairAmmNotExist : record { TokenPair; text };
+  TokenPairAmmNotExist : TokenPairAmm;
   TokenAccountsLocked : vec TokenAccount;
   MemoTooLong;
-  InsufficientBalance : record { principal; nat };
-  TokenPairAmmExist : record { TokenPair; text };
+  InsufficientBalance : record { token : principal; balance : nat };
+  TokenPairAmmExist : TokenPairAmm;
   RequestTraceLocked : text;
-  InvalidCreated : text;
+  InvalidCreated : record { created : nat64; system : nat64 };
   InvalidAmm : text;
-  InvalidTransferFee : record { principal; nat };
+  InvalidTransferFee : record { fee : nat; token : principal };
   SwapBlockChainLocked;
   TokenBlockChainError : text;
   TransferFromError : TransferFromError;
@@ -23,7 +23,7 @@ type BusinessError = variant {
   SwapBlockChainError : text;
   CallCanisterError : record { RejectionCode; text };
   Liquidity : text;
-  Expired : nat64;
+  Expired : record { deadline : nat64; system : nat64 };
 };
 type BusinessLocks = record {
   token : opt bool;

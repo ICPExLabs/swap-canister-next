@@ -27,6 +27,7 @@
         "Schedulable",
         "serde",
         "staticlib",
-        "subaccount"
+        "subaccount",
+        "thiserror"
     ]
 }

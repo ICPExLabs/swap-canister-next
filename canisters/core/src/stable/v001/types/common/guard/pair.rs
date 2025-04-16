@@ -128,7 +128,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     ) -> Result<(), BusinessError> {
         let balance = self.balances_guard.token_balance_of(token, account)?;
         if balance < *desired {
-            return Err(BusinessError::InsufficientBalance((token, balance)));
+            return Err(BusinessError::insufficient_balance(token, balance));
         }
         Ok(())
     }
@@ -230,7 +230,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Pair Cumulative Price* `pa:{}, timestamp:{}, exponent:{price_cumulative_exponent}, price0:{price0_cumulative}, price1:{price1_cumulative}`",
+            "*Pair Cumulative Price* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0:{price0_cumulative}, price1:{price1_cumulative}`",
             self.pa,
             self.arg.now.into_inner(),
         )); // * trace
@@ -294,7 +294,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             self.balances_guard
                 .token_deposit(self.token_guard, arg.clone())?;
             self.trace_guard.trace(format!(
-                "*Mint Liquidity (Deposit)* `token:[{}], from<pay 2 tokens>:({}), to<got liquidity>:({}), amount:{}`",
+                "*Mint Liquidity (Deposit)* `token:[{}], from[transferred 2 tokens]:({}), to[minted liquidity]:({}), amount:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
@@ -367,7 +367,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             self.balances_guard
                 .token_withdraw(self.token_guard, arg.clone())?;
             self.trace_guard.trace(format!(
-                "*Burn Liquidity (Withdraw)*. `token:[{}], from<pay liquidity>:({}), to<got 2 tokens>:({}) amount:{}`",
+                "*Burn Liquidity (Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}) amount:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),

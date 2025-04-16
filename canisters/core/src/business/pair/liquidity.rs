@@ -46,11 +46,11 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         // check balance
         let balance_a = with_state(|s| s.business_token_balance_of(arg.token_a, arg.from));
         if balance_a < arg.amount_a_desired {
-            return Err(BusinessError::InsufficientBalance((arg.token_a, balance_a)));
+            return Err(BusinessError::insufficient_balance(arg.token_a, balance_a));
         }
         let balance_b = with_state(|s| s.business_token_balance_of(arg.token_b, arg.from));
         if balance_b < arg.amount_b_desired {
-            return Err(BusinessError::InsufficientBalance((arg.token_b, balance_b)));
+            return Err(BusinessError::insufficient_balance(arg.token_b, balance_b));
         }
 
         // check deadline

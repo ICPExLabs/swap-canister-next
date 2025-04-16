@@ -14,7 +14,10 @@ impl CheckArgs for Deadline {
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         let now = now().into_inner();
         if self.0 as i128 <= now {
-            return Err(BusinessError::Expired(now as u64));
+            return Err(BusinessError::Expired {
+                system: now as u64,
+                deadline: self.0,
+            });
         }
         Ok(())
     }

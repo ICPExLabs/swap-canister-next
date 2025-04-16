@@ -19,7 +19,7 @@ impl CheckArgs for TokenPair {
 
             // must be different
             if self.token0 == self.token1 {
-                return Err(BusinessError::InvalidTokenPair((self.token0, self.token1)));
+                return Err(BusinessError::InvalidTokenPair(self.token0, self.token1));
             }
 
             Ok(())

@@ -139,8 +139,7 @@ impl RequestTraceGuard<'_> {
                 self.success(success);
             }
             Err(err) => {
-                let failed = format!("Got Error: {err:?}");
-                self.failed(failed);
+                self.failed(err.to_string());
             }
         }
         result

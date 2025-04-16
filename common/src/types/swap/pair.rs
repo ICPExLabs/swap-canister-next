@@ -76,7 +76,7 @@ impl TokenPairAmm {
 
     /// not exist
     pub fn not_exist(&self) -> BusinessError {
-        BusinessError::TokenPairAmmNotExist((self.pair, self.amm.into()))
+        BusinessError::TokenPairAmmNotExist(self.clone())
     }
 }
 
@@ -84,7 +84,7 @@ impl Display for TokenPairAmm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({},{},{})",
+            "[{}],[{}],{}",
             self.pair.token0.to_text(),
             self.pair.token1.to_text(),
             self.amm.into_text().as_ref()

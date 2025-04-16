@@ -28,10 +28,10 @@ impl CheckArgs for TokenTransferArgs {
         // check fee
         if let Some(fee) = &self.fee {
             if *fee != token.fee {
-                return Err(BusinessError::InvalidTransferFee((
+                return Err(BusinessError::invalid_transfer_fee(
                     token.canister_id,
                     token.fee,
-                )));
+                ));
             }
         }
 
@@ -39,10 +39,10 @@ impl CheckArgs for TokenTransferArgs {
         let balance = with_state(|s| s.business_token_balance_of(token.canister_id, self.from));
         let amount = self.transfer_amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
-            return Err(BusinessError::InsufficientBalance((
+            return Err(BusinessError::insufficient_balance(
                 token.canister_id,
                 balance,
-            )));
+            ));
         }
 
         // check meta

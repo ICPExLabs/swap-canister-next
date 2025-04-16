@@ -20,8 +20,7 @@ impl Service {
         retries: Option<u8>,
     ) -> Result<Nat, BusinessError> {
         ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_deposit", (args, retries))
-            .await
-            .map_err(BusinessError::CallCanisterError)?
+            .await?
             .0
             .into()
     }
@@ -31,8 +30,7 @@ impl Service {
         retries: Option<u8>,
     ) -> Result<Nat, BusinessError> {
         ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_withdraw", (args, retries))
-            .await
-            .map_err(BusinessError::CallCanisterError)?
+            .await?
             .0
             .into()
     }
@@ -42,8 +40,7 @@ impl Service {
         retries: Option<u8>,
     ) -> Result<Nat, BusinessError> {
         ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_transfer", (args, retries))
-            .await
-            .map_err(BusinessError::CallCanisterError)?
+            .await?
             .0
             .into()
     }
@@ -59,8 +56,7 @@ impl Service {
             "pair_liquidity_add",
             (args, retries),
         )
-        .await
-        .map_err(BusinessError::CallCanisterError)?
+        .await?
         .0
         .into()
     }
@@ -74,8 +70,7 @@ impl Service {
             "pair_liquidity_remove",
             (args, retries),
         )
-        .await
-        .map_err(BusinessError::CallCanisterError)?
+        .await?
         .0
         .into()
     }
@@ -91,8 +86,7 @@ impl Service {
             "pair_swap_exact_tokens_for_tokens",
             (args, retries),
         )
-        .await
-        .map_err(BusinessError::CallCanisterError)?
+        .await?
         .0
         .into()
     }
@@ -106,8 +100,7 @@ impl Service {
             "pair_swap_tokens_for_exact_tokens",
             (args, retries),
         )
-        .await
-        .map_err(BusinessError::CallCanisterError)?
+        .await?
         .0
         .into()
     }
@@ -121,8 +114,7 @@ impl Service {
             "pair_swap_by_loan",
             (args, retries),
         )
-        .await
-        .map_err(BusinessError::CallCanisterError)?
+        .await?
         .0
         .into()
     }

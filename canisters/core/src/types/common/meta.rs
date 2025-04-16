@@ -20,11 +20,10 @@ pub fn check_meta(
     }
     if let Some(created) = created {
         if created.into_inner() as u128 + TRANSACTION_WINDOW.as_nanos() < now.into_inner() as u128 {
-            return Err(BusinessError::InvalidCreated(format!(
-                "System Time: {} but created at {}",
-                now.into_inner(),
-                created.into_inner()
-            )));
+            return Err(BusinessError::InvalidCreated {
+                system: now.into_inner(),
+                created: created.into_inner(),
+            });
         }
     }
     Ok(now)

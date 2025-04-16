@@ -252,7 +252,7 @@ impl TokenBalancesGuard<'_> {
                 .unwrap_or_default();
         let from_balance = self.token_balance_of(token, from)?;
         if from_balance < changed {
-            return Err(BusinessError::InsufficientBalance((token, from_balance)));
+            return Err(BusinessError::insufficient_balance(token, from_balance));
         }
 
         // do transfer
