@@ -47,9 +47,12 @@ pub use crate::types::{
 pub use ::common::proto;
 
 mod blocks;
+mod metrics;
 
 #[allow(unused)]
 pub use blocks::*;
+#[allow(unused)]
+pub use metrics::*;
 
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, EnumIter, EnumString, strum_macros::Display)]

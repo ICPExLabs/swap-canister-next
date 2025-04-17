@@ -21,7 +21,7 @@ impl Business for InnerState {
         {
             return Ok(());
         }
-        Err("Only Core canister is allowed to append blocks to an Archive Node".into())
+        Err("'Only Core canister is allowed to append blocks to an Archive Node'".into())
     }
 
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
@@ -198,6 +198,32 @@ impl Business for InnerState {
             "[archive node] append_blocks(): done. archive size: {} blocks",
             self.blocks.blocks_len()
         );
+    }
+
+    fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
+        self.business_data.maintainers =
+            maintainers.map(|maintainers| maintainers.into_iter().collect());
+    }
+
+    fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
+        let length = self.blocks.blocks_len();
+        if length == 0 {
+            return None;
+        }
+        Some(self.business_data.block_height_offset() + length - 1)
+    }
+    fn business_metrics_query(&self) -> CustomMetrics {
+        CustomMetrics {
+            block_height_offset: self.business_data.block_height_offset(),
+            max_memory_size_bytes: self.business_data.max_memory_size_bytes,
+            blocks: self.blocks.blocks_len(),
+            blocks_bytes: self.blocks.total_block_size(),
+            stable_memory_pages: ic_cdk::api::stable::stable_size(),
+            stable_memory_bytes: (ic_cdk::api::stable::stable_size() * 64 * 1024),
+            heap_memory_bytes: common::utils::runtime::heap_memory_size_bytes() as u64,
+            last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns
+                / 1_000_000_000_u64,
+        }
     }
 
     fn business_example_query(&self) -> String {

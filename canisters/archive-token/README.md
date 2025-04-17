@@ -1,3 +1,3 @@
 # swap-canister-next
 
-## Archive Canister
+## Token Archive Canister

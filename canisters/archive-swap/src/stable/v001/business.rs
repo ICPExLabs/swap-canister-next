@@ -21,7 +21,7 @@ impl Business for InnerState {
         {
             return Ok(());
         }
-        Err("Only Core canister is allowed to append blocks to an Archive Node".into())
+        Err("'Only Core canister is allowed to append blocks to an Archive Node'".into())
     }
 
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
