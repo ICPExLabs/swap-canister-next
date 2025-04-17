@@ -22,6 +22,12 @@ impl CheckArgs for TokenWithdrawArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check to
+        assert!(
+            self.to.owner != self_canister.id(),
+            "to account can not be swap canister"
+        );
+
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(self.token, self.from));
         let amount = self.withdraw_amount_without_fee.clone() + token.fee.clone();
@@ -51,8 +57,8 @@ async fn inner_token_withdraw(
 
     // 2. some value
     let fee_to = vec![];
-    let token_account = TokenAccount::new(args.token, args.from);
-    let required = vec![token_account];
+    let token_account_from = TokenAccount::new(args.token, args.from);
+    let required = vec![token_account_from];
 
     let height = {
         // 3. lock

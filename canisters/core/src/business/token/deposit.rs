@@ -22,6 +22,12 @@ impl CheckArgs for TokenDepositArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check to
+        assert!(
+            self.to.owner != self_canister.id(),
+            "to account can not be swap canister"
+        );
+
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
@@ -44,8 +50,8 @@ async fn inner_token_deposit(
 
     // 2. some value
     let fee_to = vec![];
-    let token_account = TokenAccount::new(args.token, args.from);
-    let required = vec![token_account];
+    let token_account_to = TokenAccount::new(args.token, args.to);
+    let required = vec![token_account_to];
 
     let height = {
         // 3. lock

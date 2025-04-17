@@ -25,6 +25,12 @@ impl CheckArgs for TokenTransferArgs {
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
+        // check to
+        assert!(
+            self.to.owner != self_canister.id(),
+            "to account can not be swap canister"
+        );
+
         // check fee
         if let Some(fee) = &self.fee {
             if *fee != token.fee {

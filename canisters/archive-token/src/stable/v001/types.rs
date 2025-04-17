@@ -170,8 +170,8 @@ impl Default for InnerState {
 use candid::CandidType;
 use ic_canister_kit::stable;
 
-const MEMORY_ID_BLOCKS_INDEX: MemoryId = MemoryId::new(103); // 测试 Log
-const MEMORY_ID_BLOCKS_DATA: MemoryId = MemoryId::new(104); // 测试 Log
+const MEMORY_ID_BLOCKS_INDEX: MemoryId = MemoryId::new(0); // 测试 Log
+const MEMORY_ID_BLOCKS_DATA: MemoryId = MemoryId::new(1); // 测试 Log
 
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
 const MEMORY_ID_EXAMPLE_VEC: MemoryId = MemoryId::new(101); // 测试 Vec
