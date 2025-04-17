@@ -568,6 +568,7 @@ service : (opt InitArgs) -> {
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
   tokens_query : () -> (vec TokenInfo) query;
+  updated : () -> (nat64) query;
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
   wallet_receive : () -> (nat);

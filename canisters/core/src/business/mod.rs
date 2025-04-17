@@ -129,6 +129,12 @@ fn lock_token_balances_and_token_block_chain_and_swap_block_chain(
     Ok(LockResult::Locked((balances_lock, token_lock, swap_lock)))
 }
 
+// 查询最新更新时间
+#[ic_cdk::query]
+fn updated() -> u64 {
+    with_state(|s| s.business_updated())
+}
+
 // 查询
 #[ic_cdk::query(guard = "has_business_example_query")]
 fn business_example_query() -> String {

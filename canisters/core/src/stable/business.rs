@@ -19,6 +19,10 @@ pub trait Business:
     + ScheduleTask
     + StableHeap
 {
+    fn business_updated(&self) -> u64 {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     // ======================== config ========================
 
     // fee to
@@ -255,6 +259,10 @@ pub trait Business:
 
 // 业务实现
 impl Business for State {
+    fn business_updated(&self) -> u64 {
+        self.get().business_updated()
+    }
+
     // ======================== config ========================
 
     // fee to

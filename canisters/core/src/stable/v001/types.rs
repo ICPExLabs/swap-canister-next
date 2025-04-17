@@ -112,9 +112,19 @@ pub struct CanisterKit {
     pub schedule: Schedule,       // 记录定时任务 // ? 堆内存 序列化
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct BusinessData {
+    pub updated: TimestampNanos,             // 记录罐子的最后更新时间
     pub fee_to: Option<Account>, // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
+}
+
+impl Default for BusinessData {
+    fn default() -> Self {
+        Self {
+            updated: TimestampNanos::from_inner(0),
+            fee_to: Default::default(),
+        }
+    }
 }
 
 // 能序列化的和不能序列化的放在一起
@@ -281,15 +291,27 @@ impl Storable for ExampleVec {
 
 impl InnerState {
     pub fn do_init(&mut self, arg: InitArg) {
+        self.updated(|s| {
         let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
             vec![ic_canister_kit::identity::caller()] // 默认调用者为维护人员
         });
-        self.token_block_chain
+            s.token_block_chain
             .set_archive_maintainers(Some(maintainers));
+        });
     }
 
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
         // maybe do something
+        self.updated(|_| {});
+    }
+
+    pub fn updated<T, F>(&mut self, handle: F) -> T
+    where
+        F: FnOnce(&mut Self) -> T,
+    {
+        let result = handle(self);
+        self.business_data.updated = TimestampNanos::now();
+        result
     }
 
     pub fn get_token_guard<'a, T>(
