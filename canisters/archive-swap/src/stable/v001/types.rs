@@ -47,9 +47,12 @@ pub use crate::types::{
 pub use ::common::proto;
 
 mod blocks;
+mod metrics;
 
 #[allow(unused)]
 pub use blocks::*;
+#[allow(unused)]
+pub use metrics::*;
 
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, EnumIter, EnumString, strum_macros::Display)]
@@ -102,7 +105,7 @@ pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 pub struct BusinessData {
     pub maintainers: Option<HashSet<UserId>>, // None, 所有人可读, 否则指定人员可读
 
-    pub max_memory_size_bytes: u64,                    // 最大使用内存
+    pub max_memory_size_bytes: u64,                     // 最大使用内存
     pub core_canister_id: Option<CanisterId>, // 宿主罐子, 业务相关的 update 接口，都要检查是否宿主罐子发起的
     pub block_offset: (BlockIndex, HashOf<SwapBlock>), // 本罐子记录的偏移量
     pub last_upgrade_timestamp_ns: u64,       // 记录上次升级时间戳

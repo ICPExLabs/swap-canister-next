@@ -58,6 +58,17 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
+    fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_metrics_query(&self) -> CustomMetrics {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -146,6 +157,17 @@ impl Business for State {
 
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.get_mut().business_blocks_append(blocks)
+    }
+
+    fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
+        self.get_mut().business_config_maintainers_set(maintainers)
+    }
+
+    fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
+        self.get().business_latest_block_index_query()
+    }
+    fn business_metrics_query(&self) -> CustomMetrics {
+        self.get().business_metrics_query()
     }
 
     fn business_example_query(&self) -> String {

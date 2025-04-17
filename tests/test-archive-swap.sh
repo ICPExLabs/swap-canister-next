@@ -104,6 +104,18 @@ test "get_blocks" "$(dfx canister call archive_swap get_blocks "(record { start=
 test "http /metrics" "$(curl "http://$archive_swap.raw.localhost:4943/metrics" 2>&1)" 'archive_node_blocks_bytes 65' 'archive_node_blocks 1' 'archive_node_max_memory_size_bytes 10737418240'
 test "get_encoded_blocks" "$(dfx canister call archive_swap get_encoded_blocks "(record { start=0:nat64; length=100:nat64})" --output json 2>&1)" '{ "Ok": [ [ 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ] ] }'
 
+blue "\n🚩 2 business set_maintainers"
+test "set_maintainers" "$(dfx --identity alice canister call archive_swap set_maintainers "(null)" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'
+test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 67, 10, 65, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ]'
+test "set_maintainers" "$(dfx canister call archive_swap set_maintainers "(opt vec {principal\"$DEFAULT\"})" 2>&1)" '()'
+test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
+test "set_maintainers" "$(dfx canister call archive_swap set_maintainers "(null)" 2>&1)" '()'
+test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 67, 10, 65, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ]'
+
+blue "\n🚩 3 business query"
+test "query_latest_block_index" "$(dfx canister call archive_swap query_latest_block_index 2>&1)" '(opt (0 : nat64))'
+test "query_metrics" "$(dfx canister call archive_swap query_metrics 2>&1)" '( record { stable_memory_pages = 1_025 : nat64; stable_memory_bytes = 67_174_400 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 10_737_418_240 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'
+
 blue "\n🚩 1.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call archive_swap version 2>&1)" '(1 : nat32)'
 test "permission_all" "$(dfx --identity alice canister call archive_swap permission_all 2>&1)" 'vec { variant { Forbidden = "PauseQuery" }; variant { Permitted = "PauseReplace" }'

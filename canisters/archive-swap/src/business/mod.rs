@@ -16,6 +16,10 @@ mod append;
 
 mod block;
 
+mod config;
+
+mod query;
+
 // 查询
 #[ic_cdk::query(guard = "has_business_example_query")]
 fn business_example_query() -> String {
