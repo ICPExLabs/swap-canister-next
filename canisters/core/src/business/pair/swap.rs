@@ -66,6 +66,9 @@ impl CheckArgs for TokenPairSwapExactTokensForTokensArgs {
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
+        // check arg again
+        with_state(|s| s.business_token_pair_swap_fixed_in_checking(&arg))?;
+
         Ok((now, fee_to, required, self_canister, caller, arg))
     }
 }
@@ -195,6 +198,9 @@ impl CheckArgs for TokenPairSwapTokensForExactTokensArgs {
 
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
+
+        // check arg again
+        with_state(|s| s.business_token_pair_swap_fixed_out_checking(&arg))?;
 
         Ok((now, fee_to, required, self_canister, caller, arg))
     }

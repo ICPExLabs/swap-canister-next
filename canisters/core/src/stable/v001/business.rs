@@ -225,18 +225,37 @@ impl Business for InnerState {
     }
 
     // pair swap
+    fn business_token_pair_swap_fixed_in_checking(
+        &self,
+        arg: &TokenPairSwapExactTokensForTokensArg,
+    ) -> Result<(), BusinessError> {
+        self.token_pairs.get_amounts_out(
+            &arg.self_canister,
+            &arg.amount_in,
+            &arg.amount_out_min,
+            &arg.path,
+            &arg.pas,
+        )?; // ? check again
+        Ok(())
+    }
+    fn business_token_pair_swap_fixed_out_checking(
+        &self,
+        arg: &TokenPairSwapTokensForExactTokensArg,
+    ) -> Result<(), BusinessError> {
+        self.token_pairs.get_amounts_in(
+            &arg.self_canister,
+            &arg.amount_out,
+            &arg.amount_in_max,
+            &arg.path,
+            &arg.pas,
+        )?; // ? check again
+        Ok(())
+    }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
         locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
         arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        self.token_pairs.get_amounts_out(
-            &arg.arg.self_canister,
-            &arg.arg.amount_in,
-            &arg.arg.amount_out_min,
-            &arg.arg.path,
-            &arg.arg.pas,
-        )?; // ? check again
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
         let success = guard.swap_exact_tokens_for_tokens(arg)?;
@@ -249,13 +268,6 @@ impl Business for InnerState {
         locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
         arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        self.token_pairs.get_amounts_in(
-            &arg.arg.self_canister,
-            &arg.arg.amount_out,
-            &arg.arg.amount_in_max,
-            &arg.arg.path,
-            &arg.arg.pas,
-        )?; // ? check again
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
         let success = guard.swap_tokens_for_exact_tokens(arg)?;
@@ -268,13 +280,6 @@ impl Business for InnerState {
         locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
         arg: ArgWithMeta<TokenPairSwapByLoanArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        self.token_pairs.get_amounts_out(
-            &arg.arg.self_canister,
-            &arg.arg.loan, // 输入是借贷数量
-            &arg.arg.loan, // 输出必须不小于借贷数量
-            &arg.arg.path,
-            &arg.arg.pas,
-        )?; // ? check again
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
         let success = guard.swap_by_loan(arg)?;

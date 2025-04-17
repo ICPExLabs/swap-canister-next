@@ -158,6 +158,18 @@ pub trait Business:
     }
 
     // pair swap
+    fn business_token_pair_swap_fixed_in_checking(
+        &self,
+        arg: &TokenPairSwapExactTokensForTokensArg,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_pair_swap_fixed_out_checking(
+        &self,
+        arg: &TokenPairSwapTokensForExactTokensArg,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
         locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
@@ -400,6 +412,18 @@ impl Business for State {
     }
 
     // pair swap
+    fn business_token_pair_swap_fixed_in_checking(
+        &self,
+        arg: &TokenPairSwapExactTokensForTokensArg,
+    ) -> Result<(), BusinessError> {
+        self.get().business_token_pair_swap_fixed_in_checking(arg)
+    }
+    fn business_token_pair_swap_fixed_out_checking(
+        &self,
+        arg: &TokenPairSwapTokensForExactTokensArg,
+    ) -> Result<(), BusinessError> {
+        self.get().business_token_pair_swap_fixed_out_checking(arg)
+    }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
         locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),

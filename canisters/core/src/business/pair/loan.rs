@@ -60,6 +60,19 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
+        // check arg again
+        with_state(|s| {
+            s.business_token_pair_swap_fixed_in_checking(&TokenPairSwapExactTokensForTokensArg {
+                self_canister,
+                pas: arg.pas.clone(),
+                from: arg.to,
+                amount_in: arg.loan.clone(),
+                amount_out_min: arg.loan.clone(),
+                path: arg.path.clone(),
+                to: arg.to,
+            })
+        })?;
+
         Ok((now, fee_to, required, self_canister, caller, arg))
     }
 }
