@@ -11,12 +11,26 @@ use super::{
 };
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
+pub enum RequestTraceResult {
+    #[serde(rename = "ok")]
+    Ok(String),
+    #[serde(rename = "err")]
+    Err(String),
+}
+
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct RequestTraceDone {
+    done: TimestampNanos,
+    result: RequestTraceResult,
+}
+
+#[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct RequestTrace {
     index: RequestIndex,
     args: RequestArgs,
     locks: BusinessLocks,
     traces: Vec<(TimestampNanos, String)>,
-    done: Option<(TimestampNanos, Result<String, String>)>,
+    done: Option<RequestTraceDone>,
 }
 
 impl Storable for RequestTrace {
@@ -60,10 +74,16 @@ impl RequestTrace {
     }
 
     pub fn success(&mut self, success: String) {
-        self.done = Some((TimestampNanos::now(), Ok(success)));
+        self.done = Some(RequestTraceDone {
+            done: TimestampNanos::now(),
+            result: RequestTraceResult::Ok(success),
+        });
     }
 
     pub fn failed(&mut self, failed: String) {
-        self.done = Some((TimestampNanos::now(), Err(failed)));
+        self.done = Some(RequestTraceDone {
+            done: TimestampNanos::now(),
+            result: RequestTraceResult::Err(failed),
+        });
     }
 }

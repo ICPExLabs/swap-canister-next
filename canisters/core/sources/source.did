@@ -211,12 +211,13 @@ type RequestArgs = variant {
 };
 type RequestTrace = record {
   args : RequestArgs;
-  done : opt record { nat64; Result };
+  done : opt RequestTraceDone;
   traces : vec record { nat64; text };
   locks : BusinessLocks;
   index : nat64;
 };
-type Result = variant { Ok : text; Err : text };
+type RequestTraceDone = record { result : RequestTraceResult; done : nat64 };
+type RequestTraceResult = variant { ok : text; err : text };
 type SwapBlock = record {
   transaction : SwapTransaction;
   timestamp : nat64;
