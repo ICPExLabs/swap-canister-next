@@ -18,6 +18,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
+name = "archive-swap"
+version = "0.0.1"
+dependencies = [
+ "candid",
+ "common",
+ "hex",
+ "ic-canister-kit",
+ "ic-cdk",
+ "ic-metrics-encoder",
+ "icrc-ledger-types",
+ "num-bigint",
+ "once_cell",
+ "percent-encoding",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "sha2",
+ "strum 0.27.1",
+ "strum_macros 0.27.1",
+]
+
+[[package]]
 name = "archive-token"
 version = "0.0.1"
 dependencies = [

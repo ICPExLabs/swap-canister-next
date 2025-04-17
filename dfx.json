@@ -24,6 +24,18 @@
       "wasm": "canisters/archive-token/sources/source_opt.wasm",
       "candid": "canisters/archive-token/sources/source.did"
     },
+    "archive_swap": {
+      "type": "custom",
+      "build": [
+        "cargo test -p archive-swap update_candid -- --nocapture",
+        "cargo build -p archive-swap --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public",
+        "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink"
+      ],
+      "gzip": true,
+      "wasm": "canisters/archive-token/sources/source_opt.wasm",
+      "candid": "canisters/archive-token/sources/source.did"
+    },
     "token_ICP": {
       "type": "custom",
       "wasm": "ledger/ic-icrc1-ledger.wasm",
