@@ -8,17 +8,18 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-// ========================== swap ==========================
+// ========================== pay exact ==========================
 
-// pay loan tokens
-impl CheckArgs for TokenPairSwapByLoanArgs {
+// pay extra tokens
+impl CheckArgs for TokenPairSwapExactTokensForTokensArgs {
     type Result = (
         TimestampNanos,
         Vec<CanisterId>,
         Vec<TokenAccount>,
         SelfCanister,
         Caller,
-        TokenPairSwapByLoanArg,
+        TokenPairSwapExactTokensForTokensArg,
+        (Vec<Nat>, Vec<Account>),
     );
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check owner
@@ -35,11 +36,12 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
             required.extend(_required);
         }
 
-        let arg = TokenPairSwapByLoanArg {
+        let arg = TokenPairSwapExactTokensForTokensArg {
             self_canister,
             pas,
             from: self.from,
-            loan: self.loan.clone(),
+            amount_in: self.amount_in.clone(),
+            amount_out_min: self.amount_out_min.clone(),
             path: self.path.clone(),
             to: self.to,
         };
@@ -47,9 +49,14 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         // check path
         check_path(&arg.path)?;
 
-        // ! 检查代币首尾是否一致
-        if self.path[0].token.0 != self.path[self.path.len() - 1].token.1 {
-            return Err(BusinessError::Swap("INVALID_PATH".into()));
+        // check balance in
+        let balance_in =
+            with_state(|s| s.business_token_balance_of(self.path[0].token.0, self.from));
+        if balance_in < self.amount_in {
+            return Err(BusinessError::insufficient_balance(
+                self.path[0].token.0,
+                balance_in,
+            ));
         }
 
         // check deadline
@@ -61,61 +68,60 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         let now = check_meta(&self.memo, &self.created)?;
 
         // check arg again
-        with_state(|s| {
-            s.business_token_pair_swap_fixed_in_checking(&TokenPairSwapExactTokensForTokensArg {
-                self_canister,
-                pas: arg.pas.clone(),
-                from: arg.to,
-                amount_in: arg.loan.clone(),
-                amount_out_min: arg.loan.clone(),
-                path: arg.path.clone(),
-                to: arg.to,
-            })
-        })?;
+        let checking = with_state(|s| s.business_token_pair_swap_fixed_in_checking(&arg))?;
 
-        Ok((now, fee_to, required, self_canister, caller, arg))
+        Ok((now, fee_to, required, self_canister, caller, arg, checking))
     }
 }
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_swap")]
-async fn pair_swap_by_loan(
-    args: TokenPairSwapByLoanArgs,
+async fn pair_swap_exact_tokens_for_tokens(
+    args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
 ) -> TokenPairSwapTokensResult {
-    inner_pair_swap_by_loan(args, retries).await.into()
+    inner_pair_swap_exact_tokens_for_tokens(args, retries)
+        .await
+        .into()
 }
 #[inline]
-async fn inner_pair_swap_by_loan(
-    args: TokenPairSwapByLoanArgs,
+pub async fn inner_pair_swap_exact_tokens_for_tokens(
+    args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     // 1. check args
-    let (now, fee_to, mut required, self_canister, caller, arg) = args.check_args()?;
+    let (now, fee_to, mut required, self_canister, caller, arg, _checking) = args.check_args()?;
 
     // 2. some value
     // let fee_to = fee_to;
+    let token_account_in = TokenAccount::new(args.path[0].token.0, args.from);
     let token_account_out = TokenAccount::new(args.path[args.path.len() - 1].token.1, args.to);
+    required.push(token_account_in);
     required.push(token_account_out);
 
     let success = {
         // 3. lock
         let locks =
-            match super::super::lock_token_balances_and_token_block_chain_and_swap_block_chain(
+            match super::super::super::lock_token_balances_and_token_block_chain_and_swap_block_chain(
                 fee_to,
                 required,
                 retries.unwrap_or_default(),
             )? {
                 LockResult::Locked(locks) => locks,
                 LockResult::Retry(retries) => {
-                    return retry_pair_swap_by_loan(self_canister.id(), args, retries).await;
+                    return retry_pair_swap_exact_tokens_for_tokens(
+                        self_canister.id(),
+                        args,
+                        retries,
+                    )
+                    .await;
                 }
             };
 
         // * 4. do business
         {
             with_mut_state_without_record(|s| {
-                s.business_token_pair_swap_by_loan(
+                s.business_token_pair_swap_exact_tokens_for_tokens(
                     &locks,
                     ArgWithMeta {
                         now,
@@ -129,17 +135,20 @@ async fn inner_pair_swap_by_loan(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
 // ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
 #[inline]
-async fn retry_pair_swap_by_loan(
+async fn retry_pair_swap_exact_tokens_for_tokens(
     self_canister_id: CanisterId,
-    args: TokenPairSwapByLoanArgs,
+    args: TokenPairSwapExactTokensForTokensArgs,
     retries: u8,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     let service_swap = crate::services::swap::Service(self_canister_id);
-    return service_swap.pair_swap_by_loan(args, Some(retries)).await;
+    return service_swap
+        .pair_swap_exact_tokens_for_tokens(args, Some(retries))
+        .await;
 }

@@ -119,7 +119,8 @@ async fn inner_pair_liquidity_add(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
@@ -239,7 +240,8 @@ async fn inner_pair_liquidity_remove(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }

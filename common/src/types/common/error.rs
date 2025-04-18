@@ -46,6 +46,12 @@ pub enum BusinessError {
     /// 代币转账错误
     #[error("transfer token error. ({0})")]
     TransferError(TransferError),
+    /// 代币转账费用错误错误
+    #[error("bad transfer fee. (expected_fee: {})", .expected_fee)]
+    BadTransferFee {
+        /// 正确的 fee
+        expected_fee: Nat,
+    },
     /// 提现余额不足
     #[error("insufficient balance. (token: {token}. balance: {balance})")]
     InsufficientBalance {

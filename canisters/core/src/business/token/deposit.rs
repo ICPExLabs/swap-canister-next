@@ -41,7 +41,7 @@ async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenChan
     inner_token_deposit(args, retries).await.into()
 }
 #[inline]
-async fn inner_token_deposit(
+pub async fn inner_token_deposit(
     args: TokenDepositArgs,
     retries: Option<u8>,
 ) -> Result<candid::Nat, BusinessError> {
@@ -75,16 +75,24 @@ async fn inner_token_deposit(
                 owner: self_canister.id(),
                 subaccount: None,
             };
-            let height = service_icrc2
-                .icrc_2_transfer_from(crate::services::icrc2::TransferFromArgs {
+            let transfer_from_arg = crate::services::icrc2::TransferFromArgs {
                     from: args.from,
                     spender_subaccount: None, // approve subaccount
                     to: self_account,         // * to self
                     amount: args.deposit_amount_without_fee.clone(),
-                    fee: None, // deposit action doesn't care fee
+                fee: args.fee, // deposit action doesn't care fee
                     memo: None,
                     created_at_time: None,
-                })
+            };
+            ic_cdk::println!(
+                "*call canister transfer_from_arg* `token:[{}], from:({}), to:({}), amount:{}, fee:0`",
+                args.token.to_string(),
+                display_account(&transfer_from_arg.from),
+                display_account(&transfer_from_arg.to),
+                transfer_from_arg.amount.to_string(),
+            );
+            let height = service_icrc2
+                .icrc_2_transfer_from(transfer_from_arg)
                 .await?
                 .0?;
 

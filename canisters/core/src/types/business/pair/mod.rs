@@ -8,8 +8,7 @@ pub use liquidity::*;
 mod swap;
 pub use swap::*;
 
-mod loan;
-pub use loan::*;
+
 
 pub trait SelfCanisterArg {
     fn get_self_canister(&self) -> SelfCanister;

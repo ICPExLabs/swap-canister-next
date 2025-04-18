@@ -20,6 +20,7 @@ type BusinessError = variant {
   TransferFromError : TransferFromError;
   TokenAccountsUnlocked : vec TokenAccount;
   NotOwner : principal;
+  BadTransferFee : record { expected_fee : nat };
   SwapBlockChainError : text;
   CallCanisterError : record { RejectionCode; text };
   Liquidity : text;
@@ -287,6 +288,7 @@ type TokenDepositArgWithMeta = record {
 };
 type TokenDepositArgs = record {
   to : Account;
+  fee : opt nat;
   created : opt nat64;
   token : principal;
   from : Account;
@@ -437,6 +439,18 @@ type TokenPairSwapTokensResult = variant {
   Err : BusinessError;
 };
 type TokenPairSwapTokensSuccess = record { amounts : vec nat };
+type TokenPairSwapWithDepositAndWithdrawArgs = record {
+  to : Account;
+  created : opt nat64;
+  amount_out_min : nat;
+  from : Account;
+  memo : opt blob;
+  path : vec SwapTokenPair;
+  deadline : opt nat64;
+  deposit_amount_without_fee : nat;
+  withdraw_fee : opt nat;
+  deposit_fee : opt nat;
+};
 type TokenTransaction = record {
   created : opt nat64;
   memo : opt blob;
@@ -460,6 +474,7 @@ type TokenTransferArgs = record {
 };
 type TokenWithdrawArgs = record {
   to : Account;
+  fee : opt nat;
   created : opt nat64;
   token : principal;
   from : Account;
@@ -535,6 +550,13 @@ service : (opt InitArgs) -> {
       TokenPairSwapTokensForExactTokensArgs,
       opt nat8,
     ) -> (TokenPairSwapTokensResult);
+  pair_swap_with_deposit_and_withdraw : (
+      TokenPairSwapWithDepositAndWithdrawArgs,
+    ) -> (
+      TokenChangedResult,
+      opt TokenPairSwapTokensResult,
+      opt TokenChangedResult,
+    );
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

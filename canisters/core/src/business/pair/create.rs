@@ -52,7 +52,7 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<MarketMaker, Bus
         // 3. lock
         let lock = match super::super::lock_swap_block_chain(0)? {
             LockResult::Locked(lock) => lock,
-            LockResult::Retry(_) => return Err(BusinessError::SwapBlockChainLocked),
+            LockResult::Retry(_) => return Err(BusinessError::SwapBlockChainAppendLocked),
         };
 
         // * 4. do business
@@ -72,7 +72,8 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<MarketMaker, Bus
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(false, true);
 
     Ok(maker)
 }

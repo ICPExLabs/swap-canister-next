@@ -15,5 +15,3 @@ mod create;
 mod liquidity;
 
 mod swap;
-
-mod loan;

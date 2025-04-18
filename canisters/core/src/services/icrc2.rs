@@ -217,7 +217,7 @@ pub struct StandardRecord {
     pub name: String,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(Debug, CandidType, Deserialize)]
 pub struct TransferArg {
     pub to: Account,
     pub fee: Option<candid::Nat>,
@@ -354,7 +354,7 @@ pub enum Result2 {
     Err(ApproveError),
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(Debug, CandidType, Deserialize)]
 pub struct TransferFromArgs {
     pub to: Account,
     pub fee: Option<candid::Nat>,

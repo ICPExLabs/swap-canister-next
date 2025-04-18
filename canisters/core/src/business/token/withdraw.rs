@@ -28,6 +28,15 @@ impl CheckArgs for TokenWithdrawArgs {
             "to account can not be swap canister"
         );
 
+        // check fee
+        if let Some(fee) = &self.fee {
+            if *fee != *crate::utils::math::ZERO && *fee != token.fee {
+                return Err(BusinessError::BadTransferFee {
+                    expected_fee: token.fee,
+                });
+            }
+        }
+
         // check balance
         let balance = with_state(|s| s.business_token_balance_of(self.token, self.from));
         let amount = self.withdraw_amount_without_fee.clone() + token.fee.clone();
@@ -48,7 +57,7 @@ async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenCh
     inner_token_withdraw(args, retries).await.into()
 }
 #[inline]
-async fn inner_token_withdraw(
+pub async fn inner_token_withdraw(
     args: TokenWithdrawArgs,
     retries: Option<u8>,
 ) -> Result<candid::Nat, BusinessError> {
@@ -78,20 +87,26 @@ async fn inner_token_withdraw(
             let service_icrc2 = crate::services::icrc2::Service(args.token);
 
             // ? 1. transfer token to user
-            let height = service_icrc2
-                .icrc_1_transfer(crate::services::icrc2::TransferArg {
+            let fee = args.fee.unwrap_or(token.fee.clone());
+            let transfer_arg = crate::services::icrc2::TransferArg {
                     from_subaccount: None,
                     to: args.to,
                     amount: args.withdraw_amount_without_fee.clone(),
-                    fee: Some(token.fee.clone()), // withdraw action should care fee
+                fee: Some(fee.clone()), // withdraw action should care fee
                     memo: None,
                     created_at_time: None,
-                })
-                .await?
-                .0?;
+            };
+            ic_cdk::println!(
+                "*call canister transfer_arg* `token:[{}], to:({}), amount:{}, fee:{}`",
+                args.token.to_string(),
+                display_account(&transfer_arg.to),
+                transfer_arg.amount.to_string(),
+                token.fee.to_string()
+            );
+            let height = service_icrc2.icrc_1_transfer(transfer_arg).await?.0?;
 
             // ? 2. record changed
-            let amount = args.withdraw_amount_without_fee + token.fee; // Total withdrawal
+            let amount = args.withdraw_amount_without_fee + fee; // Total withdrawal
             with_mut_state_without_record(|s| {
                 s.business_token_withdraw(
                     &locks,
