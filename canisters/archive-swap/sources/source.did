@@ -232,6 +232,7 @@ service : (opt InitArgs) -> {
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
   set_maintainers : (opt vec principal) -> ();
+  set_max_memory_size_bytes : (nat64) -> ();
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
   wallet_receive : () -> (nat);

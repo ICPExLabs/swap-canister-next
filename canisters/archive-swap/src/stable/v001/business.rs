@@ -204,6 +204,9 @@ impl Business for InnerState {
         self.business_data.maintainers =
             maintainers.map(|maintainers| maintainers.into_iter().collect());
     }
+    fn business_config_max_memory_size_bytes_set(&mut self, max_memory_size_bytes: u64) {
+        self.update_max_memory_size_bytes(max_memory_size_bytes)
+    }
 
     fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
         let length = self.blocks.blocks_len();

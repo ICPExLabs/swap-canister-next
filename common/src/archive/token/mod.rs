@@ -14,6 +14,6 @@ pub use block::*;
 mod query;
 pub use query::*;
 
-/// 查询
+/// 初始化和升级参数
 mod args;
 pub use args::*;

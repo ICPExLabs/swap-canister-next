@@ -19,24 +19,10 @@ pub use super::permission::*;
 pub use super::schedule::schedule_task;
 
 // 初始化参数
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArgV1 {
-    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-
-    pub max_memory_size_bytes: Option<u64>,
-    pub core_canister_id: Option<CanisterId>,
-    pub block_offset: Option<(BlockIndex, HashOf<SwapBlock>)>,
-}
+pub type InitArgV1 = ::common::archive::swap::InitArgV1;
 
 // 升级参数
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArgV1 {
-    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-
-    pub max_memory_size_bytes: Option<u64>,
-}
+pub type UpgradeArgV1 = ::common::archive::swap::UpgradeArgV1;
 
 #[allow(unused)]
 pub use crate::types::{
@@ -105,7 +91,7 @@ pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 pub struct BusinessData {
     pub maintainers: Option<HashSet<UserId>>, // None, 所有人可读, 否则指定人员可读
 
-    pub max_memory_size_bytes: u64,                     // 最大使用内存
+    pub max_memory_size_bytes: u64,                    // 最大使用内存
     pub core_canister_id: Option<CanisterId>, // 宿主罐子, 业务相关的 update 接口，都要检查是否宿主罐子发起的
     pub block_offset: (BlockIndex, HashOf<SwapBlock>), // 本罐子记录的偏移量
     pub last_upgrade_timestamp_ns: u64,       // 记录上次升级时间戳
@@ -281,13 +267,17 @@ impl InnerState {
         self.business_data.last_upgrade_timestamp_ns = ic_cdk::api::time();
 
         if let Some(max_memory_size_bytes) = arg.max_memory_size_bytes {
-            let total_block_size = self.blocks.total_block_size();
-            if max_memory_size_bytes < total_block_size {
-                ic_cdk::trap(&format!(
-                    "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
-                ));
-            }
-            self.business_data.max_memory_size_bytes = max_memory_size_bytes;
+            self.update_max_memory_size_bytes(max_memory_size_bytes);
         }
+    }
+
+    pub fn update_max_memory_size_bytes(&mut self, max_memory_size_bytes: u64) {
+        let total_block_size = self.blocks.total_block_size();
+        if max_memory_size_bytes < total_block_size {
+            ic_cdk::trap(&format!(
+                "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
+            ));
+        }
+        self.business_data.max_memory_size_bytes = max_memory_size_bytes;
     }
 }
