@@ -1,5 +1,6 @@
 type Account = record { owner : principal; subaccount : opt blob };
 type Amm = variant { "swap_v2_1%"; "swap_v2_0.05%"; "swap_v2_0.3%" };
+type BurnFee = record { fee : nat; fee_to : Account };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -164,6 +165,7 @@ type SwapTransaction = record {
 type SwapV2BurnToken = record {
   pa : TokenPairAmm;
   to : Account;
+  fee : opt BurnFee;
   token : principal;
   from : Account;
   amount0 : nat;
@@ -178,11 +180,30 @@ type SwapV2MintFeeToken = record {
   token : principal;
   amount : nat;
 };
+type SwapV2MintToken = record {
+  pa : TokenPairAmm;
+  to : Account;
+  token : principal;
+  from : Account;
+  amount0 : nat;
+  amount1 : nat;
+  token0 : principal;
+  token1 : principal;
+  amount : nat;
+};
 type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
-  mint : SwapV2BurnToken;
+  mint : SwapV2MintToken;
   mint_fee : SwapV2MintFeeToken;
   cumulative_price : PairCumulativePrice;
+  transfer : SwapV2TransferToken;
+};
+type SwapV2TransferToken = record {
+  pa : TokenPairAmm;
+  to : Account;
+  fee : opt BurnFee;
+  from : Account;
+  amount : nat;
 };
 type TokenPair = record { token0 : principal; token1 : principal };
 type TokenPairAmm = record { amm : Amm; pair : TokenPair };
