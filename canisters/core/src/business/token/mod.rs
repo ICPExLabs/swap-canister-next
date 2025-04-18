@@ -10,8 +10,8 @@ use crate::types::*;
 
 mod query;
 
-mod deposit;
+pub mod deposit;
 
-mod withdraw;
+pub mod withdraw;
 
 mod transfer;

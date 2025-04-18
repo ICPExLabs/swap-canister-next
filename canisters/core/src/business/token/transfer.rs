@@ -72,15 +72,57 @@ async fn inner_token_transfer(
     let (now, self_canister, caller, token) = args.check_args()?;
 
     // 2. some value
-    let fee_to = vec![args.token]; // ! There is a handling fee for this operation
+    let fee_tokens = vec![args.token]; // ! There is a handling fee for this operation
     let token_account_from = TokenAccount::new(args.token, args.from);
     let token_account_to = TokenAccount::new(args.token, args.to);
     let required = vec![token_account_from, token_account_to];
 
-    let changed = {
+    let changed = if token.is_lp_token {
         // 3. lock
-        let locks = match super::super::lock_token_balances_and_token_block_chain(
-            fee_to,
+        let locks =
+            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+                fee_tokens,
+                required,
+                retries.unwrap_or_default(),
+            )? {
+                LockResult::Locked(locks) => locks,
+                LockResult::Retry(retries) => {
+                    return retry_token_transfer(self_canister.id(), args, retries).await;
+                }
+            };
+
+        // * 4. do business
+        {
+            // ? 0. get transfer fee
+            let fee_to = locks.0.fee_to; // token fee to
+
+            // ? 1. transfer
+            with_mut_state_without_record(|s| {
+                s.business_token_transfer_lp(
+                    &locks,
+                    ArgWithMeta {
+                        now,
+                        caller,
+                        arg: TransferToken {
+                            token: args.token,
+                            from: args.from,
+                            amount: args.transfer_amount_without_fee,
+                            to: args.to,
+                            fee: fee_to.map(|fee_to| TransferFee {
+                                fee: token.fee,
+                                fee_to,
+                            }),
+                        },
+                        memo: args.memo,
+                        created: args.created,
+                    },
+                )
+            })?
+        }
+    } else {
+        // 3. lock
+        let locks = match super::super::lock_token_block_chain_and_token_balances(
+            fee_tokens,
             required,
             retries.unwrap_or_default(),
         )? {
@@ -93,12 +135,7 @@ async fn inner_token_transfer(
         // * 4. do business
         {
             // ? 0. get transfer fee
-            let fee_to = locks.0.fee_to();
-            let fee_to = fee_to
-                .iter()
-                .find(|&fee_to| fee_to.token == args.token)
-                .cloned()
-                .map(|token_account| token_account.account);
+            let fee_to = locks.0.fee_to; // token fee to
 
             // ? 1. transfer
             with_mut_state_without_record(|s| {
@@ -125,7 +162,8 @@ async fn inner_token_transfer(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, false);
 
     Ok(changed)
 }

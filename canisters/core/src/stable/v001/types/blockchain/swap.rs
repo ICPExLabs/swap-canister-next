@@ -1,14 +1,13 @@
-use common::{
-    archive::swap::{SwapBlock, SwapTransaction},
-    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, QueryBlockResult, TimestampNanos},
-};
 use ic_canister_kit::{
     common::trap,
     types::{StableBTreeMap, UserId},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Business, BusinessError, with_mut_state_without_record};
+use crate::types::{
+    Account, BlockIndex, Business, BusinessError, CandidBlock, EncodedBlock, HashOf,
+    QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos, with_mut_state_without_record,
+};
 
 use super::super::init_swap_blocks;
 
@@ -43,7 +42,36 @@ impl SwapBlockChain {
     }
 
     // locks
-    pub fn lock(&mut self) -> Option<SwapBlockChainLock> {
+    pub fn archive_lock(&mut self) -> Option<SwapBlockChainArchiveLock> {
+        let mut locked = trap(self.block_chain.archive_locked.write()); // ! what if failed ?
+
+        if *locked {
+            return None;
+        }
+
+        *locked = true;
+        ic_cdk::println!("🔒 Archive Locked swap block chain.");
+
+        Some(SwapBlockChainArchiveLock)
+    }
+
+    pub fn archive_unlock(&mut self) {
+        let mut locked = trap(self.block_chain.archive_locked.write()); // ! what if failed ?
+
+        // 1. check first
+        if !*locked {
+            // if not true, terminator
+            let tips = "Archive Unlock swap block chain failed. That is not locked.";
+            ic_cdk::trap(tips); // never be here
+        }
+
+        // 2. do unlock
+        *locked = false;
+        ic_cdk::println!("🔐 Archive Unlock swap block chain.");
+    }
+
+    // locks
+    pub fn lock(&mut self, fee_to: Option<Account>) -> Option<SwapBlockChainLock> {
         let mut locked = trap(self.block_chain.locked.write()); // ! what if failed ?
 
         if *locked {
@@ -53,7 +81,7 @@ impl SwapBlockChain {
         *locked = true;
         ic_cdk::println!("🔒 Locked swap block chain.");
 
-        Some(SwapBlockChainLock)
+        Some(SwapBlockChainLock { fee_to })
     }
 
     pub fn unlock(&mut self) {
@@ -62,7 +90,7 @@ impl SwapBlockChain {
         // 1. check first
         if !*locked {
             // if not true, terminator
-            let tips = "Unlock a swap block chain failed. That is not locked.";
+            let tips = "Unlock swap block chain failed. That is not locked.";
             ic_cdk::trap(tips); // never be here
         }
 
@@ -85,7 +113,17 @@ impl SwapBlockChain {
 
 // ============================ lock ============================
 
-pub struct SwapBlockChainLock;
+pub struct SwapBlockChainArchiveLock;
+
+impl Drop for SwapBlockChainArchiveLock {
+    fn drop(&mut self) {
+        with_mut_state_without_record(|s| s.business_swap_block_chain_archive_unlock())
+    }
+}
+
+pub struct SwapBlockChainLock {
+    pub fee_to: Option<Account>,
+}
 
 impl Drop for SwapBlockChainLock {
     fn drop(&mut self) {

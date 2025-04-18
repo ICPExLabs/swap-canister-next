@@ -25,7 +25,8 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.to))?;
+        let (pa, fee_tokens, required) =
+            check_pool(&self.swap_pair, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityAddArg {
             self_canister,
@@ -61,7 +62,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
-        Ok((now, fee_to, required, self_canister, caller, arg))
+        Ok((now, fee_tokens, required, self_canister, caller, arg))
     }
 }
 
@@ -79,10 +80,10 @@ async fn inner_pair_liquidity_add(
     retries: Option<u8>,
 ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
     // 1. check args
-    let (now, fee_to, mut required, self_canister, caller, arg) = args.check_args()?;
+    let (now, fee_tokens, mut required, self_canister, caller, arg) = args.check_args()?;
 
     // 2. some value
-    // let fee_to = fee_to;
+    // let fee_tokens = vec![];
     let token_account_a = TokenAccount::new(arg.token_a, arg.from);
     let token_account_b = TokenAccount::new(arg.token_b, arg.from);
     required.push(token_account_a);
@@ -91,8 +92,8 @@ async fn inner_pair_liquidity_add(
     let success = {
         // 3. lock
         let locks =
-            match super::super::lock_token_balances_and_token_block_chain_and_swap_block_chain(
-                fee_to,
+            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+                fee_tokens,
                 required,
                 retries.unwrap_or_default(),
             )? {
@@ -152,7 +153,8 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, fee_to, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
+        let (pa, fee_tokens, required) =
+            check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
 
         let arg = TokenPairLiquidityRemoveArg {
             self_canister,
@@ -160,7 +162,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
             from: self.from,
             token_a: self.swap_pair.token.0,
             token_b: self.swap_pair.token.1,
-            liquidity: self.liquidity.clone(),
+            liquidity_without_fee: self.liquidity_without_fee.clone(),
             amount_a_min: self.amount_min.0.clone(),
             amount_b_min: self.amount_min.1.clone(),
             to: self.to,
@@ -171,7 +173,11 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
 
         // check liquidity balance
         with_state(|s| {
-            s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity)
+            s.business_token_pair_check_liquidity_removable(
+                &pa,
+                &arg.from,
+                &arg.liquidity_without_fee,
+            )
         })?;
 
         // check deadline
@@ -182,7 +188,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
-        Ok((now, fee_to, required, self_canister, caller, arg))
+        Ok((now, fee_tokens, required, self_canister, caller, arg))
     }
 }
 
@@ -200,10 +206,10 @@ async fn inner_pair_liquidity_remove(
     retries: Option<u8>,
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     // 1. check args
-    let (now, fee_to, mut required, self_canister, caller, arg) = args.check_args()?;
+    let (now, fee_tokens, mut required, self_canister, caller, arg) = args.check_args()?;
 
     // 2. some value
-    // let fee_to = fee_to;
+    // let fee_tokens = vec![];
     let token_account_a = TokenAccount::new(arg.token_a, arg.from);
     let token_account_b = TokenAccount::new(arg.token_b, arg.from);
     required.push(token_account_a);
@@ -212,8 +218,8 @@ async fn inner_pair_liquidity_remove(
     let success = {
         // 3. lock
         let locks =
-            match super::super::lock_token_balances_and_token_block_chain_and_swap_block_chain(
-                fee_to,
+            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+                fee_tokens,
                 required,
                 retries.unwrap_or_default(),
             )? {

@@ -1,16 +1,16 @@
 use candid::Nat;
-use common::types::TimestampNanos;
-use ic_canister_kit::types::CanisterId;
+use common::types::{BurnFee, TimestampNanos};
+use ic_canister_kit::{common::option::display_option, types::CanisterId};
 use icrc_ledger_types::icrc1::account::Account;
 
 use crate::types::{SelfCanisterArg, TokenPairArg};
 
 use super::super::{
-    ArgWithMeta, BusinessError, DepositToken, PairCumulativePrice, PairOperation,
+    ArgWithMeta, BusinessError, DepositToken, FeeTo, PairCumulativePrice, PairOperation,
     RequestTraceGuard, SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken,
     SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard,
-    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityAddSuccessView,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+    TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
     TokenPairLiquidityRemoveSuccessView, TokenPairSwapByLoanArg,
     TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg,
     TokenPairSwapTokensSuccess, TokenPairSwapTokensSuccessView, TokenPairs, TransferToken,
@@ -23,7 +23,7 @@ pub struct TokenPairSwapGuard<'a> {
     token_guard: TokenBlockChainGuard<'a>,
     swap_guard: SwapBlockChainGuard<'a>,
     token_pairs: &'a mut TokenPairs,
-    fee_to: Option<Account>,
+    fee_to: FeeTo,
 }
 
 impl<'a> TokenPairSwapGuard<'a> {
@@ -33,7 +33,7 @@ impl<'a> TokenPairSwapGuard<'a> {
         token_guard: TokenBlockChainGuard<'a>,
         swap_guard: SwapBlockChainGuard<'a>,
         token_pairs: &'a mut TokenPairs,
-        fee_to: Option<Account>,
+        fee_to: FeeTo,
     ) -> Self {
         Self {
             trace_guard,
@@ -43,6 +43,16 @@ impl<'a> TokenPairSwapGuard<'a> {
             token_pairs,
             fee_to,
         }
+    }
+
+    // transfer lp token
+    pub fn token_lp_transfer(
+        &mut self,
+        pa: TokenPairAmm,
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        self.balances_guard
+            .token_lp_transfer(&mut self.swap_guard, pa, &mut self.token_guard, arg)
     }
 
     pub fn add_liquidity(
@@ -187,7 +197,7 @@ pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
     balances_guard: &'a mut TokenBalancesGuard<'b>,
     token_guard: &'a mut TokenBlockChainGuard<'b>,
     swap_guard: &'a mut SwapBlockChainGuard<'b>,
-    pub fee_to: Option<Account>,
+    pub fee_to: FeeTo,
     pub arg: ArgWithMeta<T>,
 }
 
@@ -487,6 +497,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
         token: CanisterId,
         from: Account,
         amount: Nat,
+        fee: Option<BurnFee>,
     ) -> Result<(), BusinessError> {
         // burn
         let transaction = SwapTransaction {
@@ -502,6 +513,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                         token,
                         amount: amount.clone(),
                         to: self.arg.arg.to,
+                        fee: fee.clone(),
                     }
                 } else {
                     SwapV2BurnToken {
@@ -514,6 +526,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                         token,
                         amount: amount.clone(),
                         to: self.arg.arg.to,
+                        fee: fee.clone(),
                     }
                 },
             ))),
@@ -527,20 +540,45 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             WithdrawToken {
                 token,
                 from,
-                amount: amount.clone(),
+                amount: amount.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(),
                 to: self.arg.arg.to,
             },
         );
+        let deposit_fee = fee.map(|BurnFee { fee, fee_to }| {
+            ArgWithMeta::simple(
+                self.arg.now,
+                self.arg.caller,
+                DepositToken {
+                    token,
+                    from,
+                    amount: fee,
+                    to: fee_to,
+                },
+            )
+        });
         self.swap_guard.mint_block(self.arg.now, transaction, |_| {
-            self.balances_guard
-                .token_withdraw(self.token_guard, arg.clone())?;
-            self.trace_guard.trace(format!(
-                "*Burn Liquidity (Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}) amount:{}`",
+            let trace = format!(
+                "*Burn Liquidity (Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
                 arg.arg.amount,
-            )); // * trace
+                display_option(&deposit_fee.as_ref().map(|d|d.arg.amount.to_string()))
+            );
+            self.balances_guard
+                .token_withdraw(self.token_guard, arg)?;
+            self.trace_guard.trace(trace); // * trace
+            if let Some(deposit_fee) = deposit_fee {
+                let trace = format!(
+                    "*Mint Burn Fee (Deposit)*. `token:[{}], to:({}), amount:{}`",
+                    deposit_fee.arg.token.to_text(),
+                    display_account(&deposit_fee.arg.to),
+                    deposit_fee.arg.amount,
+                );
+                self.balances_guard
+                .token_deposit(self.token_guard, deposit_fee.clone())?;
+                self.trace_guard.trace(trace); // * trace
+            }
             Ok(())
         })?;
         self.trace(format!(

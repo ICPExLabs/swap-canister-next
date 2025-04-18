@@ -56,9 +56,9 @@ impl RequestTraces {
     pub fn be_guard<'a>(
         &'a mut self,
         args: RequestArgs,
-        balances: Option<&TokenBalancesGuard<'_>>,
         token: Option<&TokenBlockChainGuard<'_>>,
         swap: Option<&SwapBlockChainGuard<'_>>,
+        balances: Option<&TokenBalancesGuard<'_>>,
         trace: Option<String>,
     ) -> Result<RequestTraceGuard<'a>, BusinessError> {
         let mut next_index = self
@@ -66,7 +66,7 @@ impl RequestTraces {
             .write()
             .map_err(|err| BusinessError::RequestTraceLocked(format!("{err}")))?;
         let index = next_index.next();
-        let trace = RequestTrace::new(index, args, balances, token, swap, trace);
+        let trace = RequestTrace::new(index, args, token, swap, balances, trace);
         self.traces.insert(index, trace); // insert
         let lock = RequestTraceLock { index };
         ic_cdk::println!("🔒 Locked request index: {}", index.as_ref());

@@ -73,9 +73,12 @@ impl PoolLp {
         amount_b: &Nat,
         from: Account,
         amount: Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, amount_a, amount_b, from, amount),
+            PoolLp::InnerLP(inner_lp) => {
+                inner_lp.burn(guard, amount_a, amount_b, from, amount, fee_to)
+            }
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -83,13 +86,15 @@ impl PoolLp {
     pub fn check_liquidity_removable<F>(
         &self,
         balance_of: F,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError>
     where
         F: Fn(CanisterId) -> Result<Nat, BusinessError>,
     {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.check_liquidity_removable(balance_of, liquidity),
+            PoolLp::InnerLP(inner_lp) => {
+                inner_lp.check_liquidity_removable(balance_of, liquidity_without_fee)
+            }
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -123,6 +128,7 @@ impl InnerLP {
             symbol: format!("{}_{}_LP({})", token0.symbol, token1.symbol, amm.as_ref()),
             decimals: self.decimals,
             fee: self.fee.clone(),
+            is_lp_token: true,
         }]
     }
 
@@ -167,6 +173,7 @@ impl InnerLP {
         amount_b: &Nat,
         from: Account,
         amount: Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         guard.token_liquidity_burn(
             amount_a,
@@ -174,30 +181,37 @@ impl InnerLP {
             self.dummy_canister_id.id(),
             from,
             amount.clone(),
+            fee_to.map(|fee_to| BurnFee {
+                fee: self.fee.clone(),
+                fee_to,
+            }),
         )?;
-        if self.total_supply < amount {
+        let fee = fee_to.map(|_| self.fee.clone()).unwrap_or_default();
+        let total = amount + fee;
+        if self.total_supply < total {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }
-        self.total_supply -= amount; // 如果变成负值会 panic
+        self.total_supply -= total; // 如果变成负值会 panic
         Ok(())
     }
 
     pub fn check_liquidity_removable<F>(
         &self,
         balance_of: F,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError>
     where
         F: Fn(CanisterId) -> Result<Nat, BusinessError>,
     {
         // check balance
+        let required = liquidity_without_fee.clone() + self.fee.clone();
         let balance = balance_of(self.dummy_canister_id.id())?;
-        if balance < *liquidity {
+        if balance < required {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }
 
         // check minimum liquidity
-        let remain = self.total_supply.clone() - liquidity.to_owned();
+        let remain = self.total_supply.clone() - required;
         if remain < self.minimum_liquidity {
             return Err(BusinessError::Liquidity(
                 "REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into(),
@@ -206,6 +220,15 @@ impl InnerLP {
 
         Ok(())
     }
+
+    // pub fn transfer(
+    //     &mut self,
+    //     guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
+    //     from: Account,
+    //     to: Account,
+    //     amount: Nat,
+    // ) -> Result<(), BusinessError> {
+    // }
 }
 
 // 外部存储 lp，是一个单独的罐子，有权限对其 mint 和 burn LP 代币，// ! 罐子手续费不应该销毁

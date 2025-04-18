@@ -52,7 +52,7 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<MarketMaker, Bus
         // 3. lock
         let lock = match super::super::lock_swap_block_chain(0)? {
             LockResult::Locked(lock) => lock,
-            LockResult::Retry(_) => return Err(BusinessError::SwapBlockChainAppendLocked),
+            LockResult::Retry(_) => return Err(BusinessError::SwapBlockChainLocked),
         };
 
         // * 4. do business

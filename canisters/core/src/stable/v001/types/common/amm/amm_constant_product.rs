@@ -149,7 +149,7 @@ impl SwapV2MarketMaker {
         _reserve0: &Nat,
         _reserve1: &Nat,
     ) -> Result<bool, BusinessError> {
-        let fee_to = guard.fee_to;
+        let fee_to = guard.fee_to.swap_fee_to;
         let fee_on =
             fee_to.is_some() && self.protocol_fee.as_ref().is_some_and(|fee| !fee.is_zero());
 
@@ -328,11 +328,11 @@ impl SwapV2MarketMaker {
         &self,
         token_balances: &TokenBalances,
         from: &Account,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError> {
         self.lp.check_liquidity_removable(
             |token| token_balances.token_balance_of(token, *from),
-            liquidity,
+            liquidity_without_fee,
         )
     }
 
@@ -349,7 +349,7 @@ impl SwapV2MarketMaker {
         let _token1 = token1;
         let balance0 = guard.token_balance_of(_token0, *pool_account)?;
         let balance1 = guard.token_balance_of(_token1, *pool_account)?;
-        let liquidity = arg.liquidity.clone();
+        let liquidity = arg.liquidity_without_fee.clone();
 
         let fee_on = self.mint_fee(guard, &_reserve0, &_reserve1)?;
         let _total_supply = self.lp.get_total_supply();
@@ -377,8 +377,14 @@ impl SwapV2MarketMaker {
 
         // do burn，为用户销毁 LP 代币
         let arg = &guard.arg.arg;
-        self.lp
-            .burn(guard, &amount_a, &amount_b, arg.from, liquidity.clone())?;
+        self.lp.burn(
+            guard,
+            &amount_a,
+            &amount_b,
+            arg.from,
+            liquidity.clone(),
+            guard.fee_to.token_fee_to, // burn fee to use token fee to
+        )?;
 
         // return token
         let arg = &guard.arg.arg;
@@ -421,14 +427,14 @@ impl SwapV2MarketMaker {
             let arg = &guard.arg.arg;
             self.lp.check_liquidity_removable(
                 |token| guard.token_balance_of(token, arg.from),
-                &arg.liquidity,
+                &arg.liquidity_without_fee,
             )?;
             guard.trace(format!(
-                "*Remove Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity:{}, required: {} <= amount_a && {} <= amount_b`",
+                "*Remove Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity_without_fee:{}, required: {} <= amount_a && {} <= amount_b`",
                 arg.token_a.to_text(),
                 arg.token_b.to_text(),
                 arg.pa.amm.into_text().as_ref(),
-                arg.liquidity,
+                arg.liquidity_without_fee,
                 arg.amount_a_min,
                 arg.amount_b_min,
             )); // * trace

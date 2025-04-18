@@ -8,6 +8,8 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
+// ============================== withdraw tokens ==============================
+
 #[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_pause_replace")]
 async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
@@ -52,4 +54,13 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
     }
 
     results
+}
+
+// ============================== current archiving ==============================
+
+#[ic_cdk::update(guard = "has_pause_replace")]
+fn test_config_token_current_archiving_replace(
+    archiving: CurrentArchiving,
+) -> Option<CurrentArchiving> {
+    with_mut_state_without_record(|s| s.business_config_token_current_archiving_replace(archiving))
 }

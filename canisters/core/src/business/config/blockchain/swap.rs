@@ -8,8 +8,6 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-mod fee_to;
-
-mod blockchain;
-
-pub mod push;
+/// 推送罐子
+#[ic_cdk::update(guard = "has_pause_replace")]
+pub async fn config_swap_blocks_push() {}

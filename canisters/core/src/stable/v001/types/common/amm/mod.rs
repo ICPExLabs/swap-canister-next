@@ -111,11 +111,11 @@ impl MarketMaker {
         &self,
         token_balances: &TokenBalances,
         from: &Account,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError> {
         match self {
             MarketMaker::SwapV2(value) => {
-                value.check_liquidity_removable(token_balances, from, liquidity)
+                value.check_liquidity_removable(token_balances, from, liquidity_without_fee)
             }
         }
     }

@@ -127,10 +127,10 @@ impl TokenPairs {
         token_balances: &TokenBalances,
         pa: &TokenPairAmm,
         from: &Account,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError> {
         let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
-        maker.check_liquidity_removable(token_balances, from, liquidity)
+        maker.check_liquidity_removable(token_balances, from, liquidity_without_fee)
     }
 
     pub fn remove_liquidity(

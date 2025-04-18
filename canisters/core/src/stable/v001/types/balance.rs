@@ -1,4 +1,3 @@
-use ::common::archive::token::TransferFee;
 use ic_canister_kit::common::trap;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -67,15 +66,9 @@ impl TokenBalances {
     // locks
     pub fn lock(
         &mut self,
-        fee_to: Vec<TokenAccount>,
-        mut required: Vec<TokenAccount>,
+        required: Vec<TokenAccount>,
     ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
         let mut locks = trap(self.locks.write()); // ! what if failed ?
-
-        // 0. 手续费账户
-        for fee_to in &fee_to {
-            required.push(fee_to.clone());
-        }
 
         // duplicate removal
         let locked = required.iter().cloned().collect::<HashSet<_>>();
@@ -109,11 +102,7 @@ impl TokenBalances {
             );
         }
 
-        Ok(TokenBalancesLock {
-            required,
-            fee_to,
-            locked,
-        })
+        Ok(TokenBalancesLock { required, locked })
     }
 
     pub fn unlock(&mut self, locked: &HashSet<TokenAccount>) {
@@ -126,7 +115,7 @@ impl TokenBalances {
             }
             // if not true, terminator
             let tips = format!(
-                "Unlock a token account (\"{}|{}.{}\") that is not locked.",
+                "Unlock token account (\"{}|{}.{}\") that is not locked.",
                 token_account.token.to_text(),
                 token_account.account.owner.to_text(),
                 token_account
@@ -156,7 +145,6 @@ impl TokenBalances {
 
 pub struct TokenBalancesLock {
     required: Vec<TokenAccount>,   // 目标要求锁住的账户，打印显示
-    fee_to: Vec<TokenAccount>,     // 本次锁是否涉及到的手续费账户
     locked: HashSet<TokenAccount>, // fee_to must be included
 }
 impl Drop for TokenBalancesLock {
@@ -167,12 +155,6 @@ impl Drop for TokenBalancesLock {
                 ic_cdk::println!("🔐 Unlock token account: {}", account);
             }
         })
-    }
-}
-
-impl TokenBalancesLock {
-    pub fn fee_to(&self) -> &[TokenAccount] {
-        &self.fee_to
     }
 }
 
@@ -347,31 +329,34 @@ impl TokenBalancesGuard<'_> {
         })?;
         Ok(changed)
     }
-    // // transfer token
-    // pub fn token_transfer(
-    //     &mut self,
-    //     token: CanisterId,
-    //     from: Account,
-    //     to: Account,
-    //     amount: Nat,
-    // ) -> Result<(), BusinessError> {
-    //     let token_account_from = TokenAccount::new(token, from);
-    //     if !self.lock.locked.contains(&token_account_from) {
-    //         return Err(BusinessError::Unlocked(vec![token_account_from]));
-    //     }
-    //     let token_account_to = TokenAccount::new(token, to);
-    //     if !self.lock.locked.contains(&token_account_to) {
-    //         return Err(BusinessError::Unlocked(vec![token_account_to]));
-    //     }
-
-    //     let from_balance = self.balances.get(&token_account_from).unwrap_or_default();
-    //     assert!(amount <= from_balance.0, "Insufficient balance.");
-
-    //     self.inner_token_withdraw(token_account_from, amount.clone());
-    //     self.inner_do_token_deposit(token_account_to, amount);
-
-    //     Ok(())
-    // }
+    // transfer lp token
+    pub fn token_lp_transfer(
+        &mut self,
+        swap_guard: &mut SwapBlockChainGuard,
+        pa: TokenPairAmm,
+        token_guard: &mut TokenBlockChainGuard,
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        // 1. get swap block
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Transfer(
+                SwapV2TransferToken {
+                    pa,
+                    from: arg.arg.from,
+                    amount: arg.arg.amount.clone(),
+                    to: arg.arg.to,
+                    fee: arg.arg.fee.clone(),
+                },
+            ))),
+            memo: arg.memo.clone(),
+            created: arg.created,
+        };
+        // 2. do transfer and mint block
+        let changed = swap_guard.mint_block(arg.now, transaction, |_| {
+            self.token_transfer(token_guard, arg)
+        })?;
+        Ok(changed)
+    }
 }
 
 #[cfg(test)]

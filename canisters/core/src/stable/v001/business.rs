@@ -9,11 +9,41 @@ impl Business for InnerState {
     // ======================== config ========================
 
     // fee to
-    fn business_config_fee_to_query(&self) -> Option<&Account> {
-        self.business_data.fee_to.as_ref()
+    fn business_config_fee_to_query(&self) -> FeeTo {
+        self.business_data.fee_to
     }
-    fn business_config_fee_to_replace(&mut self, fee_to: Option<Account>) -> Option<Account> {
-        std::mem::replace(&mut self.business_data.fee_to, fee_to)
+    fn business_config_fee_to_replace(&mut self, fee_to: FeeTo) -> FeeTo {
+        self.updated(|s| std::mem::replace(&mut s.business_data.fee_to, fee_to))
+    }
+
+    // archive canister
+    // token
+    fn business_config_token_block_chain(&self) -> &BlockChain<TokenBlock> {
+        self.token_block_chain.get_token_block_chain()
+    }
+    fn business_config_token_archive_max_length_replace(
+        &mut self,
+        max_length: u64,
+    ) -> Option<CurrentArchiving> {
+        self.updated(|s| s.token_block_chain.set_token_archive_max_length(max_length))
+    }
+    fn business_config_token_archive_config_replace(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        self.updated(|s| s.token_block_chain.set_token_archive_config(archive_config))
+    }
+    fn business_config_token_current_archiving_replace(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        self.updated(|s| {
+            s.token_block_chain
+                .replace_token_current_archiving(archiving)
+        })
+    }
+    fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.token_block_chain.archive_current_canister()
     }
 
     // set_certified_data
@@ -29,46 +59,46 @@ impl Business for InnerState {
 
     // ======================== locks ========================
 
-    // token balance
-    fn business_token_balance_lock(
-        &mut self,
-        fee_to: Vec<CanisterId>,
-        required: Vec<TokenAccount>,
-    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
-        self.updated(|s| {
-            s.token_balances.lock(
-                s.business_data
-                .fee_to
-                .as_ref()
-                .map(|account| {
-                    fee_to
-                        .into_iter()
-                        .map(|token| TokenAccount::new(token, *account))
-                        .collect()
-                })
-                .unwrap_or_default(),
-            required,
-        )
-        })
-    }
-    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
-        self.updated(|s| s.token_balances.unlock(locked))
-    }
-
     // token block chain
+    fn business_token_block_chain_archive_lock(&mut self) -> Option<TokenBlockChainArchiveLock> {
+        self.updated(|s| s.token_block_chain.archive_lock())
+    }
+    fn business_token_block_chain_archive_unlock(&mut self) {
+        self.updated(|s| s.token_block_chain.archive_unlock())
+    }
     fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
-        self.updated(|s| s.token_block_chain.lock())
+        self.updated(|s| {
+            s.token_block_chain
+                .lock(s.business_data.fee_to.token_fee_to)
+        })
     }
     fn business_token_block_chain_unlock(&mut self) {
         self.updated(|s| s.token_block_chain.unlock())
     }
 
     // swap block chain
+    fn business_swap_block_chain_archive_lock(&mut self) -> Option<SwapBlockChainArchiveLock> {
+        self.updated(|s| s.swap_block_chain.archive_lock())
+    }
+    fn business_swap_block_chain_archive_unlock(&mut self) {
+        self.updated(|s| s.swap_block_chain.archive_unlock())
+    }
     fn business_swap_block_chain_lock(&mut self) -> Option<SwapBlockChainLock> {
-        self.updated(|s| s.swap_block_chain.lock())
+        self.updated(|s| s.swap_block_chain.lock(s.business_data.fee_to.swap_fee_to))
     }
     fn business_swap_block_chain_unlock(&mut self) {
         self.updated(|s| s.swap_block_chain.unlock())
+    }
+
+    // token balance
+    fn business_token_balance_lock(
+        &mut self,
+        required: Vec<TokenAccount>,
+    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+        self.updated(|s| s.token_balances.lock(required))
+    }
+    fn business_token_balance_unlock(&mut self, locked: &HashSet<TokenAccount>) {
+        self.updated(|s| s.token_balances.unlock(locked))
     }
 
     // ======================== token block chain ========================
@@ -108,40 +138,59 @@ impl Business for InnerState {
 
     fn business_token_deposit(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        locks: &(TokenBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<DepositToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
-        let height = guard.token_deposit(arg, height)?; // do deposit
+            let height = guard.token_deposit(arg, height)?; // do deposit
             s.business_certified_data_refresh(); // set certified data
-        Ok(height)
+            Ok(height)
         })
     }
     fn business_token_withdraw(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        locks: &(TokenBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<WithdrawToken>,
         height: Nat,
     ) -> Result<Nat, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
-        let height = guard.token_withdraw(arg, height)?; // do withdraw
+            let height = guard.token_withdraw(arg, height)?; // do withdraw
             s.business_certified_data_refresh(); // set certified data
-        Ok(height)
+            Ok(height)
         })
     }
     fn business_token_transfer(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock),
+        locks: &(TokenBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TransferToken>,
     ) -> Result<Nat, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
-        let changed = guard.token_transfer(arg)?; // do transfer
+            let changed = guard.token_transfer(arg)?; // do transfer
             s.business_certified_data_refresh(); // set certified data
-        Ok(changed)
+            Ok(changed)
+        })
+    }
+    fn business_token_transfer_lp(
+        &mut self,
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        arg: ArgWithMeta<TransferToken>,
+    ) -> Result<Nat, BusinessError> {
+        let pa = self
+            .token_pairs
+            .query_all_token_pair_pools()
+            .into_iter()
+            .find(|(_, maker)| maker.dummy_canisters().contains(&arg.arg.token))
+            .map(|(pa, _)| pa)
+            .ok_or(BusinessError::SystemError("must be lp token".to_string()))?;
+        self.updated(|s| {
+            let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
+            let changed = guard.token_lp_transfer(pa, arg)?; // do transfer
+            s.business_certified_data_refresh(); // set certified data
+            Ok(changed)
         })
     }
 
@@ -163,64 +212,68 @@ impl Business for InnerState {
         arg: ArgWithMeta<TokenPairAmm>,
     ) -> Result<MarketMaker, BusinessError> {
         self.updated(|s| {
-        let token0 = TOKENS
-            .get(&arg.arg.pair.token0)
-            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
-        let token1 = TOKENS
-            .get(&arg.arg.pair.token1)
-            .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
+            let token0 = TOKENS
+                .get(&arg.arg.pair.token0)
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
+            let token1 = TOKENS
+                .get(&arg.arg.pair.token1)
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
 
             let mut swap_guard = s.swap_block_chain.be_guard(lock);
             let mut trace_guard = s.request_traces.be_guard(
-            arg.clone().into(),
-            None,
-            None,
-            Some(&swap_guard),
-            None,
-        )?;
+                arg.clone().into(),
+                None,
+                Some(&swap_guard),
+                None,
+                None,
+            )?;
             let maker = s.token_pairs.create_token_pair_pool(
-            &mut swap_guard,
-            &mut trace_guard,
-            arg,
-            token0,
-            token1,
-        )?;
+                &mut swap_guard,
+                &mut trace_guard,
+                arg,
+                token0,
+                token1,
+            )?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(maker)
+            Ok(maker)
         })
     }
     // liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairLiquidityAddArg>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
-        let success = guard.add_liquidity(arg)?;
+            let success = guard.add_liquidity(arg)?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(success)
+            Ok(success)
         })
     }
     fn business_token_pair_check_liquidity_removable(
         &self,
         pa: &TokenPairAmm,
         from: &Account,
-        liquidity: &Nat,
+        liquidity_without_fee: &Nat,
     ) -> Result<(), BusinessError> {
-        self.token_pairs
-            .check_liquidity_removable(&self.token_balances, pa, from, liquidity)
+        self.token_pairs.check_liquidity_removable(
+            &self.token_balances,
+            pa,
+            from,
+            liquidity_without_fee,
+        )
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairLiquidityRemoveArg>,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
-        let success = guard.remove_liquidity(arg)?;
+            let success = guard.remove_liquidity(arg)?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(success)
+            Ok(success)
         })
     }
 
@@ -228,63 +281,61 @@ impl Business for InnerState {
     fn business_token_pair_swap_fixed_in_checking(
         &self,
         arg: &TokenPairSwapExactTokensForTokensArg,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
         self.token_pairs.get_amounts_out(
             &arg.self_canister,
             &arg.amount_in,
             &arg.amount_out_min,
             &arg.path,
             &arg.pas,
-        )?; // ? check again
-        Ok(())
+        ) // ? check again
     }
     fn business_token_pair_swap_fixed_out_checking(
         &self,
         arg: &TokenPairSwapTokensForExactTokensArg,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
         self.token_pairs.get_amounts_in(
             &arg.self_canister,
             &arg.amount_out,
             &arg.amount_in_max,
             &arg.path,
             &arg.pas,
-        )?; // ? check again
-        Ok(())
+        ) // ? check again
     }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
-        let success = guard.swap_exact_tokens_for_tokens(arg)?;
+            let success = guard.swap_exact_tokens_for_tokens(arg)?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(success)
+            Ok(success)
         })
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
-        let success = guard.swap_tokens_for_exact_tokens(arg)?;
+            let success = guard.swap_tokens_for_exact_tokens(arg)?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(success)
+            Ok(success)
         })
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
-        locks: &(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairSwapByLoanArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
-        let success = guard.swap_by_loan(arg)?;
+            let success = guard.swap_by_loan(arg)?;
             s.business_certified_data_refresh(); // set certified data
-        Ok(success)
+            Ok(success)
         })
     }
 

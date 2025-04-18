@@ -51,15 +51,15 @@ impl RequestTrace {
     pub fn new(
         index: RequestIndex,
         args: RequestArgs,
-        balances: Option<&TokenBalancesGuard<'_>>,
         token: Option<&TokenBlockChainGuard<'_>>,
         swap: Option<&SwapBlockChainGuard<'_>>,
+        balances: Option<&TokenBalancesGuard<'_>>,
         trace: Option<String>,
     ) -> Self {
         let mut request_trace = Self {
             index,
             args,
-            locks: BusinessLocks::new(balances, token, swap),
+            locks: BusinessLocks::new(token, swap, balances),
             traces: vec![],
             done: None,
         };

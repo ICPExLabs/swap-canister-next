@@ -11,13 +11,13 @@ use crate::types::*;
 // ============================== query ==============================
 
 #[ic_cdk::update(guard = "has_business_config_fee_to")]
-fn config_fee_to_query() -> Option<Account> {
-    with_state(|s| s.business_config_fee_to_query().cloned())
+fn config_fee_to_query() -> FeeTo {
+    with_state(|s| s.business_config_fee_to_query())
 }
 
 // ============================== replace ==============================
 
 #[ic_cdk::update(guard = "has_business_config_fee_to")]
-fn config_fee_to_replace(fee_to: Option<Account>) -> Option<Account> {
+fn config_swap_fee_to_replace(fee_to: FeeTo) -> FeeTo {
     with_mut_state_without_record(|s| s.business_config_fee_to_replace(fee_to))
 }

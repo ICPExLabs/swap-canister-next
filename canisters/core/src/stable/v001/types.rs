@@ -38,15 +38,15 @@ pub use crate::types::business::*;
 pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
-    Account, Amm, AmmText, BlockIndex, BusinessError, Caller, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, Nat, PairCreate, PairCumulativePrice, PairOperation,
-    PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister,
-    SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken,
-    SwapV2MintToken, SwapV2Operation, TimestampNanos, TokenAccount, TokenBlock, TokenOperation,
-    TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView, TokenPairPool,
-    TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
-    TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferToken, UserId, WithdrawToken,
-    display_account, proto,
+    Account, Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken,
+    DoHash, DummyCanisterId, EncodedBlock, HashOf, Nat, PairCreate, PairCumulativePrice,
+    PairOperation, PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult,
+    SelfCanister, SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken,
+    SwapV2MintToken, SwapV2Operation, SwapV2TransferToken, TimestampNanos, TokenAccount,
+    TokenBlock, TokenOperation, TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView,
+    TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
+    TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId,
+    WithdrawToken, display_account, proto,
 };
 
 mod common;
@@ -55,6 +55,8 @@ pub use common::*;
 
 mod balance;
 mod blockchain;
+mod fee_to;
+mod maintain;
 mod pair;
 mod request;
 
@@ -62,6 +64,10 @@ mod request;
 pub use balance::*;
 #[allow(unused)]
 pub use blockchain::*;
+#[allow(unused)]
+pub use fee_to::*;
+#[allow(unused)]
+pub use maintain::*;
 #[allow(unused)]
 pub use pair::*;
 #[allow(unused)]
@@ -115,7 +121,8 @@ pub struct CanisterKit {
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
     pub updated: TimestampNanos,             // 记录罐子的最后更新时间
-    pub fee_to: Option<Account>, // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
+    pub fee_to: FeeTo,                       // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
+    pub maintain_archives: MaintainArchives, // 维护罐子信息
 }
 
 impl Default for BusinessData {
@@ -123,6 +130,7 @@ impl Default for BusinessData {
         Self {
             updated: TimestampNanos::from_inner(0),
             fee_to: Default::default(),
+            maintain_archives: Default::default(),
         }
     }
 }
@@ -292,11 +300,11 @@ impl Storable for ExampleVec {
 impl InnerState {
     pub fn do_init(&mut self, arg: InitArg) {
         self.updated(|s| {
-        let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
-            vec![ic_canister_kit::identity::caller()] // 默认调用者为维护人员
-        });
+            let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
+                vec![ic_canister_kit::identity::caller()] // 默认调用者为维护人员
+            });
             s.token_block_chain
-            .set_archive_maintainers(Some(maintainers));
+                .set_archive_maintainers(Some(maintainers));
         });
     }
 
@@ -316,20 +324,20 @@ impl InnerState {
 
     pub fn get_token_guard<'a, T>(
         &'a mut self,
-        locks: &'a (TokenBalancesLock, TokenBlockChainLock),
+        locks: &'a (TokenBlockChainLock, TokenBalancesLock),
         arg: T,
         trace: Option<String>,
     ) -> Result<TokenGuard<'a>, BusinessError>
     where
         T: Into<RequestArgs>,
     {
-        let balances_guard = self.token_balances.be_guard(&locks.0);
-        let token_guard = self.token_block_chain.be_guard(&locks.1);
+        let token_guard = self.token_block_chain.be_guard(&locks.0);
+        let balances_guard = self.token_balances.be_guard(&locks.1);
         let trace_guard = self.request_traces.be_guard(
             arg.into(),
-            Some(&balances_guard),
             Some(&token_guard),
             None,
+            Some(&balances_guard),
             trace,
         )?;
         Ok(TokenGuard::new(trace_guard, balances_guard, token_guard))
@@ -337,21 +345,21 @@ impl InnerState {
 
     pub fn get_pair_swap_guard<'a, T>(
         &'a mut self,
-        locks: &'a (TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock),
+        locks: &'a (TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: T,
         trace: Option<String>,
     ) -> Result<TokenPairSwapGuard<'a>, BusinessError>
     where
         T: Into<RequestArgs>,
     {
-        let balances_guard = self.token_balances.be_guard(&locks.0);
-        let token_guard = self.token_block_chain.be_guard(&locks.1);
-        let swap_guard = self.swap_block_chain.be_guard(&locks.2);
+        let token_guard = self.token_block_chain.be_guard(&locks.0);
+        let swap_guard = self.swap_block_chain.be_guard(&locks.1);
+        let balances_guard = self.token_balances.be_guard(&locks.2);
         let trace_guard = self.request_traces.be_guard(
             arg.into(),
-            Some(&balances_guard),
             Some(&token_guard),
             Some(&swap_guard),
+            Some(&balances_guard),
             trace,
         )?;
         Ok(TokenPairSwapGuard::new(

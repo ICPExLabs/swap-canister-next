@@ -26,21 +26,21 @@ pub use business::*;
 pub use ::common::archive::swap::{
     PairCreate, PairCumulativePrice, PairOperation, PairSwapToken, QuerySwapBlockResult, SwapBlock,
     SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken,
-    SwapV2Operation,
+    SwapV2Operation, SwapV2TransferToken,
 };
 #[allow(unused)]
 pub use ::common::archive::token::{
     DepositToken, GetTokenBlocksResult, QueryTokenBlockResult, TokenBlock, TokenBlockRange,
-    TokenOperation, TokenTransaction, TransferFee, TransferToken, WithdrawToken,
+    TokenOperation, TokenTransaction, TransferToken, WithdrawToken,
 };
 #[allow(unused)]
 pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::types::{
-    Amm, AmmText, BlockIndex, BusinessError, Caller, DoHash, DummyCanisterId, EncodedBlock,
-    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, QueryBlockResult, SelfCanister,
-    SwapTokenPair, TimestampNanos, TokenAccount, TokenPair, TokenPairAmm, TokenPairPool,
-    check_caller, display_account,
+    Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DoHash, DummyCanisterId,
+    EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf, QueryBlockResult,
+    SelfCanister, SwapTokenPair, TimestampNanos, TokenAccount, TokenPair, TokenPairAmm,
+    TokenPairPool, TransferFee, check_caller, display_account,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

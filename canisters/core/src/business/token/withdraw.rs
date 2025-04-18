@@ -65,14 +65,14 @@ pub async fn inner_token_withdraw(
     let (now, self_canister, caller, token) = args.check_args()?;
 
     // 2. some value
-    let fee_to = vec![];
+    let fee_tokens = vec![];
     let token_account_from = TokenAccount::new(args.token, args.from);
     let required = vec![token_account_from];
 
     let height = {
         // 3. lock
-        let locks = match super::super::lock_token_balances_and_token_block_chain(
-            fee_to,
+        let locks = match super::super::lock_token_block_chain_and_token_balances(
+            fee_tokens,
             required,
             retries.unwrap_or_default(),
         )? {
@@ -89,12 +89,12 @@ pub async fn inner_token_withdraw(
             // ? 1. transfer token to user
             let fee = args.fee.unwrap_or(token.fee.clone());
             let transfer_arg = crate::services::icrc2::TransferArg {
-                    from_subaccount: None,
-                    to: args.to,
-                    amount: args.withdraw_amount_without_fee.clone(),
+                from_subaccount: None,
+                to: args.to,
+                amount: args.withdraw_amount_without_fee.clone(),
                 fee: Some(fee.clone()), // withdraw action should care fee
-                    memo: None,
-                    created_at_time: None,
+                memo: None,
+                created_at_time: None,
             };
             ic_cdk::println!(
                 "*call canister transfer_arg* `token:[{}], to:({}), amount:{}, fee:{}`",
@@ -128,7 +128,8 @@ pub async fn inner_token_withdraw(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, false);
 
     Ok(height)
 }

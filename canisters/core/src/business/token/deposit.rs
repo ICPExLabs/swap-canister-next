@@ -49,14 +49,14 @@ pub async fn inner_token_deposit(
     let (now, self_canister, caller) = args.check_args()?;
 
     // 2. some value
-    let fee_to = vec![];
+    let fee_tokens = vec![];
     let token_account_to = TokenAccount::new(args.token, args.to);
     let required = vec![token_account_to];
 
     let height = {
         // 3. lock
-        let locks = match super::super::lock_token_balances_and_token_block_chain(
-            fee_to,
+        let locks = match super::super::lock_token_block_chain_and_token_balances(
+            fee_tokens,
             required,
             retries.unwrap_or_default(),
         )? {
@@ -76,13 +76,13 @@ pub async fn inner_token_deposit(
                 subaccount: None,
             };
             let transfer_from_arg = crate::services::icrc2::TransferFromArgs {
-                    from: args.from,
-                    spender_subaccount: None, // approve subaccount
-                    to: self_account,         // * to self
-                    amount: args.deposit_amount_without_fee.clone(),
+                from: args.from,
+                spender_subaccount: None, // approve subaccount
+                to: self_account,         // * to self
+                amount: args.deposit_amount_without_fee.clone(),
                 fee: args.fee, // deposit action doesn't care fee
-                    memo: None,
-                    created_at_time: None,
+                memo: None,
+                created_at_time: None,
             };
             ic_cdk::println!(
                 "*call canister transfer_from_arg* `token:[{}], from:({}), to:({}), amount:{}, fee:0`",
@@ -119,7 +119,8 @@ pub async fn inner_token_deposit(
         }
     };
 
-    // TODO 异步触发同步任务
+    // 异步触发同步任务
+    crate::business::config::push::inner_push_blocks(true, false);
 
     Ok(height)
 }

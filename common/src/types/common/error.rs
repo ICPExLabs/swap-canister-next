@@ -13,6 +13,9 @@ use super::TokenAccount;
 #[derive(Debug, Clone, Deserialize, CandidType, Error)]
 pub enum BusinessError {
     // ================= 通用错误 =================
+    /// 系统错误
+    #[error("system error: {0}")]
+    SystemError(String),
     /// memo 太长
     #[error("too long memo.")]
     MemoTooLong,

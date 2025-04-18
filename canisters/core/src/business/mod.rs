@@ -8,26 +8,25 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
+pub mod archive;
+
 pub mod config;
 
 pub mod token;
 
 pub mod pair;
 
-pub mod archive;
-
 pub mod test;
 
 #[allow(unused)]
 #[inline(always)]
 fn lock_token_balances(
-    fee_to: Vec<CanisterId>,
     required: Vec<TokenAccount>,
     retries: u8,
 ) -> Result<LockResult<TokenBalancesLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
 
-    match with_mut_state_without_record(|s| s.business_token_balance_lock(fee_to, required)) {
+    match with_mut_state_without_record(|s| s.business_token_balance_lock(required)) {
         Ok(lock) => Ok(LockResult::Locked(lock)),
         Err(locked) => {
             if 0 < retries {
@@ -75,58 +74,87 @@ fn lock_swap_block_chain(retries: u8) -> Result<LockResult<SwapBlockChainLock>, 
 
 #[allow(unused)]
 #[inline(always)]
-fn lock_token_balances_and_token_block_chain(
-    fee_to: Vec<CanisterId>,
-    required: Vec<TokenAccount>,
+fn lock_token_block_chain_and_token_balances(
+    fee_tokens: Vec<CanisterId>,
+    mut required: Vec<TokenAccount>,
     retries: u8,
-) -> Result<LockResult<(TokenBalancesLock, TokenBlockChainLock)>, BusinessError> {
-    let balances_lock = match lock_token_balances(fee_to, required, retries)? {
+) -> Result<LockResult<(TokenBlockChainLock, TokenBalancesLock)>, BusinessError> {
+    let token_lock = match lock_token_block_chain(retries)? {
         LockResult::Locked(lock) => lock,
         LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
     };
 
-    let token_lock = match lock_token_block_chain(retries)? {
-        LockResult::Locked(lock) => lock,
-        LockResult::Retry(retries) => {
-            drop(balances_lock); // ! must drop before retry
-            return Ok(LockResult::Retry(retries));
+    // add fee token account
+    if let Some(fee_to) = token_lock.fee_to {
+        for token in fee_tokens {
+            required.push(TokenAccount {
+                token,
+                account: fee_to,
+            });
         }
-    };
+    }
 
-    Ok(LockResult::Locked((balances_lock, token_lock)))
-}
-
-#[allow(unused)]
-#[inline(always)]
-fn lock_token_balances_and_token_block_chain_and_swap_block_chain(
-    fee_to: Vec<CanisterId>,
-    required: Vec<TokenAccount>,
-    retries: u8,
-) -> Result<LockResult<(TokenBalancesLock, TokenBlockChainLock, SwapBlockChainLock)>, BusinessError>
-{
-    let balances_lock = match lock_token_balances(fee_to, required, retries)? {
-        LockResult::Locked(lock) => lock,
-        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
-    };
-
-    let token_lock = match lock_token_block_chain(retries)? {
+    let balances_lock = match lock_token_balances(required, retries)? {
         LockResult::Locked(lock) => lock,
         LockResult::Retry(retries) => {
-            drop(balances_lock); // ! must drop before retry
-            return Ok(LockResult::Retry(retries));
-        }
-    };
-
-    let swap_lock = match lock_swap_block_chain(retries)? {
-        LockResult::Locked(lock) => lock,
-        LockResult::Retry(retries) => {
-            drop(balances_lock); // ! must drop before retry
             drop(token_lock); // ! must drop before retry
             return Ok(LockResult::Retry(retries));
         }
     };
 
-    Ok(LockResult::Locked((balances_lock, token_lock, swap_lock)))
+    Ok(LockResult::Locked((token_lock, balances_lock)))
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
+    fee_tokens: Vec<CanisterId>,
+    mut required: Vec<TokenAccount>,
+    retries: u8,
+) -> Result<LockResult<(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock)>, BusinessError>
+{
+    let token_lock = match lock_token_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
+    };
+
+    let swap_lock = match lock_swap_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(token_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    // add fee token account
+    if let Some(fee_to) = token_lock.fee_to {
+        for &token in &fee_tokens {
+            required.push(TokenAccount {
+                token,
+                account: fee_to,
+            });
+        }
+    }
+    // add fee token account
+    if let Some(fee_to) = swap_lock.fee_to {
+        for &token in &fee_tokens {
+            required.push(TokenAccount {
+                token,
+                account: fee_to,
+            });
+        }
+    }
+
+    let balances_lock = match lock_token_balances(required, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(token_lock); // ! must drop before retry
+            drop(swap_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    Ok(LockResult::Locked((token_lock, swap_lock, balances_lock)))
 }
 
 // 查询最新更新时间

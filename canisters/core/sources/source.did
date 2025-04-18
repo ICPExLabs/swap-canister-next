@@ -1,5 +1,18 @@
 type Account = record { owner : principal; subaccount : opt blob };
 type Amm = variant { "swap_v2_1%"; "swap_v2_0.05%"; "swap_v2_0.3%" };
+type ArchivedBlocks = record {
+  canister_id : principal;
+  length : nat64;
+  block_height_offset : nat64;
+};
+type BlockChainView = record {
+  current_archiving : opt CurrentArchiving;
+  latest_block_hash : blob;
+  archive_config : NextArchiveCanisterConfig;
+  next_block_index : nat64;
+  archived : vec ArchivedBlocks;
+};
+type BurnFee = record { fee : nat; fee_to : Account };
 type BusinessError = variant {
   InvalidTokenPair : record { principal; principal };
   TokenBlockChainLocked;
@@ -8,6 +21,7 @@ type BusinessError = variant {
   Swap : text;
   TokenPairAmmNotExist : TokenPairAmm;
   TokenAccountsLocked : vec TokenAccount;
+  SystemError : text;
   MemoTooLong;
   InsufficientBalance : record { token : principal; balance : nat };
   TokenPairAmmExist : TokenPairAmm;
@@ -42,6 +56,12 @@ type CanisterStatusResponse = record {
   reserved_cycles : nat;
 };
 type CanisterStatusType = variant { stopped; stopping; running };
+type CurrentArchiving = record {
+  canister_id : principal;
+  length : nat64;
+  max_length : nat64;
+  block_height_offset : nat64;
+};
 type DefiniteCanisterSettings = record {
   freezing_threshold : nat;
   controllers : vec principal;
@@ -58,6 +78,7 @@ type DepositToken = record {
   amount : nat;
 };
 type ExampleVec = record { vec_data : nat64 };
+type FeeTo = record { token_fee_to : opt Account; swap_fee_to : opt Account };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
 type InnerLP = record {
@@ -77,6 +98,12 @@ type MigratedRecords = record {
   records : vec Record;
   next_id : nat64;
   removed : nat64;
+};
+type NextArchiveCanisterConfig = record {
+  maintainers : opt vec principal;
+  wasm : opt blob;
+  max_memory_size_bytes : opt nat64;
+  max_length : nat64;
 };
 type OuterLP = record {
   fee : nat;
@@ -219,6 +246,7 @@ type RequestTrace = record {
 };
 type RequestTraceDone = record { result : RequestTraceResult; done : nat64 };
 type RequestTraceResult = variant { ok : text; err : text };
+type Result = variant { Ok; Err : BusinessError };
 type SwapBlock = record {
   transaction : SwapTransaction;
   timestamp : nat64;
@@ -237,6 +265,7 @@ type SwapTransaction = record {
 type SwapV2BurnToken = record {
   pa : TokenPairAmm;
   to : Account;
+  fee : opt BurnFee;
   token : principal;
   from : Account;
   amount0 : nat;
@@ -266,11 +295,30 @@ type SwapV2MintFeeToken = record {
   token : principal;
   amount : nat;
 };
+type SwapV2MintToken = record {
+  pa : TokenPairAmm;
+  to : Account;
+  token : principal;
+  from : Account;
+  amount0 : nat;
+  amount1 : nat;
+  token0 : principal;
+  token1 : principal;
+  amount : nat;
+};
 type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
-  mint : SwapV2BurnToken;
+  mint : SwapV2MintToken;
   mint_fee : SwapV2MintFeeToken;
   cumulative_price : PairCumulativePrice;
+  transfer : SwapV2TransferToken;
+};
+type SwapV2TransferToken = record {
+  pa : TokenPairAmm;
+  to : Account;
+  fee : opt BurnFee;
+  from : Account;
+  amount : nat;
 };
 type TokenAccount = record { token : principal; account : Account };
 type TokenBlock = record {
@@ -300,6 +348,7 @@ type TokenInfo = record {
   decimals : nat8;
   name : text;
   canister_id : principal;
+  is_lp_token : bool;
   symbol : text;
 };
 type TokenOperation = variant {
@@ -355,16 +404,16 @@ type TokenPairLiquidityRemoveArg = record {
   token_a : principal;
   token_b : principal;
   self_canister : principal;
+  liquidity_without_fee : nat;
   from : Account;
-  liquidity : nat;
   amount_b_min : nat;
 };
 type TokenPairLiquidityRemoveArgs = record {
   to : Account;
   created : opt nat64;
+  liquidity_without_fee : nat;
   from : Account;
   memo : opt blob;
-  liquidity : nat;
   deadline : opt nat64;
   amount_min : record { nat; nat };
   swap_pair : SwapTokenPair;
@@ -491,7 +540,6 @@ type TransferError = variant {
   TooOld;
   InsufficientFunds : record { balance : nat };
 };
-type TransferFee = record { fee : nat; fee_to : Account };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -505,7 +553,7 @@ type TransferFromError = variant {
 };
 type TransferToken = record {
   to : Account;
-  fee : opt TransferFee;
+  fee : opt BurnFee;
   token : principal;
   from : Account;
   amount : nat;
@@ -529,8 +577,23 @@ service : (opt InitArgs) -> {
   business_example_vec_push : (nat64) -> ();
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
-  config_fee_to_query : () -> (opt Account);
-  config_fee_to_replace : (opt Account) -> (opt Account);
+  config_fee_to_query : () -> (FeeTo);
+  config_swap_blocks_push : () -> ();
+  config_swap_fee_to_replace : (FeeTo) -> (FeeTo);
+  config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
+      NextArchiveCanisterConfig,
+    );
+  config_token_archive_max_length_replace : (nat64) -> (opt CurrentArchiving);
+  config_token_archived_canister_maintainers_set : (
+      principal,
+      opt vec principal,
+    ) -> (Result);
+  config_token_archived_canister_max_memory_size_bytes_set : (
+      principal,
+      nat64,
+    ) -> (Result);
+  config_token_block_chain : () -> (BlockChainView);
+  config_token_blocks_push : () -> (Result);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
@@ -579,6 +642,9 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
+  test_config_token_current_archiving_replace : (CurrentArchiving) -> (
+      opt CurrentArchiving,
+    );
   test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;

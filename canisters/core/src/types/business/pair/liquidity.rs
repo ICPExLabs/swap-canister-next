@@ -128,7 +128,7 @@ pub struct TokenPairLiquidityRemoveArgs {
     pub from: Account, // 标记来源，caller 务必和 from 一致
 
     pub swap_pair: SwapTokenPair,
-    pub liquidity: Nat,
+    pub liquidity_without_fee: Nat, // 移除流动性会直接销毁一份 fee，限制用户进行女巫攻击
     pub amount_min: (Nat, Nat),
     pub to: Account,
     pub deadline: Option<Deadline>,
@@ -169,7 +169,7 @@ pub struct TokenPairLiquidityRemoveArg {
     pub from: Account,
     pub token_a: CanisterId,
     pub token_b: CanisterId,
-    pub liquidity: Nat,
+    pub liquidity_without_fee: Nat,
     pub amount_a_min: Nat,
     pub amount_b_min: Nat,
     pub to: Account,
@@ -181,7 +181,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArg {
 
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check 0
-        if self.liquidity == *ZERO {
+        if self.liquidity_without_fee == *ZERO {
             return Err(BusinessError::Liquidity("LIQUIDITY_TOO_SMALL".into()));
         }
 

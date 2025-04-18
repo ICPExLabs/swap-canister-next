@@ -1,16 +1,16 @@
-use common::{
-    archive::token::{TokenBlock, TokenTransaction},
-    types::{BlockIndex, CandidBlock, EncodedBlock, HashOf, QueryBlockResult, TimestampNanos},
-};
 use ic_canister_kit::{
     common::trap,
     types::{StableBTreeMap, UserId},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Business, BusinessError, with_mut_state_without_record};
+use crate::types::with_mut_state_without_record;
 
-use super::super::init_token_blocks;
+use super::super::{
+    Account, BlockIndex, Business, BusinessError, CandidBlock, CurrentArchiving, EncodedBlock,
+    HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
+    TokenTransaction, init_token_blocks,
+};
 
 use super::BlockChain;
 
@@ -46,8 +46,61 @@ impl TokenBlockChain {
         self.block_chain.set_archive_maintainers(maintainers);
     }
 
+    // token
+    pub fn get_token_block_chain(&self) -> &BlockChain<TokenBlock> {
+        &self.block_chain
+    }
+    pub fn set_token_archive_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
+        self.block_chain.set_archive_max_length(max_length)
+    }
+    pub fn set_token_archive_config(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        self.block_chain.set_archive_config(archive_config)
+    }
+    pub fn replace_token_current_archiving(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        self.block_chain.replace_token_current_archiving(archiving)
+    }
+
     // locks
-    pub fn lock(&mut self) -> Option<TokenBlockChainLock> {
+    pub fn archive_lock(&mut self) -> Option<TokenBlockChainArchiveLock> {
+        let mut locked = trap(self.block_chain.archive_locked.write()); // ! what if failed ?
+
+        if *locked {
+            return None;
+        }
+
+        *locked = true;
+        ic_cdk::println!("🔒 Archive Locked token block chain.");
+
+        Some(TokenBlockChainArchiveLock)
+    }
+
+    pub fn archive_unlock(&mut self) {
+        let mut locked = trap(self.block_chain.archive_locked.write()); // ! what if failed ?
+
+        // 1. check first
+        if !*locked {
+            // if not true, terminator
+            let tips = "Archive Unlock token block chain failed. That is not locked.";
+            ic_cdk::trap(tips); // never be here
+        }
+
+        // 2. do unlock
+        *locked = false;
+        ic_cdk::println!("🔐 Archive Unlock token block chain.");
+    }
+
+    pub fn archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.block_chain.archive_current_canister()
+    }
+
+    // locks
+    pub fn lock(&mut self, fee_to: Option<Account>) -> Option<TokenBlockChainLock> {
         let mut locked = trap(self.block_chain.locked.write()); // ! what if failed ?
 
         if *locked {
@@ -57,7 +110,7 @@ impl TokenBlockChain {
         *locked = true;
         ic_cdk::println!("🔒 Locked token block chain.");
 
-        Some(TokenBlockChainLock)
+        Some(TokenBlockChainLock { fee_to })
     }
 
     pub fn unlock(&mut self) {
@@ -66,7 +119,7 @@ impl TokenBlockChain {
         // 1. check first
         if !*locked {
             // if not true, terminator
-            let tips = "Unlock a token block chain failed. That is not locked.";
+            let tips = "Unlock token block chain failed. That is not locked.";
             ic_cdk::trap(tips); // never be here
         }
 
@@ -89,7 +142,17 @@ impl TokenBlockChain {
 
 // ============================ lock ============================
 
-pub struct TokenBlockChainLock;
+pub struct TokenBlockChainArchiveLock;
+
+impl Drop for TokenBlockChainArchiveLock {
+    fn drop(&mut self) {
+        with_mut_state_without_record(|s| s.business_token_block_chain_archive_unlock())
+    }
+}
+
+pub struct TokenBlockChainLock {
+    pub fee_to: Option<Account>,
+}
 
 impl Drop for TokenBlockChainLock {
     fn drop(&mut self) {
