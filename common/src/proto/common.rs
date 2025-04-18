@@ -26,3 +26,19 @@ pub struct UserId {
     #[prost(bytes = "bytes", tag = "1")]
     pub bytes: ::prost::bytes::Bytes,
 }
+/// 代币转移收取手续费
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TransferFee {
+    #[prost(message, optional, tag = "1")]
+    pub fee: ::core::option::Option<Nat>,
+    #[prost(message, optional, tag = "2")]
+    pub fee_to: ::core::option::Option<Account>,
+}
+/// 销毁流动性收取手续费
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BurnFee {
+    #[prost(message, optional, tag = "1")]
+    pub fee: ::core::option::Option<Nat>,
+    #[prost(message, optional, tag = "2")]
+    pub fee_to: ::core::option::Option<Account>,
+}

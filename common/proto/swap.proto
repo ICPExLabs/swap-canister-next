@@ -47,6 +47,15 @@ message PairSwapToken {
 
 // ========================= basic operation pair swap v2 =========================
 
+// cumulative price
+message PairCumulativePrice {
+    TokenPairAmm pa = 1;
+    uint64 block_timestamp = 2;
+    uint32 price_cumulative_exponent = 3;
+    common.Nat price0_cumulative = 4;
+    common.Nat price1_cumulative = 5;
+}
+
 // mint
 message SwapV2MintToken {
     // which token pair
@@ -81,6 +90,8 @@ message SwapV2BurnToken {
     common.Nat amount1 = 8;
     // to account
     common.Account to = 9;
+    // maybe fee
+    optional common.BurnFee fee = 10;
 }
 
 // mint fee
@@ -94,23 +105,24 @@ message SwapV2MintFeeToken {
     common.Account to = 4;
 }
 
-
-// cumulative price
-message PairCumulativePrice {
+// transfer
+message SwapV2TransferToken {
+    // which token pair
     TokenPairAmm pa = 1;
-    uint64 block_timestamp = 2;
-    uint32 price_cumulative_exponent = 3;
-    common.Nat price0_cumulative = 4;
-    common.Nat price1_cumulative = 5;
+    common.Account from = 2;
+    common.Nat amount = 3;
+    common.Account to = 4;
+    optional common.TransferFee fee = 5;
 }
 
 // swap v2 operation
 message SwapV2Operation {
     oneof swap_v2_operation {
-        SwapV2MintToken mint = 1;
-        SwapV2BurnToken burn = 2;
-        SwapV2MintFeeToken mint_fee = 3;
-        PairCumulativePrice cumulative_price = 4;
+        PairCumulativePrice cumulative_price = 1;
+        SwapV2MintToken mint = 2;
+        SwapV2BurnToken burn = 3;
+        SwapV2MintFeeToken mint_fee = 4;
+        SwapV2TransferToken transfer = 5;
     }
 }
 

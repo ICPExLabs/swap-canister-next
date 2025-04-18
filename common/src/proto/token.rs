@@ -35,14 +35,7 @@ pub struct TransferToken {
     #[prost(message, optional, tag = "4")]
     pub to: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "5")]
-    pub fee: ::core::option::Option<TransferFee>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TransferFee {
-    #[prost(message, optional, tag = "1")]
-    pub fee: ::core::option::Option<super::common::Nat>,
-    #[prost(message, optional, tag = "2")]
-    pub fee_to: ::core::option::Option<super::common::Account>,
+    pub fee: ::core::option::Option<super::common::TransferFee>,
 }
 /// operation
 #[derive(Clone, PartialEq, ::prost::Message)]

@@ -13,3 +13,7 @@ pub use account::*;
 /// principal
 mod principal;
 pub use principal::*;
+
+/// fee
+mod fee;
+pub use fee::*;

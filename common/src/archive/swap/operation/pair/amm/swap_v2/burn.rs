@@ -3,7 +3,10 @@ use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::TokenPairAmm};
+use crate::{
+    proto,
+    types::{BurnFee, TokenPairAmm},
+};
 
 // ==================== swap v2 burn ====================
 
@@ -33,6 +36,9 @@ pub struct SwapV2BurnToken {
 
     /// 操作账户
     pub to: Account,
+
+    /// 销毁手续费
+    pub fee: Option<BurnFee>,
 }
 
 impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
@@ -48,6 +54,7 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
         let amount0 = value.amount0.try_into()?;
         let amount1 = value.amount1.try_into()?;
         let to = value.to.into();
+        let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
 
         Ok(Self {
             pa: Some(pa),
@@ -59,6 +66,7 @@ impl TryFrom<SwapV2BurnToken> for proto::SwapV2BurnToken {
             amount0: Some(amount0),
             amount1: Some(amount1),
             to: Some(to),
+            fee,
         })
     }
 }
@@ -106,6 +114,7 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             .to
             .ok_or_else(|| "to of swap v2 burn token can not be none".to_string())?
             .try_into()?;
+        let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
 
         Ok(Self {
             pa,
@@ -117,6 +126,7 @@ impl TryFrom<proto::SwapV2BurnToken> for SwapV2BurnToken {
             amount0,
             amount1,
             to,
+            fee,
         })
     }
 }

@@ -22,3 +22,15 @@ message Nat {
 message UserId {
     bytes bytes = 1;
 }
+
+// 代币转移收取手续费
+message TransferFee {
+    common.Nat fee = 1;
+    common.Account fee_to = 2;
+}
+
+// 销毁流动性收取手续费
+message BurnFee {
+    common.Nat fee = 1;
+    common.Account fee_to = 2;
+}

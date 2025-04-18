@@ -28,11 +28,7 @@ message TransferToken {
     common.Account from = 2;
     common.Nat amount = 3;
     common.Account to = 4;
-    optional TransferFee fee = 5;
-}
-message TransferFee {
-    common.Nat fee = 1;
-    common.Account fee_to = 2;
+    optional common.TransferFee fee = 5;
 }
 
 // ========================= token operation =========================

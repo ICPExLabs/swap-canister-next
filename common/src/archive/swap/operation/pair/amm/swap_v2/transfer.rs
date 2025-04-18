@@ -1,15 +1,17 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::TransferFee};
+use crate::{
+    proto,
+    types::{TokenPairAmm, TransferFee},
+};
 
 /// 转账交易
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
-pub struct TransferToken {
-    /// 代币
-    pub token: CanisterId,
+pub struct SwapV2TransferToken {
+    /// 池子
+    pub pa: TokenPairAmm,
     /// 源账户
     pub from: Account,
     /// 转移数量，不包含手续费
@@ -20,18 +22,18 @@ pub struct TransferToken {
     pub fee: Option<TransferFee>,
 }
 
-impl TryFrom<TransferToken> for proto::TransferToken {
+impl TryFrom<SwapV2TransferToken> for proto::SwapV2TransferToken {
     type Error = candid::Error;
 
-    fn try_from(value: TransferToken) -> Result<Self, Self::Error> {
-        let token = value.token.into();
+    fn try_from(value: SwapV2TransferToken) -> Result<Self, Self::Error> {
+        let pa = value.pa.into();
         let from = value.from.into();
         let amount = value.amount.try_into()?;
         let to = value.to.into();
         let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
-        
+
         Ok(Self {
-            token: Some(token),
+            pa: Some(pa),
             from: Some(from),
             amount: Some(amount),
             to: Some(to),
@@ -40,14 +42,14 @@ impl TryFrom<TransferToken> for proto::TransferToken {
     }
 }
 
-impl TryFrom<proto::TransferToken> for TransferToken {
+impl TryFrom<proto::SwapV2TransferToken> for SwapV2TransferToken {
     type Error = String;
 
-    fn try_from(value: proto::TransferToken) -> Result<Self, Self::Error> {
-        let token = value
-            .token
-            .ok_or_else(|| "token of withdraw can not be none".to_string())?
-            .into();
+    fn try_from(value: proto::SwapV2TransferToken) -> Result<Self, Self::Error> {
+        let pa = value
+            .pa
+            .ok_or_else(|| "pa of swap v2 burn token can not be none".to_string())?
+            .try_into()?;
         let from = value
             .from
             .ok_or_else(|| "from of withdraw can not be none".to_string())?
@@ -64,7 +66,7 @@ impl TryFrom<proto::TransferToken> for TransferToken {
         let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
 
         Ok(Self {
-            token,
+            pa,
             from,
             amount,
             to,

@@ -26,6 +26,7 @@ impl TryFrom<WithdrawToken> for proto::WithdrawToken {
         let from = value.from.into();
         let amount = value.amount.try_into()?;
         let to = value.to.into();
+        
         Ok(Self {
             token: Some(token),
             from: Some(from),

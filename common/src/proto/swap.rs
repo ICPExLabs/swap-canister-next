@@ -46,6 +46,20 @@ pub struct PairSwapToken {
     #[prost(message, optional, tag = "7")]
     pub amount_b: ::core::option::Option<super::common::Nat>,
 }
+/// cumulative price
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PairCumulativePrice {
+    #[prost(message, optional, tag = "1")]
+    pub pa: ::core::option::Option<TokenPairAmm>,
+    #[prost(uint64, tag = "2")]
+    pub block_timestamp: u64,
+    #[prost(uint32, tag = "3")]
+    pub price_cumulative_exponent: u32,
+    #[prost(message, optional, tag = "4")]
+    pub price0_cumulative: ::core::option::Option<super::common::Nat>,
+    #[prost(message, optional, tag = "5")]
+    pub price1_cumulative: ::core::option::Option<super::common::Nat>,
+}
 /// mint
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SwapV2MintToken {
@@ -99,6 +113,9 @@ pub struct SwapV2BurnToken {
     /// to account
     #[prost(message, optional, tag = "9")]
     pub to: ::core::option::Option<super::common::Account>,
+    /// maybe fee
+    #[prost(message, optional, tag = "10")]
+    pub fee: ::core::option::Option<super::common::BurnFee>,
 }
 /// mint fee
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -115,24 +132,25 @@ pub struct SwapV2MintFeeToken {
     #[prost(message, optional, tag = "4")]
     pub to: ::core::option::Option<super::common::Account>,
 }
-/// cumulative price
+/// transfer
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PairCumulativePrice {
+pub struct SwapV2TransferToken {
+    /// which token pair
     #[prost(message, optional, tag = "1")]
     pub pa: ::core::option::Option<TokenPairAmm>,
-    #[prost(uint64, tag = "2")]
-    pub block_timestamp: u64,
-    #[prost(uint32, tag = "3")]
-    pub price_cumulative_exponent: u32,
+    #[prost(message, optional, tag = "2")]
+    pub from: ::core::option::Option<super::common::Account>,
+    #[prost(message, optional, tag = "3")]
+    pub amount: ::core::option::Option<super::common::Nat>,
     #[prost(message, optional, tag = "4")]
-    pub price0_cumulative: ::core::option::Option<super::common::Nat>,
+    pub to: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "5")]
-    pub price1_cumulative: ::core::option::Option<super::common::Nat>,
+    pub fee: ::core::option::Option<super::common::TransferFee>,
 }
 /// swap v2 operation
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SwapV2Operation {
-    #[prost(oneof = "swap_v2_operation::SwapV2Operation", tags = "1, 2, 3, 4")]
+    #[prost(oneof = "swap_v2_operation::SwapV2Operation", tags = "1, 2, 3, 4, 5")]
     pub swap_v2_operation: ::core::option::Option<swap_v2_operation::SwapV2Operation>,
 }
 /// Nested message and enum types in `SwapV2Operation`.
@@ -141,13 +159,15 @@ pub mod swap_v2_operation {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum SwapV2Operation {
         #[prost(message, tag = "1")]
-        Mint(super::SwapV2MintToken),
-        #[prost(message, tag = "2")]
-        Burn(super::SwapV2BurnToken),
-        #[prost(message, tag = "3")]
-        MintFee(super::SwapV2MintFeeToken),
-        #[prost(message, tag = "4")]
         CumulativePrice(super::PairCumulativePrice),
+        #[prost(message, tag = "2")]
+        Mint(super::SwapV2MintToken),
+        #[prost(message, tag = "3")]
+        Burn(super::SwapV2BurnToken),
+        #[prost(message, tag = "4")]
+        MintFee(super::SwapV2MintFeeToken),
+        #[prost(message, tag = "5")]
+        Transfer(super::SwapV2TransferToken),
     }
 }
 /// pair operation
