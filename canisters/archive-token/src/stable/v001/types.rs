@@ -19,24 +19,10 @@ pub use super::permission::*;
 pub use super::schedule::schedule_task;
 
 // 初始化参数
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArgV1 {
-    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-
-    pub max_memory_size_bytes: Option<u64>,
-    pub core_canister_id: Option<CanisterId>,
-    pub block_offset: Option<(BlockIndex, HashOf<TokenBlock>)>,
-}
+pub type InitArgV1 = ::common::archive::token::InitArgV1;
 
 // 升级参数
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArgV1 {
-    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-
-    pub max_memory_size_bytes: Option<u64>,
-}
+pub type UpgradeArgV1 = ::common::archive::token::UpgradeArgV1;
 
 #[allow(unused)]
 pub use crate::types::{
@@ -281,13 +267,17 @@ impl InnerState {
         self.business_data.last_upgrade_timestamp_ns = ic_cdk::api::time();
 
         if let Some(max_memory_size_bytes) = arg.max_memory_size_bytes {
-            let total_block_size = self.blocks.total_block_size();
-            if max_memory_size_bytes < total_block_size {
-                ic_cdk::trap(&format!(
-                    "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
-                ));
-            }
-            self.business_data.max_memory_size_bytes = max_memory_size_bytes;
+            self.update_max_memory_size_bytes(max_memory_size_bytes);
         }
+    }
+
+    pub fn update_max_memory_size_bytes(&mut self, max_memory_size_bytes: u64) {
+        let total_block_size = self.blocks.total_block_size();
+        if max_memory_size_bytes < total_block_size {
+            ic_cdk::trap(&format!(
+                "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
+            ));
+        }
+        self.business_data.max_memory_size_bytes = max_memory_size_bytes;
     }
 }

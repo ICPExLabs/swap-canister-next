@@ -116,6 +116,13 @@ blue "\n🚩 3 business query"
 test "query_latest_block_index" "$(dfx canister call archive_token query_latest_block_index 2>&1)" '(opt (0 : nat64))'
 test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( record { stable_memory_pages = 1_025 : nat64; stable_memory_bytes = 67_174_400 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 10_737_418_240 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'
 
+blue "\n🚩 4 business set_max_memory_size_bytes"
+test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( record { stable_memory_pages = 1_025 : nat64; stable_memory_bytes = 67_174_400 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 10_737_418_240 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'
+test "set_max_memory_size_bytes" "$(dfx --identity alice canister call archive_token set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Only Core canister is allowed to append blocks to an Archive Node'
+test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_token set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Cannot set max_memory_size_bytes to 10, because it is lower than total_block_size 65.'
+test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_token set_max_memory_size_bytes "(100:nat64)" 2>&1)" '()'
+test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( record { stable_memory_pages = 1_025 : nat64; stable_memory_bytes = 67_174_400 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 100 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'
+
 blue "\n🚩 1.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call archive_token version 2>&1)" '(1 : nat32)'
 test "permission_all" "$(dfx --identity alice canister call archive_token permission_all 2>&1)" 'vec { variant { Forbidden = "PauseQuery" }; variant { Permitted = "PauseReplace" }'

@@ -61,6 +61,9 @@ pub trait Business:
     fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_config_max_memory_size_bytes_set(&mut self, max_memory_size_bytes: u64) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
         ic_cdk::trap("Not supported operation by this version.")
@@ -161,6 +164,10 @@ impl Business for State {
 
     fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
         self.get_mut().business_config_maintainers_set(maintainers)
+    }
+    fn business_config_max_memory_size_bytes_set(&mut self, max_memory_size_bytes: u64) {
+        self.get_mut()
+            .business_config_max_memory_size_bytes_set(max_memory_size_bytes)
     }
 
     fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
