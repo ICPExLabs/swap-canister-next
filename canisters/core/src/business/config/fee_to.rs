@@ -18,6 +18,6 @@ fn config_fee_to_query() -> FeeTo {
 // ============================== replace ==============================
 
 #[ic_cdk::update(guard = "has_business_config_fee_to")]
-fn config_swap_fee_to_replace(fee_to: FeeTo) -> FeeTo {
+fn config_fee_to_replace(fee_to: FeeTo) -> FeeTo {
     with_mut_state_without_record(|s| s.business_config_fee_to_replace(fee_to))
 }

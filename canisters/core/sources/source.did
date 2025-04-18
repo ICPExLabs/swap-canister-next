@@ -578,8 +578,8 @@ service : (opt InitArgs) -> {
   business_example_vec_query : () -> (vec ExampleVec) query;
   canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (FeeTo);
+  config_fee_to_replace : (FeeTo) -> (FeeTo);
   config_swap_blocks_push : () -> ();
-  config_swap_fee_to_replace : (FeeTo) -> (FeeTo);
   config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
