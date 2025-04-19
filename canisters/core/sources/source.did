@@ -36,7 +36,7 @@ type BusinessError = variant {
   NotOwner : principal;
   BadTransferFee : record { expected_fee : nat };
   SwapBlockChainError : text;
-  CallCanisterError : record { RejectionCode; text };
+  CallCanisterError : text;
   Liquidity : text;
   Expired : record { deadline : nat64; system : nat64 };
 };
@@ -190,6 +190,8 @@ type PermissionUpdatedArg = variant {
   UpdateUserRole : record { principal; opt vec text };
 };
 type PoolLp = variant { outer : OuterLP; inner : InnerLP };
+type PushBlocks = record { block_height_start : nat64; length : nat64 };
+type PushBlocksResult = variant { Ok : opt PushBlocks; Err : BusinessError };
 type QueryPage = record { page : nat64; size : nat32 };
 type QueryStats = record {
   response_payload_bytes_total : nat;
@@ -217,24 +219,18 @@ type RecordSearchArg = record {
   content : opt text;
   caller : opt vec principal;
 };
-type RejectionCode = variant {
-  NoError;
-  CanisterError;
-  SysTransient;
-  DestinationInvalid;
-  Unknown;
-  SysFatal;
-  CanisterReject;
-};
 type RequestArgs = variant {
+  token_block_push;
   token_deposit : TokenDepositArgWithMeta;
   pair_create : PairCreateArgWithMeta;
   pair_swap_exact_tokens_for_tokens : PairSwapExactTokensForTokensArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
   pair_swap_by_loan : PairSwapByLoanArgWithMeta;
+  blocks_maintaining;
   pair_liquidity_remove : PairLiquidityRemoveArgWithMeta;
   pair_swap_tokens_for_exact_tokens : PairSwapTokensForExactTokensArgWithMeta;
+  swap_block_push;
   token_withdraw : TokenDepositArgWithMeta;
 };
 type RequestTrace = record {
@@ -593,7 +589,7 @@ service : (opt InitArgs) -> {
       nat64,
     ) -> (Result);
   config_token_block_chain : () -> (BlockChainView);
-  config_token_blocks_push : () -> (Result);
+  config_token_blocks_push : () -> (PushBlocksResult);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,

@@ -65,6 +65,33 @@ impl TokenBlockChain {
     ) -> Option<CurrentArchiving> {
         self.block_chain.replace_token_current_archiving(archiving)
     }
+    pub fn get_parent_hash(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
+        if let Some(block) = self.cached.get(&block_height) {
+            let block: TokenBlock = trap(block.try_into());
+            return Some(block.get_parent_hash());
+        }
+        Some(self.block_chain.latest_block_hash)
+    }
+    pub fn get_cached_block_index(&self) -> Option<(BlockIndex, u64)> {
+        let keys = self.cached.keys().collect::<Vec<_>>();
+        let length = keys.len();
+        keys.into_iter().min().map(|height| (height, length as u64))
+    }
+    pub fn archived_block(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
+        use ::common::types::system_error;
+        if !self.cached.contains_key(&block_height) {
+            return Err(system_error(format!(
+                "block: {block_height} is not exist. can not remove"
+            )));
+        }
+        if !self.block_chain.increment(block_height) {
+            return Err(system_error(format!(
+                "last block height is not: {block_height}"
+            )));
+        }
+        self.cached.remove(&block_height);
+        Ok(())
+    }
 
     // locks
     pub fn archive_lock(&mut self) -> Option<TokenBlockChainArchiveLock> {

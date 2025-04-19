@@ -56,6 +56,30 @@ pub trait Business:
     ) -> Option<CurrentArchiving> {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_config_token_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<TokenBlock>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_token_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    // maintain archives
+    fn business_config_maintain_archives_cycles_recharged(
+        &mut self,
+        canister_id: CanisterId,
+        cycles: u128,
+    ) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {
@@ -264,6 +288,9 @@ pub trait Business:
     fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_request_trace_insert(&mut self, trace: RequestTrace) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     fn business_example_query(&self) -> String {
         ic_cdk::trap("Not supported operation by this version.")
@@ -355,6 +382,33 @@ impl Business for State {
     ) -> Option<CurrentArchiving> {
         self.get_mut()
             .business_config_token_current_archiving_replace(archiving)
+    }
+    fn business_config_token_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<TokenBlock>> {
+        self.get()
+            .business_config_token_parent_hash_get(block_height)
+    }
+    fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.get().business_config_token_cached_block_get()
+    }
+    fn business_config_token_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        self.get_mut()
+            .business_config_token_block_archived(block_height)
+    }
+
+    // maintain archives
+    fn business_config_maintain_archives_cycles_recharged(
+        &mut self,
+        canister_id: CanisterId,
+        cycles: u128,
+    ) {
+        self.get_mut()
+            .business_config_maintain_archives_cycles_recharged(canister_id, cycles)
     }
 
     // set_certified_data
@@ -568,6 +622,9 @@ impl Business for State {
     }
     fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
         self.get_mut().business_request_trace_remove(index)
+    }
+    fn business_request_trace_insert(&mut self, trace: RequestTrace) {
+        self.get_mut().business_request_trace_insert(trace)
     }
 
     fn business_example_query(&self) -> String {

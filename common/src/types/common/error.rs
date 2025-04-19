@@ -2,7 +2,7 @@ use candid::{CandidType, Nat};
 use ic_canister_kit::types::{CanisterId, UserId};
 use ic_cdk::api::call::RejectionCode;
 use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::transfer_from::TransferFromError};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::types::TokenPairAmm;
@@ -10,7 +10,7 @@ use crate::types::TokenPairAmm;
 use super::TokenAccount;
 
 /// 所有错误
-#[derive(Debug, Clone, Deserialize, CandidType, Error)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType, Error)]
 pub enum BusinessError {
     // ================= 通用错误 =================
     /// 系统错误
@@ -28,8 +28,8 @@ pub enum BusinessError {
         created: u64,
     },
     /// 跨罐子调用错误
-    #[error("call canister error. (code: {0:?}, message: {1})")]
-    CallCanisterError(RejectionCode, String),
+    #[error("call canister error. ({0})")]
+    CallCanisterError(String),
     /// 必须自己作为所有者才能调用
     #[error("caller must be owner. (owner: {0})")]
     NotOwner(UserId),
@@ -136,9 +136,17 @@ fn display_token_accounts(accounts: &[TokenAccount]) -> String {
     )
 }
 
+/// system error
+pub fn system_error(message: impl Into<String>) -> BusinessError {
+    BusinessError::SystemError(message.into())
+}
+
 impl From<(RejectionCode, String)> for BusinessError {
     fn from(value: (RejectionCode, String)) -> Self {
-        Self::CallCanisterError(value.0, value.1)
+        Self::CallCanisterError(format!(
+            "rejection code: {:?}, message: {}",
+            value.0, value.1
+        ))
     }
 }
 

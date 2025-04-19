@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard};
 
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Default, Serialize, Deserialize, CandidType)]
 pub struct BusinessLocks {
     /// 是否有 token 锁
     token: Option<bool>,

@@ -2,7 +2,7 @@
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
 use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
-use common::types::BusinessError;
+use common::types::{BusinessError, EncodedBlock};
 use ic_canister_kit::types::UserId;
 
 pub struct Service(pub Principal);
@@ -24,6 +24,10 @@ impl Service {
             (max_memory_size_bytes,),
         )
         .await?;
+        Ok(())
+    }
+    pub async fn append_blocks(&self, args: Vec<EncodedBlock>) -> Result<(), BusinessError> {
+        ic_cdk::call::<_, ()>(self.0, "append_blocks", (args,)).await?;
         Ok(())
     }
 }

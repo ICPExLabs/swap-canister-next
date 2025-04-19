@@ -10,6 +10,13 @@ use super::super::{
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub enum RequestArgs {
+    // no arg
+    #[serde(rename = "token_block_push")]
+    TokenBlockPush,
+    #[serde(rename = "swap_block_push")]
+    SwapBlockPush,
+    #[serde(rename = "blocks_maintaining")]
+    BlocksMaintaining,
     // token
     #[serde(rename = "token_deposit")]
     TokenDeposit(Box<TokenDepositArgWithMeta>),

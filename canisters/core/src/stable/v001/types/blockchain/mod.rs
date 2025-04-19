@@ -100,7 +100,7 @@ impl<T> BlockChain<T> {
         };
         // 必须达到最大限度才能归档
         if current_archiving.length < current_archiving.max_length {
-            return Err(BusinessError::SystemError(format!(
+            return Err(common::types::system_error(format!(
                 "can not archive canister because: current_length: {} < max_length:{}",
                 current_archiving.length, current_archiving.max_length
             )));
@@ -113,6 +113,13 @@ impl<T> BlockChain<T> {
         self.archived.push(archived);
         self.current_archiving = None;
         Ok(())
+    }
+
+    pub fn increment(&mut self, block_height: BlockIndex) -> bool {
+        match self.current_archiving.as_mut() {
+            Some(current_archiving) => current_archiving.increment(block_height),
+            None => false,
+        }
     }
 }
 
@@ -151,14 +158,42 @@ impl CurrentArchiving {
         }
         None
     }
+
+    pub fn is_full(&self) -> bool {
+        self.max_length <= self.length
+    }
+    pub fn remain(&self) -> u64 {
+        self.max_length - self.length
+    }
+    pub fn increment(&mut self, block_height: BlockIndex) -> bool {
+        if self.is_full() {
+            return false;
+        }
+        if self.block_height_offset + self.length != block_height {
+            return false;
+        }
+        self.length += 1;
+        true
+    }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct NextArchiveCanisterConfig {
     pub maintainers: Option<Vec<UserId>>,   // 维护人
     pub max_memory_size_bytes: Option<u64>, // 最大内存
     pub wasm: Option<Vec<u8>>,              // wasm
     pub max_length: u64,                    // 最大长度
+}
+
+impl Default for NextArchiveCanisterConfig {
+    fn default() -> Self {
+        Self {
+            maintainers: None,
+            max_memory_size_bytes: None,
+            wasm: None,
+            max_length: 1_000_000, // ? 估计 10 GB
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]

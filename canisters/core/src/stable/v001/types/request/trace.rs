@@ -27,10 +27,10 @@ pub struct RequestTraceDone {
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct RequestTrace {
     index: RequestIndex,
-    args: RequestArgs,
+    pub args: RequestArgs,
     locks: BusinessLocks,
-    traces: Vec<(TimestampNanos, String)>,
-    done: Option<RequestTraceDone>,
+    pub traces: Vec<(TimestampNanos, String)>,
+    pub done: Option<RequestTraceDone>,
 }
 
 impl Storable for RequestTrace {
@@ -67,6 +67,16 @@ impl RequestTrace {
             request_trace.trace(trace);
         }
         request_trace
+    }
+
+    pub fn from_args(args: RequestArgs) -> Self {
+        Self {
+            index: Default::default(),
+            args,
+            locks: BusinessLocks::default(),
+            traces: vec![],
+            done: None,
+        }
     }
 
     pub fn trace(&mut self, trace: String) {

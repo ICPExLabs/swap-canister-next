@@ -12,7 +12,8 @@ use crate::types::*;
 pub fn inner_push_blocks(token: bool, swap: bool) {
     if token {
         ic_cdk::spawn(async {
-            let _ = crate::business::config::blockchain::token::config_token_blocks_push().await;
+            let _ =
+                crate::business::config::blockchain::token::inner_config_token_blocks_push().await;
         });
     }
     if swap {

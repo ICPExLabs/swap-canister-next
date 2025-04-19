@@ -45,6 +45,32 @@ impl Business for InnerState {
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         self.token_block_chain.archive_current_canister()
     }
+    fn business_config_token_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<TokenBlock>> {
+        self.token_block_chain.get_parent_hash(block_height)
+    }
+    fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.token_block_chain.get_cached_block_index()
+    }
+    fn business_config_token_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        self.token_block_chain.archived_block(block_height)
+    }
+
+    // maintain archives
+    fn business_config_maintain_archives_cycles_recharged(
+        &mut self,
+        canister_id: CanisterId,
+        cycles: u128,
+    ) {
+        self.business_data
+            .maintain_archives
+            .cycles_recharged(canister_id, cycles)
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {
@@ -371,6 +397,9 @@ impl Business for InnerState {
     }
     fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
         self.updated(|s| s.request_traces.remove_request_trace(index))
+    }
+    fn business_request_trace_insert(&mut self, trace: RequestTrace) {
+        self.request_traces.insert_request_trace(trace)
     }
 
     fn business_example_query(&self) -> String {

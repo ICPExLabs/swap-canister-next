@@ -52,6 +52,13 @@ impl RequestTraces {
     pub fn remove_request_trace(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
         self.traces.remove(index)
     }
+    pub fn insert_request_trace(&mut self, trace: RequestTrace) {
+        let mut guard = trap(self.be_guard(trace.args, None, None, None, None));
+        guard.do_trace(|t| {
+            t.traces = trace.traces;
+            t.done = trace.done;
+        });
+    }
 
     pub fn be_guard<'a>(
         &'a mut self,

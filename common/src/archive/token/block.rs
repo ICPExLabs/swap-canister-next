@@ -17,6 +17,13 @@ use super::transaction::TokenTransaction;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TokenBlock(pub CandidBlock<TokenBlock, TokenTransaction>);
 
+impl TokenBlock {
+    /// parent hash
+    pub fn get_parent_hash(&self) -> HashOf<TokenBlock> {
+        self.0.parent_hash
+    }
+}
+
 impl DoHash for TokenBlock {
     fn do_hash(&self) -> Result<HashOf<TokenBlock>, String> {
         let mut bytes = Vec::with_capacity(32 + 32);

@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use candid::Nat;
-use common::types::TimestampNanos;
 use ic_canister_kit::types::CanisterId;
 use serde::{Deserialize, Serialize};
+
+use super::*;
 
 // 默认最小阈值
 const DEFAULT_MIN_CYCLES_THRESHOLD: u64 = 5_000_000_000_000; // 5 T cycles
@@ -34,5 +35,11 @@ impl Default for MaintainArchives {
             checking_interval_ns: 1_000_000 * 1000 * 3600 * 8, // 每 8 小时检查一次
             last_checked_timestamp: TimestampNanos::from_inner(0),
         }
+    }
+}
+
+impl MaintainArchives {
+    pub fn cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
+        *(self.recharged.entry(canister_id).or_default()) += Nat::from(cycles);
     }
 }

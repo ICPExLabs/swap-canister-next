@@ -3,6 +3,15 @@
     "core": {
       "type": "custom",
       "build": [
+        "cargo build -p common --features \"full\"",
+        "cargo test -p archive-token update_candid -- --nocapture",
+        "cargo build -p archive-token --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public",
+        "ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink",
+        "cargo test -p archive-swap update_candid -- --nocapture",
+        "cargo build -p archive-swap --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public",
+        "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink",
         "cargo test -p core update_candid -- --nocapture",
         "cargo build -p core --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/core.wasm -o canisters/core/sources/source_opt.wasm metadata candid:service -f canisters/core/sources/source.did -v public",

@@ -17,6 +17,13 @@ use super::transaction::SwapTransaction;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapBlock(pub CandidBlock<SwapBlock, SwapTransaction>);
 
+impl SwapBlock {
+    /// parent hash
+    pub fn get_parent_hash(&self) -> HashOf<SwapBlock> {
+        self.0.parent_hash
+    }
+}
+
 impl DoHash for SwapBlock {
     fn do_hash(&self) -> Result<HashOf<SwapBlock>, String> {
         let mut bytes = Vec::with_capacity(32 + 32);
