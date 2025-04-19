@@ -1,5 +1,4 @@
 use candid::CandidType;
-use ic_canister_kit::types::Permission;
 use serde::{Deserialize, Serialize};
 
 mod common;
@@ -121,17 +120,3 @@ impl State {
         }
     }
 }
-
-// ================== 权限 ==================
-// 本罐子需要的权限转换
-pub trait ParsePermission {
-    fn parse_permission<'a>(&self, name: &'a str) -> Result<Permission, ParsePermissionError<'a>>;
-}
-#[derive(Debug, Clone, Serialize, CandidType)]
-pub struct ParsePermissionError<'a>(&'a str);
-impl Display for ParsePermissionError<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ParsePermissionError: {}", self.0)
-    }
-}
-impl std::error::Error for ParsePermissionError<'_> {}
