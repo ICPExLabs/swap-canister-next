@@ -46,7 +46,7 @@ pub trait Business:
     ) -> Result<Option<Vec<u8>>, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_archive_max_length_replace(
+    fn business_config_token_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
@@ -96,7 +96,7 @@ pub trait Business:
     ) -> Result<Option<Vec<u8>>, BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_swap_archive_max_length_replace(
+    fn business_config_swap_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
@@ -394,12 +394,12 @@ impl Business for State {
         self.get_mut()
             .business_config_token_archive_wasm_module_replace(wasm_module)
     }
-    fn business_config_token_archive_max_length_replace(
+    fn business_config_token_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
         self.get_mut()
-            .business_config_token_archive_max_length_replace(max_length)
+            .business_config_token_current_archiving_max_length_replace(max_length)
     }
     fn business_config_token_archive_config_replace(
         &mut self,
@@ -451,12 +451,12 @@ impl Business for State {
         self.get_mut()
             .business_config_swap_archive_wasm_module_replace(wasm_module)
     }
-    fn business_config_swap_archive_max_length_replace(
+    fn business_config_swap_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
         self.get_mut()
-            .business_config_swap_archive_max_length_replace(max_length)
+            .business_config_swap_current_archiving_max_length_replace(max_length)
     }
     fn business_config_swap_archive_config_replace(
         &mut self,

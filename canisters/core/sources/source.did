@@ -526,7 +526,7 @@ service : (opt InitArgs) -> {
   config_swap_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
-  config_swap_archive_max_length_replace : (nat64) -> (opt CurrentArchiving);
+  config_swap_current_archiving_max_length_replace : (nat64) -> (opt CurrentArchiving);
   config_swap_archive_wasm_module_query : () -> (opt blob) query;
   config_swap_archive_wasm_module_replace : (blob) -> (
       ReplaceArchiveWasmModuleResult,
@@ -544,7 +544,6 @@ service : (opt InitArgs) -> {
   config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
-  config_token_archive_max_length_replace : (nat64) -> (opt CurrentArchiving);
   config_token_archive_wasm_module_query : () -> (opt blob) query;
   config_token_archive_wasm_module_replace : (blob) -> (
       ReplaceArchiveWasmModuleResult,
@@ -559,6 +558,9 @@ service : (opt InitArgs) -> {
     ) -> (Result);
   config_token_block_chain_query : () -> (BlockChainView) query;
   config_token_blocks_push : () -> (PushBlocksResult);
+  config_token_current_archiving_max_length_replace : (nat64) -> (
+      opt CurrentArchiving,
+    );
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,

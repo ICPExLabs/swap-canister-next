@@ -76,8 +76,12 @@ impl SwapBlockChain {
             .map_err(|err| system_error(format!("replace wasm module failed: {err:?}")))?;
         Ok(old)
     }
-    pub fn set_swap_archive_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
-        self.block_chain.set_archive_max_length(max_length)
+    pub fn set_swap_current_archiving_max_length(
+        &mut self,
+        max_length: u64,
+    ) -> Option<CurrentArchiving> {
+        self.block_chain
+            .set_current_archiving_max_length(max_length)
     }
     pub fn set_swap_archive_config(
         &mut self,

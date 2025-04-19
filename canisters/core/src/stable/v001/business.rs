@@ -30,11 +30,14 @@ impl Business for InnerState {
     ) -> Result<Option<Vec<u8>>, BusinessError> {
         self.token_block_chain.replace_wasm_module(wasm_module)
     }
-    fn business_config_token_archive_max_length_replace(
+    fn business_config_token_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
-        self.updated(|s| s.token_block_chain.set_token_archive_max_length(max_length))
+        self.updated(|s| {
+            s.token_block_chain
+                .set_token_current_archiving_max_length(max_length)
+        })
     }
     fn business_config_token_archive_config_replace(
         &mut self,
@@ -83,11 +86,14 @@ impl Business for InnerState {
     ) -> Result<Option<Vec<u8>>, BusinessError> {
         self.swap_block_chain.replace_wasm_module(wasm_module)
     }
-    fn business_config_swap_archive_max_length_replace(
+    fn business_config_swap_current_archiving_max_length_replace(
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
-        self.updated(|s| s.swap_block_chain.set_swap_archive_max_length(max_length))
+        self.updated(|s| {
+            s.swap_block_chain
+                .set_swap_current_archiving_max_length(max_length)
+        })
     }
     fn business_config_swap_archive_config_replace(
         &mut self,

@@ -69,7 +69,7 @@ impl<T> BlockChain<T> {
         self.next_block_index += 1;
     }
 
-    fn set_archive_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
+    fn set_current_archiving_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
         self.archive_config.max_length = max_length;
         if let Some(current_archiving) = &mut self.current_archiving {
             current_archiving.max_length = max_length;

@@ -29,8 +29,8 @@ fn config_swap_archive_wasm_module_replace(wasm_module: Vec<u8>) -> ReplaceArchi
 }
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn config_swap_archive_max_length_replace(max_length: u64) -> Option<CurrentArchiving> {
-    with_mut_state(|s| s.business_config_swap_archive_max_length_replace(max_length))
+fn config_swap_current_archiving_max_length_replace(max_length: u64) -> Option<CurrentArchiving> {
+    with_mut_state(|s| s.business_config_swap_current_archiving_max_length_replace(max_length))
 }
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
