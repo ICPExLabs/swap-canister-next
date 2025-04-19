@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 use crate::types::with_mut_state_without_record;
 
 use super::super::{
-    Account, BlockIndex, Business, BusinessError, CandidBlock, EncodedBlock, HashOf,
-    QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos, init_swap_blocks,
-    init_swap_wasm_module, system_error,
+    Account, BlockIndex, Business, BusinessError, CandidBlock, CurrentArchiving, EncodedBlock,
+    HashOf, NextArchiveCanisterConfig, QueryBlockResult, SwapBlock, SwapTransaction,
+    TimestampNanos, init_swap_blocks, init_swap_wasm_module, system_error,
 };
 
 use super::BlockChain;
@@ -47,6 +47,10 @@ impl SwapBlockChain {
         trap(block.ok_or("invalid block height"))
     }
 
+    pub fn set_archive_maintainers(&mut self, maintainers: Option<Vec<UserId>>) {
+        self.block_chain.set_archive_maintainers(maintainers);
+    }
+
     // swap
     pub fn init_wasm_module(&mut self) -> Result<(), BusinessError> {
         if self.wasm_module.get().is_none() {
@@ -54,6 +58,67 @@ impl SwapBlockChain {
                 .set(Some(WASM_MODULE.to_vec()))
                 .map_err(|err| system_error(format!("init wasm module failed: {err:?}")))?;
         }
+        Ok(())
+    }
+    pub fn get_swap_block_chain(&self) -> &BlockChain<SwapBlock> {
+        &self.block_chain
+    }
+    pub fn query_wasm_module(&self) -> &Option<Vec<u8>> {
+        self.wasm_module.get()
+    }
+    pub fn replace_wasm_module(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        let old = self.wasm_module.get().clone();
+        self.wasm_module
+            .set(Some(wasm_module))
+            .map_err(|err| system_error(format!("replace wasm module failed: {err:?}")))?;
+        Ok(old)
+    }
+    pub fn set_swap_archive_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
+        self.block_chain.set_archive_max_length(max_length)
+    }
+    pub fn set_swap_archive_config(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        self.block_chain.set_archive_config(archive_config)
+    }
+    pub fn replace_swap_current_archiving(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        self.block_chain.replace_current_archiving(archiving)
+    }
+    pub fn archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.block_chain.archive_current_canister()
+    }
+    pub fn get_parent_hash(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
+        if let Some(block) = self.cached.get(&block_height) {
+            let block: SwapBlock = trap(block.try_into());
+            return Some(block.get_parent_hash());
+        }
+        Some(self.block_chain.latest_block_hash)
+    }
+    pub fn get_cached_block_index(&self) -> Option<(BlockIndex, u64)> {
+        let keys = self.cached.keys().collect::<Vec<_>>();
+        let length = keys.len();
+        keys.into_iter().min().map(|height| (height, length as u64))
+    }
+    pub fn archived_block(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
+        use ::common::types::system_error;
+        if !self.cached.contains_key(&block_height) {
+            return Err(system_error(format!(
+                "block: {block_height} is not exist. can not remove"
+            )));
+        }
+        if !self.block_chain.increment(block_height) {
+            return Err(system_error(format!(
+                "last block height is not: {block_height}"
+            )));
+        }
+        self.cached.remove(&block_height);
         Ok(())
     }
 

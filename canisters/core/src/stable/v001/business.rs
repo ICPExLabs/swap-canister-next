@@ -70,6 +70,56 @@ impl Business for InnerState {
         self.token_block_chain.archived_block(block_height)
     }
 
+    // swap
+    fn business_config_swap_block_chain_query(&self) -> &BlockChain<SwapBlock> {
+        self.swap_block_chain.get_swap_block_chain()
+    }
+    fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        self.swap_block_chain.query_wasm_module()
+    }
+    fn business_config_swap_archive_wasm_module_replace(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        self.swap_block_chain.replace_wasm_module(wasm_module)
+    }
+    fn business_config_swap_archive_max_length_replace(
+        &mut self,
+        max_length: u64,
+    ) -> Option<CurrentArchiving> {
+        self.updated(|s| s.swap_block_chain.set_swap_archive_max_length(max_length))
+    }
+    fn business_config_swap_archive_config_replace(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        self.updated(|s| s.swap_block_chain.set_swap_archive_config(archive_config))
+    }
+    fn business_config_swap_current_archiving_replace(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        self.updated(|s| s.swap_block_chain.replace_swap_current_archiving(archiving))
+    }
+    fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.swap_block_chain.archive_current_canister()
+    }
+    fn business_config_swap_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<SwapBlock>> {
+        self.swap_block_chain.get_parent_hash(block_height)
+    }
+    fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.swap_block_chain.get_cached_block_index()
+    }
+    fn business_config_swap_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        self.swap_block_chain.archived_block(block_height)
+    }
+
     // maintain archives
     fn business_config_maintain_archives_cycles_recharged(
         &mut self,

@@ -18,7 +18,8 @@ pub fn inner_push_blocks(token: bool, swap: bool) {
     }
     if swap {
         ic_cdk::spawn(async {
-            let _ = crate::business::config::blockchain::swap::config_swap_blocks_push().await;
+            let _ =
+                crate::business::config::blockchain::swap::inner_config_swap_blocks_push().await;
         });
     }
 }

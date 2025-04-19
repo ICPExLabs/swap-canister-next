@@ -82,7 +82,7 @@ impl<T> BlockChain<T> {
     ) -> NextArchiveCanisterConfig {
         std::mem::replace(&mut self.archive_config, archive_config)
     }
-    fn replace_token_current_archiving(
+    fn replace_current_archiving(
         &mut self,
         archiving: CurrentArchiving,
     ) -> Option<CurrentArchiving> {

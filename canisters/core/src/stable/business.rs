@@ -65,6 +65,9 @@ pub trait Business:
     ) -> Option<CurrentArchiving> {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     fn business_config_token_parent_hash_get(
         &self,
         block_height: BlockIndex,
@@ -75,6 +78,56 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_token_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    // swap
+    fn business_config_swap_block_chain_query(&self) -> &BlockChain<SwapBlock> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_archive_wasm_module_replace(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_archive_max_length_replace(
+        &mut self,
+        max_length: u64,
+    ) -> Option<CurrentArchiving> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_archive_config_replace(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_current_archiving_replace(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<SwapBlock>> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_swap_block_archived(
         &mut self,
         block_height: BlockIndex,
     ) -> Result<(), BusinessError> {
@@ -108,9 +161,6 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_block_chain_unlock(&mut self) {
-        ic_cdk::trap("Not supported operation by this version.")
-    }
-    fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -402,6 +452,10 @@ impl Business for State {
         self.get_mut()
             .business_config_token_current_archiving_replace(archiving)
     }
+    fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.get_mut()
+            .business_config_token_archive_current_canister()
+    }
     fn business_config_token_parent_hash_get(
         &self,
         block_height: BlockIndex,
@@ -418,6 +472,63 @@ impl Business for State {
     ) -> Result<(), BusinessError> {
         self.get_mut()
             .business_config_token_block_archived(block_height)
+    }
+
+    // swap
+    fn business_config_swap_block_chain_query(&self) -> &BlockChain<SwapBlock> {
+        self.get().business_config_swap_block_chain_query()
+    }
+    fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        self.get().business_config_swap_archive_wasm_module_query()
+    }
+    fn business_config_swap_archive_wasm_module_replace(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        self.get_mut()
+            .business_config_swap_archive_wasm_module_replace(wasm_module)
+    }
+    fn business_config_swap_archive_max_length_replace(
+        &mut self,
+        max_length: u64,
+    ) -> Option<CurrentArchiving> {
+        self.get_mut()
+            .business_config_swap_archive_max_length_replace(max_length)
+    }
+    fn business_config_swap_archive_config_replace(
+        &mut self,
+        archive_config: NextArchiveCanisterConfig,
+    ) -> NextArchiveCanisterConfig {
+        self.get_mut()
+            .business_config_swap_archive_config_replace(archive_config)
+    }
+    fn business_config_swap_current_archiving_replace(
+        &mut self,
+        archiving: CurrentArchiving,
+    ) -> Option<CurrentArchiving> {
+        self.get_mut()
+            .business_config_swap_current_archiving_replace(archiving)
+    }
+    fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.get_mut()
+            .business_config_swap_archive_current_canister()
+    }
+    fn business_config_swap_parent_hash_get(
+        &self,
+        block_height: BlockIndex,
+    ) -> Option<HashOf<SwapBlock>> {
+        self.get()
+            .business_config_swap_parent_hash_get(block_height)
+    }
+    fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.get().business_config_swap_cached_block_get()
+    }
+    fn business_config_swap_block_archived(
+        &mut self,
+        block_height: BlockIndex,
+    ) -> Result<(), BusinessError> {
+        self.get_mut()
+            .business_config_swap_block_archived(block_height)
     }
 
     // maintain archives
@@ -449,10 +560,6 @@ impl Business for State {
     }
     fn business_token_block_chain_unlock(&mut self) {
         self.get_mut().business_token_block_chain_unlock()
-    }
-    fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_config_token_archive_current_canister()
     }
 
     // swap block chain

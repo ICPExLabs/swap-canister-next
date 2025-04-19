@@ -83,7 +83,8 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
     use super::deploy_canister;
     use ::common::types::system_error;
 
-    // 0. 获取锁
+    // 0. 必须非暂停状态，获取锁
+    with_state(|s| s.pause_must_be_running()).map_err(system_error)?;
     let _lock = with_mut_state_without_record(|s| s.business_token_block_chain_archive_lock())
         .ok_or(system_error("token block chain archive locked"))?;
 

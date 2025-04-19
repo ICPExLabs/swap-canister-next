@@ -90,7 +90,10 @@ impl TokenBlockChain {
         &mut self,
         archiving: CurrentArchiving,
     ) -> Option<CurrentArchiving> {
-        self.block_chain.replace_token_current_archiving(archiving)
+        self.block_chain.replace_current_archiving(archiving)
+    }
+    pub fn archive_current_canister(&mut self) -> Result<(), BusinessError> {
+        self.block_chain.archive_current_canister()
     }
     pub fn get_parent_hash(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
         if let Some(block) = self.cached.get(&block_height) {
@@ -147,10 +150,6 @@ impl TokenBlockChain {
         // 2. do unlock
         *locked = false;
         ic_cdk::println!("🔐 Archive Unlock token block chain.");
-    }
-
-    pub fn archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.block_chain.archive_current_canister()
     }
 
     // locks
