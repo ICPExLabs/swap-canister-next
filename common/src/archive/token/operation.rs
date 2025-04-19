@@ -3,29 +3,29 @@ use serde::{Deserialize, Serialize};
 
 use crate::proto;
 
-/// 存入代币
+/// Deposit tokens
 mod deposit;
 pub use deposit::*;
 
-/// 提取代币
+/// Retrieve tokens
 mod withdraw;
 pub use withdraw::*;
 
-/// 转移代币
-/// 流动性添加和移除
+/// Transfer tokens
+/// Liquidity addition and removal
 mod transfer;
 pub use transfer::*;
 
-/// 代币操作
+/// Token operation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum TokenOperation {
-    /// 存入
+    /// Save
     #[serde(rename = "deposit")]
     Deposit(DepositToken),
-    /// 提取
+    /// extract
     #[serde(rename = "withdraw")]
     Withdraw(WithdrawToken),
-    /// 转移
+    /// Transfer
     #[serde(rename = "transfer")]
     Transfer(TransferToken),
 }

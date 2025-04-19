@@ -155,7 +155,7 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
     Ok(LockResult::Locked((token_lock, swap_lock, balances_lock)))
 }
 
-// 查询最新更新时间
+// Query the latest update time
 #[ic_cdk::query]
 fn updated() -> u64 {
     with_state(|s| s.business_updated())

@@ -10,12 +10,12 @@ use super::{
     TokenPairLiquidityRemoveSuccess,
 };
 
-/// Automated Market Maker 自动化做市商
+/// Automated Market Maker
 mod amm_constant_product;
 #[allow(unused)]
 pub use amm_constant_product::*;
 
-/// Proactive Market Maker 自动化做市商
+/// Proactive Market Maker
 /// https://docs.dodoex.io/zh/product/pmm-algorithm/details-about-pmm
 /// https://dodoex.github.io/cn/docs/
 mod pmm_v1;

@@ -10,9 +10,9 @@ use crate::{proto, types::TokenPairAmm};
 /// SwapV2 Mint
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2MintToken {
-    /// 池子
+    /// token pair pool
     pub pa: TokenPairAmm,
-    /// 操作账户
+    /// Operation account
     pub from: Account,
 
     // pay
@@ -31,7 +31,7 @@ pub struct SwapV2MintToken {
     /// amount
     pub amount: Nat,
 
-    /// 操作账户
+    /// to account
     pub to: Account,
 }
 

@@ -1,19 +1,19 @@
-/// 操作
+/// operation
 mod operation;
 pub use operation::*;
 
-/// 交易
+/// transaction
 mod transaction;
 pub use transaction::*;
 
-/// 块
+/// block
 mod block;
 pub use block::*;
 
-/// 查询
+/// query
 mod query;
 pub use query::*;
 
-/// 初始化和升级参数
+/// initialization and upgrade
 mod args;
 pub use args::*;

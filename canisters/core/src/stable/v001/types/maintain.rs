@@ -6,20 +6,20 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
-// 默认最小阈值
+// Default minimum threshold
 const DEFAULT_MIN_CYCLES_THRESHOLD: u64 = 5_000_000_000_000; // 5 T cycles
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct MaintainArchives {
-    /// 记录所有罐子的充值数量
+    /// Record the recharge amount of all canisters
     recharged: HashMap<CanisterId, Nat>,
-    /// 罐子触发充值的最小 cycles
+    /// Minimum cycles for canister trigger recharge
     pub min_cycles_threshold: u64,
-    /// 每次触发充值数量
+    /// Number of recharges per trigger
     pub recharge_cycles: u64,
-    /// 检查的间隔时间 ns
+    /// Check interval ns
     pub checking_interval_ns: u64,
-    /// 上次检查时间 ns
+    /// Last check time ns
     pub last_checked_timestamp: TimestampNanos,
 }
 
@@ -29,7 +29,7 @@ impl Default for MaintainArchives {
             recharged: HashMap::new(),
             min_cycles_threshold: DEFAULT_MIN_CYCLES_THRESHOLD,
             recharge_cycles: DEFAULT_MIN_CYCLES_THRESHOLD,
-            checking_interval_ns: 1_000_000 * 1000 * 3600 * 8, // 每 8 小时检查一次
+            checking_interval_ns: 1_000_000 * 1000 * 3600 * 8, // Check every 8 hours
             last_checked_timestamp: TimestampNanos::from_inner(0),
         }
     }

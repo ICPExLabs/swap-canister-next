@@ -67,12 +67,12 @@ impl<T> HashOf<T> {
         }
     }
 
-    /// 拆开
+    /// bytes
     pub fn into_bytes(self) -> [u8; HASH_LENGTH] {
         self.inner
     }
 
-    /// 使用
+    /// ref
     pub fn as_slice(&self) -> &[u8] {
         &self.inner
     }

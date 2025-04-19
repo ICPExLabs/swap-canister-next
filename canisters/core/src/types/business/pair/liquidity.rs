@@ -6,7 +6,7 @@ use super::super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityAddArgs {
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
 
     pub swap_pair: SwapTokenPair,
     pub amount_desired: (Nat, Nat),
@@ -125,10 +125,10 @@ impl From<&TokenPairLiquidityAddSuccess> for TokenPairLiquidityAddSuccessView {
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairLiquidityRemoveArgs {
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
 
     pub swap_pair: SwapTokenPair,
-    pub liquidity_without_fee: Nat, // 移除流动性会直接销毁一份 fee，限制用户进行女巫攻击
+    pub liquidity_without_fee: Nat, // Removing liquidity will directly destroy a fee, restricting users from witch attacks
     pub amount_min: (Nat, Nat),
     pub to: Account,
     pub deadline: Option<Deadline>,

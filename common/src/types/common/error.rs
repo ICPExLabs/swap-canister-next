@@ -9,17 +9,17 @@ use crate::types::TokenPairAmm;
 
 use super::TokenAccount;
 
-/// 所有错误
+/// All errors
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, Error)]
 pub enum BusinessError {
-    // ================= 通用错误 =================
-    /// 系统错误
+    // ================= general error =================
+    /// System Error
     #[error("system error: {0}")]
     SystemError(String),
-    /// memo 太长
+    /// memo too long
     #[error("too long memo.")]
     MemoTooLong,
-    /// 交易时间窗口无效
+    /// The transaction time window is invalid
     #[error("invalid created timestamp. (system time is {system} but created at {created})")]
     InvalidCreated {
         /// system time
@@ -27,13 +27,13 @@ pub enum BusinessError {
         /// created
         created: u64,
     },
-    /// 跨罐子调用错误
+    /// Cross-can call error
     #[error("call canister error. ({0})")]
     CallCanisterError(String),
-    /// 必须自己作为所有者才能调用
+    /// You must be the owner to call it
     #[error("caller must be owner. (owner: {0})")]
     NotOwner(UserId),
-    /// 请求过期
+    /// Request expires
     #[error("call is expired. (system time is {system} but deadline is {deadline})")]
     Expired {
         /// system time
@@ -42,20 +42,20 @@ pub enum BusinessError {
         deadline: u64,
     },
 
-    // ================= 代币转移错误 =================
-    /// 代币转账错误
+    // ================= Token transfer error =================
+    /// Token transfer error
     #[error("transfer token from error. ({0})")]
     TransferFromError(TransferFromError),
-    /// 代币转账错误
+    /// Token transfer error
     #[error("transfer token error. ({0})")]
     TransferError(TransferError),
-    /// 代币转账费用错误错误
+    /// Token transfer fee error
     #[error("bad transfer fee. (expected_fee: {})", .expected_fee)]
     BadTransferFee {
-        /// 正确的 fee
+        /// The correct fee
         expected_fee: Nat,
     },
-    /// 提现余额不足
+    /// Inadequate withdrawal balance
     #[error("insufficient balance. (token: {token}. balance: {balance})")]
     InsufficientBalance {
         /// token
@@ -63,7 +63,7 @@ pub enum BusinessError {
         /// balance
         balance: Nat,
     },
-    /// 错误的转账费用
+    /// Incorrect transfer fee
     #[error("invalid transfer fee. (token: {token}. fee: {fee})")]
     InvalidTransferFee {
         /// token
@@ -72,45 +72,45 @@ pub enum BusinessError {
         fee: Nat,
     },
 
-    // ================= 代币错误 =================
-    /// 不支持的代币罐子
+    // ================= Token error =================
+    /// Unsupported token canisters
     #[error("token:[{0}] is not supported.")]
     NotSupportedToken(CanisterId),
-    /// 不支持的代币对
+    /// Unsupported token pairs
     #[error("token pair is not supported. ([{0}],[{1}])")]
     InvalidTokenPair(CanisterId, CanisterId),
 
-    // ================= 并发错误 =================
-    /// 申请新的 Request Index 错误
+    // ================= Concurrency error =================
+    /// Apply for a new Request Index error
     #[error("request trace is locked. ({0})")]
     RequestTraceLocked(String),
-    /// 用户操作涉及到的账户被锁定，无法执行操作
+    /// The account involved in the user's operation is locked and the operation cannot be performed.
     #[error("token accounts are locked. ({})", display_token_accounts(.0))]
     TokenAccountsLocked(Vec<TokenAccount>),
-    /// 用户操作涉及到的 Token Blockchain 被锁定，无法执行操作
+    /// The Token Blockchain involved in the user's operation is locked and the operation cannot be performed.
     #[error("token block chain is locked.")]
     TokenBlockChainLocked,
-    /// 用户操作涉及到的 Swap Blockchain 被锁定，无法执行操作
+    /// The Swap Blockchain involved in user operations is locked and cannot perform the operation
     #[error("swap block chain is locked.")]
     SwapBlockChainLocked,
-    /// 用户操作涉及到的账户未被锁定，无法执行操作
+    /// The account involved in the user's operation is not locked and the operation cannot be performed.
     #[error("token accounts are not locked, can not unlock. ({})", display_token_accounts(.0))]
     TokenAccountsUnlocked(Vec<TokenAccount>),
 
     // ================= swap =================
-    /// 无效的 Amm 算法
+    /// Invalid Ammm algorithm
     #[error("invalid amm:{0}.")]
     InvalidAmm(String),
-    /// 代币池子已经存在, 不能再次创建
+    /// Token pool already exists and cannot be created again
     #[error("token pair amm is already exist. ({0})")]
     TokenPairAmmExist(TokenPairAmm),
-    /// 代币池子不存在, 不能进行操作
+    /// The token pool does not exist and cannot be operated
     #[error("token pair amm is not exist. ({0})")]
     TokenPairAmmNotExist(TokenPairAmm),
-    /// 流动性错误
+    /// Liquidity errors
     #[error("liquidity error: {0}.")]
     Liquidity(String),
-    /// swap 错误
+    /// swap error
     #[error("swap error: {0}.")]
     Swap(String),
 
@@ -136,11 +136,6 @@ fn display_token_accounts(accounts: &[TokenAccount]) -> String {
     )
 }
 
-/// system error
-pub fn system_error(message: impl Into<String>) -> BusinessError {
-    BusinessError::SystemError(message.into())
-}
-
 impl From<(RejectionCode, String)> for BusinessError {
     fn from(value: (RejectionCode, String)) -> Self {
         Self::CallCanisterError(format!(
@@ -162,11 +157,15 @@ impl From<TransferError> for BusinessError {
 }
 
 impl BusinessError {
-    /// 余额不足
+    /// system error
+    pub fn system_error(message: impl Into<String>) -> BusinessError {
+        BusinessError::SystemError(message.into())
+    }
+    /// Insufficient balance
     pub fn insufficient_balance(token: CanisterId, balance: Nat) -> Self {
         Self::InsufficientBalance { token, balance }
     }
-    /// 费用错误
+    /// Fee error
     pub fn invalid_transfer_fee(token: CanisterId, fee: Nat) -> Self {
         Self::InvalidTransferFee { token, fee }
     }

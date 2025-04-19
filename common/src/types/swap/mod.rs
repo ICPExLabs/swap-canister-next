@@ -15,11 +15,11 @@ pub use pair::*;
 /// (token0, token1, amm)
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairPool {
-    /// 代币 0
+    /// token 0
     pub token0: CanisterId,
-    /// 代币 1
+    /// token 1
     pub token1: CanisterId,
-    /// amm 算法
+    /// amm algorithm
     pub amm: AmmText,
 }
 
@@ -35,13 +35,13 @@ impl From<TokenPairAmm> for TokenPairPool {
 
 // =================== token pair swap ===================
 
-/// 注意兑换方向
+/// Pay attention to the redemption direction
 /// token_a -> token_b
 /// (token_a, token_b, amm)
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct SwapTokenPair {
-    /// 代币 a, 代币 b
+    /// token a, token b
     pub token: (CanisterId, CanisterId),
-    /// amm 算法
+    /// amm algorithm
     pub amm: AmmText,
 }

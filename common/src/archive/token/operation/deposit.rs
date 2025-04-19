@@ -5,16 +5,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::proto;
 
-/// 存入交易
+/// Deposit to transaction
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct DepositToken {
-    /// 代币
+    /// Tokens
     pub token: CanisterId,
-    /// 源账户
+    /// from
     pub from: Account,
-    /// 转入数量，实际转入数量，转入过程中代币罐子扣除的手续费不计入
+    /// Transfer quantity, actual transfer quantity, the handling fee deducted from token canister during transfer process will not be included
     pub amount: Nat,
-    /// 目标账户
+    /// to account
     pub to: Account,
 }
 

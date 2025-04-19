@@ -7,18 +7,18 @@ use serde::{Deserialize, Serialize};
 
 // ============================ token account ============================
 
-/// 代币账户
+/// Token Account
 #[derive(
     Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]
 pub struct TokenAccount {
-    /// 代币罐子
+    /// Token canister
     pub token: CanisterId,
-    /// 账户
+    /// Account
     pub account: Account,
 }
 
-/// 显示 Account
+/// show Account
 pub fn display_account(account: &Account) -> String {
     format!(
         "{}.{}",
@@ -39,7 +39,7 @@ impl Display for TokenAccount {
 }
 
 impl TokenAccount {
-    /// 构建
+    /// new
     pub fn new(token: CanisterId, account: Account) -> Self {
         Self { token, account }
     }

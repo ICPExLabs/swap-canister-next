@@ -229,7 +229,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         self.balances_guard.token_balance_of(token, account)
     }
 
-    /// 检查余额是否满足要求
+    /// Check whether the balance meets the requirements
     pub fn assert_token_balance(
         &self,
         token: CanisterId,
@@ -262,7 +262,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         Ok(())
     }
 
-    /// 借出代币
+    /// Lend tokens
     pub fn token_loan(&mut self, arg: DepositToken) -> Result<(), BusinessError> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
         let trace = format!(
@@ -276,7 +276,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         self.trace_guard.trace(trace); // * trace
         Ok(())
     }
-    /// 归还代币
+    /// Return tokens
     pub fn token_repay(&mut self, arg: WithdrawToken) -> Result<(), BusinessError> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
         let trace = format!(
@@ -381,7 +381,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             memo: None,
             created: None,
         };
-        // 为手续费账户铸币，产生 DepositToken 事件
+        // Mint coins for handling fee accounts, generate a DepositToken event
         let arg = ArgWithMeta::simple(
             self.arg.now,
             self.arg.caller,
@@ -457,7 +457,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             memo: self.arg.memo.clone(),
             created: self.arg.created,
         };
-        // 为用户铸币，产生 DepositToken 事件
+        // Mint coins for users and generate a DepositToken event
         let arg = ArgWithMeta::simple(
             self.arg.now,
             self.arg.caller,
@@ -533,7 +533,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             memo: self.arg.memo.clone(),
             created: self.arg.created,
         };
-        // 为用户销毁，产生 WithdrawToken 事件
+        // Destroy for users, generates a WithdrawToken event
         let arg = ArgWithMeta::simple(
             self.arg.now,
             self.arg.caller,

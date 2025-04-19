@@ -4,7 +4,7 @@ use candid::CandidType;
 use common::types::{BusinessError, Caller, TimestampNanos};
 use serde::{Deserialize, Serialize};
 
-// 默认 1 天时间
+// Default 1 day time
 const TRANSACTION_WINDOW: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub fn check_meta(

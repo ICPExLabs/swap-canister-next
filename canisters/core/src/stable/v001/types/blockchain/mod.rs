@@ -14,15 +14,15 @@ pub use swap::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockChain<T> {
-    // 归档相关
-    pub archived: Vec<ArchivedBlocks>,               // 已经存档的块
-    pub current_archiving: Option<CurrentArchiving>, // 当前正在存档的块
-    pub archive_config: NextArchiveCanisterConfig,   // 下一个存档的配置
-    pub archive_locked: RwLock<bool>,                // 标记是否获取锁,只有持有锁才能修改
-    // 添加交易相关
-    pub locked: RwLock<bool>,         // 标记是否获取锁,只有持有锁才能修改
-    pub latest_block_hash: HashOf<T>, // 记录上一个块的 hash
-    pub next_block_index: BlockIndex, // 记录下一个块的高度
+    // Archive related
+    pub archived: Vec<ArchivedBlocks>, // Archived blocks
+    pub current_archiving: Option<CurrentArchiving>, // The block currently being archived
+    pub archive_config: NextArchiveCanisterConfig, // The configuration of the next archive
+    pub archive_locked: RwLock<bool>, // Tag whether to acquire the lock, only if you hold the lock can be modified
+    // Add transaction related
+    pub locked: RwLock<bool>, // Tag whether to acquire the lock, only if you hold the lock can be modified
+    pub latest_block_hash: HashOf<T>, // Record the hash of the previous block
+    pub next_block_index: BlockIndex, // Record the height of the next block
 }
 
 impl<T> Default for BlockChain<T> {
@@ -94,12 +94,13 @@ impl<T> BlockChain<T> {
             Some(current_archiving) => current_archiving,
             None => return Ok(()),
         };
-        // 必须达到最大限度才能归档
+        // Must be maximized to archive
         if current_archiving.length < current_archiving.max_length {
-            return Err(common::types::system_error(format!(
-                "can not archive canister because: current_length: {} < max_length:{}",
-                current_archiving.length, current_archiving.max_length
-            )));
+            // return Err(common::types::system_error(format!(
+            //     "can not archive canister because: current_length: {} < max_length:{}",
+            //     current_archiving.length, current_archiving.max_length
+            // )));
+            return Ok(());
         }
         let archived = ArchivedBlocks {
             canister_id: current_archiving.canister_id,
@@ -134,8 +135,8 @@ impl<T> BlockChain<T> {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct ArchivedBlocks {
     pub canister_id: CanisterId,
-    pub block_height_offset: BlockIndex, // 起始偏移，如果有的话，第一个就是
-    pub length: u64,                     // 该罐子已保存的个数
+    pub block_height_offset: BlockIndex, // The starting offset, if any, the first one is
+    pub length: u64,                     // The number of stored canisters
 }
 
 impl ArchivedBlocks {
@@ -152,9 +153,9 @@ impl ArchivedBlocks {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct CurrentArchiving {
     pub canister_id: CanisterId,
-    pub block_height_offset: BlockIndex, // 起始偏移，如果有的话，第一个就是
-    pub length: u64,                     // 该罐子已保存的个数
-    pub max_length: u64,                 // 超过这个长度就不应该再往这个里面保存
+    pub block_height_offset: BlockIndex, // The starting offset, if any, the first one is
+    pub length: u64,                     // The number of stored canisters
+    pub max_length: u64, // If it exceeds this length, it should not be stored in this
 }
 
 impl CurrentArchiving {
@@ -187,9 +188,9 @@ impl CurrentArchiving {
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct NextArchiveCanisterConfig {
-    pub maintainers: Option<Vec<UserId>>,   // 维护人
-    pub max_memory_size_bytes: Option<u64>, // 最大内存
-    pub max_length: u64,                    // 最大长度
+    pub maintainers: Option<Vec<UserId>>,   // Maintainer
+    pub max_memory_size_bytes: Option<u64>, // Maximum memory
+    pub max_length: u64,                    // Maximum length
 }
 
 impl Default for NextArchiveCanisterConfig {
@@ -197,18 +198,18 @@ impl Default for NextArchiveCanisterConfig {
         Self {
             maintainers: None,
             max_memory_size_bytes: None,
-            max_length: 1_000_000, // ? 估计 10 GB
+            max_length: 1_000_000, // ? Estimated 10 GB
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct BlockChainView<T> {
-    pub archived: Vec<ArchivedBlocks>,               // 已经存档的块
-    pub current_archiving: Option<CurrentArchiving>, // 当前正在存档的块
-    pub archive_config: NextArchiveCanisterConfig,   // 下一个存档的配置
-    pub latest_block_hash: HashOf<T>,                // 记录上一个块的 hash
-    pub next_block_index: BlockIndex,                // 记录下一个块的高度
+    pub archived: Vec<ArchivedBlocks>,               // Archived blocks
+    pub current_archiving: Option<CurrentArchiving>, // The block currently being archived
+    pub archive_config: NextArchiveCanisterConfig,   // The configuration of the next archive
+    pub latest_block_hash: HashOf<T>,                // Record the hash of the previous block
+    pub next_block_index: BlockIndex,                // Record the height of the next block
 }
 
 impl<T: Clone> From<&BlockChain<T>> for BlockChainView<T> {

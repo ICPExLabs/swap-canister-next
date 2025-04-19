@@ -1,6 +1,6 @@
 use crate::stable::*;
 
-// ================== 通用接口 ==================
+// ================== general apis ==================
 
 #[ic_cdk::query]
 pub fn wallet_balance() -> candid::Nat {
@@ -12,9 +12,9 @@ pub fn wallet_receive() -> candid::Nat {
     ic_canister_kit::canister::cycles::wallet_receive(|_accepted| {})
 }
 
-// ================== 数据版本 ==================
+// ================== data version ==================
 
-// 当前数据库版本
+// current data version
 #[ic_cdk::query]
 fn version() -> u32 {
     with_state(|s| s.version())

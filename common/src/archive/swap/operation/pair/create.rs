@@ -4,13 +4,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{proto, types::TokenPairAmm};
 
-/// 创建池子
-
+/// Create a pool
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct PairCreate {
-    /// 代币对和算法
+    /// Token pairs and algorithms
     pub pa: TokenPairAmm,
-    /// 创建者
+    /// Creator
     pub creator: UserId,
 }
 

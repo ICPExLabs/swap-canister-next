@@ -363,7 +363,7 @@ pub trait Business:
     }
 }
 
-// 业务实现
+// Business
 impl Business for State {
     fn business_updated(&self) -> u64 {
         self.get().business_updated()

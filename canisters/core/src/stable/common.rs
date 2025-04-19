@@ -6,18 +6,17 @@ use ic_canister_kit::types::*;
 use super::{InitArgs, ParsePermission, ParsePermissionError, UpgradeArgs, schedule_task};
 use super::{State, State::*};
 
-// 默认值
 impl Default for State {
     fn default() -> Self {
-        // ? 初始化和升级会先进行迁移, 因此最初的版本无关紧要
+        // ? Initialization and upgrade will be migrated first, so the initial version does not matter
         V0(Box::default())
     }
 }
 
-/// 检查是否拥有某权限
+/// Check if you have a certain permission
 pub fn check_permission(
     permission: &str,
-    running: bool, // 是否要求必须处于正常运行状态
+    running: bool, // Whether it is required to be in normal operation
 ) -> Result<(), String> {
     let caller = ic_canister_kit::identity::caller();
     with_state(|s| {
@@ -32,24 +31,24 @@ pub fn check_permission(
     })
 }
 
-// ================= 需要持久化的数据 ================
+// ================= Data that needs to be persisted ================
 
 thread_local! {
-    static STATE: RefCell<State> = RefCell::default();// 存储系统数据
+    static STATE: RefCell<State> = RefCell::default();
 }
 
-// ==================== 初始化方法 ====================
+// ==================== initial ====================
 
 #[ic_cdk::init]
 fn initial(args: Option<InitArgs>) {
     with_mut_state(|s| {
         s.upgrade(None); // upgrade to latest version
-        s.init(args); // ! 初始化最新版本
-        s.schedule_reload(); // * 重置定时任务
+        s.init(args);
+        s.schedule_reload(); // * Reset timing tasks
     })
 }
 
-// ==================== 升级时的恢复逻辑 ====================
+// ==================== post upgrade ====================
 
 #[ic_cdk::post_upgrade]
 fn post_upgrade(args: Option<UpgradeArgs>) {
@@ -61,24 +60,24 @@ fn post_upgrade(args: Option<UpgradeArgs>) {
         let mut bytes = vec![0; memory.read_u64() as usize];
         memory.read(&mut bytes); // restore data
 
-        // 利用版本号恢复升级前的版本
+        // Restore the previous version using the version number
         let mut last_state = State::from_version(version);
-        last_state.heap_from_bytes(&bytes); // 恢复数据
+        last_state.heap_from_bytes(&bytes); // Recovery data
         *state.borrow_mut() = last_state;
 
-        state.borrow_mut().upgrade(args); // ! 恢复后要进行升级到最新版本
-        state.borrow_mut().schedule_reload(); // * 重置定时任务
+        state.borrow_mut().upgrade(args); // ! After recovery, upgrade to the latest version
+        state.borrow_mut().schedule_reload(); // * Reset timing tasks
     });
 }
 
-// ==================== 升级时的保存逻辑，下次升级执行 ====================
+// ==================== Save data before upgrade, would be execute next upgrade ====================
 
 #[ic_cdk::pre_upgrade]
 fn pre_upgrade() {
     STATE.with(|state| {
         use ic_canister_kit::common::trap;
-        trap(state.borrow().pause_must_be_paused()); // ! 必须是维护状态, 才可以升级
-        state.borrow_mut().schedule_stop(); // * 停止定时任务
+        trap(state.borrow().pause_must_be_paused()); // ! Must be in maintenance state before upgrading
+        state.borrow_mut().schedule_stop(); // * Stop timing tasks
 
         let version = state.borrow().version();
         let bytes = state.borrow().heap_to_bytes();
@@ -92,38 +91,38 @@ fn pre_upgrade() {
     });
 }
 
-// ==================== 工具方法 ====================
+// ==================== utils ====================
 
-/// 外界需要系统状态时
+/// immutable system data
 #[allow(unused)]
 pub fn with_state<F, R>(callback: F) -> R
 where
     F: FnOnce(&State) -> R,
 {
     STATE.with(|state| {
-        let state = state.borrow(); // 取得不可变对象
+        let state = state.borrow(); // immutable data
         callback(&state)
     })
 }
 
-/// 需要可变系统状态时
+///  mutable system data
 #[allow(unused)]
 pub fn with_mut_state<F, R>(callback: F) -> R
 where
     F: FnOnce(&mut State) -> R,
 {
     STATE.with(|state| {
-        let mut state = state.borrow_mut(); // 取得可变对象
+        let mut state = state.borrow_mut(); // mutable data
         callback(&mut state)
     })
 }
 
 impl Pausable<PauseReason> for State {
-    // 查询
+    // get
     fn pause_query(&self) -> &Option<PauseReason> {
         self.get().pause_query()
     }
-    // 修改
+    // replace
     fn pause_replace(&mut self, reason: Option<PauseReason>) {
         self.get_mut().pause_replace(reason)
     }
@@ -136,7 +135,7 @@ impl ParsePermission for State {
 }
 
 impl Permissable<Permission> for State {
-    // 查询
+    // query
     fn permission_users(&self) -> HashSet<&UserId> {
         self.get().permission_users()
     }
@@ -159,7 +158,7 @@ impl Permissable<Permission> for State {
         self.get().permission_owned(user_id)
     }
 
-    // 修改
+    // update
     fn permission_reset(&mut self, permissions: HashSet<Permission>) {
         self.get_mut().permission_reset(permissions)
     }
@@ -172,11 +171,11 @@ impl Permissable<Permission> for State {
 }
 
 impl Schedulable for State {
-    // 查询
+    // query
     fn schedule_find(&self) -> Option<DurationNanos> {
         self.get().schedule_find()
     }
-    // 修改
+    // update
     fn schedule_replace(&mut self, schedule: Option<DurationNanos>) {
         self.get_mut().schedule_replace(schedule)
     }
@@ -185,7 +184,7 @@ impl Schedulable for State {
 #[allow(unused)]
 fn static_schedule_task() {
     if with_state(|s| s.pause_is_paused()) {
-        return; // 维护中不允许执行任务
+        return; // Tasks are not allowed during maintenance
     }
 
     ic_cdk::spawn(async move { schedule_task(None).await });

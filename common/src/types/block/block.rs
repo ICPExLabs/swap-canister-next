@@ -10,7 +10,7 @@ use super::{BlockIndex, DoHash, HashOf};
 
 // ========================== Block ==========================
 
-/// 编码后的快
+/// Encoded blocks
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct EncodedBlock(pub Vec<u8>);
 
@@ -44,14 +44,14 @@ impl Storable for EncodedBlock {
     const BOUND: Bound = Bound::Unbounded;
 }
 
-/// 块
+/// block
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct CandidBlock<B, T> {
-    /// 前置 hash
+    /// parent hash
     pub parent_hash: HashOf<B>,
-    /// 时间戳
+    /// Timestamp
     pub timestamp: TimestampNanos,
-    /// 交易内容
+    /// Transaction content
     pub transaction: T,
 }
 
@@ -66,37 +66,37 @@ impl<B, T: DoHash> CandidBlock<B, T> {
     }
 }
 
-// ========================== 查询 ==========================
+// ========================== query ==========================
 
-/// 查询块
+/// query blocks
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct GetBlocksArgs {
-    /// 起始
+    /// start
     pub start: BlockIndex,
-    /// 数量
+    /// length
     pub length: u64,
 }
 
-/// 查询块错误
+/// Query block error
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum GetBlocksError {
-    /// 错误起始
+    /// The error starts
     BadFirstBlockIndex {
-        /// 请求的第一个块
+        /// The first block requested
         requested_index: BlockIndex,
-        /// 实际有效的第一个块
+        /// The first block that actually works
         first_valid_index: BlockIndex,
     },
-    /// 其他错误
+    /// Other errors
     Other {
-        /// 错误码
+        /// Error code
         error_code: u64,
-        /// 错误消息
+        /// Error message
         error_message: String,
     },
 }
 
-/// 编码后的结果
+/// Encoded results
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct GetEncodedBlocksResult(Result<Vec<EncodedBlock>, GetBlocksError>);
 

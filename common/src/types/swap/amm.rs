@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::BusinessError;
 
-/// amm 算法
+/// amm algorithm
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq, Hash)]
 pub struct AmmText(String);
 impl AsRef<str> for AmmText {
@@ -12,7 +12,7 @@ impl AsRef<str> for AmmText {
     }
 }
 
-/// Amm 算法
+/// Amm algorithm
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]

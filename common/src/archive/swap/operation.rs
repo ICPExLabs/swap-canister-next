@@ -6,7 +6,7 @@ use crate::proto;
 mod pair;
 pub use pair::*;
 
-/// 兑换操作
+/// swap operation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum SwapOperation {
     /// pair operation

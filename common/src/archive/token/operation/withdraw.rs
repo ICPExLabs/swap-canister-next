@@ -5,16 +5,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::proto;
 
-/// 提取交易
+/// Withdrawal transactions
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct WithdrawToken {
-    /// 代币
+    /// Tokens
     pub token: CanisterId,
-    /// 源账户
+    /// from
     pub from: Account,
-    /// 转出数量，实际消耗数量，转出过程中代币罐子扣除的手续费需要计入
+    /// The transfer quantity, actual consumption quantity, and the handling fee deducted by the token can during the transfer process must be included
     pub amount: Nat,
-    /// 目标账户
+    /// to account
     pub to: Account,
 }
 
@@ -26,7 +26,7 @@ impl TryFrom<WithdrawToken> for proto::WithdrawToken {
         let from = value.from.into();
         let amount = value.amount.try_into()?;
         let to = value.to.into();
-        
+
         Ok(Self {
             token: Some(token),
             from: Some(from),

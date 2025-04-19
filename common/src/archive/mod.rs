@@ -1,7 +1,7 @@
-/// 代币存档
+/// Token Archive
 #[cfg(feature = "archive-token")]
 pub mod token;
 
-/// 兑换存档
+/// Redemption archive
 #[cfg(feature = "archive-swap")]
 pub mod swap;

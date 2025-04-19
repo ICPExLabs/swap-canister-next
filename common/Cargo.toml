@@ -5,7 +5,7 @@ edition.workspace = true
 
 [lib]
 path = "src/lib.rs"
-# crate-type = ["cdylib"] # rust lib 包不能是 cdylib, 否则不能被引入
+# crate-type = ["cdylib"] # The rust lib package cannot be cdylib, otherwise it cannot be introduced
 
 [lints]
 workspace = true
@@ -30,7 +30,7 @@ thiserror = { workspace = true }
 hex = { workspace = true }
 sha2 = { workspace = true }
 
-prost = "0.13.5" # 处理 protobuf 的代码
+prost = "0.13.5"
 
 [build-dependencies]
-prost-build = "0.13.5" # 编译 protobuf build依赖
+prost-build = "0.13.5"

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use super::BusinessError;
 
-/// 罐子自身
+/// The canister itself
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct SelfCanister(CanisterId);
 
@@ -18,7 +18,7 @@ impl SelfCanister {
     }
 }
 
-/// 调用者
+/// caller
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, CandidType)]
 pub struct Caller(UserId);
 
@@ -35,28 +35,28 @@ impl Caller {
     }
 }
 
-/// 检查 caller 是否一致，如果调用者是 self canister，则默认 owner 是正确的
+/// Check whether the caller is consistent. If the caller is a self canister, the default owner is correct.
 pub fn check_caller(owner: &UserId) -> Result<(SelfCanister, Caller), BusinessError> {
     let self_canister_id = self_canister_id();
     let mut caller = ic_canister_kit::identity::caller();
     if caller == self_canister_id {
-        caller = owner.to_owned(); // swap canister 代为调用
+        caller = owner.to_owned(); // swap canister is called on behalf of
     } else if caller != *owner {
         return Err(BusinessError::NotOwner(*owner));
     }
     Ok((SelfCanister(self_canister_id), Caller(caller)))
 }
 
-/// 模拟池子的 LP 代币
+/// Simulate the pool's LP tokens
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, CandidType)]
 pub struct DummyCanisterId(CanisterId);
 impl DummyCanisterId {
-    /// 构建
+    /// new
     pub fn new(id: CanisterId) -> Self {
         Self(id)
     }
 
-    /// 获取 id
+    /// get id
     pub fn id(&self) -> CanisterId {
         self.0
     }

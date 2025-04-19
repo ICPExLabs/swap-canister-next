@@ -5,21 +5,20 @@ use ic_canister_kit::types::*;
 use super::{InitArgs, UpgradeArgs};
 use super::{State, State::*};
 
-// 默认值
 impl Default for State {
     fn default() -> Self {
-        // ? 初始化和升级会先进行迁移, 因此最初的版本无关紧要
+        // ? Initialization and upgrade will be migrated first, so the initial version does not matter
         V0(Box::default())
     }
 }
 
-// ================= 需要持久化的数据 ================
+// ================= Data that needs to be persisted ================
 
 thread_local! {
-    static STATE: RefCell<State> = RefCell::default();// 存储系统数据
+    static STATE: RefCell<State> = RefCell::default();
 }
 
-// ==================== 初始化方法 ====================
+// ==================== initial ====================
 
 #[ic_cdk::init]
 fn initial(args: Option<InitArgs>) {
@@ -29,7 +28,7 @@ fn initial(args: Option<InitArgs>) {
     })
 }
 
-// ==================== 升级时的恢复逻辑 ====================
+// ==================== post upgrade ====================
 
 #[ic_cdk::post_upgrade]
 fn post_upgrade(args: Option<UpgradeArgs>) {
@@ -41,16 +40,16 @@ fn post_upgrade(args: Option<UpgradeArgs>) {
         let mut bytes = vec![0; memory.read_u64() as usize];
         memory.read(&mut bytes); // restore data
 
-        // 利用版本号恢复升级前的版本
+        // Restore the previous version using the version number
         let mut last_state = State::from_version(version);
-        last_state.heap_from_bytes(&bytes); // 恢复数据
+        last_state.heap_from_bytes(&bytes); // Recovery data
         *state.borrow_mut() = last_state;
 
-        state.borrow_mut().upgrade(args); // ! 恢复后要进行升级到最新版本
+        state.borrow_mut().upgrade(args); // ! After recovery, upgrade to the latest version
     });
 }
 
-// ==================== 升级时的保存逻辑，下次升级执行 ====================
+// ==================== Save data before upgrade, would be execute next upgrade ====================
 
 #[ic_cdk::pre_upgrade]
 fn pre_upgrade() {
@@ -69,28 +68,28 @@ fn pre_upgrade() {
     });
 }
 
-// ==================== 工具方法 ====================
+// ==================== utils ====================
 
-/// 外界需要系统状态时
+/// immutable system data
 #[allow(unused)]
 pub fn with_state<F, R>(callback: F) -> R
 where
     F: FnOnce(&State) -> R,
 {
     STATE.with(|state| {
-        let state = state.borrow(); // 取得不可变对象
+        let state = state.borrow(); // immutable data
         callback(&state)
     })
 }
 
-/// 需要可变系统状态时
+///  mutable system data
 #[allow(unused)]
 pub fn with_mut_state<F, R>(callback: F) -> R
 where
     F: FnOnce(&mut State) -> R,
 {
     STATE.with(|state| {
-        let mut state = state.borrow_mut(); // 取得可变对象
+        let mut state = state.borrow_mut(); // mutable data
         callback(&mut state)
     })
 }

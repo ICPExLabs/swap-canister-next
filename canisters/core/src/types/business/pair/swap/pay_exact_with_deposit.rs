@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapWithDepositAndWithdrawArgs {
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
 
     pub deposit_amount_without_fee: candid::Nat, // amount_in
     pub deposit_fee: Option<candid::Nat>,

@@ -9,14 +9,14 @@ use crate::{
 
 use super::TokenOperation;
 
-/// 代币交易
+/// Token trading
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TokenTransaction {
-    /// 用户操作
+    /// User Operation
     pub operation: TokenOperation,
-    /// 用户标记，最大 32 字节
+    /// User tag, up to 32 bytes
     pub memo: Option<Vec<u8>>,
-    /// 用户设置的创建时间
+    /// Created time set by user
     pub created: Option<TimestampNanos>,
 }
 

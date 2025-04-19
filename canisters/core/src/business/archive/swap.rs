@@ -6,7 +6,7 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-/// 本罐子存储的 Block，参数是对应的 height
+/// The parameters of the block stored in this canister are the corresponding height
 #[ic_cdk::query(guard = "has_business_swap_queryable")]
 fn block_swap_get(block_height: BlockIndex) -> QuerySwapBlockResult {
     inner_block_swap_get(block_height).into()

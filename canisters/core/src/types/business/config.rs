@@ -33,10 +33,10 @@ impl From<Result<Option<PushBlocks>, BusinessError>> for PushBlocksResult {
 // ========================== maintain archives config ==========================
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct MaintainArchivesConfig {
-    /// 罐子触发充值的最小 cycles
+    /// Minimum cycles for canister trigger recharge
     pub min_cycles_threshold: u64,
-    /// 每次触发充值数量
+    /// Number of recharges per trigger
     pub recharge_cycles: u64,
-    /// 检查的间隔时间 ns
+    /// Check interval ns
     pub checking_interval_ns: u64,
 }

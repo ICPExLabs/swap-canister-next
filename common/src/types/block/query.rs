@@ -2,13 +2,13 @@ use candid::CandidType;
 use ic_canister_kit::types::CanisterId;
 use serde::{Deserialize, Serialize};
 
-/// 查询块
+/// Query block
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub enum QueryBlockResult<T> {
-    /// 块内内容
+    /// Contents in the block
     #[serde(rename = "block")]
     Block(T),
-    /// 罐子
+    /// archive canister
     #[serde(rename = "archive")]
     Archive(CanisterId),
 }

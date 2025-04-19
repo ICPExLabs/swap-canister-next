@@ -1,4 +1,4 @@
-/// 时间戳
+/// timestamp
 mod timestamp;
 pub use timestamp::*;
 

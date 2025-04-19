@@ -9,7 +9,7 @@ use crate::types::with_mut_state;
 use super::super::{
     Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving,
     EncodedBlock, HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
-    TokenTransaction, init_token_blocks, init_token_wasm_module, system_error,
+    TokenTransaction, init_token_blocks, init_token_wasm_module,
 };
 
 use super::BlockChain;
@@ -20,7 +20,7 @@ const WASM_MODULE: &[u8] =
 #[derive(Serialize, Deserialize)]
 pub struct TokenBlockChain {
     #[serde(skip, default = "init_token_blocks")]
-    cached: StableBTreeMap<BlockIndex, EncodedBlock>, // 暂存所有缓存的块
+    cached: StableBTreeMap<BlockIndex, EncodedBlock>, // Staging all cached blocks
     #[serde(skip, default = "init_token_wasm_module")]
     wasm_module: StableCell<Option<Vec<u8>>>,
     block_chain: BlockChain<TokenBlock>,
@@ -57,7 +57,9 @@ impl TokenBlockChain {
         if self.wasm_module.get().is_none() {
             self.wasm_module
                 .set(Some(WASM_MODULE.to_vec()))
-                .map_err(|err| system_error(format!("init wasm module failed: {err:?}")))?;
+                .map_err(|err| {
+                    BusinessError::system_error(format!("init wasm module failed: {err:?}"))
+                })?;
         }
         Ok(())
     }
@@ -72,9 +74,9 @@ impl TokenBlockChain {
         wasm_module: Vec<u8>,
     ) -> Result<Option<Vec<u8>>, BusinessError> {
         let old = self.wasm_module.get().clone();
-        self.wasm_module
-            .set(Some(wasm_module))
-            .map_err(|err| system_error(format!("replace wasm module failed: {err:?}")))?;
+        self.wasm_module.set(Some(wasm_module)).map_err(|err| {
+            BusinessError::system_error(format!("replace wasm module failed: {err:?}"))
+        })?;
         Ok(old)
     }
     pub fn set_token_current_archiving_max_length(
@@ -112,14 +114,13 @@ impl TokenBlockChain {
         keys.into_iter().min().map(|height| (height, length as u64))
     }
     pub fn archived_block(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
-        use ::common::types::system_error;
         if !self.cached.contains_key(&block_height) {
-            return Err(system_error(format!(
+            return Err(BusinessError::system_error(format!(
                 "block: {block_height} is not exist. can not remove"
             )));
         }
         if !self.block_chain.increment(block_height) {
-            return Err(system_error(format!(
+            return Err(BusinessError::system_error(format!(
                 "last block height is not: {block_height}"
             )));
         }

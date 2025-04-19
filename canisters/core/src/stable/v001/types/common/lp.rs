@@ -100,15 +100,15 @@ impl PoolLp {
     }
 }
 
-// 内部存储 lp
+// Internal storage lp
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub struct InnerLP {
-    pub dummy_canister_id: DummyCanisterId, // 生成一个假的罐子序号用来标记池子 lp
+    pub dummy_canister_id: DummyCanisterId, // Generate a fake canister number to mark the pool lp
 
-    pub total_supply: Nat, // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
-    pub decimals: u8,      // 需要记录小数位数，显示需要
-    pub fee: Nat,          // 需要记录手续费，转移时候需要用到
-    pub minimum_liquidity: Nat, // 需要记录最小流动性，移除流动性时候需要检查是否达到最小流动性
+    pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
+    pub decimals: u8,      // Decimal places need to be recorded, display
+    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl InnerLP {
@@ -143,7 +143,7 @@ impl InnerLP {
         amount: Nat,
     ) -> Result<(), BusinessError> {
         guard.token_liquidity_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
-        self.total_supply += amount; // Nat 不会超出精度
+        self.total_supply += amount; // Nat will not exceed the accuracy
         Ok(())
     }
 
@@ -162,7 +162,7 @@ impl InnerLP {
             to,
             amount.clone(),
         )?;
-        self.total_supply += amount; // Nat 不会超出精度
+        self.total_supply += amount; // Nat will not exceed the accuracy
         Ok(())
     }
 
@@ -191,7 +191,7 @@ impl InnerLP {
         if self.total_supply < total {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }
-        self.total_supply -= total; // 如果变成负值会 panic
+        self.total_supply -= total; // If it becomes negative, it will panic
         Ok(())
     }
 
@@ -231,15 +231,15 @@ impl InnerLP {
     // }
 }
 
-// 外部存储 lp，是一个单独的罐子，有权限对其 mint 和 burn LP 代币，// ! 罐子手续费不应该销毁
+// External storage lp, is a separate canister, with permission to its mint and burn LP tokens，// ! The canister handling fee should not be destroyed
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub struct OuterLP {
-    pub token_canister_id: CanisterId, // 需要记录外部的罐子 id
+    pub token_canister_id: CanisterId, // Need to record the external canister id
 
-    pub total_supply: Nat, // 需要记录总 lp，新增和移除流动性时候需要按比例退回对应的代币
-    pub decimals: u8,      // 需要记录小数位数，显示需要
-    pub fee: Nat,          // 需要记录手续费，转移时候需要用到
-    pub minimum_liquidity: Nat, // 需要记录最小流动性，移除流动性时候需要检查是否达到最小流动性
+    pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
+    pub decimals: u8,      // Decimal places need to be recorded, display
+    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl PoolLp {

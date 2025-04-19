@@ -1,7 +1,7 @@
-/// 对数做市商（Logarithmic AMM）
-/// - 核心公式：y = k * ln(x)（x、y 为两资产数量，k 为常数）
-/// - 代表项目：Bancor V3、Balancer（部分池）
-/// - 特点
-///   - 提供更平滑的价格曲线，滑点低于常数乘积。
-///   - 支持多资产组合，通过权重调整流动性分布。
-///   - Bancor V3 引入「弹性供应」机制，允许动态增发代币。
+/// Logarithmic market maker（Logarithmic AMM）
+/// - Core formula：y = k * ln(x)（x and y are the number of two assets, and k is the constant）
+/// - Representative Project：Bancor V3、Balancer（Some pools）
+/// - Features
+///   - Provides a smoother price curve with slippage below the product of the constant.
+///   - Support multi-asset portfolios and adjust liquidity distribution through weights.
+///   - Bancor V3 introduces a "elastic supply" mechanism, allowing dynamic additional tokens.

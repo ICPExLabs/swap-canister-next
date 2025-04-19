@@ -8,14 +8,14 @@ use super::types::*;
 #[allow(unused)]
 #[allow(unused_variables)]
 pub async fn schedule_task(record_by: Option<CallerId>) {
-    // 如果有定时任务
+    // If there is a scheduled task
     ic_cdk::println!(
         "{}: do schedule task... ({})",
         display_option_by(&record_by, |p| p.to_text()),
         now()
     );
 
-    // ! 为了保证记录的完整性，不应当发生 panic
+    // ! To ensure the integrity of the record, panic should not occur
     inner_task(record_by).await;
 }
 

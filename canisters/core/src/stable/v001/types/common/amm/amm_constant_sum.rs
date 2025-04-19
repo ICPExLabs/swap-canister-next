@@ -1,6 +1,6 @@
-/// 常数和做市商（Constant Sum AMM）
-/// - 核心公式：x + y = k（x、y 为两资产数量，k 为常数）
-/// - 代表项目：早期实验性项目（如 Bancor 旧版本）
-/// - 特点
-///   - 价格恒定，无滑点（仅适用于完全替代品，如稳定币）
-///   - 流动性效率极低，实际应用较少。
+/// Constant and market maker（Constant Sum AMM）
+/// - Core formula：x + y = k（x and y are the number of two assets, and k is the constant）
+/// - Representative Project：Early experimental projects (such as the old version of Bancor)
+/// - Features
+///   - Constant price, no slippage (only for complete alternatives, such as stable coins)
+///   - The liquidity efficiency is extremely low and there are few practical applications.

@@ -12,8 +12,7 @@ use crate::{
 
 use super::transaction::TokenTransaction;
 
-/// 代币块
-
+/// Token blocks
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TokenBlock(pub CandidBlock<TokenBlock, TokenTransaction>);
 
@@ -34,14 +33,14 @@ impl DoHash for TokenBlock {
     }
 }
 
-/// 多个块
+/// Multiple blocks
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenBlockRange {
-    /// 块
+    /// block
     pub blocks: Vec<TokenBlock>,
 }
 
-/// 查询块结果
+/// Query block results
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct GetTokenBlocksResult(Result<TokenBlockRange, GetBlocksError>);
 

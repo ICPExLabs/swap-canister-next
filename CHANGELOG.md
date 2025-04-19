@@ -6,14 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Token 日志存档罐子
-- Swap 日志存档罐子
+- Token Archive Canister
+- Swap Archive Canister
+- Maintain Archive Canisters
+- Remove useless codes
 
 ## [1.0.0.alpha.1] - 2025-04-17
 
 ### Added
 
-- 初始化项目框架
-- Token 存取功能及日志
-- SwapV2 算法的兑换功能及日志
-- 借贷三角套利
+- Initialize the project framework
+- Token deposit and deposit and logs
+- SwapV2 amm swap function and logs
+- Loan triangle arbitrage

@@ -5,12 +5,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{proto, types::Amm};
 
-/// 创建池子
+/// Create a pool
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct PairSwapToken {
-    /// 支付代币
+    /// Pay tokens
     pub token_a: CanisterId,
-    /// 获得代币
+    /// Obtain tokens
     pub token_b: CanisterId,
     /// amm
     pub amm: Amm,

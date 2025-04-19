@@ -126,12 +126,12 @@ pub async fn inner_token_withdraw(
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(true, false);
 
     Ok(height)
 }
-// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+// ! This implicitly contains self_canister_id, which can be called again through permission checks and replaces caller.
 #[inline]
 async fn retry_token_withdraw(
     self_canister_id: CanisterId,

@@ -1,10 +1,10 @@
-/// 常数乘积做市商（Constant Product AMM）
-/// - 核心公式：x * y = k（x、y 为两资产数量，k 为常数）
-/// - 代表项目：Uniswap V2/V3、SushiSwap、PancakeSwap
-/// - 特点
-///   - 简单高效，适合大多数交易场景。
-///   - 大额交易时滑点显著（价格变化剧烈）。
-///   - Uniswap V3 引入「集中流动性」，允许 LP 设定价格区间，提升资本效率。
+/// Constant product market maker（Constant Product AMM）
+/// - Core formula：x * y = k（x and y are the number of two assets, and k is the constant）
+/// - Representative Project：Uniswap V2/V3、SushiSwap、PancakeSwap
+/// - Features
+///   - Simple and efficient, suitable for most trading scenarios.
+///   - There is significant slippage in large-scale transactions (significant price changes).
+///   - Uniswap V3 introduces "concentrated liquidity", allowing LPs to set price ranges and improve capital efficiency.
 use std::collections::HashMap;
 
 use ::common::utils::principal::sort_tokens;
@@ -21,25 +21,25 @@ use crate::{
     utils::math::{ZERO, zero},
 };
 
-/// 当前算法手续费下，需要的数据
+/// The required data under the current algorithm processing fee
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SwapV2MarketMaker {
-    subaccount: Subaccount, // ! fixed. 资金余额存放位置 self_canister_id.subaccount
-    fee_rate: SwapRatio,    // ! fixed. 交易费率
+    subaccount: Subaccount, // ! fixed. Fund balance storage location self_canister_id.subaccount
+    fee_rate: SwapRatio,    // ! fixed. Transaction rates
 
-    token0: CanisterId, // ! 当前 token0 的 canister_id
-    token1: CanisterId, // ! 当前 token1 的 canister_id
-    reserve0: Nat,      // ! 当前 token0 存入的余额
-    reserve1: Nat,      // ! 当前 token0 存入的余额
+    token0: CanisterId, // ! Canister_id of the current token0
+    token1: CanisterId, // ! Canister_id of the current token1
+    reserve0: Nat,      // ! The current balance deposited by token0
+    reserve1: Nat,      // ! The current balance deposited by token1
     block_timestamp_last: u64,
 
-    price_cumulative_exponent: u8, // 指数计算
+    price_cumulative_exponent: u8, // Exponential calculation
     price0_cumulative_last: Nat,
     price1_cumulative_last: Nat,
-    k_last: Nat, // ! 当前 k 值
+    k_last: Nat, // ! Current k value
 
-    lp: PoolLp, // lp 代币信息, 一旦新建池子成功，除了 supply，其他数据不可更改
-    protocol_fee: Option<SwapRatio>, // 协议分享的手续费 和 lp fee 累计应该等于 1
+    lp: PoolLp, // lp token information, Once the new pool is successfully created, other data cannot be changed except for supply
+    protocol_fee: Option<SwapRatio>, // The processing fee and lp fee for the agreement sharing should be equal to 1
 }
 
 impl SwapV2MarketMaker {
@@ -103,7 +103,7 @@ impl SwapV2MarketMaker {
         }
     }
 
-    /// 计算另一个代币所需的数量
+    /// Calculate the amount required for another token
     fn quote(amount_a: &Nat, reserve_a: &Nat, reserve_b: &Nat) -> Nat {
         assert!(*amount_a > *ZERO, "INSUFFICIENT_AMOUNT");
         assert!(*reserve_a > *ZERO, "INSUFFICIENT_LIQUIDITY");
@@ -111,7 +111,7 @@ impl SwapV2MarketMaker {
         amount_a.to_owned() * reserve_b.to_owned() / reserve_a.to_owned()
     }
 
-    /// 计算添加流动性所需的代币数量
+    /// Calculate the number of tokens required to add liquidity
     fn inner_add_liquidity(
         &self,
         arg: &TokenPairLiquidityAddArg,
@@ -119,23 +119,23 @@ impl SwapV2MarketMaker {
         let (reserve_a, reserve_b) = self.get_reserves(arg.token_a, arg.token_b);
 
         if reserve_a == *ZERO && reserve_b == *ZERO {
-            Ok((arg.amount_a_desired.clone(), arg.amount_b_desired.clone())) // 第一次添加无需计算
+            Ok((arg.amount_a_desired.clone(), arg.amount_b_desired.clone())) // No calculation required for the first time
         } else {
-            let amount_b_optimal = Self::quote(&arg.amount_a_desired, &reserve_a, &reserve_b); // 以 a 计算 b 的数量
+            let amount_b_optimal = Self::quote(&arg.amount_a_desired, &reserve_a, &reserve_b); // Calculate the number of b with a
             if amount_b_optimal <= arg.amount_b_desired {
                 if amount_b_optimal < arg.amount_b_min {
-                    // 以 a 数量所需的 b 太少，小于最少的 b
+                    // Too few b required in a quantity of a, less than the minimum b
                     return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
                 }
                 Ok((arg.amount_a_desired.clone(), amount_b_optimal))
             } else {
-                // 以 a 数量所需的 b 太多，大于最大的 b
+                // Too much b is required in a quantity of a, greater than the maximum b
 
-                // 切换另一个代币计算
-                let amount_a_optimal = Self::quote(&arg.amount_b_desired, &reserve_b, &reserve_a); // 以 b 计算 a 的数量
+                // Switch to another token calculation
+                let amount_a_optimal = Self::quote(&arg.amount_b_desired, &reserve_b, &reserve_a); // Calculate the number of a with b
                 if amount_a_optimal > arg.amount_a_desired || amount_a_optimal < arg.amount_a_min {
-                    // 以 b 数量所需的 a 太多，大于最大的 a
-                    // 以 b 数量所需的 a 太少，小于最少的 a
+                    // Too much a is required in b quantity, greater than the maximum a
+                    // Too little a is needed in b quantity, less than the minimum a
                     return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
                 }
                 Ok((amount_a_optimal, arg.amount_b_desired.clone()))
@@ -224,7 +224,7 @@ impl SwapV2MarketMaker {
         Ok(())
     }
 
-    /// 铸造流动性
+    /// mint liquidity
     fn mint(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
@@ -234,18 +234,18 @@ impl SwapV2MarketMaker {
     ) -> Result<Nat, BusinessError> {
         let (token0, token1) = (self.token0, self.token1);
 
-        // 获取当前持有
+        // Get the current hold
         let (_reserve0, _reserve1) = self.get_reserves(token0, token1);
-        // 获取当前余额
+        // Get the current balance
         let balance0 = guard.token_balance_of(token0, *pool_account)?;
         let balance1 = guard.token_balance_of(token1, *pool_account)?;
-        // 计算增加额度
+        // Calculate the increase amount
         let amount0 = balance0.clone() - _reserve0.clone();
         let amount1 = balance1.clone() - _reserve1.clone();
 
-        // 收取手续费，铸造成 LP 代币，然后才能计算新增流动性
+        // Charge a handling fee to mint LP tokens before the additional liquidity can be calculated
         let fee_on = self.mint_fee(guard, &_reserve0, &_reserve1)?;
-        // 计算增加的流动性
+        // Calculate increased liquidity
         let _total_supply = self.lp.get_total_supply();
         let liquidity = if _total_supply == *ZERO {
             Nat::from((amount0 * amount1).0.sqrt())
@@ -255,15 +255,15 @@ impl SwapV2MarketMaker {
             liquidity0.min(liquidity1)
         };
 
-        // do mint，为用户铸造 LP 代币
+        // do mint，Mint LP tokens for users
         let arg = &guard.arg.arg;
         self.lp
             .mint(guard, amount_a, amount_b, arg.to, liquidity.clone())?;
 
-        // 更新当前余额
+        // Update the current balance
         self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
         if fee_on {
-            self.k_last = self.reserve0.clone() * self.reserve1.clone(); // 记录当前 k
+            self.k_last = self.reserve0.clone() * self.reserve1.clone(); // Record the current k
         }
 
         Ok(liquidity)
@@ -296,7 +296,7 @@ impl SwapV2MarketMaker {
         guard.trace(format!(
             "*Add Liquidity* `amount_a:{amount_a}, amount_b:{amount_b}`",
         )); // * trace
-        // 池子接收代币账户
+        // Pool token account
         let arg = &guard.arg.arg;
         let pool_account = Account {
             owner: arg.self_canister.id(),
@@ -375,7 +375,7 @@ impl SwapV2MarketMaker {
             return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
         }
 
-        // do burn，为用户销毁 LP 代币
+        // do burn，Destroy LP tokens for users
         let arg = &guard.arg.arg;
         self.lp.burn(
             guard,
@@ -407,7 +407,7 @@ impl SwapV2MarketMaker {
         let balance0 = guard.token_balance_of(_token0, *pool_account)?;
         let balance1 = guard.token_balance_of(_token1, *pool_account)?;
 
-        // 更新当前余额
+        // Update the current balance
         self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
         if fee_on {
             self.k_last = self.reserve0.clone() * self.reserve1.clone();
@@ -440,7 +440,7 @@ impl SwapV2MarketMaker {
             )); // * trace
         }
 
-        // 池子转出代币账户
+        // Transfer token account from the pool
         let arg = &guard.arg.arg;
         let pool_account = Account {
             owner: arg.self_canister.id(),
@@ -526,9 +526,9 @@ impl SwapV2MarketMaker {
         let numerator = reserve_out * amount_in_with_fee.clone();
         let denominator = reserve_in * d + amount_in_with_fee;
 
-        let amount_out = numerator / denominator; // ! 转出可以少，向下取整
+        let amount_out = numerator / denominator; // ! You can turn out less and get downward
 
-        // 检查转出余额是否足够
+        // Check if the transfer balance is sufficient
         if (token_out == self.token0 && self.reserve0 < amount_out)
             || (token_out == self.token1 && self.reserve1 < amount_out)
         {
@@ -581,9 +581,9 @@ impl SwapV2MarketMaker {
         let numerator = reserve_in * amount_out.clone() * d.clone();
         let denominator = (reserve_out - amount_out.clone()) * (d - n);
 
-        let amount_in = (numerator / denominator) + 1_u32; // ! 转入不可以少，向上取整
+        let amount_in = (numerator / denominator) + 1_u32; // ! You must not miss the transfer, and you can get it upward
 
-        // 检查转出余额是否足够
+        // Check if the transfer balance is sufficient
         if (token_out == self.token0 && self.reserve0 < *amount_out)
             || (token_out == self.token1 && self.reserve1 < *amount_out)
         {
@@ -596,7 +596,7 @@ impl SwapV2MarketMaker {
         Ok((pool_account, amount_in))
     }
 
-    /// 务必先转入对应的代币，再调用本方法转出代币
+    /// Be sure to transfer the corresponding token first, and then call this method to transfer the token
     pub fn swap<T: TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
@@ -605,18 +605,18 @@ impl SwapV2MarketMaker {
         amount1_out: Nat,
         to: Account,
     ) -> Result<(), BusinessError> {
-        // 池子的账户
+        // Pool's account
         let pool_account = Account {
             owner: self_canister.id(),
             subaccount: Some(self.subaccount),
         };
 
-        // 2 种代币的输出不能都为 0
+        // The output of both tokens cannot be 0
         if amount0_out == *ZERO && amount1_out == *ZERO {
             return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
         }
 
-        // 各自代币的输出不能大于池子持有量
+        // The output of each token cannot be greater than the pool holder
         let (_reserve0, _reserve1) = (self.reserve0.clone(), self.reserve1.clone());
         if _reserve0 < amount0_out || _reserve1 < amount1_out {
             return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
@@ -627,7 +627,7 @@ impl SwapV2MarketMaker {
             let _token0 = self.token0;
             let _token1 = self.token1;
             if to.owner == _token0 || to.owner == _token1 {
-                return Err(BusinessError::Swap("INVALID_TO".into())); // 输出代币目标地址不能为代币本身
+                return Err(BusinessError::Swap("INVALID_TO".into())); // The output token target address cannot be the token itself
             }
             if amount0_out > *ZERO {
                 guard.token_transfer(TransferToken {
@@ -652,7 +652,7 @@ impl SwapV2MarketMaker {
             (balance0, balance1)
         };
 
-        // 计算 2 种代币各自得到数量，调用本函数之前应当提前转入
+        // Calculate the 2 tokens to get the number, and you should transfer it in advance before calling this function.
         let (amount0_in, amount1_in) = {
             let amount0_in = if balance0 > _reserve0.clone() - amount0_out.clone() {
                 balance0.clone() - (_reserve0.clone() - amount0_out.clone())
@@ -666,7 +666,7 @@ impl SwapV2MarketMaker {
             };
             (amount0_in, amount1_in)
         };
-        // 2 种代币的输入不能都为 0
+        // The inputs of both tokens cannot be 0
         if amount0_in == *ZERO && amount1_in == *ZERO {
             return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
         }

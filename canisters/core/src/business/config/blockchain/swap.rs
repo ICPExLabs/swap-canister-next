@@ -64,50 +64,50 @@ async fn config_swap_archived_canister_max_memory_size_bytes_set(
 
 // ============================== push swap block ==============================
 
-/// 推送罐子
+/// Push blocks
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn config_swap_blocks_push() -> PushBlocksResult {
     inner_config_swap_blocks_push().await.into()
 }
 
-/// 推送罐子
+/// Push blocks
 pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, BusinessError> {
     use super::deploy_canister;
-    use ::common::types::system_error;
 
-    // 0. 必须非暂停状态，获取锁
-    with_state(|s| s.pause_must_be_running()).map_err(system_error)?;
-    let _lock = with_mut_state(|s| s.business_swap_block_chain_archive_lock())
-        .ok_or(system_error("swap block chain archive locked"))?;
+    // 0. Must be non-pause state, obtain lock
+    with_state(|s| s.pause_must_be_running()).map_err(BusinessError::system_error)?;
+    let _lock = with_mut_state(|s| s.business_swap_block_chain_archive_lock()).ok_or(
+        BusinessError::system_error("swap block chain archive locked"),
+    )?;
 
-    // 1. 若当前已满，需要进行存档
+    // 1. If it is currently full, archive is required
     with_mut_state(|s| s.business_config_swap_archive_current_canister())?;
 
-    // 2. 查询罐子是否已满
+    // 2. Check if the canister is full
     let mut view: BlockChainView<SwapBlock> =
         with_state(|s| s.business_config_swap_block_chain_query().into());
     if let Some(current_archiving) = view.current_archiving {
         if current_archiving.is_full() {
-            return Err(system_error(
+            return Err(BusinessError::system_error(
                 "swap block chain current archive canister is full",
             ));
         }
     }
 
-    // 3. 若不存在或已满，需要创建新的罐子
+    // 3. If it does not exist or is full, a new canister needs to be created
     if view.current_archiving.is_none() {
         const INITIAL_CYCLES: u128 = 3_000_000_000_000; // initial 3 TCycles
         let cycles_balance = ic_canister_kit::canister::cycles::wallet_balance();
         let required = Nat::from(INITIAL_CYCLES * 2);
-        // 判断自身 cycles 是否足够
+        // whether self cycles are sufficient
         if cycles_balance < required {
-            return Err(system_error(format!(
+            return Err(BusinessError::system_error(format!(
                 "self canister insufficient cycles: {cycles_balance} < {required}"
             )));
         }
-        // 创建新的罐子
+        // Create a new canister
         let wasm = with_state(|s| s.business_config_swap_archive_wasm_module_query().clone())
-            .ok_or(system_error(
+            .ok_or(BusinessError::system_error(
                 "swap block chain wasm is none, can not deploy next archive canister",
             ))?;
         let block_offset = {
@@ -122,7 +122,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
                 None
             } else {
                 let hash = with_state(|s| s.business_config_swap_parent_hash_get(block_offset))
-                    .ok_or(system_error(format!(
+                    .ok_or(BusinessError::system_error(format!(
                         "can not find parent hash by height: {block_offset}"
                     )))?;
                 Some((block_offset, hash))
@@ -134,17 +134,18 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
             core_canister_id: Some(self_canister_id()),
             block_offset,
         };
-        let init_args = candid::encode_args((Some(init_args.clone()),))
-            .map_err(|err| system_error(format!("can not encode args: {init_args:?} {err:?}")))?;
+        let init_args = candid::encode_args((Some(init_args.clone()),)).map_err(|err| {
+            BusinessError::system_error(format!("can not encode args: {init_args:?} {err:?}"))
+        })?;
         let mut trace = RequestTrace::from_args(RequestArgs::SwapBlockPush);
         let deploy_result = deploy_canister(&mut trace, INITIAL_CYCLES, wasm, init_args).await;
         with_mut_state(|s| s.business_request_trace_insert(trace));
         let canister_id = deploy_result.map_err(|err| {
-            system_error(format!(
+            BusinessError::system_error(format!(
                 "create and deploy new swap canister failed: {err:?}"
             ))
         })?;
-        // 设置新的存档罐子
+        // Set up a new archive canister
         with_mut_state(|s| {
             s.business_config_swap_current_archiving_replace(CurrentArchiving {
                 canister_id,
@@ -153,26 +154,26 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
                 max_length: view.archive_config.max_length,
             })
         });
-        // 再次获取
+        // Get it again
         view = with_state(|s| s.business_config_swap_block_chain_query().into());
     }
     let current_archiving = match view.current_archiving {
         Some(current_archiving) => {
             if current_archiving.is_full() {
-                return Err(system_error(
+                return Err(BusinessError::system_error(
                     "swap block chain current archive canister is full",
                 ));
             }
             current_archiving
         }
         None => {
-            return Err(system_error(
+            return Err(BusinessError::system_error(
                 "swap block chain current archive canister is none",
             ));
         }
     };
 
-    // 4. 查询当前能够存储到当前罐子的块信息
+    // 4. Query the block information that can be stored in the current canister
     let (height_start, length) = match with_state(|s| s.business_config_swap_cached_block_get()) {
         Some(v) => v,
         None => return Ok(None), // nothing
@@ -181,7 +182,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
     if num == 0 {
         return Ok(None);
     }
-    // 7. 推送新的块并在成功后移除
+    // 7. Push new block and remove after success
     let service = crate::services::archive::Service(current_archiving.canister_id);
     for i in 0..num {
         let block_height = height_start + i;
@@ -195,7 +196,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
             }
         };
         service.append_blocks(vec![block]).await?;
-        // 成功插入后要移除缓存并更新序号
+        // After successful insertion, remove the cache and update the sequence number
         with_mut_state(|s| s.business_config_swap_block_archived(block_height))?;
     }
     Ok(Some(PushBlocks {

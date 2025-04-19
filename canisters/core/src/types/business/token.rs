@@ -23,7 +23,7 @@ impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenDepositArgs {
     pub token: CanisterId,
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
     pub deposit_amount_without_fee: candid::Nat,
     pub to: Account,
     pub fee: Option<candid::Nat>,
@@ -36,7 +36,7 @@ pub struct TokenDepositArgs {
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenWithdrawArgs {
     pub token: CanisterId,
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
     pub withdraw_amount_without_fee: candid::Nat,
     pub to: Account,
     pub fee: Option<candid::Nat>,
@@ -50,7 +50,7 @@ pub struct TokenWithdrawArgs {
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenTransferArgs {
     pub token: CanisterId,
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
     pub transfer_amount_without_fee: candid::Nat,
     pub to: Account,
     pub fee: Option<candid::Nat>,

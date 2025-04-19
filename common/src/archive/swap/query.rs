@@ -5,7 +5,7 @@ use crate::types::QueryBlockResult;
 
 use super::SwapBlock;
 
-/// 查询 Swap Block
+/// query Swap Block
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct QuerySwapBlockResult(QueryBlockResult<SwapBlock>);
 

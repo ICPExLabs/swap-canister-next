@@ -8,33 +8,33 @@ use super::super::check_permission;
 
 use super::types::{InnerState, ParsePermission};
 
-// 权限常量
-// 通用权限
+// Permission constants
+// General permissions
 pub use super::super::v000::types::{
     ACTION_PAUSE_QUERY, ACTION_PAUSE_REPLACE, ACTION_PERMISSION_FIND, ACTION_PERMISSION_QUERY,
     ACTION_PERMISSION_UPDATE, ACTION_SCHEDULE_FIND, ACTION_SCHEDULE_REPLACE,
     ACTION_SCHEDULE_TRIGGER,
 };
 
-// 业务权限
+// Business permissions
 // config
-pub const ACTION_BUSINESS_CONFIG_FEE_TO: &str = "BusinessConfigFeeTo"; // 查询和设置手续费接收地址权限
-pub const ACTION_BUSINESS_CONFIG_MAINTAINING: &str = "BusinessConfigMaintaining"; // 维护权限
+pub const ACTION_BUSINESS_CONFIG_FEE_TO: &str = "BusinessConfigFeeTo"; // Query and set the handling fee receiving address permissions
+pub const ACTION_BUSINESS_CONFIG_MAINTAINING: &str = "BusinessConfigMaintaining"; // Maintain permissions
 // token
-pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // 查询指定账户余额权限
-pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // 存入代币权限
-pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // 提取代币权限
-pub const ACTION_BUSINESS_TOKEN_TRANSFER: &str = "BusinessTokenTransfer"; // 代币内部转移权限
+pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // Query the permissions for the specified account balance
+pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // Deposit token permission
+pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // Retrieve token permissions
+pub const ACTION_BUSINESS_TOKEN_TRANSFER: &str = "BusinessTokenTransfer"; // Internal transfer permissions for tokens
 // pair
-pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE: &str = "BusinessTokenPairCreate"; // 创建代币对池子权限
-pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD: &str = "BusinessTokenPairLiquidityAdd"; // 向代币对池子添加流动性权限
-pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE: &str = "BusinessTokenPairLiquidityRemove"; // 向代币对池子移除流动性权限
-pub const ACTION_BUSINESS_TOKEN_PAIR_SWAP: &str = "BusinessTokenPairSwap"; // 代币对池子交换代币权限
+pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE: &str = "BusinessTokenPairCreate"; // Create token pair pool permissions
+pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD: &str = "BusinessTokenPairLiquidityAdd"; // Add liquidity permissions to the token pair pool
+pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE: &str = "BusinessTokenPairLiquidityRemove"; // Remove liquidity permissions from token pair pools
+pub const ACTION_BUSINESS_TOKEN_PAIR_SWAP: &str = "BusinessTokenPairSwap"; // Token exchange permissions for tokens on pools
 
-// 所有权限列表
+// All permission list
 #[allow(unused)]
 pub const ACTIONS: [&str; 18] = [
-    // 通用权限
+    // General permissions
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
     ACTION_PERMISSION_QUERY,
@@ -43,7 +43,7 @@ pub const ACTIONS: [&str; 18] = [
     ACTION_SCHEDULE_FIND,
     ACTION_SCHEDULE_REPLACE,
     ACTION_SCHEDULE_TRIGGER,
-    // 业务权限
+    // Business permissions
     // config
     ACTION_BUSINESS_CONFIG_FEE_TO,
     ACTION_BUSINESS_CONFIG_MAINTAINING,
@@ -69,11 +69,11 @@ where
     permissions.into_iter().collect()
 }
 
-// 权限默认状态
+// Permission default status
 impl ParsePermission for InnerState {
     fn parse_permission<'a>(&self, name: &'a str) -> Result<Permission, ParsePermissionError<'a>> {
         Ok(match name {
-            // 通用权限
+            // General permissions
             ACTION_PAUSE_QUERY => Permission::by_forbid(name),
             ACTION_PAUSE_REPLACE => Permission::by_permit(name),
             ACTION_PERMISSION_QUERY => Permission::by_forbid(name),
@@ -82,7 +82,7 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_FIND => Permission::by_permit(name),
             ACTION_SCHEDULE_REPLACE => Permission::by_permit(name),
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
-            // 业务权限
+            // Business permissions
             // config
             ACTION_BUSINESS_CONFIG_FEE_TO => Permission::by_permit(name),
             ACTION_BUSINESS_CONFIG_MAINTAINING => Permission::by_permit(name),
@@ -96,20 +96,20 @@ impl ParsePermission for InnerState {
             ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_PAIR_SWAP => Permission::by_forbid(name), // default anyone
-            // 其他错误
+            // Other errors
             _ => return Err(ParsePermissionError(name)),
         })
     }
 }
 
-// 通用权限
+// General permissions
 #[allow(unused)]
 pub use super::super::v000::types::{
     has_pause_query, has_pause_replace, has_permission_find, has_permission_query,
     has_permission_update, has_schedule_find, has_schedule_replace, has_schedule_trigger,
 };
 
-// 业务权限
+// Business permissions
 pub fn has_business_token_queryable() -> Result<(), String> {
     use super::super::Business;
     let caller = ic_canister_kit::identity::caller();

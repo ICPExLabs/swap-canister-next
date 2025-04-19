@@ -144,7 +144,7 @@ impl TokenBalances {
 // ============================ lock ============================
 
 pub struct TokenBalancesLock {
-    required: Vec<TokenAccount>,   // 目标要求锁住的账户，打印显示
+    required: Vec<TokenAccount>,   // The target requires locked account, print it to display
     locked: HashSet<TokenAccount>, // fee_to must be included
 }
 impl Drop for TokenBalancesLock {

@@ -7,14 +7,14 @@ use super::types::*;
 #[allow(unused)]
 #[allow(unused_variables)]
 pub async fn schedule_task(record_by: Option<CallerId>) {
-    // 如果有定时任务
+    // If there is a scheduled task
     ic_cdk::println!(
         "{}: do schedule task... ({})",
         display_option_by(&record_by, |p| p.to_text()),
         now()
     );
 
-    // ! 为了保证记录的完整性，不应当发生 panic
+    // ! To ensure the integrity of the record, panic should not occur
     inner_task(record_by).await;
 }
 
@@ -33,15 +33,13 @@ async fn inner_task(caller: Option<CallerId>) {
 }
 
 async fn maintaining_canisters(trace: &mut RequestTrace) -> Result<(), BusinessError> {
-    use ::common::types::system_error;
-
-    // 0.检查维护状态
+    // 0. Check maintenance status
     if let Err(err) = with_state(|s| s.pause_must_be_running()) {
         trace.failed(format!("system paused: {err:?}"));
-        return Err(system_error(err));
+        return Err(BusinessError::system_error(err));
     }
 
-    // 1. 查询所有需要管理的罐子
+    // 1. Query all canisters that need to be managed
     let config = with_state(|s| s.business_config_maintain_archives_query().clone());
     let threshold = Nat::from(config.min_cycles_threshold);
     let canisters = with_state(|s| s.business_config_maintain_canisters());
@@ -54,7 +52,7 @@ async fn maintaining_canisters(trace: &mut RequestTrace) -> Result<(), BusinessE
             .join(",")
     ));
 
-    // 2. 遍历每一个罐子判断是否需要充值
+    // 2. Traverse each canister to determine whether it is necessary to recharge
     for (i, &canister_id) in canisters.iter().enumerate() {
         let prefix = format!("# {} *[{}]* ", i + 1, canister_id.to_text());
         let status = match ic_cdk::api::call::call::<

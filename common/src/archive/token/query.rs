@@ -5,7 +5,7 @@ use crate::types::QueryBlockResult;
 
 use super::TokenBlock;
 
-/// 查询 Token Block
+/// query Token Block
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct QueryTokenBlockResult(QueryBlockResult<TokenBlock>);
 

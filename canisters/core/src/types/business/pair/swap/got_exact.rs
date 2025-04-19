@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapTokensForExactTokensArgs {
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
 
     pub amount_out: Nat,    // got
     pub amount_in_max: Nat, // max pay

@@ -2,13 +2,13 @@
 start_time=$(date +%H:%M:%S)
 start_time_s=$(date +%s)
 
-# 运行完毕自动停止
+# Automatically stop after operation
 dfx stop
 trap 'say test over && dfx stop' EXIT
 
-# dfx start --background --clean # 开启新的 dfx 环境
-dfx start --artificial-delay 0 --background --clean # 开启新的 dfx 环境
-# dfx start --background --clean >/dev/null 2>&1 # 开启新的 dfx 环境
+# dfx start --background --clean # Open a new dfx environment
+dfx start --artificial-delay 0 --background --clean # Open a new dfx environment
+# dfx start --background --clean >/dev/null 2>&1 # Open a new dfx environment
 
 function red { echo "\033[31m$1\033[0m"; }
 function green { echo "\033[32m$1\033[0m"; }
@@ -255,7 +255,7 @@ test "icrc1_balance_of snsCHAT/default" "$(dfx --identity default canister call 
 test "icrc1_balance_of snsCHAT/alice" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
 test "icrc1_balance_of snsCHAT/bob" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
 
-# ! 1. 测试 core
+# ! 1. Test core
 red "\n=========== 1. core ===========\n"
 dfx canister create core --specified-id "piwiu-wiaaa-aaaaj-azzka-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(null)" core
@@ -309,7 +309,8 @@ test "token_withdraw" "$(dfx --identity default canister call core token_withdra
 test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(2:nat64)" 2>&1)" '(null)'
 test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
 test "token_withdraw" "$(dfx --identity default canister call core token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; withdraw_amount_without_fee=999_998_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 5 : nat })'
-test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { withdraw = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
+test "👁︎ block_token_get" "$(dfx --identity default canister call core block_token_get "(1:nat64)" 2>&1)" '(variant { archive = principal "bkyz2-fmaaa-aaaaa-qaaaq-cai" })'
+test "👁︎👁︎ block_token_get" "$(dfx --identity default canister call archive_token block_token_get "(1:nat64)" 2>&1)" "( variant { block = record { transaction = record { created = null; memo = null; operation = variant { withdraw = record { to = record { owner = principal \"$DEFAULT\"; subaccount = null; }; token = principal \"ss2fx-dyaaa-aaaar-qacoq-cai\"; from = record { owner = principal \"$DEFAULT\"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; } }; }; timestamp = " " : nat64; parent_hash = blob \""
 test "👁︎ request_trace_get" "$(dfx --identity default canister call core request_trace_get "(2:nat64)" 2>&1)" '( opt record { args = variant { token_withdraw = record { arg = record { to = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; from = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { result = variant { ok = "5" }; done = ' ' : nat64; }; traces = vec { record { ' ' : nat64; "*Withdraw* `token:[ss2fx-dyaaa-aaaar-qacoq-cai], to:('"$DEFAULT"'.), amount:1_000_000_000_000_000_000, height:5`"; }; record { ' ' : nat64; "Withdraw Done." }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; }; }; }; index = 2 : nat64; }, )'
 test "tokens_balance_of" "$(dfx --identity default canister call core tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 4_000_000_000_000_000_000 : nat;}'
 
@@ -656,9 +657,9 @@ test "config_token_archive_wasm_module_query" "$(dfx canister call core config_t
 test "config_token_current_archiving_max_length_replace" "$(dfx canister call core config_token_current_archiving_max_length_replace "(1000: nat64)" 2>&1)" '( opt record { canister_id = principal "bkyz2-fmaaa-aaaaa-qaaaq-cai"; length = 1 : nat64; max_length = 1_000 : nat64; block_height_offset = 0 : nat64; }, )'
 test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$DEFAULT"'" ] ], "max_length": "1000", "max_memory_size_bytes": [] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
 test "config_token_archive_config_replace" "$(dfx canister call core config_token_archive_config_replace "(record {maintainers=opt vec{principal \"$BOB\"}; max_memory_size_bytes=opt (2000000:nat64); max_length=10000:nat64})" 2>&1)" '( record { maintainers = opt vec { principal "'"$DEFAULT"'"; }; max_memory_size_bytes = null; max_length = 1_000 : nat64; }, )'
-test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$DEFAULT"'" ] ], "max_length": "10000", "max_memory_size_bytes": [ "2000000" ] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
-test "config_token_archived_canister_maintainers_set" "$(dfx canister call core config_token_archived_canister_maintainers_set "(principal \"$archive_token\", opt vec {principal \"$ALICE\"})" 2>&1)" '{ Ok = null }'
-test "config_token_archived_canister_max_memory_size_bytes_set" "$(dfx canister call core config_token_archived_canister_max_memory_size_bytes_set "(principal \"$archive_token\", 300: nat64)" 2>&1)" 'xxx'
+test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$BOB"'" ] ], "max_length": "10000", "max_memory_size_bytes": [ "2000000" ] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
+test "config_token_archived_canister_maintainers_set" "$(dfx canister call core config_token_archived_canister_maintainers_set "(principal \"$archive_token\", opt vec {principal \"$ALICE\"})" 2>&1)" '(variant { Ok })'
+test "config_token_archived_canister_max_memory_size_bytes_set" "$(dfx canister call core config_token_archived_canister_max_memory_size_bytes_set "(principal \"$archive_token\", 300: nat64)" 2>&1)" '(variant { Ok })'
 test "config_token_archived_canister_max_memory_size_bytes_set" "$(dfx canister call core config_token_archived_canister_max_memory_size_bytes_set "(principal \"$archive_token\", 3_000_000: nat64)" 2>&1)" 'xxxxx'
 
 blue "\n🚩 8.1 test archive-token"
@@ -681,4 +682,4 @@ echo "✅ $start_time -> $end_time" "Total: $spend seconds ($spend_minutes mins)
 say test successful
 
 # sleep 10000
-# read -s -n1 -p "按任意键结束..."
+# read -s -n1 -p "Press any key to end..."

@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenPairSwapByLoanArgs {
-    pub from: Account, // 标记来源，caller 务必和 from 一致
+    pub from: Account, // make caller, caller must be consistent with from
 
     pub loan: Nat,                // pay loaned token
     pub path: Vec<SwapTokenPair>, // pay exact tokens

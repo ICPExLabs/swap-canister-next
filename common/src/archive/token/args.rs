@@ -5,26 +5,26 @@ use crate::types::{BlockIndex, HashOf};
 
 use super::TokenBlock;
 
-/// token archive 部署参数
+/// token archive deploy args
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
 pub struct InitArgV1 {
-    /// 维护者账户
+    /// Maintainer Account
     pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
 
-    /// 最大内存
+    /// Maximum memory
     pub max_memory_size_bytes: Option<u64>,
-    /// 宿主罐子
+    /// Host canister
     pub core_canister_id: Option<CanisterId>,
-    /// 块偏移
+    /// Block Offset
     pub block_offset: Option<(BlockIndex, HashOf<TokenBlock>)>,
 }
 
-/// token archive 升级参数
+/// token archive upgrade args
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
 pub struct UpgradeArgV1 {
-    /// 添加新的维护者账户
+    /// Add a new maintainer account
     pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
 
-    /// 最大内存
+    /// Maximum memory
     pub max_memory_size_bytes: Option<u64>,
 }

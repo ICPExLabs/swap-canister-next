@@ -12,8 +12,7 @@ use crate::{
 
 use super::transaction::SwapTransaction;
 
-/// 代币块
-
+/// Token blocks
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapBlock(pub CandidBlock<SwapBlock, SwapTransaction>);
 
@@ -34,14 +33,14 @@ impl DoHash for SwapBlock {
     }
 }
 
-/// 多个块
+/// Multiple blocks
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct SwapBlockRange {
-    /// 块
+    /// piece
     pub blocks: Vec<SwapBlock>,
 }
 
-/// 查询块结果
+/// Query block results
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct GetSwapBlocksResult(Result<SwapBlockRange, GetBlocksError>);
 

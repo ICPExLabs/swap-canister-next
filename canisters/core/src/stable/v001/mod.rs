@@ -14,43 +14,43 @@ mod business;
 
 use types::*;
 
-// 初始化
-// ! 第一次部署会执行
+// initialization
+// ! The first deployment will be executed
 impl Initial<Option<InitArg>> for InnerState {
     fn init(&mut self, arg: Option<InitArg>) {
-        let arg = arg.unwrap_or_default(); // ! 就算是 None，也要执行一次
+        let arg = arg.unwrap_or_default(); // ! Even if it is None, it must be executed once
 
-        // 维护人员初始化
+        // Maintenance personnel initialization
         let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
-            vec![caller()] // 默认调用者为维护人员
+            vec![caller()] // The default caller is the maintenance person
         });
 
         let permissions = get_all_permissions(|n| self.parse_permission(n));
         let updated = supers_updated(&maintainers, &permissions);
 
-        // 刷新权限
+        // Refresh permissions
         self.permission_reset(permissions);
-        // 维护人员赋予所有权限
-        assert!(self.permission_update(updated).is_ok()); // 插入权限
+        // Maintenance personnel grant all permissions
+        assert!(self.permission_update(updated).is_ok()); // Insert permissions
 
-        // 定时任务
+        // Timing tasks
         self.schedule_replace(arg.schedule);
 
-        // 业务数据
+        // Business data
         self.do_init(arg);
     }
 }
 
-// 升级
-// ! 升级时执行
+// upgrade
+// ! Execute during upgrade
 impl Upgrade<Option<UpgradeArg>> for InnerState {
     fn upgrade(&mut self, arg: Option<UpgradeArg>) {
         let arg = match arg {
             Some(arg) => arg,
-            None => return, // ! None 表示升级无需处理数据
+            None => return, // ! None means no data processing is required for upgrade
         };
 
-        // 维护人员初始化
+        // Maintenance personnel initialization
         let maintainers = arg.maintainers.clone();
 
         let permissions = get_all_permissions(|n| self.parse_permission(n));
@@ -58,34 +58,34 @@ impl Upgrade<Option<UpgradeArg>> for InnerState {
             .as_ref()
             .map(|maintainers| supers_updated(maintainers, &permissions));
 
-        // 刷新权限
+        // Refresh permissions
         self.permission_reset(permissions);
-        // 维护人员赋予所有权限
+        // Maintenance personnel grant all permissions
         if let Some(updated) = updated {
-            assert!(self.permission_update(updated).is_ok()); // 插入权限
+            assert!(self.permission_update(updated).is_ok()); // Insert permissions
         }
 
-        // 定时任务
+        // Timing tasks
         self.schedule_replace(arg.schedule);
 
-        // 业务数据
+        // Business data
         self.do_upgrade(arg);
     }
 }
 
 impl Pausable<PauseReason> for InnerState {
-    // 查询
+    // query
     fn pause_query(&self) -> &Option<PauseReason> {
         self.canister_kit.pause.pause_query()
     }
-    // 修改
+    //  update
     fn pause_replace(&mut self, reason: Option<PauseReason>) {
         self.canister_kit.pause.pause_replace(reason)
     }
 }
 
 impl Permissable<Permission> for InnerState {
-    // 查询
+    // query
     fn permission_users(&self) -> HashSet<&UserId> {
         self.canister_kit.permissions.permission_users()
     }
@@ -110,7 +110,7 @@ impl Permissable<Permission> for InnerState {
         self.canister_kit.permissions.permission_owned(user_id)
     }
 
-    // 修改
+    //  update
     fn permission_reset(&mut self, permissions: HashSet<Permission>) {
         self.canister_kit.permissions.permission_reset(permissions)
     }
@@ -123,11 +123,11 @@ impl Permissable<Permission> for InnerState {
 }
 
 impl Schedulable for InnerState {
-    // 查询
+    // query
     fn schedule_find(&self) -> Option<DurationNanos> {
         self.canister_kit.schedule.schedule_find()
     }
-    // 修改
+    //  update
     fn schedule_replace(&mut self, schedule: Option<DurationNanos>) {
         self.canister_kit.schedule.schedule_replace(schedule)
     }

@@ -21,19 +21,19 @@ pub use transfer::*;
 /// swap v2
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum SwapV2Operation {
-    /// 价格累计，用于计算平均价
+    /// Price accumulation, used to calculate the average price
     #[serde(rename = "cumulative_price")]
     CumulativePrice(PairCumulativePrice),
-    /// 添加流动性
+    /// Add liquidity
     #[serde(rename = "mint")]
     Mint(SwapV2MintToken),
-    /// 移除流动性
+    /// Remove liquidity
     #[serde(rename = "burn")]
     Burn(SwapV2BurnToken),
-    /// 收取手续费铸造流动性
+    /// Charge handling fees for casting liquidity
     #[serde(rename = "mint_fee")]
     MintFee(SwapV2MintFeeToken),
-    /// 转移流动性
+    /// Transfer liquidity
     #[serde(rename = "transfer")]
     Transfer(SwapV2TransferToken),
 }

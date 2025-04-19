@@ -3,7 +3,7 @@ use ic_canister_kit::identity::caller;
 use crate::stable::*;
 use crate::types::*;
 
-// ================== 通用接口 ==================
+// ================== general apis ==================
 
 #[ic_cdk::query]
 pub fn wallet_balance() -> candid::Nat {
@@ -15,35 +15,35 @@ pub fn wallet_receive() -> candid::Nat {
     ic_canister_kit::canister::cycles::wallet_receive(|_accepted| {})
 }
 
-// ================== 数据版本 ==================
+// ================== current data version ==================
 
-// 当前数据库版本
+// current data version
 #[ic_cdk::query]
 fn version() -> u32 {
     with_state(|s| s.version())
 }
 
-// ================== 维护接口 ==================
+// ================== pause apis ==================
 
-// 查询维护状态
+// Query maintenance status
 #[ic_cdk::query(guard = "has_pause_query")]
 fn pause_query() -> bool {
     with_state(|s| s.pause_is_paused())
 }
 
-// 查询维护状态
+// Query maintenance status
 #[ic_cdk::query(guard = "has_pause_query")]
 fn pause_query_reason() -> Option<PauseReason> {
     with_state(|s| s.pause_query().clone())
 }
 
-// 设置维护状态
+// Set maintenance status
 #[ic_cdk::update(guard = "has_pause_replace")]
 fn pause_replace(reason: Option<String>) {
     let old = with_state(|s| s.pause_query().clone());
 
     if old.is_none() && reason.is_none() {
-        return; // 未改变内容
+        return; // Unchanged content
     }
 
     with_mut_state(|s| {
@@ -51,9 +51,9 @@ fn pause_replace(reason: Option<String>) {
     })
 }
 
-// ================== 权限接口 ==================
+// ================== permission apis ==================
 
-// 所有权限
+// all permissions
 #[ic_cdk::query(guard = "has_permission_query")]
 fn permission_all() -> Vec<Permission> {
     use ic_canister_kit::common::trap;
@@ -64,13 +64,13 @@ fn permission_all() -> Vec<Permission> {
     })
 }
 
-// 查询自己权限
+// Query your own permissions
 #[ic_cdk::query(guard = "has_permission_query")]
 fn permission_query() -> Vec<&'static str> {
     permission_find_by_user(ic_canister_kit::identity::caller())
 }
 
-// 查询他人权限
+// Query other people's permissions
 #[ic_cdk::query(guard = "has_permission_find")]
 fn permission_find_by_user(user_id: UserId) -> Vec<&'static str> {
     with_state(|s| {
@@ -86,19 +86,19 @@ fn permission_find_by_user(user_id: UserId) -> Vec<&'static str> {
     })
 }
 
-// 查询自己指定权限
+// Query your own specified permissions
 #[ic_cdk::query(guard = "has_permission_query")]
 fn permission_assigned_query() -> Option<HashSet<Permission>> {
     permission_assigned_by_user(ic_canister_kit::identity::caller())
 }
 
-// 查询他人指定权限
+// Query other people's specified permissions
 #[ic_cdk::query(guard = "has_permission_find")]
 fn permission_assigned_by_user(user_id: UserId) -> Option<HashSet<Permission>> {
     with_state(|s| s.permission_assigned(&user_id).cloned())
 }
 
-// 所有角色
+// all roles
 #[ic_cdk::query(guard = "has_permission_query")]
 fn permission_roles_all() -> HashMap<String, HashSet<Permission>> {
     with_state(|s| {
@@ -116,19 +116,19 @@ fn permission_roles_all() -> HashMap<String, HashSet<Permission>> {
     })
 }
 
-// 查询自己角色
+// Query your role
 #[ic_cdk::query(guard = "has_permission_query")]
 fn permission_roles_query() -> Option<HashSet<String>> {
     permission_roles_by_user(ic_canister_kit::identity::caller())
 }
 
-// 查询他人角色
+// Query other people's roles
 #[ic_cdk::query(guard = "has_permission_find")]
 fn permission_roles_by_user(user_id: UserId) -> Option<HashSet<String>> {
     with_state(|s| s.permission_user_roles(&user_id).cloned())
 }
 
-// 更新权限
+// Update permissions
 #[ic_cdk::update(guard = "has_permission_update")]
 fn permission_update(args: Vec<PermissionUpdatedArg<String>>) {
     with_mut_state(|s| {
@@ -142,29 +142,29 @@ fn permission_update(args: Vec<PermissionUpdatedArg<String>>) {
     })
 }
 
-// ================== 定时任务 ==================
+// ================== Schedules tasks ==================
 
-// 查询定时状态
+// Query the timing status
 #[ic_cdk::query(guard = "has_schedule_find")]
 fn schedule_find() -> Option<u64> {
     with_state(|s| s.schedule_find().map(|s| s.into_inner() as u64))
 }
 
-// 设置定时状态
+// Set the timing status
 #[ic_cdk::update(guard = "has_schedule_replace")]
 fn schedule_replace(schedule: Option<u64>) {
     with_mut_state(|s| {
         s.schedule_replace(schedule.map(|s| (s as u128).into()));
-        s.schedule_reload(); // * 重置定时任务
+        s.schedule_reload(); // * Reset timing tasks
     })
 }
 
-// 手动触发定时任务
+// Manually trigger timing tasks
 #[ic_cdk::update(guard = "has_schedule_trigger")]
 async fn schedule_trigger() {
     let caller = caller();
 
-    assert!(with_mut_state(|s| { s.pause_must_be_running() }).is_ok()); // 维护中不允许执行任务
+    assert!(with_mut_state(|s| { s.pause_must_be_running() }).is_ok()); // Tasks are not allowed during maintenance
 
     schedule_task(Some(caller)).await;
 }

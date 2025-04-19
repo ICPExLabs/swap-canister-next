@@ -7,18 +7,18 @@ use crate::{
     types::{TokenPairAmm, TransferFee},
 };
 
-/// 转账交易
+/// transfer
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2TransferToken {
-    /// 池子
+    /// token pair pool
     pub pa: TokenPairAmm,
-    /// 源账户
+    /// from
     pub from: Account,
-    /// 转移数量，不包含手续费
+    /// Transfer quantity, not including handling fee
     pub amount: Nat,
-    /// 目标账户
+    /// Target account
     pub to: Account,
-    /// 转移手续费及收取账户
+    /// Transfer fees and account collection
     pub fee: Option<TransferFee>,
 }
 

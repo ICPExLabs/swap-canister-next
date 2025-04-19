@@ -8,23 +8,23 @@ use super::super::check_permission;
 
 use super::types::{InnerState, ParsePermission};
 
-// 权限常量
-// 通用权限
-pub const ACTION_PAUSE_QUERY: &str = "PauseQuery"; // 查询维护状态
-pub const ACTION_PAUSE_REPLACE: &str = "PauseReplace"; // 设置维护状态
-pub const ACTION_PERMISSION_QUERY: &str = "PermissionQuery"; // 查询个人权限信息
-pub const ACTION_PERMISSION_FIND: &str = "PermissionFind"; // 查询他人权限
-pub const ACTION_PERMISSION_UPDATE: &str = "PermissionUpdate"; // 设置权限
-pub const ACTION_SCHEDULE_FIND: &str = "ScheduleFind"; // 查询定时状态
-pub const ACTION_SCHEDULE_REPLACE: &str = "ScheduleReplace"; // 设置定时频率
-pub const ACTION_SCHEDULE_TRIGGER: &str = "ScheduleTrigger"; // 触发定时任务
+// Permission constants
+// General permissions
+pub const ACTION_PAUSE_QUERY: &str = "PauseQuery"; // Query maintenance status
+pub const ACTION_PAUSE_REPLACE: &str = "PauseReplace"; // Set maintenance status
+pub const ACTION_PERMISSION_QUERY: &str = "PermissionQuery"; // Query personal permission information
+pub const ACTION_PERMISSION_FIND: &str = "PermissionFind"; // Query other people's permissions
+pub const ACTION_PERMISSION_UPDATE: &str = "PermissionUpdate"; // Set permissions
+pub const ACTION_SCHEDULE_FIND: &str = "ScheduleFind"; // Query the timing status
+pub const ACTION_SCHEDULE_REPLACE: &str = "ScheduleReplace"; // Set the timing frequency
+pub const ACTION_SCHEDULE_TRIGGER: &str = "ScheduleTrigger"; // Trigger timing tasks
 
-// 业务权限
+// Business permissions
 
-// 所有权限列表
+// All permission list
 #[allow(unused)]
 pub const ACTIONS: [&str; 8] = [
-    // 通用权限
+    // General permissions
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
     ACTION_PERMISSION_QUERY,
@@ -33,7 +33,7 @@ pub const ACTIONS: [&str; 8] = [
     ACTION_SCHEDULE_FIND,
     ACTION_SCHEDULE_REPLACE,
     ACTION_SCHEDULE_TRIGGER,
-    // 业务权限
+    // Business permissions
 ];
 
 pub(super) fn get_all_permissions<'a, F>(parse: F) -> HashSet<Permission>
@@ -46,11 +46,11 @@ where
     permissions.into_iter().collect()
 }
 
-// 权限默认状态
+// Permission default status
 impl ParsePermission for InnerState {
     fn parse_permission<'a>(&self, name: &'a str) -> Result<Permission, ParsePermissionError<'a>> {
         Ok(match name {
-            // 通用权限
+            // General permissions
             ACTION_PAUSE_QUERY => Permission::by_forbid(name),
             ACTION_PAUSE_REPLACE => Permission::by_permit(name),
             ACTION_PERMISSION_QUERY => Permission::by_forbid(name),
@@ -59,15 +59,15 @@ impl ParsePermission for InnerState {
             ACTION_SCHEDULE_FIND => Permission::by_permit(name),
             ACTION_SCHEDULE_REPLACE => Permission::by_permit(name),
             ACTION_SCHEDULE_TRIGGER => Permission::by_permit(name),
-            // 业务权限
+            // Business permissions
 
-            // 其他错误
+            // Other errors
             _ => return Err(ParsePermissionError(name)),
         })
     }
 }
 
-// 通用权限
+// General permissions
 
 pub fn has_pause_query() -> Result<(), String> {
     check_permission(ACTION_PAUSE_QUERY, false)
@@ -101,4 +101,4 @@ pub fn has_schedule_trigger() -> Result<(), String> {
     check_permission(ACTION_SCHEDULE_TRIGGER, true)
 }
 
-// 业务权限
+// Business permissions

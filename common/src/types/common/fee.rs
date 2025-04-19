@@ -6,12 +6,12 @@ use crate::proto;
 
 // ============================== transfer fee ==============================
 
-/// 转账手续费
+/// Transfer fee
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TransferFee {
-    /// 手续费数量
+    /// Number of handling fees
     pub fee: Nat,
-    /// 手续费收取账户
+    /// Registration fee collection account
     pub fee_to: Account,
 }
 
@@ -48,12 +48,12 @@ impl TryFrom<proto::TransferFee> for TransferFee {
 
 // ============================== burn fee ==============================
 
-/// 销毁手续费，流动性销毁需要收取手续费，防止女巫攻击
+/// Destruction fee, liquidity destruction requires a handling fee to prevent witch attacks
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct BurnFee {
-    /// 手续费数量
+    /// Number of handling fees
     pub fee: Nat,
-    /// 手续费收取账户
+    /// Registration fee collection account
     pub fee_to: Account,
 }
 

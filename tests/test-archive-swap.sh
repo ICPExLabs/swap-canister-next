@@ -2,13 +2,13 @@
 start_time=$(date +%H:%M:%S)
 start_time_s=$(date +%s)
 
-# 运行完毕自动停止
+# Automatically stop after operation
 dfx stop
 trap 'say test over && dfx stop' EXIT
 
-# dfx start --background --clean                      # 开启新的 dfx 环境
-dfx start --artificial-delay 0 --background --clean # 开启新的 dfx 环境
-# dfx start --background --clean >/dev/null 2>&1 # 开启新的 dfx 环境
+# dfx start --background --clean                      # Open a new dfx environment
+dfx start --artificial-delay 0 --background --clean # Open a new dfx environment
+# dfx start --background --clean >/dev/null 2>&1 # Open a new dfx environment
 
 function red { echo "\033[31m$1\033[0m"; }
 function green { echo "\033[32m$1\033[0m"; }
@@ -76,7 +76,7 @@ BOB=$(dfx --identity bob identity get-principal)
 cargo clippy
 # cargo audit --no-fetch --quiet
 
-# ! 1. 测试 archive_swap
+# ! 1. Test archive_swap
 red "\n=========== 1. archive_swap ===========\n"
 dfx canister create archive_swap --specified-id "bkyz2-fmaaa-aaaaa-qaaaq-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(null)" archive_swap
@@ -136,4 +136,4 @@ echo "✅ $start_time -> $end_time" "Total: $spend seconds ($spend_minutes mins)
 say test successful
 
 # sleep 10000
-# read -s -n1 -p "按任意键结束..."
+# read -s -n1 -p "Press any key to end..."

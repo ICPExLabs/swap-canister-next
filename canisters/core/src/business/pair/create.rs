@@ -70,7 +70,7 @@ async fn inner_pair_create(args: TokenPairCreateArgs) -> Result<MarketMaker, Bus
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(false, true);
 
     Ok(maker)

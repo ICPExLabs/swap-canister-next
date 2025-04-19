@@ -45,7 +45,7 @@ impl TokenPairs {
             .collect()
     }
 
-    /// 查询该币对池子涉及的账户
+    /// Query the accounts involved in this coin pair pool
     pub fn get_token_pair_pool(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
         self.pairs.get(pa)
     }
@@ -228,7 +228,7 @@ impl TokenPairs {
         Ok(())
     }
 
-    // 固定输入，计算每一个币对的中间数量
+    // Fixed input to calculate the intermediate number of each coin pair
     pub fn get_amounts_out(
         &self,
         self_canister: &SelfCanister,
@@ -245,18 +245,18 @@ impl TokenPairs {
 
         let mut pool_accounts = vec![];
         for (pool, pa) in path.iter().zip(pas.iter()) {
-            // 获取下一个币对
+            // Get the next coin pair
             let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
-            // 计算该币对池子能得到的输出
+            // Calculate the output that the coin pair can obtain
             let (pool_account, amount) =
                 maker.get_amount_out(self_canister, &last_amount_in, pool.token.0, pool.token.1)?;
-            last_amount_in = amount.clone(); // 保存输出数量，在下个循环就是输入数量
+            last_amount_in = amount.clone(); // Save the output quantity, and the input quantity in the next cycle
 
             amounts.push(amount);
             pool_accounts.push(pool_account);
         }
 
-        // 判断输出数量是否满足要求
+        // Determine whether the output quantity meets the requirements
         if amounts[amounts.len() - 1] < *amount_out_min {
             return Err(BusinessError::Swap(format!(
                 "INSUFFICIENT_OUTPUT_AMOUNT: {}",
@@ -267,7 +267,7 @@ impl TokenPairs {
         Ok((amounts, pool_accounts))
     }
 
-    // 固定输出，计算每一个币对的中间数量
+    // Fixed output to calculate the intermediate number of each coin pair
     pub fn get_amounts_in(
         &self,
         self_canister: &SelfCanister,
@@ -284,22 +284,22 @@ impl TokenPairs {
 
         let mut pool_accounts = vec![];
         for (pool, pa) in path.iter().zip(pas.iter()).rev() {
-            // 获取下一个币对
+            // Get the next coin pair
             let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
-            // 计算该币对池子能得到的输入
+            // Calculate the input that the coin pair can obtain
             let (pool_account, amount) =
                 maker.get_amount_in(self_canister, &last_amount_out, pool.token.0, pool.token.1)?;
-            last_amount_out = amount.clone(); // 保存输入数量，在下个循环就是输出数量
+            last_amount_out = amount.clone(); // Save the input quantity, and the output quantity in the next loop
 
             amounts.push(amount);
             pool_accounts.push(pool_account);
         }
 
-        // 逆序
+        // Reverse order
         amounts.reverse();
         pool_accounts.reverse();
 
-        // 判断输入数量是否满足要求
+        // Determine whether the input quantity meets the requirements
         if *amount_in_max < amounts[0] {
             return Err(BusinessError::Swap(format!(
                 "EXCESSIVE_INPUT_AMOUNT: {}",
@@ -404,13 +404,13 @@ impl TokenPairs {
         let arg = &guard.arg.arg;
         let (amounts, pool_accounts) = self.get_amounts_out(
             &arg.self_canister,
-            &arg.loan, // 输入是借贷数量
-            &arg.loan, // 输出必须不小于借贷数量
+            &arg.loan, // Enter the number of loans
+            &arg.loan, // The output must be no less than the loan quantity
             &arg.path,
             &pas,
         )?;
 
-        // 借贷人，也就是罐子自身
+        // The lender, that is, the canister itself
         let loaner = Account {
             owner: arg.self_canister.id(),
             subaccount: None,

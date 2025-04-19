@@ -5,18 +5,18 @@ use serde::{Deserialize, Serialize};
 
 use crate::{proto, types::TransferFee};
 
-/// 转账交易
+/// Transfer transactions
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct TransferToken {
-    /// 代币
+    /// Tokens
     pub token: CanisterId,
-    /// 源账户
+    /// Source Account
     pub from: Account,
-    /// 转移数量，不包含手续费
+    /// Transfer quantity, not including handling fee
     pub amount: Nat,
-    /// 目标账户
+    /// Target account
     pub to: Account,
-    /// 转移手续费及收取账户
+    /// Transfer fees and account collection
     pub fee: Option<TransferFee>,
 }
 
@@ -29,7 +29,7 @@ impl TryFrom<TransferToken> for proto::TransferToken {
         let amount = value.amount.try_into()?;
         let to = value.to.into();
         let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
-        
+
         Ok(Self {
             token: Some(token),
             from: Some(from),

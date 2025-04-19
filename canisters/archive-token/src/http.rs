@@ -12,7 +12,7 @@ use crate::types::*;
 //     todo!()
 // }
 
-// 请求数据
+// http request
 #[ic_cdk::query]
 fn http_request(request: CustomHttpRequest) -> CustomHttpResponse {
     crate::stable::with_state(|state| inner_http_request(state, request))
@@ -22,7 +22,7 @@ fn http_request(request: CustomHttpRequest) -> CustomHttpResponse {
 fn inner_http_request(state: &State, req: CustomHttpRequest) -> CustomHttpResponse {
     let mut split_url = req.url.split('?');
 
-    let path = split_url.next().unwrap_or("/"); // 分割出 url，默认是 /
+    let path = split_url.next().unwrap_or("/");
     let path = percent_decode_str(path)
         .decode_utf8()
         .unwrap_or(Cow::Borrowed(path));
@@ -32,7 +32,7 @@ fn inner_http_request(state: &State, req: CustomHttpRequest) -> CustomHttpRespon
     //     ic_cdk::println!("header: {}: {}", key, value);
     // }
 
-    let mut code = 200; // 响应码默认是 200
+    let mut code = 200; // default response code is 200
     let mut headers: HashMap<&str, Cow<str>> = HashMap::new();
     let body: Vec<u8>;
     let streaming_strategy: Option<StreamingStrategy> = None;

@@ -45,15 +45,15 @@ impl From<TokenPairSwapTokensResult> for Result<TokenPairSwapTokensSuccess, Busi
     }
 }
 
-/// 检查币对是否首尾相连
-/// 上一个币对换回来的结果，正好是下一个币对的输入
+/// Check whether the coin pair is connected to the end
+/// The result of the exchange of the previous coin pair is exactly the input of the next coin pair.
 pub fn check_path(path: &[SwapTokenPair]) -> Result<(), BusinessError> {
     // check path
     if path.is_empty() {
         return Err(BusinessError::Swap("INVALID_PATH".into()));
     }
     if 1 < path.len() {
-        // 循环检查代币是否相连
+        // Check whether tokens are connected in a loop
         let mut i = 1;
         loop {
             if path.len() <= i {

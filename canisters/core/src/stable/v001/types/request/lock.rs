@@ -6,11 +6,11 @@ use super::{SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard};
 
 #[derive(Debug, Default, Serialize, Deserialize, CandidType)]
 pub struct BusinessLocks {
-    /// 是否有 token 锁
+    /// Is there a token lock
     token: Option<bool>,
-    /// 是否有 swap 锁
+    /// Is there a swap lock
     swap: Option<bool>,
-    /// 是否有余额锁
+    /// Is there a balance lock
     balances: Option<Vec<TokenAccount>>,
 }
 

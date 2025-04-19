@@ -1,7 +1,7 @@
-/// 锁定结果
+/// Lock results
 pub enum LockResult<T> {
-    /// 锁定成功
+    /// Locked successfully
     Locked(T),
-    /// 异步再试
+    /// Try again asynchronously
     Retry(u8),
 }

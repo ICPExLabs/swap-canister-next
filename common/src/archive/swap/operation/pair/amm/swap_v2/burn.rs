@@ -13,9 +13,9 @@ use crate::{
 /// SwapV2 Burn
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2BurnToken {
-    /// 池子
+    /// token pair pool
     pub pa: TokenPairAmm,
-    /// 操作账户
+    /// Operation account
     pub from: Account,
 
     // pay
@@ -34,10 +34,10 @@ pub struct SwapV2BurnToken {
     /// amount1
     pub amount1: Nat,
 
-    /// 操作账户
+    /// to account
     pub to: Account,
 
-    /// 销毁手续费
+    /// burn fee
     pub fee: Option<BurnFee>,
 }
 

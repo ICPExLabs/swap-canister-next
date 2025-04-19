@@ -12,7 +12,7 @@ use crate::{
 
 use super::{Amm, AmmText};
 
-/// 有顺序的代币对
+/// Sequential token pairs
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]
@@ -24,21 +24,21 @@ pub struct TokenPair {
 }
 
 impl TokenPair {
-    /// 构建
+    /// new
     pub fn new(token_a: CanisterId, token_b: CanisterId) -> Self {
         let (token0, token1) = sort_tokens(token_a, token_b);
         Self { token0, token1 }
     }
 }
 
-/// 有顺序的代币对和算法
+/// Sequential token pairs and algorithms
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]
 pub struct TokenPairAmm {
-    /// 代币对
+    /// Token pairs
     pub pair: TokenPair,
-    /// amm 算法
+    /// amm algorithm
     pub amm: Amm,
 }
 
@@ -57,7 +57,7 @@ impl Storable for TokenPairAmm {
 }
 
 impl TokenPairAmm {
-    /// 获取池子的子账户
+    /// Get the sub-account of the pool
     pub fn get_subaccount(&self) -> [u8; 32] {
         let amm: AmmText = self.amm.into();
         let mut data = Vec::new();
@@ -67,7 +67,7 @@ impl TokenPairAmm {
         hash_sha256(&data)
     }
 
-    /// 获取池子的子账户和模拟代币地址
+    /// Get the sub-account and simulated token address of the pool
     pub fn get_subaccount_and_dummy_canister_id(&self) -> (Subaccount, DummyCanisterId) {
         let subaccount = self.get_subaccount();
         let canister_id = CanisterId::from_slice(&subaccount[..CanisterId::MAX_LENGTH_IN_BYTES]);

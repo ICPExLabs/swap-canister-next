@@ -4,13 +4,13 @@ use super::types::*;
 
 impl From<Box<LastState>> for Box<InnerState> {
     fn from(value: Box<LastState>) -> Self {
-        let mut state = InnerState::default(); // ? 初始化
+        let mut state = InnerState::default(); // ? initialization
 
-        // ! 每次升级新版本，务必比较每一个数据的升级方式
-        // ! 如果不修改数据结构，可以直接赋值升级
-        // ! 如果修改数据结构，必须代码处理数据升级
+        // ! Every time you upgrade a new version, be sure to compare the upgrade method of each data.
+        // ! If the data structure is not modified, you can directly assign a value and upgrade it
+        // ! If the data structure is modified, the code must be processed to upgrade the data
 
-        // 1. 继承之前的数据
+        // 1. Restore previous data
         let LastCanisterKit {
             pause,
             permissions,

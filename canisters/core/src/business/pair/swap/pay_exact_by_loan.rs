@@ -45,7 +45,7 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         // check path
         check_path(&arg.path)?;
 
-        // ! 检查代币首尾是否一致
+        // ! Check whether the token is consistent
         if self.path[0].token.0 != self.path[self.path.len() - 1].token.1 {
             return Err(BusinessError::Swap("INVALID_PATH".into()));
         }
@@ -127,12 +127,12 @@ async fn inner_pair_swap_by_loan(
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
-// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+// ! This implicitly contains self_canister_id, which can be called again through permission checks and replaces caller.
 #[inline]
 async fn retry_pair_swap_by_loan(
     self_canister_id: CanisterId,

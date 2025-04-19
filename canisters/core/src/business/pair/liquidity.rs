@@ -118,12 +118,12 @@ async fn inner_pair_liquidity_add(
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
-// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+// ! This implicitly contains self_canister_id, which can be called again through permission checks and replaces caller.
 #[inline]
 async fn retry_pair_liquidity_add(
     self_canister_id: CanisterId,
@@ -244,12 +244,12 @@ async fn inner_pair_liquidity_remove(
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
-// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+// ! This implicitly contains self_canister_id, which can be called again through permission checks and replaces caller.
 #[inline]
 async fn retry_pair_liquidity_remove(
     self_canister_id: CanisterId,

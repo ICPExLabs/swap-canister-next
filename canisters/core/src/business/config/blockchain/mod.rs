@@ -21,7 +21,7 @@ async fn deploy_canister(
         create_canister, install_code, start_canister,
     };
 
-    // 1. 创建一个新的罐子
+    // 1. Create a new canister
     let canister_id =
         match create_canister(CreateCanisterArgument { settings: None }, initial_cycles)
             .await
@@ -44,7 +44,7 @@ async fn deploy_canister(
         s.business_config_maintain_archives_cycles_recharged(canister_id, initial_cycles)
     });
 
-    // 2. 安装代码
+    // 2. Installation code
     if let Err(err) = install_code(InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
@@ -64,7 +64,7 @@ async fn deploy_canister(
         canister_id.to_text()
     ));
 
-    // 3. 启动
+    // 3. start
     if let Err(err) = start_canister(CanisterIdRecord { canister_id })
         .await
         .map_err(|err| {

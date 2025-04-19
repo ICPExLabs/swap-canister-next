@@ -14,14 +14,14 @@ pub use super::permission::*;
 #[allow(unused)]
 pub use super::schedule::schedule_task;
 
-// 初始化参数
+// initialization parameters
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
 pub struct InitArg {
     pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
     pub schedule: Option<DurationNanos>,  // init scheduled task or not
 }
 
-// 升级参数
+// Upgrade parameters
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
 pub struct UpgradeArg {
     pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
@@ -42,7 +42,7 @@ pub use crate::types::{
     TokenBlock, TokenOperation, TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView,
     TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
     TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId,
-    WithdrawToken, display_account, proto, system_error,
+    WithdrawToken, display_account, proto,
 };
 
 mod common;
@@ -69,19 +69,19 @@ pub use pair::*;
 #[allow(unused)]
 pub use request::*;
 
-// 框架需要的数据结构
+// Data structures required by the framework
 #[derive(Serialize, Deserialize, Default)]
 pub struct CanisterKit {
-    pub pause: Pause,             // 记录维护状态 // ? 堆内存 序列化
-    pub permissions: Permissions, // 记录自身权限 // ? 堆内存 序列化
-    pub schedule: Schedule,       // 记录定时任务 // ? 堆内存 序列化
+    pub pause: Pause, // Record maintenance status //  ? Heap memory Serialization
+    pub permissions: Permissions, // Record your own permissions //  ? Heap memory Serialization
+    pub schedule: Schedule, // Record timing tasks //  ? Heap memory Serialization
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
-    pub updated: TimestampNanos,             // 记录罐子的最后更新时间
-    pub fee_to: FeeTo,                       // 记录协议费收集者账户, lp 代币转移也需要收集转移费用
-    pub maintain_archives: MaintainArchives, // 维护罐子信息
+    pub updated: TimestampNanos, // Record the last update time of the canister
+    pub fee_to: FeeTo, // Record the agreement fee collector account, lp token transfer also requires the collection of transfer fees
+    pub maintain_archives: MaintainArchives, // Maintain canister information
 }
 
 impl Default for BusinessData {
@@ -94,24 +94,24 @@ impl Default for BusinessData {
     }
 }
 
-// 能序列化的和不能序列化的放在一起
-// 其中不能序列化的采用如下注解
-// #[serde(skip)] 默认初始化方式
-// #[serde(skip, default="init_xxx_data")] 指定初始化方式
-// ! 如果使用 ic-stable-structures 提供的稳定内存，不能变更 memory_id 的使用类型，否则会出现各个版本不兼容，数据会被清空
+// Put together those that can be serialized and those that cannot be serialized
+// The following annotations are used for serialization
+// #[serde(skip)] Default initialization method
+// #[serde(skip, default="init_xxx_data")] Specify the initialization method
+// ! If you use the stable memory provided by ic-stable-structures, the usage type of memory_id cannot be changed, otherwise each version will be incompatible and the data will be cleared
 #[derive(Serialize, Deserialize)]
 pub struct InnerState {
-    pub canister_kit: CanisterKit, // 框架需要的数据 // ? 堆内存 序列化
+    pub canister_kit: CanisterKit, // Data required by the framework //  ? Heap memory Serialization
 
-    // 业务数据
-    pub business_data: BusinessData, // 业务数据 // ? 堆内存 序列化
+    // Business data
+    pub business_data: BusinessData, // Business data //  ? Heap memory Serialization
 
-    pub request_traces: RequestTraces, // 业务数据, 记录请求步骤 // ? 堆内存 序列化 稳定内存
-    pub token_block_chain: TokenBlockChain, // 业务数据, 记录 Token 块数据 // ? 堆内存 序列化 稳定内存
-    pub swap_block_chain: SwapBlockChain, // 业务数据, 记录 Swap 块数据 // ? 堆内存 序列化 稳定内存
+    pub request_traces: RequestTraces, // Business data, Record request steps //  ? Heap memory Serialization Stable memory
+    pub token_block_chain: TokenBlockChain, // Business data, Record Token block data //  ? Heap memory Serialization Stable memory
+    pub swap_block_chain: SwapBlockChain, // Business data, Record Swap block data //  ? Heap memory Serialization Stable memory
 
-    pub token_pairs: TokenPairs, // 业务数据, 记录交易对数据 // ? 堆内存 序列化 稳定内存
-    pub token_balances: TokenBalances, // 业务数据, 记录账户余额数据 // ? 堆内存 序列化 稳定内存
+    pub token_pairs: TokenPairs, // Business data, Record transaction pair data //  ? Heap memory Serialization Stable memory
+    pub token_balances: TokenBalances, // Business data, Record account balance data //  ? Heap memory Serialization Stable memory
 }
 
 impl Default for InnerState {
@@ -120,7 +120,7 @@ impl Default for InnerState {
         Self {
             canister_kit: Default::default(),
 
-            // 业务数据
+            // Business data
             business_data: Default::default(),
 
             request_traces: Default::default(),
@@ -177,7 +177,7 @@ impl InnerState {
     pub fn do_init(&mut self, arg: InitArg) {
         self.updated(|s| {
             let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
-                vec![ic_canister_kit::identity::caller()] // 默认调用者为维护人员
+                vec![ic_canister_kit::identity::caller()] // The default caller is the maintenance person
             });
             s.token_block_chain
                 .set_archive_maintainers(Some(maintainers));

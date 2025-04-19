@@ -88,7 +88,7 @@ impl RequestTraces {
 // ============================ lock ============================
 
 pub struct RequestTraceLock {
-    index: RequestIndex, // 记录 index
+    index: RequestIndex, // request index
 }
 impl Drop for RequestTraceLock {
     fn drop(&mut self) {

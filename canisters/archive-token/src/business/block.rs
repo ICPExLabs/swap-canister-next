@@ -3,7 +3,19 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-/// 本罐子存储的 Block，参数是对应的 height
+/// This Rust function `get_blocks` queries swap blocks based on the provided arguments with a guard
+/// condition `has_business_queryable`.
+///
+/// Arguments:
+///
+/// * `args`: The `args` parameter in the `get_blocks` function likely represents the arguments needed
+/// to retrieve blocks for swapping. These arguments could include information such as block height,
+/// block timestamp, or any other parameters necessary to query and retrieve the desired blocks for
+/// swapping.
+///
+/// Returns:
+///
+/// The function `get_blocks` is returning a `GetSwapBlocksResult` value.
 #[ic_cdk::query(guard = "has_business_queryable")]
 fn get_blocks(args: GetBlocksArgs) -> GetTokenBlocksResult {
     inner_get_blocks(args).into()
@@ -24,7 +36,19 @@ fn inner_get_blocks(args: GetBlocksArgs) -> Result<TokenBlockRange, GetBlocksErr
     Ok(TokenBlockRange { blocks })
 }
 
-/// 本罐子存储的 Block，参数是对应的 height
+/// The function `get_encoded_blocks` retrieves encoded blocks based on the provided arguments.
+///
+/// Arguments:
+///
+/// * `args`: The `args` parameter in the `get_encoded_blocks` function likely represents the arguments
+/// needed to retrieve encoded blocks. These arguments could include information such as block height,
+/// timestamps, or any other parameters required to fetch the encoded blocks from the underlying data
+/// source. The specific structure and content of the `Get
+///
+/// Returns:
+///
+/// The function `get_encoded_blocks` is returning a `GetEncodedBlocksResult` which is the result of
+/// calling the `inner_get_encoded_blocks` function with the provided arguments `args`.
 #[ic_cdk::query(guard = "has_business_queryable")]
 fn get_encoded_blocks(args: GetBlocksArgs) -> GetEncodedBlocksResult {
     inner_get_encoded_blocks(args).into()

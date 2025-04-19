@@ -46,7 +46,7 @@ impl CheckArgs for TokenPairSwapTokensForExactTokensArgs {
         // check path
         check_path(&arg.path)?;
 
-        // check balance in // 内部计算出最小输入后，再检查
+        // check balance in // check after
 
         // check deadline
         if let Some(deadline) = &self.deadline {
@@ -57,7 +57,15 @@ impl CheckArgs for TokenPairSwapTokensForExactTokensArgs {
         let now = check_meta(&self.memo, &self.created)?;
 
         // check arg again
-        with_state(|s| s.business_token_pair_swap_fixed_out_checking(&arg))?;
+        let (amounts, _) = with_state(|s| s.business_token_pair_swap_fixed_out_checking(&arg))?;
+        let balance_in =
+            with_state(|s| s.business_token_balance_of(self.path[0].token.0, self.from));
+        if balance_in < amounts[0] {
+            return Err(BusinessError::insufficient_balance(
+                arg.path[0].token.0,
+                balance_in,
+            ));
+        }
 
         Ok((now, fee_tokens, required, self_canister, caller, arg))
     }
@@ -124,12 +132,12 @@ async fn inner_pair_swap_tokens_for_exact_tokens(
         }
     };
 
-    // 异步触发同步任务
+    // Asynchronously triggers synchronization tasks
     crate::business::config::push::inner_push_blocks(true, true);
 
     Ok(success)
 }
-// ! 这里隐式包含 self_canister_id 能通过权限检查, 替 caller 进行再次调用
+// ! This implicitly contains self_canister_id, which can be called again through permission checks and replaces caller.
 #[inline]
 async fn retry_pair_swap_tokens_for_exact_tokens(
     self_canister_id: CanisterId,

@@ -6,14 +6,14 @@ use crate::{
     types::{TimestampNanos, TokenPairAmm},
 };
 
-/// 累计价格
+/// Accumulated price
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct PairCumulativePrice {
-    /// 代币对和算法
+    /// Token pairs and algorithms
     pub pa: TokenPairAmm,
-    /// 时间戳
+    /// Timestamp
     pub block_timestamp: TimestampNanos,
-    /// 累计单位指数
+    /// Cumulative unit index
     pub price_cumulative_exponent: u8,
     /// price0 cumulative
     pub price0_cumulative: Nat,

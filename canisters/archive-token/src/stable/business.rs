@@ -59,7 +59,7 @@ pub trait Business: StableHeap {
     }
 }
 
-// 业务实现
+// business
 impl Business for State {
     fn business_queryable(&self, caller: &UserId) -> Result<(), String> {
         self.get().business_queryable(caller)

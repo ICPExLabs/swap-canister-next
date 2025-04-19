@@ -1,4 +1,4 @@
-// 业务权限
+// Business permissions
 pub fn has_business_queryable() -> Result<(), String> {
     use super::super::Business;
     let caller = ic_canister_kit::identity::caller();

@@ -12,27 +12,27 @@ mod business;
 
 use types::*;
 
-// 初始化
-// ! 第一次部署会执行
+// initialization
+// ! The first deployment will be executed
 impl Initial<Option<InitArg>> for InnerState {
     fn init(&mut self, arg: Option<InitArg>) {
-        let arg = arg.unwrap_or_default(); // ! 就算是 None，也要执行一次
+        let arg = arg.unwrap_or_default(); // ! Even if it is None, it must be executed once
 
-        // 业务数据
+        // Business data
         self.do_init(arg);
     }
 }
 
-// 升级
-// ! 升级时执行
+// upgrade
+// ! Execute during upgrade
 impl Upgrade<Option<UpgradeArg>> for InnerState {
     fn upgrade(&mut self, arg: Option<UpgradeArg>) {
         let arg = match arg {
             Some(arg) => arg,
-            None => return, // ! None 表示升级无需处理数据
+            None => return, // ! None means no data processing is required for upgrade
         };
 
-        // 业务数据
+        // Business data
         self.do_upgrade(arg);
     }
 }
