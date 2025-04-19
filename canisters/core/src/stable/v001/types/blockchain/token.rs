@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use crate::types::with_mut_state_without_record;
 
 use super::super::{
-    Account, BlockIndex, Business, BusinessError, CandidBlock, CurrentArchiving, EncodedBlock,
-    HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
+    Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving,
+    EncodedBlock, HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
     TokenTransaction, init_token_blocks, init_token_wasm_module, system_error,
 };
 
@@ -121,6 +121,10 @@ impl TokenBlockChain {
         }
         self.cached.remove(&block_height);
         Ok(())
+    }
+
+    pub fn get_maintain_canisters(&self) -> Vec<CanisterId> {
+        self.block_chain.get_maintain_canisters()
     }
 
     // locks

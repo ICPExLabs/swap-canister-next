@@ -98,6 +98,18 @@ type LogVisibility = variant {
   public;
   allowed_viewers : vec principal;
 };
+type MaintainArchives = record {
+  recharged : vec record { principal; nat };
+  checking_interval_ns : nat64;
+  recharge_cycles : nat64;
+  min_cycles_threshold : nat64;
+  last_checked_timestamp : nat64;
+};
+type MaintainArchivesConfig = record {
+  checking_interval_ns : nat64;
+  recharge_cycles : nat64;
+  min_cycles_threshold : nat64;
+};
 type MarketMakerView = variant { swap_v2 : SwapV2MarketMakerView };
 type MigratedRecords = record {
   records : vec Record;
@@ -583,6 +595,8 @@ service : (opt InitArgs) -> {
   canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (FeeTo);
   config_fee_to_replace : (FeeTo) -> (FeeTo);
+  config_maintain_archives_query : () -> (MaintainArchives) query;
+  config_maintain_archives_set : (MaintainArchivesConfig) -> ();
   config_swap_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );

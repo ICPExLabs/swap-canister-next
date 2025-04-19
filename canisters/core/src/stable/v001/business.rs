@@ -121,6 +121,23 @@ impl Business for InnerState {
     }
 
     // maintain archives
+    fn business_config_maintain_archives_query(&self) -> &MaintainArchives {
+        &self.business_data.maintain_archives
+    }
+    fn business_config_maintain_archives_set(&mut self, config: MaintainArchivesConfig) {
+        self.business_data.maintain_archives.update_config(config);
+    }
+    fn business_config_maintain_trigger(&mut self, now: TimestampNanos) -> bool {
+        self.business_data.maintain_archives.is_trigger(now)
+    }
+    fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
+        let tokens = self.token_block_chain.get_maintain_canisters();
+        let swaps = self.swap_block_chain.get_maintain_canisters();
+        let mut canisters = Vec::with_capacity(tokens.len() + swaps.len());
+        canisters.extend_from_slice(&tokens);
+        canisters.extend_from_slice(&swaps);
+        canisters
+    }
     fn business_config_maintain_archives_cycles_recharged(
         &mut self,
         canister_id: CanisterId,

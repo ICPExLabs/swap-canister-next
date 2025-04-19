@@ -111,7 +111,19 @@ impl<T> BlockChain<T> {
         Ok(())
     }
 
-    pub fn increment(&mut self, block_height: BlockIndex) -> bool {
+    fn get_maintain_canisters(&self) -> Vec<CanisterId> {
+        let mut canisters = self
+            .archived
+            .iter()
+            .map(|a| a.canister_id)
+            .collect::<Vec<_>>();
+        if let Some(current_archiving) = &self.current_archiving {
+            canisters.push(current_archiving.canister_id);
+        }
+        canisters
+    }
+
+    fn increment(&mut self, block_height: BlockIndex) -> bool {
         match self.current_archiving.as_mut() {
             Some(current_archiving) => current_archiving.increment(block_height),
             None => false,

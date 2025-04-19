@@ -16,7 +16,7 @@ pub enum RequestArgs {
     #[serde(rename = "swap_block_push")]
     SwapBlockPush,
     #[serde(rename = "blocks_maintaining")]
-    BlocksMaintaining,
+    CanistersMaintaining,
     // token
     #[serde(rename = "token_deposit")]
     TokenDeposit(Box<TokenDepositArgWithMeta>),

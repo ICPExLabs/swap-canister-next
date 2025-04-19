@@ -135,6 +135,18 @@ pub trait Business:
     }
 
     // maintain archives
+    fn business_config_maintain_archives_query(&self) -> &MaintainArchives {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_maintain_archives_set(&mut self, config: MaintainArchivesConfig) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_maintain_trigger(&mut self, now: TimestampNanos) -> bool {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     fn business_config_maintain_archives_cycles_recharged(
         &mut self,
         canister_id: CanisterId,
@@ -532,6 +544,18 @@ impl Business for State {
     }
 
     // maintain archives
+    fn business_config_maintain_archives_query(&self) -> &MaintainArchives {
+        self.get().business_config_maintain_archives_query()
+    }
+    fn business_config_maintain_archives_set(&mut self, config: MaintainArchivesConfig) {
+        self.get_mut().business_config_maintain_archives_set(config)
+    }
+    fn business_config_maintain_trigger(&mut self, now: TimestampNanos) -> bool {
+        self.get_mut().business_config_maintain_trigger(now)
+    }
+    fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
+        self.get().business_config_maintain_canisters()
+    }
     fn business_config_maintain_archives_cycles_recharged(
         &mut self,
         canister_id: CanisterId,

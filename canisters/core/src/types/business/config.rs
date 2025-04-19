@@ -29,3 +29,14 @@ impl From<Result<Option<PushBlocks>, BusinessError>> for PushBlocksResult {
         Self(value)
     }
 }
+
+// ========================== maintain archives config ==========================
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct MaintainArchivesConfig {
+    /// 罐子触发充值的最小 cycles
+    pub min_cycles_threshold: u64,
+    /// 每次触发充值数量
+    pub recharge_cycles: u64,
+    /// 检查的间隔时间 ns
+    pub checking_interval_ns: u64,
+}
