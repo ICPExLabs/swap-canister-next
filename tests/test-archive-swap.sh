@@ -198,15 +198,15 @@ test "business_example_set" "$(dfx canister call archive_swap business_example_s
 test "business_example_query" "$(dfx --identity alice canister call archive_swap business_example_query 2>&1)" "test string"
 test "business_example_query" "$(dfx canister call archive_swap business_example_query 2>&1)" "test string"
 
-blue "\n🚩 6 test core data"
+blue "\n🚩 6 test archive_swap data"
 test "pause_replace" "$(dfx canister call archive_swap pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call archive_swap pause_query 2>&1)" "(true)"
-dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" core
+dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" archive_swap
 test "pause_replace" "$(dfx canister call archive_swap pause_replace "(null)" 2>&1)" "()"
 test "pause_query" "$(dfx canister call archive_swap pause_query 2>&1)" "(false)"
 test "business_example_query" "$(dfx canister call archive_swap business_example_query 2>&1)" "test string"
 
-blue "\n🚩 7 test core cell"
+blue "\n🚩 7 test archive_swap cell"
 test "business_example_cell_query" "$(dfx --identity alice canister call archive_swap business_example_cell_query 2>&1)" "\"\""
 test "business_example_cell_query" "$(dfx canister call archive_swap business_example_cell_query 2>&1)" "\"\""
 test "business_example_cell_set" "$(dfx --identity alice canister call archive_swap business_example_cell_set "(\"test string\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -214,7 +214,7 @@ test "business_example_cell_set" "$(dfx canister call archive_swap business_exam
 test "business_example_cell_query" "$(dfx --identity alice canister call archive_swap business_example_cell_query 2>&1)" "test string"
 test "business_example_cell_query" "$(dfx canister call archive_swap business_example_cell_query 2>&1)" "test string"
 
-blue "\n🚩 8 test core vec"
+blue "\n🚩 8 test archive_swap vec"
 test "business_example_vec_query" "$(dfx --identity alice canister call archive_swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call archive_swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_pop" "$(dfx --identity alice canister call archive_swap business_example_vec_pop "()" 2>&1)" "'BusinessExampleSet' is required"
@@ -228,7 +228,7 @@ test "business_example_vec_pop" "$(dfx canister call archive_swap business_examp
 test "business_example_vec_query" "$(dfx --identity alice canister call archive_swap business_example_vec_query 2>&1)" "(vec {})"
 test "business_example_vec_query" "$(dfx canister call archive_swap business_example_vec_query 2>&1)" "(vec {})"
 
-blue "\n🚩 9 test core map"
+blue "\n🚩 9 test archive_swap map"
 test "business_example_map_query" "$(dfx --identity alice canister call archive_swap business_example_map_query 2>&1)" "(vec {})"
 test "business_example_map_query" "$(dfx canister call archive_swap business_example_map_query 2>&1)" "(vec {})"
 test "business_example_map_update" "$(dfx --identity alice canister call archive_swap business_example_map_update "(1:nat64, opt \"111\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -241,7 +241,7 @@ test "business_example_map_update" "$(dfx canister call archive_swap business_ex
 test "business_example_map_query" "$(dfx --identity alice canister call archive_swap business_example_map_query 2>&1)" '(vec { record { 2 : nat64; "222" } })'
 test "business_example_map_query" "$(dfx canister call archive_swap business_example_map_query 2>&1)" '(vec { record { 2 : nat64; "222" } })'
 
-blue "\n🚩 10 test core log"
+blue "\n🚩 10 test archive_swap log"
 test "business_example_log_query" "$(dfx --identity alice canister call archive_swap business_example_log_query 2>&1)" "(vec {})"
 test "business_example_log_query" "$(dfx canister call archive_swap business_example_log_query 2>&1)" "(vec {})"
 test "business_example_log_update" "$(dfx --identity alice canister call archive_swap business_example_log_update "(\"111\")" 2>&1)" "'BusinessExampleSet' is required"
@@ -252,7 +252,7 @@ test "business_example_log_update" "$(dfx canister call archive_swap business_ex
 test "business_example_log_query" "$(dfx --identity alice canister call archive_swap business_example_log_query 2>&1)" '(vec { "111"; "123" })'
 test "business_example_log_query" "$(dfx canister call archive_swap business_example_log_query 2>&1)" '(vec { "111"; "123" })'
 
-blue "\n🚩 11 test core priority queue"
+blue "\n🚩 11 test archive_swap priority queue"
 test "business_example_priority_queue_query" "$(dfx --identity alice canister call archive_swap business_example_priority_queue_query 2>&1)" "(vec {})"
 test "business_example_priority_queue_query" "$(dfx canister call archive_swap business_example_priority_queue_query 2>&1)" "(vec {})"
 test "business_example_priority_queue_pop" "$(dfx --identity alice canister call archive_swap business_example_priority_queue_pop "()" 2>&1)" "'BusinessExampleSet' is required"
@@ -268,10 +268,10 @@ test "business_example_priority_queue_pop" "$(dfx canister call archive_swap bus
 test "business_example_priority_queue_query" "$(dfx --identity alice canister call archive_swap business_example_priority_queue_query 2>&1)" "(vec { 5 : nat64 })"
 test "business_example_priority_queue_query" "$(dfx canister call archive_swap business_example_priority_queue_query 2>&1)" "(vec { 5 : nat64 })"
 
-blue "\n🚩 12 test core priority queue"
+blue "\n🚩 12 test archive_swap priority queue"
 test "pause_replace" "$(dfx canister call archive_swap pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call archive_swap pause_query 2>&1)" "(true)"
-dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" core
+dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" archive_swap
 test "pause_replace" "$(dfx canister call archive_swap pause_replace "(null)" 2>&1)" "()"
 test "pause_query" "$(dfx canister call archive_swap pause_query 2>&1)" "(false)"
 test "business_example_query" "$(dfx canister call archive_swap business_example_query 2>&1)" "test string"
