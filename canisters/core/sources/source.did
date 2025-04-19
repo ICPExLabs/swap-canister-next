@@ -578,7 +578,24 @@ service : (opt InitArgs) -> {
   canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (FeeTo);
   config_fee_to_replace : (FeeTo) -> (FeeTo);
-  config_swap_blocks_push : () -> ();
+  config_swap_archive_config_replace : (NextArchiveCanisterConfig) -> (
+      NextArchiveCanisterConfig,
+    );
+  config_swap_archive_max_length_replace : (nat64) -> (opt CurrentArchiving);
+  config_swap_archive_wasm_module_query : () -> (opt blob) query;
+  config_swap_archive_wasm_module_replace : (blob) -> (
+      ReplaceArchiveWasmModuleResult,
+    );
+  config_swap_archived_canister_maintainers_set : (
+      principal,
+      opt vec principal,
+    ) -> (Result);
+  config_swap_archived_canister_max_memory_size_bytes_set : (
+      principal,
+      nat64,
+    ) -> (Result);
+  config_swap_block_chain_query : () -> (BlockChainView) query;
+  config_swap_blocks_push : () -> (PushBlocksResult);
   config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
