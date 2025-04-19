@@ -4,7 +4,7 @@ use ic_canister_kit::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::types::with_mut_state_without_record;
+use crate::types::with_mut_state;
 
 use super::super::{
     Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving,
@@ -203,7 +203,7 @@ pub struct TokenBlockChainArchiveLock;
 
 impl Drop for TokenBlockChainArchiveLock {
     fn drop(&mut self) {
-        with_mut_state_without_record(|s| s.business_token_block_chain_archive_unlock())
+        with_mut_state(|s| s.business_token_block_chain_archive_unlock())
     }
 }
 
@@ -213,7 +213,7 @@ pub struct TokenBlockChainLock {
 
 impl Drop for TokenBlockChainLock {
     fn drop(&mut self) {
-        with_mut_state_without_record(|s| s.business_token_block_chain_unlock())
+        with_mut_state(|s| s.business_token_block_chain_unlock())
     }
 }
 

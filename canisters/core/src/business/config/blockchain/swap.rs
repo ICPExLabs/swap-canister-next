@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -10,41 +8,41 @@ use crate::types::*;
 
 // ============================== query ==============================
 
-#[ic_cdk::query(guard = "has_pause_replace")]
+#[ic_cdk::query]
 fn config_swap_block_chain_query() -> BlockChainView<SwapBlock> {
     with_state(|s| s.business_config_swap_block_chain_query().into())
 }
 
-#[ic_cdk::query(guard = "has_pause_replace")]
+#[ic_cdk::query]
 fn config_swap_archive_wasm_module_query() -> Option<Vec<u8>> {
     with_state(|s| s.business_config_swap_archive_wasm_module_query().clone())
 }
 
 // ============================== replace ==============================
 
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 fn config_swap_archive_wasm_module_replace(wasm_module: Vec<u8>) -> ReplaceArchiveWasmModuleResult {
-    with_mut_state_without_record(|s| {
+    with_mut_state(|s| {
         s.business_config_swap_archive_wasm_module_replace(wasm_module)
             .into()
     })
 }
 
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 fn config_swap_archive_max_length_replace(max_length: u64) -> Option<CurrentArchiving> {
-    with_mut_state_without_record(|s| s.business_config_swap_archive_max_length_replace(max_length))
+    with_mut_state(|s| s.business_config_swap_archive_max_length_replace(max_length))
 }
 
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 fn config_swap_archive_config_replace(
     archive_config: NextArchiveCanisterConfig,
 ) -> NextArchiveCanisterConfig {
-    with_mut_state_without_record(|s| s.business_config_swap_archive_config_replace(archive_config))
+    with_mut_state(|s| s.business_config_swap_archive_config_replace(archive_config))
 }
 
 // ============================== set archived canisters ==============================
 
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn config_swap_archived_canister_maintainers_set(
     canister_id: CanisterId,
     maintainers: Option<Vec<UserId>>,
@@ -53,7 +51,7 @@ async fn config_swap_archived_canister_maintainers_set(
     return service_archive.set_maintainers(maintainers).await;
 }
 
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn config_swap_archived_canister_max_memory_size_bytes_set(
     canister_id: CanisterId,
     max_memory_size_bytes: u64,
@@ -67,7 +65,7 @@ async fn config_swap_archived_canister_max_memory_size_bytes_set(
 // ============================== push swap block ==============================
 
 /// 推送罐子
-#[ic_cdk::update(guard = "has_pause_replace")]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn config_swap_blocks_push() -> PushBlocksResult {
     inner_config_swap_blocks_push().await.into()
 }
@@ -79,11 +77,11 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
 
     // 0. 必须非暂停状态，获取锁
     with_state(|s| s.pause_must_be_running()).map_err(system_error)?;
-    let _lock = with_mut_state_without_record(|s| s.business_swap_block_chain_archive_lock())
+    let _lock = with_mut_state(|s| s.business_swap_block_chain_archive_lock())
         .ok_or(system_error("swap block chain archive locked"))?;
 
     // 1. 若当前已满，需要进行存档
-    with_mut_state_without_record(|s| s.business_config_swap_archive_current_canister())?;
+    with_mut_state(|s| s.business_config_swap_archive_current_canister())?;
 
     // 2. 查询罐子是否已满
     let mut view: BlockChainView<SwapBlock> =
@@ -140,14 +138,14 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
             .map_err(|err| system_error(format!("can not encode args: {init_args:?} {err:?}")))?;
         let mut trace = RequestTrace::from_args(RequestArgs::SwapBlockPush);
         let deploy_result = deploy_canister(&mut trace, INITIAL_CYCLES, wasm, init_args).await;
-        with_mut_state_without_record(|s| s.business_request_trace_insert(trace));
+        with_mut_state(|s| s.business_request_trace_insert(trace));
         let canister_id = deploy_result.map_err(|err| {
             system_error(format!(
                 "create and deploy new swap canister failed: {err:?}"
             ))
         })?;
         // 设置新的存档罐子
-        with_mut_state_without_record(|s| {
+        with_mut_state(|s| {
             s.business_config_swap_current_archiving_replace(CurrentArchiving {
                 canister_id,
                 block_height_offset: block_offset.map(|(h, _)| h).unwrap_or_default(),
@@ -198,7 +196,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
         };
         service.append_blocks(vec![block]).await?;
         // 成功插入后要移除缓存并更新序号
-        with_mut_state_without_record(|s| s.business_config_swap_block_archived(block_height))?;
+        with_mut_state(|s| s.business_config_swap_block_archived(block_height))?;
     }
     Ok(Some(PushBlocks {
         block_height_start: height_start,

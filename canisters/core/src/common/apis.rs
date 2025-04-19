@@ -1,4 +1,4 @@
-use ic_canister_kit::{common::option::display_option, identity::caller};
+use ic_canister_kit::identity::caller;
 
 use crate::stable::*;
 use crate::types::*;
@@ -12,26 +12,7 @@ pub fn wallet_balance() -> candid::Nat {
 
 #[ic_cdk::update]
 pub fn wallet_receive() -> candid::Nat {
-    let caller = caller();
-    ic_canister_kit::canister::cycles::wallet_receive(|accepted| {
-        let record_id = with_record_push(
-            RecordTopics::CyclesCharge.topic(),
-            format!("{} recharge {} cycles", caller.to_text(), accepted),
-        );
-        with_record_update_done(record_id);
-    })
-}
-
-#[ic_cdk::update]
-async fn canister_status() -> ic_cdk::api::management_canister::main::CanisterStatusResponse {
-    use ic_canister_kit::{canister::status::canister_status, identity::self_canister_id};
-    let response = canister_status(self_canister_id()).await;
-    ic_canister_kit::common::trap(response)
-}
-
-#[ic_cdk::query]
-async fn whoami() -> ic_canister_kit::types::UserId {
-    ic_canister_kit::identity::caller()
+    ic_canister_kit::canister::cycles::wallet_receive(|_accepted| {})
 }
 
 // ================== 数据版本 ==================
@@ -65,17 +46,9 @@ fn pause_replace(reason: Option<String>) {
         return; // 未改变内容
     }
 
-    let caller = caller();
-    let arg_content = format!("{} -> {}", display_option(&old), display_option(&reason)); // * 记录参数内容
-
-    with_mut_state(
-        |s, _done| {
-            s.pause_replace(reason.map(PauseReason::new));
-        },
-        caller,
-        RecordTopics::Pause.topic(),
-        arg_content,
-    )
+    with_mut_state(|s| {
+        s.pause_replace(reason.map(PauseReason::new));
+    })
 }
 
 // ================== 权限接口 ==================
@@ -158,75 +131,15 @@ fn permission_roles_by_user(user_id: UserId) -> Option<HashSet<String>> {
 // 更新权限
 #[ic_cdk::update(guard = "has_permission_update")]
 fn permission_update(args: Vec<PermissionUpdatedArg<String>>) {
-    let caller = caller();
-    let arg_content = format!(
-        "permission update: [{}]",
-        args.iter()
-            .map(|a| a.to_string())
-            .collect::<Vec<String>>()
-            .join(", ")
-    ); // * 记录参数内容
-
-    with_mut_state(
-        |s, _done| {
-            use ic_canister_kit::common::trap;
-            let args = args
-                .into_iter()
-                .map(|a| a.parse_permission(|n| s.parse_permission(n).map_err(|e| e.to_string())))
-                .collect::<Result<Vec<_>, _>>();
-            let args = trap(args);
-            trap(s.permission_update(args))
-        },
-        caller,
-        RecordTopics::Permission.topic(),
-        arg_content,
-    )
-}
-
-// ================== 记录接口 ==================
-
-// 查询所有主题
-#[ic_cdk::query(guard = "has_record_find")]
-fn record_topics() -> Vec<String> {
-    RecordTopics::topics()
-}
-
-// 查询所有 分页
-#[ic_cdk::query(guard = "has_record_find")]
-fn record_find_by_page(page: QueryPage, search: Option<RecordSearchArg>) -> PageData<Record> {
-    use ic_canister_kit::common::trap;
-    let search = search
-        .map(|s| s.into(|t| RecordTopics::from(t).map(|t| t.topic())))
-        .transpose();
-    let search = trap(search);
-    let result = with_state(|s| {
-        s.record_find_by_page(&page, 1000, &search)
-            .map(|p| p.into())
-    });
-    trap(result)
-}
-
-// 移动
-#[ic_cdk::update(guard = "has_record_migrate")]
-fn record_migrate(max: u32) -> MigratedRecords<Record> {
-    let caller = caller();
-    let arg_content = format!("wanna migrate {} records", max); // * 记录参数内容
-
-    with_mut_state(
-        |s, done| {
-            let result = s.record_migrate(max);
-            *done = Some(format!(
-                "removed: {} total: {} record size: {} ",
-                result.removed,
-                result.next_id,
-                result.records.len(),
-            ));
-            result
-        },
-        caller,
-        RecordTopics::Schedule.topic(),
-        arg_content,
-    )
+    with_mut_state(|s| {
+        use ic_canister_kit::common::trap;
+        let args = args
+            .into_iter()
+            .map(|a| a.parse_permission(|n| s.parse_permission(n).map_err(|e| e.to_string())))
+            .collect::<Result<Vec<_>, _>>();
+        let args = trap(args);
+        trap(s.permission_update(args))
+    })
 }
 
 // ================== 定时任务 ==================
@@ -240,20 +153,10 @@ fn schedule_find() -> Option<u64> {
 // 设置定时状态
 #[ic_cdk::update(guard = "has_schedule_replace")]
 fn schedule_replace(schedule: Option<u64>) {
-    let old = with_state(|s| s.schedule_find());
-
-    let caller = caller();
-    let arg_content = format!("{} -> {}", display_option(&old), display_option(&schedule)); // * 记录参数内容
-
-    with_mut_state(
-        |s, _done| {
-            s.schedule_replace(schedule.map(|s| (s as u128).into()));
-            s.schedule_reload(); // * 重置定时任务
-        },
-        caller,
-        RecordTopics::Schedule.topic(),
-        arg_content,
-    )
+    with_mut_state(|s| {
+        s.schedule_replace(schedule.map(|s| (s as u128).into()));
+        s.schedule_reload(); // * 重置定时任务
+    })
 }
 
 // 手动触发定时任务
@@ -261,7 +164,7 @@ fn schedule_replace(schedule: Option<u64>) {
 async fn schedule_trigger() {
     let caller = caller();
 
-    assert!(with_mut_state_without_record(|s| { s.pause_must_be_running() }).is_ok()); // 维护中不允许执行任务
+    assert!(with_mut_state(|s| { s.pause_must_be_running() }).is_ok()); // 维护中不允许执行任务
 
     schedule_task(Some(caller)).await;
 }

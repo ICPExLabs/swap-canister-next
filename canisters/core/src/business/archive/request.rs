@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -20,5 +18,5 @@ async fn request_trace_get(index: RequestIndex) -> Option<RequestTrace> {
 
 #[ic_cdk::update(guard = "has_pause_replace")]
 async fn request_trace_remove(index: RequestIndex) -> Option<RequestTrace> {
-    with_mut_state_without_record(|s| s.business_request_trace_remove(&index))
+    with_mut_state(|s| s.business_request_trace_remove(&index))
 }

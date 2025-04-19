@@ -7,12 +7,6 @@ use super::types::*;
 #[allow(unused)]
 #[allow(unused_variables)]
 pub async fn schedule_task(record_by: Option<CallerId>) {
-    // * 记录
-    let record_id = with_record_push(
-        super::types::RecordTopics::Schedule.topic(),
-        String::with_capacity(0),
-    );
-
     // 如果有定时任务
     ic_cdk::println!(
         "{}: do schedule task... ({})",
@@ -22,19 +16,16 @@ pub async fn schedule_task(record_by: Option<CallerId>) {
 
     // ! 为了保证记录的完整性，不应当发生 panic
     inner_task(record_by).await;
-
-    // * 记录
-    with_record_update_done(record_id);
 }
 
 async fn inner_task(caller: Option<CallerId>) {
     ic_cdk::println!("do something: {:?}", caller.map(|c| c.to_text()));
 
     let now = TimestampNanos::now();
-    if with_mut_state_without_record(|s| s.business_config_maintain_trigger(now)) {
+    if with_mut_state(|s| s.business_config_maintain_trigger(now)) {
         let mut trace = RequestTrace::from_args(RequestArgs::CanistersMaintaining);
         let result = maintaining_canisters(&mut trace).await;
-        with_mut_state_without_record(|s| s.business_request_trace_insert(trace));
+        with_mut_state(|s| s.business_request_trace_insert(trace));
         if let Err(err) = result {
             ic_cdk::println!("maintaining_canisters err: {err:?}");
         }

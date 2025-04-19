@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -105,7 +103,7 @@ async fn inner_pair_liquidity_add(
 
         // * 4. do business
         {
-            with_mut_state_without_record(|s| {
+            with_mut_state(|s| {
                 s.business_token_pair_liquidity_add(
                     &locks,
                     ArgWithMeta {
@@ -231,7 +229,7 @@ async fn inner_pair_liquidity_remove(
 
         // * 4. do business
         {
-            with_mut_state_without_record(|s| {
+            with_mut_state(|s| {
                 s.business_token_pair_liquidity_remove(
                     &locks,
                     ArgWithMeta {

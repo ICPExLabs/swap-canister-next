@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -19,5 +17,5 @@ fn config_fee_to_query() -> FeeTo {
 
 #[ic_cdk::update(guard = "has_business_config_fee_to")]
 fn config_fee_to_replace(fee_to: FeeTo) -> FeeTo {
-    with_mut_state_without_record(|s| s.business_config_fee_to_replace(fee_to))
+    with_mut_state(|s| s.business_config_fee_to_replace(fee_to))
 }

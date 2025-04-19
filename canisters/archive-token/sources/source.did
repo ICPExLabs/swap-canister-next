@@ -1,15 +1,4 @@
 type Account = record { owner : principal; subaccount : opt blob };
-type CanisterStatusResponse = record {
-  status : CanisterStatusType;
-  memory_size : nat;
-  cycles : nat;
-  settings : DefiniteCanisterSettings;
-  query_stats : QueryStats;
-  idle_cycles_burned_per_day : nat;
-  module_hash : opt blob;
-  reserved_cycles : nat;
-};
-type CanisterStatusType = variant { stopped; stopping; running };
 type CustomHttpRequest = record {
   url : text;
   method : text;
@@ -32,15 +21,6 @@ type CustomMetrics = record {
   blocks : nat64;
   blocks_bytes : nat64;
   block_height_offset : nat64;
-};
-type DefiniteCanisterSettings = record {
-  freezing_threshold : nat;
-  controllers : vec principal;
-  reserved_cycles_limit : nat;
-  log_visibility : LogVisibility;
-  wasm_memory_limit : nat;
-  memory_allocation : nat;
-  compute_allocation : nat;
 };
 type DepositToken = record {
   to : Account;
@@ -68,17 +48,6 @@ type InitArgV1 = record {
   max_memory_size_bytes : opt nat64;
 };
 type InitArgs = variant { V0 : record {}; V1 : InitArgV1 };
-type LogVisibility = variant {
-  controllers;
-  public;
-  allowed_viewers : vec principal;
-};
-type QueryStats = record {
-  response_payload_bytes_total : nat;
-  num_instructions_total : nat;
-  num_calls_total : nat;
-  request_payload_bytes_total : nat;
-};
 type StreamingCallbackHttpResponse = record {
   token : opt StreamingCallbackToken;
   body : blob;
@@ -122,7 +91,6 @@ type TransferToken = record {
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   append_blocks : (vec blob) -> ();
-  canister_status : () -> (CanisterStatusResponse);
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;

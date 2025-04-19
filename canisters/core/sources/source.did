@@ -50,31 +50,11 @@ type BusinessLocks = record {
   swap : opt bool;
   balances : opt vec TokenAccount;
 };
-type CanisterStatusResponse = record {
-  status : CanisterStatusType;
-  memory_size : nat;
-  cycles : nat;
-  settings : DefiniteCanisterSettings;
-  query_stats : QueryStats;
-  idle_cycles_burned_per_day : nat;
-  module_hash : opt blob;
-  reserved_cycles : nat;
-};
-type CanisterStatusType = variant { stopped; stopping; running };
 type CurrentArchiving = record {
   canister_id : principal;
   length : nat64;
   max_length : nat64;
   block_height_offset : nat64;
-};
-type DefiniteCanisterSettings = record {
-  freezing_threshold : nat;
-  controllers : vec principal;
-  reserved_cycles_limit : nat;
-  log_visibility : LogVisibility;
-  wasm_memory_limit : nat;
-  memory_allocation : nat;
-  compute_allocation : nat;
 };
 type DepositToken = record {
   to : Account;
@@ -82,7 +62,6 @@ type DepositToken = record {
   from : Account;
   amount : nat;
 };
-type ExampleVec = record { vec_data : nat64 };
 type FeeTo = record { token_fee_to : opt Account; swap_fee_to : opt Account };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
@@ -92,11 +71,6 @@ type InnerLP = record {
   dummy_canister_id : principal;
   minimum_liquidity : nat;
   total_supply : nat;
-};
-type LogVisibility = variant {
-  controllers;
-  public;
-  allowed_viewers : vec principal;
 };
 type MaintainArchives = record {
   recharged : vec record { principal; nat };
@@ -111,11 +85,6 @@ type MaintainArchivesConfig = record {
   min_cycles_threshold : nat64;
 };
 type MarketMakerView = variant { swap_v2 : SwapV2MarketMakerView };
-type MigratedRecords = record {
-  records : vec Record;
-  next_id : nat64;
-  removed : nat64;
-};
 type NextArchiveCanisterConfig = record {
   maintainers : opt vec principal;
   max_memory_size_bytes : opt nat64;
@@ -127,12 +96,6 @@ type OuterLP = record {
   token_canister_id : principal;
   minimum_liquidity : nat;
   total_supply : nat;
-};
-type PageData = record {
-  total : nat64;
-  data : vec Record;
-  page : nat64;
-  size : nat32;
 };
 type PairCreate = record { pa : TokenPairAmm; creator : principal };
 type PairCreateArgWithMeta = record {
@@ -208,32 +171,10 @@ type PermissionUpdatedArg = variant {
 type PoolLp = variant { outer : OuterLP; inner : InnerLP };
 type PushBlocks = record { block_height_start : nat64; length : nat64 };
 type PushBlocksResult = variant { Ok : opt PushBlocks; Err : BusinessError };
-type QueryPage = record { page : nat64; size : nat32 };
-type QueryStats = record {
-  response_payload_bytes_total : nat;
-  num_instructions_total : nat;
-  num_calls_total : nat;
-  request_payload_bytes_total : nat;
-};
 type QuerySwapBlockResult = variant { archive : principal; block : SwapBlock };
 type QueryTokenBlockResult = variant {
   archive : principal;
   block : TokenBlock;
-};
-type Record = record {
-  id : nat64;
-  created : int;
-  topic : nat8;
-  content : text;
-  done : opt record { int; text };
-  caller : principal;
-};
-type RecordSearchArg = record {
-  id : opt record { opt nat64; opt nat64 };
-  created : opt record { opt nat64; opt nat64 };
-  topic : opt vec text;
-  content : opt text;
-  caller : opt vec principal;
 };
 type ReplaceArchiveWasmModuleResult = variant {
   Ok : opt blob;
@@ -578,21 +519,6 @@ service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   block_swap_get : (nat64) -> (QuerySwapBlockResult) query;
   block_token_get : (nat64) -> (QueryTokenBlockResult) query;
-  business_example_cell_query : () -> (text) query;
-  business_example_cell_set : (text) -> ();
-  business_example_log_query : () -> (vec text) query;
-  business_example_log_update : (text) -> (nat64);
-  business_example_map_query : () -> (vec record { nat64; text }) query;
-  business_example_map_update : (nat64, opt text) -> (opt text);
-  business_example_priority_queue_pop : () -> (opt nat64);
-  business_example_priority_queue_push : (nat64) -> ();
-  business_example_priority_queue_query : () -> (vec nat64) query;
-  business_example_query : () -> (text) query;
-  business_example_set : (text) -> ();
-  business_example_vec_pop : () -> (opt ExampleVec);
-  business_example_vec_push : (nat64) -> ();
-  business_example_vec_query : () -> (vec ExampleVec) query;
-  canister_status : () -> (CanisterStatusResponse);
   config_fee_to_query : () -> (FeeTo);
   config_fee_to_replace : (FeeTo) -> (FeeTo);
   config_maintain_archives_query : () -> (MaintainArchives) query;
@@ -672,9 +598,6 @@ service : (opt InitArgs) -> {
   permission_roles_by_user : (principal) -> (opt vec text) query;
   permission_roles_query : () -> (opt vec text) query;
   permission_update : (vec PermissionUpdatedArg) -> ();
-  record_find_by_page : (QueryPage, opt RecordSearchArg) -> (PageData) query;
-  record_migrate : (nat32) -> (MigratedRecords);
-  record_topics : () -> (vec text) query;
   request_trace_get : (nat64) -> (opt RequestTrace);
   request_trace_index_get : () -> (nat64, nat64);
   request_trace_remove : (nat64) -> (opt RequestTrace);
@@ -700,5 +623,4 @@ service : (opt InitArgs) -> {
   version : () -> (nat32) query;
   wallet_balance : () -> (nat) query;
   wallet_receive : () -> (nat);
-  whoami : () -> (principal) query;
 }

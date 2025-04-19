@@ -14,12 +14,10 @@ impl From<Box<LastState>> for Box<InnerState> {
         let LastCanisterKit {
             pause,
             permissions,
-            records,
             schedule,
         } = value.canister_kit;
         state.canister_kit.pause = pause;
         state.canister_kit.permissions = permissions;
-        state.canister_kit.records = records;
         state.canister_kit.schedule = schedule;
 
         Box::new(state)

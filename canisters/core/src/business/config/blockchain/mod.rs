@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -42,7 +40,7 @@ async fn deploy_canister(
         "create token archive canister success: [{}]",
         canister_id.to_text()
     ));
-    with_mut_state_without_record(|s| {
+    with_mut_state(|s| {
         s.business_config_maintain_archives_cycles_recharged(canister_id, initial_cycles)
     });
 

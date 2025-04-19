@@ -21,7 +21,6 @@ serde_bytes = { workspace = true }
 ic-canister-kit = { workspace = true, features = [
     "identity",
     "canister",
-    "call-once",
     "schedule",
     "stable",
 ] }

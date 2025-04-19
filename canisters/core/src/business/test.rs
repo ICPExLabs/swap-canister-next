@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -62,5 +60,5 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
 fn test_config_token_current_archiving_replace(
     archiving: CurrentArchiving,
 ) -> Option<CurrentArchiving> {
-    with_mut_state_without_record(|s| s.business_config_token_current_archiving_replace(archiving))
+    with_mut_state(|s| s.business_config_token_current_archiving_replace(archiving))
 }

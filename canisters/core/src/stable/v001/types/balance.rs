@@ -8,7 +8,7 @@ use std::{
 
 use super::*;
 
-use super::super::super::with_mut_state_without_record;
+use super::super::super::with_mut_state;
 
 // ============================ balance ============================
 
@@ -149,7 +149,7 @@ pub struct TokenBalancesLock {
 }
 impl Drop for TokenBalancesLock {
     fn drop(&mut self) {
-        with_mut_state_without_record(|s| {
+        with_mut_state(|s| {
             s.get_mut().business_token_balance_unlock(&self.locked);
             for account in &self.required {
                 ic_cdk::println!("🔐 Unlock token account: {}", account);

@@ -122,26 +122,6 @@ impl Permissable<Permission> for InnerState {
     }
 }
 
-impl Recordable<Record, RecordTopic, RecordSearch> for InnerState {
-    // 查询
-    fn record_find_all(&self) -> &[Record] {
-        self.canister_kit.records.record_find_all()
-    }
-    // 修改
-    fn record_push(&mut self, caller: CallerId, topic: RecordTopic, content: String) -> RecordId {
-        self.canister_kit
-            .records
-            .record_push(caller, topic, content)
-    }
-    fn record_update(&mut self, record_id: RecordId, done: String) {
-        self.canister_kit.records.record_update(record_id, done)
-    }
-    // 迁移
-    fn record_migrate(&mut self, max: u32) -> MigratedRecords<Record> {
-        self.canister_kit.records.record_migrate(max)
-    }
-}
-
 impl Schedulable for InnerState {
     // 查询
     fn schedule_find(&self) -> Option<DurationNanos> {

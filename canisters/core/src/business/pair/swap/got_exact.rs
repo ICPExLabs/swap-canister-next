@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -111,7 +109,7 @@ async fn inner_pair_swap_tokens_for_exact_tokens(
 
         // * 4. do business
         {
-            with_mut_state_without_record(|s| {
+            with_mut_state(|s| {
                 s.business_token_pair_swap_tokens_for_exact_tokens(
                     &locks,
                     ArgWithMeta {

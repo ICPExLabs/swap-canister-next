@@ -1,6 +1,4 @@
 #[allow(unused)]
-use ic_canister_kit::common::once::call_once_guard;
-#[allow(unused)]
 use ic_canister_kit::identity::caller;
 
 #[allow(unused)]
@@ -97,7 +95,7 @@ async fn inner_token_transfer(
             let fee_to = locks.0.fee_to; // token fee to
 
             // ? 1. transfer
-            with_mut_state_without_record(|s| {
+            with_mut_state(|s| {
                 s.business_token_transfer_lp(
                     &locks,
                     ArgWithMeta {
@@ -138,7 +136,7 @@ async fn inner_token_transfer(
             let fee_to = locks.0.fee_to; // token fee to
 
             // ? 1. transfer
-            with_mut_state_without_record(|s| {
+            with_mut_state(|s| {
                 s.business_token_transfer(
                     &locks,
                     ArgWithMeta {
