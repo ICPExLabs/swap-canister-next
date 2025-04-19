@@ -17,6 +17,9 @@ impl AsRef<str> for AmmText {
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
 )]
 pub enum Amm {
+    /// fee 0.01%
+    #[serde(rename = "swap_v2_0.01%")]
+    SwapV2M100,
     /// fee 0.05%
     #[serde(rename = "swap_v2_0.05%")]
     SwapV2M500,
@@ -33,6 +36,7 @@ impl TryFrom<&str> for Amm {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
+            "swap_v2_0.01%" => Ok(Self::SwapV2M100),
             "swap_v2_0.05%" => Ok(Self::SwapV2M500),
             "swap_v2_0.3%" => Ok(Self::SwapV2T3),
             "swap_v2_1%" => Ok(Self::SwapV2H1),
@@ -44,6 +48,7 @@ impl TryFrom<&str> for Amm {
 impl From<Amm> for AmmText {
     fn from(value: Amm) -> Self {
         match value {
+            Amm::SwapV2M100 => Self("swap_v2_0.01%".to_string()),
             Amm::SwapV2M500 => Self("swap_v2_0.05%".to_string()),
             Amm::SwapV2T3 => Self("swap_v2_0.3%".to_string()),
             Amm::SwapV2H1 => Self("swap_v2_1%".to_string()),

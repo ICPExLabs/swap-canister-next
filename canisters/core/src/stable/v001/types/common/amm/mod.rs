@@ -52,6 +52,13 @@ impl MarketMaker {
     ) -> Self {
         let lp = PoolLp::new_inner_lp(dummy_canister_id, token0, token1);
         match amm {
+            Amm::SwapV2M100 => Self::SwapV2(new_swap_v2_market_maker(
+                subaccount,
+                SwapRatio::new(1, 10_000), // swap fee 0.01%
+                token0.canister_id,
+                token1.canister_id,
+                lp,
+            )),
             Amm::SwapV2M500 => Self::SwapV2(new_swap_v2_market_maker(
                 subaccount,
                 SwapRatio::new(5, 10_000), // swap fee 0.05%

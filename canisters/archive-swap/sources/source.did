@@ -1,5 +1,10 @@
 type Account = record { owner : principal; subaccount : opt blob };
-type Amm = variant { "swap_v2_1%"; "swap_v2_0.05%"; "swap_v2_0.3%" };
+type Amm = variant {
+  "swap_v2_1%";
+  "swap_v2_0.01%";
+  "swap_v2_0.05%";
+  "swap_v2_0.3%";
+};
 type BurnFee = record { fee : nat; fee_to : Account };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
