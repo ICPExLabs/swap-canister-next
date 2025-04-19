@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-pub use ic_canister_kit::types::*;
-
 #[allow(unused)]
 pub use super::super::Business;
 
@@ -14,17 +12,11 @@ pub use super::permission::*;
 
 // 初始化参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArg {
-    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-}
+pub struct InitArg {}
 
 // 升级参数
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArg {
-    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-}
+pub struct UpgradeArg {}
 
 // 框架需要的数据结构
 #[derive(Serialize, Deserialize, Default)]

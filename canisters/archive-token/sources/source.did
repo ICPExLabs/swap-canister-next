@@ -61,15 +61,13 @@ type GetTokenBlocksResult = variant {
   Ok : TokenBlockRange;
   Err : GetBlocksError;
 };
-type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgV1 = record {
   maintainers : opt vec principal;
   block_offset : opt record { nat64; blob };
   core_canister_id : opt principal;
   max_memory_size_bytes : opt nat64;
-  schedule : opt nat;
 };
-type InitArgs = variant { V0 : InitArg; V1 : InitArgV1 };
+type InitArgs = variant { V0 : record {}; V1 : InitArgV1 };
 type LogVisibility = variant {
   controllers;
   public;

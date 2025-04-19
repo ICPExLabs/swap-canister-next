@@ -23,7 +23,6 @@ ic-canister-kit = { workspace = true, features = [
     "identity",
     "canister",
     "http",
-    "call-once",
     "schedule",
     "stable",
 ] }

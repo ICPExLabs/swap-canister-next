@@ -1,4 +1,4 @@
-use ic_canister_kit::types::{CanisterId, DurationNanos, UserId};
+use ic_canister_kit::types::{CanisterId, UserId};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{BlockIndex, HashOf};
@@ -10,8 +10,6 @@ use super::TokenBlock;
 pub struct InitArgV1 {
     /// 维护者账户
     pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
-    /// 定时任务
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
 
     /// 最大内存
     pub max_memory_size_bytes: Option<u64>,
@@ -26,8 +24,6 @@ pub struct InitArgV1 {
 pub struct UpgradeArgV1 {
     /// 添加新的维护者账户
     pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
-    /// 定时任务
-    pub schedule: Option<DurationNanos>, // init scheduled task or not
 
     /// 最大内存
     pub max_memory_size_bytes: Option<u64>,

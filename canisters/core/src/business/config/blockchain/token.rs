@@ -138,7 +138,6 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
         };
         let init_args = ::common::archive::token::InitArgV1 {
             maintainers: view.archive_config.maintainers,
-            schedule: None,
             max_memory_size_bytes: view.archive_config.max_memory_size_bytes,
             core_canister_id: Some(self_canister_id()),
             block_offset,
