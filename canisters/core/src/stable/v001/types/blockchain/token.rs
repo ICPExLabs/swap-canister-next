@@ -1,6 +1,6 @@
 use ic_canister_kit::{
     common::trap,
-    types::{StableBTreeMap, UserId},
+    types::{StableBTreeMap, StableCell, UserId},
 };
 use serde::{Deserialize, Serialize};
 
@@ -9,15 +9,20 @@ use crate::types::with_mut_state_without_record;
 use super::super::{
     Account, BlockIndex, Business, BusinessError, CandidBlock, CurrentArchiving, EncodedBlock,
     HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
-    TokenTransaction, init_token_blocks,
+    TokenTransaction, init_token_blocks, init_token_wasm_module, system_error,
 };
 
 use super::BlockChain;
+
+const WASM_MODULE: &[u8] =
+    include_bytes!("../../../../../../archive-token/sources/source_opt.wasm");
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenBlockChain {
     #[serde(skip, default = "init_token_blocks")]
     cached: StableBTreeMap<BlockIndex, EncodedBlock>, // 暂存所有缓存的块
+    #[serde(skip, default = "init_token_wasm_module")]
+    wasm_module: StableCell<Option<Vec<u8>>>,
     block_chain: BlockChain<TokenBlock>,
 }
 
@@ -25,6 +30,7 @@ impl Default for TokenBlockChain {
     fn default() -> Self {
         Self {
             cached: init_token_blocks(),
+            wasm_module: init_token_wasm_module(),
             block_chain: BlockChain::default(),
         }
     }
@@ -47,8 +53,29 @@ impl TokenBlockChain {
     }
 
     // token
+    pub fn init_wasm_module(&mut self) -> Result<(), BusinessError> {
+        if self.wasm_module.get().is_none() {
+            self.wasm_module
+                .set(Some(WASM_MODULE.to_vec()))
+                .map_err(|err| system_error(format!("init wasm module failed: {err:?}")))?;
+        }
+        Ok(())
+    }
     pub fn get_token_block_chain(&self) -> &BlockChain<TokenBlock> {
         &self.block_chain
+    }
+    pub fn query_wasm_module(&self) -> &Option<Vec<u8>> {
+        self.wasm_module.get()
+    }
+    pub fn replace_wasm_module(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        let old = self.wasm_module.get().clone();
+        self.wasm_module
+            .set(Some(wasm_module))
+            .map_err(|err| system_error(format!("replace wasm module failed: {err:?}")))?;
+        Ok(old)
     }
     pub fn set_token_archive_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
         self.block_chain.set_archive_max_length(max_length)

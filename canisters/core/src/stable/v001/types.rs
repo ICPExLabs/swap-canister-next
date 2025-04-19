@@ -46,7 +46,7 @@ pub use crate::types::{
     TokenBlock, TokenOperation, TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView,
     TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
     TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId,
-    WithdrawToken, display_account, proto,
+    WithdrawToken, display_account, proto, system_error,
 };
 
 mod common;
@@ -200,10 +200,15 @@ use ic_canister_kit::stable;
 
 // stable memory
 const MEMORY_ID_REQUEST_TRACES: MemoryId = MemoryId::new(0); // request traces
-const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(1); // token blocks
-const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(2); // swap blocks
-const MEMORY_ID_TOKEN_PAIRS: MemoryId = MemoryId::new(16); // token pairs
-const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(17); // token balances
+
+const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(8); // token blocks
+const MEMORY_ID_TOKEN_WASM_MODULE: MemoryId = MemoryId::new(9); // token blocks
+
+const MEMORY_ID_SWAP_BLOCKS: MemoryId = MemoryId::new(16); // swap blocks
+const MEMORY_ID_SWAP_WASM_MODULE: MemoryId = MemoryId::new(17); // token blocks
+
+const MEMORY_ID_TOKEN_PAIRS: MemoryId = MemoryId::new(24); // token pairs
+const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(25); // token balances
 
 // example
 const MEMORY_ID_EXAMPLE_CELL: MemoryId = MemoryId::new(100); // 测试 Cell
@@ -216,11 +221,19 @@ const MEMORY_ID_EXAMPLE_PRIORITY_QUEUE: MemoryId = MemoryId::new(105); // 测试
 fn init_request_traces() -> StableBTreeMap<RequestIndex, RequestTrace> {
     stable::init_map_data(MEMORY_ID_REQUEST_TRACES)
 }
+
 fn init_token_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
     stable::init_map_data(MEMORY_ID_TOKEN_BLOCKS)
 }
+fn init_token_wasm_module() -> StableCell<Option<Vec<u8>>> {
+    stable::init_cell_data(MEMORY_ID_TOKEN_WASM_MODULE, Default::default())
+}
+
 fn init_swap_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
     stable::init_map_data(MEMORY_ID_SWAP_BLOCKS)
+}
+fn init_swap_wasm_module() -> StableCell<Option<Vec<u8>>> {
+    stable::init_cell_data(MEMORY_ID_SWAP_WASM_MODULE, Default::default())
 }
 
 fn init_token_pairs() -> StableBTreeMap<TokenPairAmm, MarketMaker> {
@@ -305,11 +318,17 @@ impl InnerState {
             });
             s.token_block_chain
                 .set_archive_maintainers(Some(maintainers));
+
+            let _ = s.token_block_chain.init_wasm_module();
+            let _ = s.swap_block_chain.init_wasm_module();
         });
     }
 
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
         // maybe do something
+        let _ = self.token_block_chain.init_wasm_module();
+        let _ = self.swap_block_chain.init_wasm_module();
+
         self.updated(|_| {});
     }
 

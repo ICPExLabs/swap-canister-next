@@ -80,11 +80,7 @@ impl<T> BlockChain<T> {
         &mut self,
         archive_config: NextArchiveCanisterConfig,
     ) -> NextArchiveCanisterConfig {
-        let old = std::mem::replace(&mut self.archive_config, archive_config);
-        if self.archive_config.wasm.is_none() && old.wasm.is_some() {
-            self.archive_config.wasm = old.wasm.clone();
-        }
-        old
+        std::mem::replace(&mut self.archive_config, archive_config)
     }
     fn replace_token_current_archiving(
         &mut self,
@@ -181,7 +177,6 @@ impl CurrentArchiving {
 pub struct NextArchiveCanisterConfig {
     pub maintainers: Option<Vec<UserId>>,   // 维护人
     pub max_memory_size_bytes: Option<u64>, // 最大内存
-    pub wasm: Option<Vec<u8>>,              // wasm
     pub max_length: u64,                    // 最大长度
 }
 
@@ -190,7 +185,6 @@ impl Default for NextArchiveCanisterConfig {
         Self {
             maintainers: None,
             max_memory_size_bytes: None,
-            wasm: None,
             max_length: 1_000_000, // ? 估计 10 GB
         }
     }

@@ -18,8 +18,17 @@ impl Business for InnerState {
 
     // archive canister
     // token
-    fn business_config_token_block_chain(&self) -> &BlockChain<TokenBlock> {
+    fn business_config_token_block_chain_query(&self) -> &BlockChain<TokenBlock> {
         self.token_block_chain.get_token_block_chain()
+    }
+    fn business_config_token_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        self.token_block_chain.query_wasm_module()
+    }
+    fn business_config_token_archive_wasm_module_replace(
+        &mut self,
+        wasm_module: Vec<u8>,
+    ) -> Result<Option<Vec<u8>>, BusinessError> {
+        self.token_block_chain.replace_wasm_module(wasm_module)
     }
     fn business_config_token_archive_max_length_replace(
         &mut self,

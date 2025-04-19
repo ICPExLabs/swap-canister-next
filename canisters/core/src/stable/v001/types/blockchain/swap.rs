@@ -1,22 +1,27 @@
 use ic_canister_kit::{
     common::trap,
-    types::{StableBTreeMap, UserId},
+    types::{StableBTreeMap, StableCell, UserId},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::types::{
+use crate::types::with_mut_state_without_record;
+
+use super::super::{
     Account, BlockIndex, Business, BusinessError, CandidBlock, EncodedBlock, HashOf,
-    QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos, with_mut_state_without_record,
+    QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos, init_swap_blocks,
+    init_swap_wasm_module, system_error,
 };
 
-use super::super::init_swap_blocks;
-
 use super::BlockChain;
+
+const WASM_MODULE: &[u8] = include_bytes!("../../../../../../archive-swap/sources/source_opt.wasm");
 
 #[derive(Serialize, Deserialize)]
 pub struct SwapBlockChain {
     #[serde(skip, default = "init_swap_blocks")]
     cached: StableBTreeMap<BlockIndex, EncodedBlock>, // 暂存所有缓存的块
+    #[serde(skip, default = "init_swap_wasm_module")]
+    wasm_module: StableCell<Option<Vec<u8>>>,
     block_chain: BlockChain<SwapBlock>,
 }
 
@@ -24,6 +29,7 @@ impl Default for SwapBlockChain {
     fn default() -> Self {
         Self {
             cached: init_swap_blocks(),
+            wasm_module: init_swap_wasm_module(),
             block_chain: BlockChain::default(),
         }
     }
@@ -39,6 +45,16 @@ impl SwapBlockChain {
         }
         let block = self.cached.get(&block_height).map(QueryBlockResult::Block);
         trap(block.ok_or("invalid block height"))
+    }
+
+    // swap
+    pub fn init_wasm_module(&mut self) -> Result<(), BusinessError> {
+        if self.wasm_module.get().is_none() {
+            self.wasm_module
+                .set(Some(WASM_MODULE.to_vec()))
+                .map_err(|err| system_error(format!("init wasm module failed: {err:?}")))?;
+        }
+        Ok(())
     }
 
     // locks

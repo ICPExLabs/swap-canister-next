@@ -10,12 +10,27 @@ use crate::types::*;
 
 // ============================== query ==============================
 
-#[ic_cdk::update(guard = "has_pause_replace")]
-fn config_token_block_chain() -> BlockChainView<TokenBlock> {
-    with_state(|s| s.business_config_token_block_chain().into())
+#[ic_cdk::query(guard = "has_pause_replace")]
+fn config_token_block_chain_query() -> BlockChainView<TokenBlock> {
+    with_state(|s| s.business_config_token_block_chain_query().into())
+}
+
+#[ic_cdk::query(guard = "has_pause_replace")]
+fn config_token_archive_wasm_module_query() -> Option<Vec<u8>> {
+    with_state(|s| s.business_config_token_archive_wasm_module_query().clone())
 }
 
 // ============================== replace ==============================
+
+#[ic_cdk::update(guard = "has_pause_replace")]
+fn config_token_archive_wasm_module_replace(
+    wasm_module: Vec<u8>,
+) -> ReplaceArchiveWasmModuleResult {
+    with_mut_state_without_record(|s| {
+        s.business_config_token_archive_wasm_module_replace(wasm_module)
+            .into()
+    })
+}
 
 #[ic_cdk::update(guard = "has_pause_replace")]
 fn config_token_archive_max_length_replace(max_length: u64) -> Option<CurrentArchiving> {
@@ -77,7 +92,7 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
 
     // 2. 查询罐子是否已满
     let mut view: BlockChainView<TokenBlock> =
-        with_state(|s| s.business_config_token_block_chain().into());
+        with_state(|s| s.business_config_token_block_chain_query().into());
     if let Some(current_archiving) = view.current_archiving {
         if current_archiving.is_full() {
             return Err(system_error(
@@ -98,9 +113,10 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
             )));
         }
         // 创建新的罐子
-        let wasm = view.archive_config.wasm.ok_or(system_error(
-            "token block chain wasm is none, can not deploy next archive canister",
-        ))?;
+        let wasm = with_state(|s| s.business_config_token_archive_wasm_module_query().clone())
+            .ok_or(system_error(
+                "token block chain wasm is none, can not deploy next archive canister",
+            ))?;
         let block_offset = {
             let mut block_offset = 0;
             for a in &view.archived {
@@ -146,7 +162,7 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
             })
         });
         // 再次获取
-        view = with_state(|s| s.business_config_token_block_chain().into());
+        view = with_state(|s| s.business_config_token_block_chain_query().into());
     }
     let current_archiving = match view.current_archiving {
         Some(current_archiving) => {

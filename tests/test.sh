@@ -260,6 +260,7 @@ red "\n=========== 1. core ===========\n"
 dfx canister create core --specified-id "piwiu-wiaaa-aaaaj-azzka-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(null)" core
 core=$(canister_id "core")
+archive_token="bkyz2-fmaaa-aaaaa-qaaaq-cai"
 blue "Core Canister: $core"
 
 if [ -z "$core" ]; then

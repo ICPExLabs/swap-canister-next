@@ -101,7 +101,6 @@ type MigratedRecords = record {
 };
 type NextArchiveCanisterConfig = record {
   maintainers : opt vec principal;
-  wasm : opt blob;
   max_memory_size_bytes : opt nat64;
   max_length : nat64;
 };
@@ -218,6 +217,10 @@ type RecordSearchArg = record {
   topic : opt vec text;
   content : opt text;
   caller : opt vec principal;
+};
+type ReplaceArchiveWasmModuleResult = variant {
+  Ok : opt blob;
+  Err : BusinessError;
 };
 type RequestArgs = variant {
   token_block_push;
@@ -580,6 +583,10 @@ service : (opt InitArgs) -> {
       NextArchiveCanisterConfig,
     );
   config_token_archive_max_length_replace : (nat64) -> (opt CurrentArchiving);
+  config_token_archive_wasm_module_query : () -> (opt blob) query;
+  config_token_archive_wasm_module_replace : (blob) -> (
+      ReplaceArchiveWasmModuleResult,
+    );
   config_token_archived_canister_maintainers_set : (
       principal,
       opt vec principal,
@@ -588,7 +595,7 @@ service : (opt InitArgs) -> {
       principal,
       nat64,
     ) -> (Result);
-  config_token_block_chain : () -> (BlockChainView);
+  config_token_block_chain_query : () -> (BlockChainView) query;
   config_token_blocks_push : () -> (PushBlocksResult);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
