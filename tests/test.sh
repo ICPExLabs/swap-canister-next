@@ -580,7 +580,7 @@ test "tokens_balance_of user bob    " "$(dfx --identity bob canister call core t
 test "pair_liquidity_remove" "$(dfx --identity bob canister call core pair_liquidity_remove "(record { from=record{owner=principal\"$BOB\"}; swap_pair=record { token = record { principal \"$token_ckETH\"; principal \"$token_ckUSDT\" }; amm=\"swap_v2_0.3%\"; }; liquidity_without_fee=11_194:nat; amount_min=record{1:nat;1:nat}; to=record{owner=principal\"$BOB\"}; deadline=null } , null)" 2>&1)" '{ Err = variant { Liquidity = "INSUFFICIENT_LIQUIDITY" } })'
 test "tokens_balance_of user bob    " "$(dfx --identity bob canister call core tokens_balance_of "(record { owner=principal \"$BOB\";         subaccount=null})" 2>&1)" 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 0 : nat;}' 'record { principal "cngnf-vqaaa-aaaar-qag4q-cai"; 0 : nat;}' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 18_850 : nat;}'
 
-blue "\n🚩 1.1 permission permission_query"
+blue "\n🚩 4.1 permission permission_query"
 test "version" "$(dfx --identity alice canister call core version 2>&1)" '(1 : nat32)'
 test "permission_all" "$(dfx --identity alice canister call core permission_all 2>&1)" 'vec { variant { Forbidden = "PauseQuery" }; variant { Permitted = "PauseReplace" }'
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
@@ -594,7 +594,7 @@ test "permission_update" "$(dfx --identity alice canister call core permission_u
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
 test "permission_query" "$(dfx canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
 
-blue "\n🚩 1.2 permission permission update"
+blue "\n🚩 4.2 permission permission update"
 test "permission_query" "$(dfx canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
 test "permission_find_by_user" "$(dfx canister call core permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreate"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
@@ -602,7 +602,7 @@ test "permission_find_by_user" "$(dfx canister call core permission_find_by_user
 test "🙈 permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" "'PermissionFind' is required"
 test "🙈 permission_find_by_user" "$(dfx --identity alice canister call core permission_find_by_user "(principal \"$ALICE\")" 2>&1)" "'PermissionFind' is required"
 
-blue "\n🚩 1.3 permission roles"
+blue "\n🚩 4.3 permission roles"
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateRolePermission=record{\"Admin\"; opt vec {\"PauseReplace\"; \"PauseQuery\"} } } })" 2>&1)" "()"
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; opt vec {\"Admin\"} } } })" 2>&1)" "()"
@@ -610,18 +610,18 @@ test "permission_query" "$(dfx --identity alice canister call core permission_qu
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
 test "permission_query" "$(dfx --identity alice canister call core permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
 
-blue "\n🚩 2.1 pause permission"
+blue "\n🚩 5.1 pause permission"
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(false)"
 test "pause_query_reason" "$(dfx canister call core pause_query_reason 2>&1)" "(null)"
 test "pause_replace" "$(dfx canister call core pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(true)"
 test "pause_query_reason" "$(dfx canister call core pause_query_reason 2>&1)" "message = \"reason\""
 
-blue "\n🚩 2.2 pause permission by alice"
+blue "\n🚩 5.2 pause permission by alice"
 test "pause_query" "$(dfx --identity alice canister call core pause_query 2>&1)" "(true)"
 test "pause_query_reason" "$(dfx --identity alice canister call core pause_query_reason 2>&1)" "message = \"reason\""
 
-blue "\n🚩 2.3 pause no permission"
+blue "\n🚩 5.3 pause no permission"
 test "🙈 pause_replace" "$(dfx --identity alice canister call core pause_replace "(null)" 2>&1)" "'PauseReplace' is required"
 test "permission_update" "$(dfx canister call core permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PauseReplace\";\"PauseQuery\" } } } })" 2>&1)" "()"
 test "pause_replace" "$(dfx --identity alice canister call core pause_replace "(null)" 2>&1)" "()"
@@ -630,7 +630,7 @@ test "🙈 pause_query_reason" "$(dfx --identity alice canister call core pause_
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(false)"
 test "pause_query_reason" "$(dfx canister call core pause_query_reason 2>&1)" "(null)"
 
-blue "\n🚩 3 schedule"
+blue "\n🚩 6 schedule"
 test "🙈 schedule_find" "$(dfx --identity alice canister call core schedule_find 2>&1)" "'ScheduleFind' is required"
 test "schedule_find" "$(dfx canister call core schedule_find 2>&1)" "(null)"
 test "🙈 schedule_replace" "$(dfx --identity alice canister call core schedule_replace "(opt (1000000000:nat64))" 2>&1)" "'ScheduleReplace' is required"
@@ -641,12 +641,32 @@ sleep 2
 test "🙈 schedule_trigger" "$(dfx --identity alice canister call core schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
 test "schedule_trigger" "$(dfx canister call core schedule_trigger 2>&1)" "()"
 
-blue "\n🚩 4 test core data"
+blue "\n🚩 7 test core data"
 test "pause_replace" "$(dfx canister call core pause_replace "(opt \"reason\")" 2>&1)" "()"
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(true)"
 dfx canister install --mode=upgrade --upgrade-unchanged --argument "(null)" core
 test "pause_replace" "$(dfx canister call core pause_replace "(null)" 2>&1)" "()"
 test "pause_query" "$(dfx canister call core pause_query 2>&1)" "(false)"
+
+blue "\n🚩 8 test archive-token"
+test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$DEFAULT"'" ] ], "max_length": "1000000", "max_memory_size_bytes": [] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
+test "config_token_archive_wasm_module_query" "$(dfx canister call core config_token_archive_wasm_module_query --output json 2>&1)" '[ [ ' ' ] ]'
+test "config_token_archive_wasm_module_replace" "$(dfx canister call core config_token_archive_wasm_module_replace "(vec { 1: nat8; 2: nat8; 3: nat8})" 2>&1)" '{ Ok = opt blob'
+test "config_token_archive_wasm_module_query" "$(dfx canister call core config_token_archive_wasm_module_query --output json 2>&1)" '[ [ 1, 2, 3 ] ]'
+test "config_token_current_archiving_max_length_replace" "$(dfx canister call core config_token_current_archiving_max_length_replace "(1000: nat64)" 2>&1)" '( opt record { canister_id = principal "bkyz2-fmaaa-aaaaa-qaaaq-cai"; length = 1 : nat64; max_length = 1_000 : nat64; block_height_offset = 0 : nat64; }, )'
+test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$DEFAULT"'" ] ], "max_length": "1000", "max_memory_size_bytes": [] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
+test "config_token_archive_config_replace" "$(dfx canister call core config_token_archive_config_replace "(record {maintainers=opt vec{principal \"$BOB\"}; max_memory_size_bytes=opt (2000000:nat64); max_length=10000:nat64})" 2>&1)" '( record { maintainers = opt vec { principal "'"$DEFAULT"'"; }; max_memory_size_bytes = null; max_length = 1_000 : nat64; }, )'
+test "config_token_block_chain_query" "$(dfx canister call core config_token_block_chain_query --output json 2>&1)" '{ "archive_config": { "maintainers": [ [ "'"$DEFAULT"'" ] ], "max_length": "10000", "max_memory_size_bytes": [ "2000000" ] }, "archived": [], "current_archiving": [ { "block_height_offset": "0", "canister_id": "bkyz2-fmaaa-aaaaa-qaaaq-cai", "length": "1", "max_length": "1000" } ], "latest_block_hash": [' '], "next_block_index": "41" }'
+test "config_token_archived_canister_maintainers_set" "$(dfx canister call core config_token_archived_canister_maintainers_set "(principal \"$archive_token\", opt vec {principal \"$ALICE\"})" 2>&1)" '{ Ok = null }'
+test "config_token_archived_canister_max_memory_size_bytes_set" "$(dfx canister call core config_token_archived_canister_max_memory_size_bytes_set "(principal \"$archive_token\", 300: nat64)" 2>&1)" 'xxx'
+test "config_token_archived_canister_max_memory_size_bytes_set" "$(dfx canister call core config_token_archived_canister_max_memory_size_bytes_set "(principal \"$archive_token\", 3_000_000: nat64)" 2>&1)" 'xxxxx'
+
+blue "\n🚩 8.1 test archive-token"
+test "get_blocks" "$(dfx canister call core get_blocks 2>&1)" "(false)"
+
+blue "\n🚩 9 test archive-swap"
+
+blue "\n🚩 10 test request trace"
 
 # test completed
 

@@ -526,7 +526,6 @@ service : (opt InitArgs) -> {
   config_swap_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
-  config_swap_current_archiving_max_length_replace : (nat64) -> (opt CurrentArchiving);
   config_swap_archive_wasm_module_query : () -> (opt blob) query;
   config_swap_archive_wasm_module_replace : (blob) -> (
       ReplaceArchiveWasmModuleResult,
@@ -541,6 +540,9 @@ service : (opt InitArgs) -> {
     ) -> (Result);
   config_swap_block_chain_query : () -> (BlockChainView) query;
   config_swap_blocks_push : () -> (PushBlocksResult);
+  config_swap_current_archiving_max_length_replace : (nat64) -> (
+      opt CurrentArchiving,
+    );
   config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
       NextArchiveCanisterConfig,
     );
