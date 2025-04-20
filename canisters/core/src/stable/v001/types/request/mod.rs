@@ -50,6 +50,11 @@ impl RequestTraces {
         self.traces.get(index)
     }
     pub fn remove_request_trace(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        // must be min
+        let min = self.traces.keys().min()?;
+        if *index != min {
+            ic_cdk::trap(&format!("must remove min request index: {}", min.as_ref()));
+        }
         self.traces.remove(index)
     }
     pub fn insert_request_trace(&mut self, trace: RequestTrace) {

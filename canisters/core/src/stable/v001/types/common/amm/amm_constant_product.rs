@@ -42,6 +42,11 @@ pub struct SwapV2MarketMaker {
     protocol_fee: Option<SwapRatio>, // The processing fee and lp fee for the agreement sharing should be equal to 1
 }
 
+struct InnerSwapResult {
+    balance: (Nat, Nat),
+    _reserve: (Nat, Nat),
+}
+
 impl SwapV2MarketMaker {
     pub fn new(
         subaccount: Subaccount,
@@ -603,7 +608,7 @@ impl SwapV2MarketMaker {
         amount0_out: Nat,
         amount1_out: Nat,
         to: Account,
-    ) -> Result<((Nat, Nat), (Nat, Nat)), BusinessError> {
+    ) -> Result<InnerSwapResult, BusinessError> {
         // Pool's account
         let pool_account = Account {
             owner: self_canister.id(),
@@ -703,10 +708,15 @@ impl SwapV2MarketMaker {
                 return Err(BusinessError::Swap("K".into()));
             }
         }
-        Ok(((balance0, balance1), (_reserve0, _reserve1)))
+        Ok(InnerSwapResult {
+            balance: (balance0, balance1),
+            _reserve: (_reserve0, _reserve1),
+        })
     }
 
     /// Be sure to transfer the corresponding token first, and then call this method to transfer the token
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
     pub fn swap<T: TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
@@ -717,7 +727,10 @@ impl SwapV2MarketMaker {
         amount1_out: Nat,
         to: Account,
     ) -> Result<(), BusinessError> {
-        let ((balance0, balance1), (_reserve0, _reserve1)) = guard.mint_swap_block(
+        let InnerSwapResult {
+            balance: (balance0, balance1),
+            _reserve: (_reserve0, _reserve1),
+        } = guard.mint_swap_block(
             guard.arg.now,
             transaction,
             |guard| self.inner_swap(guard, self_canister, amount0_out, amount1_out, to),

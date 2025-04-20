@@ -164,6 +164,8 @@ impl MarketMaker {
         }
     }
 
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
     pub fn swap<T: TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
