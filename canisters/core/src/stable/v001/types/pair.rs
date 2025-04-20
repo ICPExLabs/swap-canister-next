@@ -185,42 +185,45 @@ impl TokenPairs {
                 memo: guard.arg.memo.clone(),
                 created: guard.arg.created,
             };
+            let trace = format!(
+                "*Pair Swap Token* `swap_pair:([{}],[{}],{}), from:({}), to:({}), pay_amount:{}, got_amount:{}`",
+                input.to_text(),
+                output.to_text(),
+                pa.amm.into_text().as_ref(),
+                display_account(&last_from),
+                display_account(&to),
+                last_from_amount,
+                amount_out,
+            );
 
-            guard.mint_swap_block(
-                guard.arg.now,
-                transaction,
-                |guard| {
-                    struct WrappedPairAmm {
-                        pa: TokenPairAmm,
-                    }
-                    impl TokenPairArg for WrappedPairAmm {
-                        fn get_pa(&self) -> &TokenPairAmm {
-                            &self.pa
-                        }
-                    }
-                    let wpa = ArgWithMeta {
-                        now: guard.arg.now,
-                        caller: guard.arg.caller,
-                        arg: WrappedPairAmm { pa },
-                        memo: guard.arg.memo.clone(),
-                        created: guard.arg.created,
-                    };
-                    self.handle_maker(pa, |maker| {
-                        guard.handle_guard(wpa, |guard| {
-                            maker.swap(guard, &self_canister, amount0_out, amount1_out, to)
-                        })
-                    })
-                },
-                format!("*Pair Swap Token* `swap_pair:([{}],[{}],{}), from:({}), to:({}), pay_amount:{}, got_amount:{}`",
-                    input.to_text(),
-                    output.to_text(),
-                    pa.amm.into_text().as_ref(),
-                    display_account(&last_from),
-                    display_account(&to),
-                    last_from_amount,
-                    amount_out,
-                ),
-            )?;
+            struct WrappedPairAmm {
+                pa: TokenPairAmm,
+            }
+            impl TokenPairArg for WrappedPairAmm {
+                fn get_pa(&self) -> &TokenPairAmm {
+                    &self.pa
+                }
+            }
+            let wpa = ArgWithMeta {
+                now: guard.arg.now,
+                caller: guard.arg.caller,
+                arg: WrappedPairAmm { pa },
+                memo: guard.arg.memo.clone(),
+                created: guard.arg.created,
+            };
+            self.handle_maker(pa, |maker| {
+                guard.handle_guard(wpa, |guard| {
+                    maker.swap(
+                        guard,
+                        transaction,
+                        trace,
+                        &self_canister,
+                        amount0_out,
+                        amount1_out,
+                        to,
+                    )
+                })
+            })?;
 
             last_from = to;
             last_from_amount = amount_out;

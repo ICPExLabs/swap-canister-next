@@ -596,15 +596,14 @@ impl SwapV2MarketMaker {
         Ok((pool_account, amount_in))
     }
 
-    /// Be sure to transfer the corresponding token first, and then call this method to transfer the token
-    pub fn swap<T: TokenPairArg>(
+    fn inner_swap<T: TokenPairArg>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, &T>,
         self_canister: &SelfCanister,
         amount0_out: Nat,
         amount1_out: Nat,
         to: Account,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<((Nat, Nat), (Nat, Nat)), BusinessError> {
         // Pool's account
         let pool_account = Account {
             owner: self_canister.id(),
@@ -704,6 +703,26 @@ impl SwapV2MarketMaker {
                 return Err(BusinessError::Swap("K".into()));
             }
         }
+        Ok(((balance0, balance1), (_reserve0, _reserve1)))
+    }
+
+    /// Be sure to transfer the corresponding token first, and then call this method to transfer the token
+    pub fn swap<T: TokenPairArg>(
+        &mut self,
+        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+        transaction: SwapTransaction,
+        trace: String,
+        self_canister: &SelfCanister,
+        amount0_out: Nat,
+        amount1_out: Nat,
+        to: Account,
+    ) -> Result<(), BusinessError> {
+        let ((balance0, balance1), (_reserve0, _reserve1)) = guard.mint_swap_block(
+            guard.arg.now,
+            transaction,
+            |guard| self.inner_swap(guard, self_canister, amount0_out, amount1_out, to),
+            trace,
+        )?;
 
         self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
 

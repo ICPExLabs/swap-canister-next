@@ -167,15 +167,23 @@ impl MarketMaker {
     pub fn swap<T: TokenPairArg>(
         &mut self,
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+        transaction: SwapTransaction,
+        trace: String,
         self_canister: &SelfCanister,
         amount0_out: Nat,
         amount1_out: Nat,
         to: Account,
     ) -> Result<(), BusinessError> {
         match self {
-            MarketMaker::SwapV2(value) => {
-                value.swap(guard, self_canister, amount0_out, amount1_out, to)
-            }
+            MarketMaker::SwapV2(value) => value.swap(
+                guard,
+                transaction,
+                trace,
+                self_canister,
+                amount0_out,
+                amount1_out,
+                to,
+            ),
         }
     }
 }
