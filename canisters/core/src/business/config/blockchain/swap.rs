@@ -18,6 +18,12 @@ fn config_swap_archive_wasm_module_query() -> Option<Vec<u8>> {
     with_state(|s| s.business_config_swap_archive_wasm_module_query().clone())
 }
 
+/// query
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+async fn config_swap_cached_block_query() -> Option<(BlockIndex, u64)> {
+    with_state(|s| s.business_config_swap_cached_block_get())
+}
+
 // ============================== replace ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
@@ -182,7 +188,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
     if num == 0 {
         return Ok(None);
     }
-    // 7. Push new block and remove after success
+    // 5. Push new block and remove after success
     let service = crate::services::archive::Service(current_archiving.canister_id);
     for i in 0..num {
         let block_height = height_start + i;
