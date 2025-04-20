@@ -540,6 +540,7 @@ service : (opt InitArgs) -> {
     ) -> (Result);
   config_swap_block_chain_query : () -> (BlockChainView) query;
   config_swap_blocks_push : () -> (PushBlocksResult);
+  config_swap_cached_block_query : () -> (opt record { nat64; nat64 });
   config_swap_current_archiving_max_length_replace : (nat64) -> (
       opt CurrentArchiving,
     );
@@ -560,6 +561,7 @@ service : (opt InitArgs) -> {
     ) -> (Result);
   config_token_block_chain_query : () -> (BlockChainView) query;
   config_token_blocks_push : () -> (PushBlocksResult);
+  config_token_cached_block_query : () -> (opt record { nat64; nat64 });
   config_token_current_archiving_max_length_replace : (nat64) -> (
       opt CurrentArchiving,
     );

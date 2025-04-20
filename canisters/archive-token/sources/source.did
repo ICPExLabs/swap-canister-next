@@ -91,6 +91,7 @@ type TransferToken = record {
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   append_blocks : (vec blob) -> ();
+  get_block : (nat64) -> (opt TokenBlock) query;
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;

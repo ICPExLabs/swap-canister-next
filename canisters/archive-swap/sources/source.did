@@ -147,6 +147,7 @@ type TokenPairAmm = record { amm : Amm; pair : TokenPair };
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   append_blocks : (vec blob) -> ();
+  get_block : (nat64) -> (opt SwapBlock) query;
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetSwapBlocksResult) query;
   get_blocks_pb : (blob) -> (blob) query;
