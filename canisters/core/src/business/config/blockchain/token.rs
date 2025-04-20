@@ -9,74 +9,80 @@ use crate::types::*;
 // ============================== query ==============================
 
 #[ic_cdk::query]
-fn config_token_block_chain_query() -> BlockChainView<TokenBlock> {
-    with_state(|s| s.business_config_token_block_chain_query().into())
+fn config_token_block_chain_query(args: BlockChainArgs) -> TokenBlockResult {
+    inner_config_token_block_chain_query(args).into()
+}
+fn inner_config_token_block_chain_query(
+    args: BlockChainArgs,
+) -> Result<TokenBlockResponse, BusinessError> {
+    let response = match args {
+        BlockChainArgs::BlockChainQuery => BlockChainResponse::BlockChain(with_state(|s| {
+            s.business_config_token_block_chain_query().into()
+        })),
+        BlockChainArgs::WasmModuleQuery => BlockChainResponse::WasmModule(with_state(|s| {
+            s.business_config_token_archive_wasm_module_query().clone()
+        })),
+        BlockChainArgs::CachedBlockQuery => BlockChainResponse::CachedBlock(with_state(|s| {
+            s.business_config_token_cached_block_get()
+        })),
+        BlockChainArgs::BlockQuery(_) => unimplemented!(),
+        _ => ic_cdk::trap("not query args"),
+    };
+    Ok(response.into())
 }
 
-#[ic_cdk::query]
-fn config_token_archive_wasm_module_query() -> Option<Vec<u8>> {
-    with_state(|s| s.business_config_token_archive_wasm_module_query().clone())
-}
-
-/// query
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-async fn config_token_cached_block_query() -> Option<(BlockIndex, u64)> {
-    with_state(|s| s.business_config_token_cached_block_get())
-}
-
-// ============================== replace ==============================
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn config_token_archive_wasm_module_replace(
-    wasm_module: Vec<u8>,
-) -> ReplaceArchiveWasmModuleResult {
-    with_mut_state(|s| {
-        s.business_config_token_archive_wasm_module_replace(wasm_module)
-            .into()
-    })
-}
+// ============================== update ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn config_token_current_archiving_max_length_replace(max_length: u64) -> Option<CurrentArchiving> {
-    with_mut_state(|s| s.business_config_token_current_archiving_max_length_replace(max_length))
+async fn config_token_block_chain_update(args: BlockChainArgs) -> TokenBlockResult {
+    inner_config_token_block_chain_update(args).await.into()
 }
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn config_token_archive_config_replace(
-    archive_config: NextArchiveCanisterConfig,
-) -> NextArchiveCanisterConfig {
-    with_mut_state(|s| s.business_config_token_archive_config_replace(archive_config))
-}
-
-// ============================== set archived canisters ==============================
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-async fn config_token_archived_canister_maintainers_set(
-    canister_id: CanisterId,
-    maintainers: Option<Vec<UserId>>,
-) -> Result<(), BusinessError> {
-    let service_archive = crate::services::archive::Service(canister_id);
-    return service_archive.set_maintainers(maintainers).await;
-}
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-async fn config_token_archived_canister_max_memory_size_bytes_set(
-    canister_id: CanisterId,
-    max_memory_size_bytes: u64,
-) -> Result<(), BusinessError> {
-    let service_archive = crate::services::archive::Service(canister_id);
-    return service_archive
-        .set_max_memory_size_bytes(max_memory_size_bytes)
-        .await;
+async fn inner_config_token_block_chain_update(
+    args: BlockChainArgs,
+) -> Result<TokenBlockResponse, BusinessError> {
+    let response = match args {
+        BlockChainArgs::WasmModuleUpdate(wasm_module) => {
+            BlockChainResponse::WasmModule(with_mut_state(|s| {
+                s.business_config_token_archive_wasm_module_replace(wasm_module)
+            })?)
+        }
+        BlockChainArgs::CurrentArchivingMaxLengthUpdate(max_length) => {
+            BlockChainResponse::CurrentArchivingMaxLength(with_mut_state(|s| {
+                s.business_config_token_current_archiving_max_length_replace(max_length)
+            }))
+        }
+        BlockChainArgs::NextArchiveCanisterConfigUpdate(archive_config) => {
+            BlockChainResponse::NextArchiveCanisterConfig(with_mut_state(|s| {
+                s.business_config_token_archive_config_replace(archive_config)
+            }))
+        }
+        BlockChainArgs::ArchivedCanisterMaintainersUpdate {
+            canister_id,
+            maintainers,
+        } => {
+            let service_archive = crate::services::archive::Service(canister_id);
+            service_archive.set_maintainers(maintainers).await?;
+            BlockChainResponse::ArchivedCanisterMaintainers
+        }
+        BlockChainArgs::ArchivedCanisterMaxMemorySizeBytesUpdate {
+            canister_id,
+            max_memory_size_bytes,
+        } => {
+            let service_archive = crate::services::archive::Service(canister_id);
+            service_archive
+                .set_max_memory_size_bytes(max_memory_size_bytes)
+                .await?;
+            BlockChainResponse::ArchivedCanisterMaxMemorySizeBytes
+        }
+        BlockChainArgs::BlocksPush => {
+            BlockChainResponse::BlocksPush(inner_config_token_blocks_push().await?)
+        }
+        _ => ic_cdk::trap("not update args"),
+    };
+    Ok(response.into())
 }
 
 // ============================== push token block ==============================
-
-/// Push blocks
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-async fn config_token_blocks_push() -> PushBlocksResult {
-    inner_config_token_blocks_push().await.into()
-}
 
 /// Push blocks
 pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, BusinessError> {

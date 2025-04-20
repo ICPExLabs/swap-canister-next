@@ -10,6 +10,24 @@ type ArchivedBlocks = record {
   length : nat64;
   block_height_offset : nat64;
 };
+type BlockChainArgs = variant {
+  BlockQuery : nat64;
+  WasmModuleQuery;
+  CurrentArchivingMaxLengthUpdate : nat64;
+  ArchivedCanisterMaxMemorySizeBytesUpdate : record {
+    canister_id : principal;
+    max_memory_size_bytes : nat64;
+  };
+  NextArchiveCanisterConfigUpdate : NextArchiveCanisterConfig;
+  BlocksPush;
+  CachedBlockQuery;
+  ArchivedCanisterMaintainersUpdate : record {
+    maintainers : opt vec principal;
+    canister_id : principal;
+  };
+  WasmModuleUpdate : blob;
+  BlockChainQuery;
+};
 type BlockChainView = record {
   current_archiving : opt CurrentArchiving;
   latest_block_hash : blob;
@@ -170,15 +188,10 @@ type PermissionUpdatedArg = variant {
 };
 type PoolLp = variant { outer : OuterLP; inner : InnerLP };
 type PushBlocks = record { block_height_start : nat64; length : nat64 };
-type PushBlocksResult = variant { Ok : opt PushBlocks; Err : BusinessError };
 type QuerySwapBlockResult = variant { archive : principal; block : SwapBlock };
 type QueryTokenBlockResult = variant {
   archive : principal;
   block : TokenBlock;
-};
-type ReplaceArchiveWasmModuleResult = variant {
-  Ok : opt blob;
-  Err : BusinessError;
 };
 type RequestArgs = variant {
   token_block_push;
@@ -203,12 +216,23 @@ type RequestTrace = record {
 };
 type RequestTraceDone = record { result : RequestTraceResult; done : nat64 };
 type RequestTraceResult = variant { ok : text; err : text };
-type Result = variant { Ok; Err : BusinessError };
 type SwapBlock = record {
   transaction : SwapTransaction;
   timestamp : nat64;
   parent_hash : blob;
 };
+type SwapBlockResponse = variant {
+  CachedBlock : opt record { nat64; nat64 };
+  BlockChain : BlockChainView;
+  ArchivedCanisterMaintainers;
+  CurrentArchivingMaxLength : opt CurrentArchiving;
+  NextArchiveCanisterConfig : NextArchiveCanisterConfig;
+  Block : QuerySwapBlockResult;
+  WasmModule : opt blob;
+  BlocksPush : opt PushBlocks;
+  ArchivedCanisterMaxMemorySizeBytes;
+};
+type SwapBlockResult = variant { Ok : SwapBlockResponse; Err : BusinessError };
 type SwapOperation = variant { pair : PairOperation };
 type SwapTokenPair = record {
   amm : text;
@@ -282,6 +306,21 @@ type TokenBlock = record {
   transaction : TokenTransaction;
   timestamp : nat64;
   parent_hash : blob;
+};
+type TokenBlockResponse = variant {
+  CachedBlock : opt record { nat64; nat64 };
+  BlockChain : BlockChainView;
+  ArchivedCanisterMaintainers;
+  CurrentArchivingMaxLength : opt CurrentArchiving;
+  NextArchiveCanisterConfig : NextArchiveCanisterConfig;
+  Block : QueryTokenBlockResult;
+  WasmModule : opt blob;
+  BlocksPush : opt PushBlocks;
+  ArchivedCanisterMaxMemorySizeBytes;
+};
+type TokenBlockResult = variant {
+  Ok : TokenBlockResponse;
+  Err : BusinessError;
 };
 type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
 type TokenDepositArgWithMeta = record {
@@ -523,48 +562,10 @@ service : (opt InitArgs) -> {
   config_fee_to_replace : (FeeTo) -> (FeeTo);
   config_maintain_archives_query : () -> (MaintainArchives) query;
   config_maintain_archives_set : (MaintainArchivesConfig) -> ();
-  config_swap_archive_config_replace : (NextArchiveCanisterConfig) -> (
-      NextArchiveCanisterConfig,
-    );
-  config_swap_archive_wasm_module_query : () -> (opt blob) query;
-  config_swap_archive_wasm_module_replace : (blob) -> (
-      ReplaceArchiveWasmModuleResult,
-    );
-  config_swap_archived_canister_maintainers_set : (
-      principal,
-      opt vec principal,
-    ) -> (Result);
-  config_swap_archived_canister_max_memory_size_bytes_set : (
-      principal,
-      nat64,
-    ) -> (Result);
-  config_swap_block_chain_query : () -> (BlockChainView) query;
-  config_swap_blocks_push : () -> (PushBlocksResult);
-  config_swap_cached_block_query : () -> (opt record { nat64; nat64 });
-  config_swap_current_archiving_max_length_replace : (nat64) -> (
-      opt CurrentArchiving,
-    );
-  config_token_archive_config_replace : (NextArchiveCanisterConfig) -> (
-      NextArchiveCanisterConfig,
-    );
-  config_token_archive_wasm_module_query : () -> (opt blob) query;
-  config_token_archive_wasm_module_replace : (blob) -> (
-      ReplaceArchiveWasmModuleResult,
-    );
-  config_token_archived_canister_maintainers_set : (
-      principal,
-      opt vec principal,
-    ) -> (Result);
-  config_token_archived_canister_max_memory_size_bytes_set : (
-      principal,
-      nat64,
-    ) -> (Result);
-  config_token_block_chain_query : () -> (BlockChainView) query;
-  config_token_blocks_push : () -> (PushBlocksResult);
-  config_token_cached_block_query : () -> (opt record { nat64; nat64 });
-  config_token_current_archiving_max_length_replace : (nat64) -> (
-      opt CurrentArchiving,
-    );
+  config_swap_block_chain_query : (BlockChainArgs) -> (SwapBlockResult) query;
+  config_swap_block_chain_update : (BlockChainArgs) -> (SwapBlockResult);
+  config_token_block_chain_query : (BlockChainArgs) -> (TokenBlockResult) query;
+  config_token_block_chain_update : (BlockChainArgs) -> (TokenBlockResult);
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,

@@ -78,7 +78,7 @@ cargo clippy
 
 # ! 1. Test archive_token
 red "\n=========== 1. archive_token ===========\n"
-dfx canister create archive_token --specified-id "bkyz2-fmaaa-aaaaa-qaaaq-cai" # --with-cycles 50T
+dfx canister create archive_token --specified-id "ykio2-paaaa-aaaaj-az5ka-cai" # --with-cycles 50T
 dfx deploy --mode=reinstall --yes --argument "(opt variant { V1=record {maintainers=opt vec { principal \"$DEFAULT\" }}})" archive_token
 archive_token=$(canister_id "archive_token")
 blue "Archive Token Canister: $archive_token_token"

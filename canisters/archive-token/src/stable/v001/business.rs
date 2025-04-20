@@ -168,7 +168,7 @@ impl Business for InnerState {
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.business_remaining_capacity(); // would be failed if exceed max memory size
         ic_cdk::println!(
-            "[archive node] append_blocks(): archive size: {} blocks, appending {} blocks",
+            "[token archive node] append_blocks(): archive size: {} blocks, appending {} blocks",
             self.blocks.blocks_len(),
             blocks.len()
         );
@@ -195,7 +195,7 @@ impl Business for InnerState {
             ic_cdk::trap("No space left");
         }
         ic_cdk::println!(
-            "[archive node] append_blocks(): done. archive size: {} blocks",
+            "[token archive node] append_blocks(): done. archive size: {} blocks",
             self.blocks.blocks_len()
         );
     }

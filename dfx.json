@@ -45,8 +45,8 @@
         "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink"
       ],
       "gzip": true,
-      "wasm": "canisters/archive-token/sources/source_opt.wasm",
-      "candid": "canisters/archive-token/sources/source.did"
+      "wasm": "canisters/archive-swap/sources/source_opt.wasm",
+      "candid": "canisters/archive-swap/sources/source.did"
     },
     "token_ICP": {
       "type": "custom",
