@@ -54,6 +54,26 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
     results
 }
 
+#[allow(clippy::unwrap_used)]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+async fn test_set_controller(canister_id: CanisterId) {
+    let caller = caller();
+    ic_canister_kit::canister::settings::update_settings(
+        canister_id,
+        ic_cdk::api::management_canister::main::CanisterSettings {
+            controllers: Some(vec![caller]),
+            compute_allocation: None,
+            memory_allocation: None,
+            freezing_threshold: None,
+            reserved_cycles_limit: None,
+            log_visibility: None,
+            wasm_memory_limit: None,
+        },
+    )
+    .await
+    .unwrap();
+}
+
 // ============================== current archiving ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
