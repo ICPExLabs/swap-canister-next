@@ -610,13 +610,13 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
-  test_set_controller : (principal) -> ();
   test_config_swap_current_archiving_replace : (CurrentArchiving) -> (
       opt CurrentArchiving,
     );
   test_config_token_current_archiving_replace : (CurrentArchiving) -> (
       opt CurrentArchiving,
     );
+  test_set_controller : (principal) -> ();
   test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;
