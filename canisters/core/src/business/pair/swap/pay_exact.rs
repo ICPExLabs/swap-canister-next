@@ -8,6 +8,83 @@ use crate::types::*;
 
 // ========================== pay exact ==========================
 
+#[allow(clippy::type_complexity)]
+#[inline]
+pub(super) fn check_pay_exact(
+    args: &TokenPairSwapExactTokensForTokensArgs,
+    balance_in: Option<Nat>,
+) -> Result<
+    (
+        TimestampNanos,
+        Vec<CanisterId>,
+        Vec<TokenAccount>,
+        SelfCanister,
+        Caller,
+        TokenPairSwapExactTokensForTokensArg,
+        (Vec<Nat>, Vec<Account>),
+    ),
+    BusinessError,
+> {
+    // check owner
+    let (self_canister, caller) = check_caller(&args.from.owner)?;
+
+    // check pools
+    let mut pas = vec![];
+    let mut fee_tokens = vec![];
+    let mut required = vec![];
+    for pool in &args.path {
+        let (pa, _fee_tokens, _required) = check_pool(pool, &self_canister, None)?;
+        pas.push(pa);
+        fee_tokens.extend(_fee_tokens);
+        required.extend(_required);
+    }
+
+    let arg = TokenPairSwapExactTokensForTokensArg {
+        self_canister,
+        pas,
+        from: args.from,
+        amount_in: args.amount_in.clone(),
+        amount_out_min: args.amount_out_min.clone(),
+        path: args.path.clone(),
+        to: args.to,
+    };
+
+    // check path
+    check_path(&arg.path)?;
+
+    // check balance in
+    let balance_in = balance_in.unwrap_or_else(|| {
+        with_state(|s| s.business_token_balance_of(args.path[0].token.0, args.from))
+    });
+    if balance_in < args.amount_in {
+        return Err(BusinessError::insufficient_balance(
+            args.path[0].token.0,
+            balance_in,
+        ));
+    }
+
+    // check deadline
+    if let Some(deadline) = &args.deadline {
+        deadline.check_args()?;
+    }
+
+    // check meta
+    let now = check_meta(&args.memo, &args.created)?;
+
+    // check arg again
+    let checking = with_state(|s| s.business_token_pair_swap_fixed_in_checking(&arg))?;
+
+    Ok((
+        now,
+        fee_tokens,
+        required,
+        self_canister,
+        caller,
+        arg,
+        checking,
+    ))
+}
+
 // pay extra tokens
 impl CheckArgs for TokenPairSwapExactTokensForTokensArgs {
     type Result = (
@@ -20,63 +97,7 @@ impl CheckArgs for TokenPairSwapExactTokensForTokensArgs {
         (Vec<Nat>, Vec<Account>),
     );
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
-        // check owner
-        let (self_canister, caller) = check_caller(&self.from.owner)?;
-
-        // check pools
-        let mut pas = vec![];
-        let mut fee_tokens = vec![];
-        let mut required = vec![];
-        for pool in &self.path {
-            let (pa, _fee_tokens, _required) = check_pool(pool, &self_canister, None)?;
-            pas.push(pa);
-            fee_tokens.extend(_fee_tokens);
-            required.extend(_required);
-        }
-
-        let arg = TokenPairSwapExactTokensForTokensArg {
-            self_canister,
-            pas,
-            from: self.from,
-            amount_in: self.amount_in.clone(),
-            amount_out_min: self.amount_out_min.clone(),
-            path: self.path.clone(),
-            to: self.to,
-        };
-
-        // check path
-        check_path(&arg.path)?;
-
-        // check balance in
-        let balance_in =
-            with_state(|s| s.business_token_balance_of(self.path[0].token.0, self.from));
-        if balance_in < self.amount_in {
-            return Err(BusinessError::insufficient_balance(
-                self.path[0].token.0,
-                balance_in,
-            ));
-        }
-
-        // check deadline
-        if let Some(deadline) = &self.deadline {
-            deadline.check_args()?;
-        }
-
-        // check meta
-        let now = check_meta(&self.memo, &self.created)?;
-
-        // check arg again
-        let checking = with_state(|s| s.business_token_pair_swap_fixed_in_checking(&arg))?;
-
-        Ok((
-            now,
-            fee_tokens,
-            required,
-            self_canister,
-            caller,
-            arg,
-            checking,
-        ))
+        check_pay_exact(self, None)
     }
 }
 
