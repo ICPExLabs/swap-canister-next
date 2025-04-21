@@ -2,13 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0.alpha.2] - 2025-04-18
+## [1.0.0.alpha.2] - 2025-04-21
 
 ### Added
 
 - Token Archive Canister
 - Swap Archive Canister
-- Maintain Archive Canisters
+- Maintains Archive Canisters
 - Remove useless codes
 
 ## [1.0.0.alpha.1] - 2025-04-17
