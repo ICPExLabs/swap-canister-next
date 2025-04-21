@@ -128,5 +128,5 @@ If you'd like to contribute:
 
 ## License
 
-This project is licensed under the **[Insert License Name]**.
+This project is licensed under the **Business Source License**.
 For details, refer to the `LICENSE` file.
