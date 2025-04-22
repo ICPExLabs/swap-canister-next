@@ -23,6 +23,7 @@ fn lock_token_balances(
     retries: u8,
 ) -> Result<LockResult<TokenBalancesLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
+    ic_cdk::println!("lock_token_balances: {retries}");
 
     match with_mut_state(|s| s.business_token_balance_lock(required)) {
         Ok(lock) => Ok(LockResult::Locked(lock)),
@@ -40,6 +41,7 @@ fn lock_token_balances(
 #[inline(always)]
 fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
+    ic_cdk::println!("lock_token_block_chain: {retries}");
 
     match with_mut_state(|s| s.business_token_block_chain_lock()) {
         Some(lock) => Ok(LockResult::Locked(lock)),
@@ -57,6 +59,7 @@ fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>
 #[inline(always)]
 fn lock_swap_block_chain(retries: u8) -> Result<LockResult<SwapBlockChainLock>, BusinessError> {
     assert!(retries < 10, "Too many retries");
+    ic_cdk::println!("lock_swap_block_chain: {retries}");
 
     match with_mut_state(|s| s.business_swap_block_chain_lock()) {
         Some(lock) => Ok(LockResult::Locked(lock)),
@@ -77,6 +80,8 @@ fn lock_token_block_chain_and_token_balances(
     mut required: Vec<TokenAccount>,
     retries: u8,
 ) -> Result<LockResult<(TokenBlockChainLock, TokenBalancesLock)>, BusinessError> {
+    ic_cdk::println!("lock_token_block_chain_and_token_balances: {retries}");
+
     let token_lock = match lock_token_block_chain(retries)? {
         LockResult::Locked(lock) => lock,
         LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
@@ -85,10 +90,7 @@ fn lock_token_block_chain_and_token_balances(
     // add fee token account
     if let Some(fee_to) = token_lock.fee_to {
         for token in fee_tokens {
-            required.push(TokenAccount {
-                token,
-                account: fee_to,
-            });
+            required.push(TokenAccount { token, account: fee_to });
         }
     }
 
@@ -109,8 +111,9 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
     fee_tokens: Vec<CanisterId>,
     mut required: Vec<TokenAccount>,
     retries: u8,
-) -> Result<LockResult<(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock)>, BusinessError>
-{
+) -> Result<LockResult<(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock)>, BusinessError> {
+    ic_cdk::println!("lock_token_block_chain_and_swap_block_chain_and_token_balances: {retries}");
+
     let token_lock = match lock_token_block_chain(retries)? {
         LockResult::Locked(lock) => lock,
         LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
@@ -127,19 +130,13 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
     // add fee token account
     if let Some(fee_to) = token_lock.fee_to {
         for &token in &fee_tokens {
-            required.push(TokenAccount {
-                token,
-                account: fee_to,
-            });
+            required.push(TokenAccount { token, account: fee_to });
         }
     }
     // add fee token account
     if let Some(fee_to) = swap_lock.fee_to {
         for &token in &fee_tokens {
-            required.push(TokenAccount {
-                token,
-                account: fee_to,
-            });
+            required.push(TokenAccount { token, account: fee_to });
         }
     }
 

@@ -53,14 +53,10 @@ pub(super) fn check_pay_exact(
     check_path(&arg.path)?;
 
     // check balance in
-    let balance_in = balance_in.unwrap_or_else(|| {
-        with_state(|s| s.business_token_balance_of(args.path[0].token.0, args.from))
-    });
+    let balance_in =
+        balance_in.unwrap_or_else(|| with_state(|s| s.business_token_balance_of(args.path[0].token.0, args.from)));
     if balance_in < args.amount_in {
-        return Err(BusinessError::insufficient_balance(
-            args.path[0].token.0,
-            balance_in,
-        ));
+        return Err(BusinessError::insufficient_balance(args.path[0].token.0, balance_in));
     }
 
     // check deadline
@@ -74,15 +70,7 @@ pub(super) fn check_pay_exact(
     // check arg again
     let checking = with_state(|s| s.business_token_pair_swap_fixed_in_checking(&arg))?;
 
-    Ok((
-        now,
-        fee_tokens,
-        required,
-        self_canister,
-        caller,
-        arg,
-        checking,
-    ))
+    Ok((now, fee_tokens, required, self_canister, caller, arg, checking))
 }
 
 // pay extra tokens
@@ -107,7 +95,7 @@ async fn pair_swap_exact_tokens_for_tokens(
     args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
 ) -> TokenPairSwapTokensResult {
-    inner_pair_swap_exact_tokens_for_tokens(args, retries)
+    inner_pair_swap_exact_tokens_for_tokens(args, retries, true)
         .await
         .into()
 }
@@ -115,10 +103,10 @@ async fn pair_swap_exact_tokens_for_tokens(
 pub async fn inner_pair_swap_exact_tokens_for_tokens(
     args: TokenPairSwapExactTokensForTokensArgs,
     retries: Option<u8>,
+    push: bool,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
     // 1. check args
-    let (now, fee_tokens, mut required, self_canister, caller, arg, _checking) =
-        args.check_args()?;
+    let (now, fee_tokens, mut required, self_canister, caller, arg, _checking) = args.check_args()?;
 
     // 2. some value
     // let fee_tokens = vec![];
@@ -129,22 +117,16 @@ pub async fn inner_pair_swap_exact_tokens_for_tokens(
 
     let success = {
         // 3. lock
-        let locks =
-            match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_pair_swap_exact_tokens_for_tokens(
-                        self_canister.id(),
-                        args,
-                        retries,
-                    )
-                    .await;
-                }
-            };
+        let locks = match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_pair_swap_exact_tokens_for_tokens(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {
@@ -164,7 +146,9 @@ pub async fn inner_pair_swap_exact_tokens_for_tokens(
     };
 
     // Asynchronously triggers synchronization tasks
-    crate::business::config::push::inner_push_blocks(true, true);
+    if push {
+        crate::business::config::push::inner_push_blocks(true, true);
+    }
 
     Ok(success)
 }

@@ -592,6 +592,13 @@ service : (opt InitArgs) -> {
       opt TokenPairSwapTokensResult,
       opt TokenChangedResult,
     );
+  pair_swap_with_deposit_and_withdraw2 : (
+      TokenPairSwapWithDepositAndWithdrawArgs,
+    ) -> (
+      TokenChangedResult,
+      opt TokenPairSwapTokensResult,
+      opt TokenChangedResult,
+    );
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;

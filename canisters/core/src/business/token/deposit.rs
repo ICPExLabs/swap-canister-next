@@ -36,12 +36,13 @@ impl CheckArgs for TokenDepositArgs {
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_deposit")]
 async fn token_deposit(args: TokenDepositArgs, retries: Option<u8>) -> TokenChangedResult {
-    inner_token_deposit(args, retries).await.into()
+    inner_token_deposit(args, retries, true).await.into()
 }
 #[inline]
 pub async fn inner_token_deposit(
     args: TokenDepositArgs,
     retries: Option<u8>,
+    push: bool,
 ) -> Result<candid::Nat, BusinessError> {
     // 1. check args
     let (now, self_canister, caller) = args.check_args()?;
@@ -89,10 +90,7 @@ pub async fn inner_token_deposit(
                 display_account(&transfer_from_arg.to),
                 transfer_from_arg.amount.to_string(),
             );
-            let height = service_icrc2
-                .icrc_2_transfer_from(transfer_from_arg)
-                .await?
-                .0?;
+            let height = service_icrc2.icrc_2_transfer_from(transfer_from_arg).await?.0?;
 
             // ? 2. record changed
             let amount = args.deposit_amount_without_fee; // ! Actual deposit
@@ -118,7 +116,9 @@ pub async fn inner_token_deposit(
     };
 
     // Asynchronously triggers synchronization tasks
-    crate::business::config::push::inner_push_blocks(true, false);
+    if push {
+        crate::business::config::push::inner_push_blocks(true, false);
+    }
 
     Ok(height)
 }
