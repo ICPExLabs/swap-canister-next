@@ -52,12 +52,13 @@ impl CheckArgs for TokenWithdrawArgs {
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_withdraw")]
 async fn token_withdraw(args: TokenWithdrawArgs, retries: Option<u8>) -> TokenChangedResult {
-    inner_token_withdraw(args, retries).await.into()
+    inner_token_withdraw(args, retries, true).await.into()
 }
 #[inline]
 pub async fn inner_token_withdraw(
     args: TokenWithdrawArgs,
     retries: Option<u8>,
+    push: bool,
 ) -> Result<candid::Nat, BusinessError> {
     // 1. check args
     let (now, self_canister, caller, token) = args.check_args()?;
@@ -127,7 +128,9 @@ pub async fn inner_token_withdraw(
     };
 
     // Asynchronously triggers synchronization tasks
-    crate::business::config::push::inner_push_blocks(true, false);
+    if push {
+        crate::business::config::push::inner_push_blocks(true, false);
+    }
 
     Ok(height)
 }
