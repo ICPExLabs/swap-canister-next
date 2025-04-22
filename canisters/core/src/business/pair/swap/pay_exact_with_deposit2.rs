@@ -65,7 +65,7 @@ async fn pair_swap_with_deposit_and_withdraw2(
     ic_cdk::spawn(async move {
         let withdraw_result =
             super::super::super::token::withdraw::inner_token_withdraw(withdraw, Some(3), false).await;
-        ic_cdk::println!("pair_swap_with_deposit_and_withdraw2 #4: {:?} ", withdraw_result);
+        ic_cdk::println!("pair_swap_with_deposit_and_withdraw2 #4: {:?}", withdraw_result);
     });
 
     // Asynchronously triggers synchronization tasks
