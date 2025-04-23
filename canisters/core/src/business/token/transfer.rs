@@ -28,14 +28,12 @@ impl CheckArgs for TokenTransferArgs {
             self.to.owner != self_canister.id(),
             "to account can not be swap canister"
         );
+        assert!(self.from.owner != self.to.owner, "to account can not be from account");
 
         // check fee
         if let Some(fee) = &self.fee {
             if *fee != token.fee {
-                return Err(BusinessError::invalid_transfer_fee(
-                    token.canister_id,
-                    token.fee,
-                ));
+                return Err(BusinessError::invalid_transfer_fee(token.canister_id, token.fee));
             }
         }
 
@@ -43,10 +41,7 @@ impl CheckArgs for TokenTransferArgs {
         let balance = with_state(|s| s.business_token_balance_of(token.canister_id, self.from));
         let amount = self.transfer_amount_without_fee.clone() + token.fee.clone();
         if balance < amount {
-            return Err(BusinessError::insufficient_balance(
-                token.canister_id,
-                balance,
-            ));
+            return Err(BusinessError::insufficient_balance(token.canister_id, balance));
         }
 
         // check meta
@@ -62,10 +57,7 @@ async fn token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> TokenCh
     inner_token_transfer(args, retries).await.into()
 }
 #[inline]
-async fn inner_token_transfer(
-    args: TokenTransferArgs,
-    retries: Option<u8>,
-) -> Result<candid::Nat, BusinessError> {
+async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> Result<candid::Nat, BusinessError> {
     // 1. check args
     let (now, self_canister, caller, token) = args.check_args()?;
 
@@ -77,17 +69,16 @@ async fn inner_token_transfer(
 
     let changed = if token.is_lp_token {
         // 3. lock
-        let locks =
-            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_token_transfer(self_canister.id(), args, retries).await;
-                }
-            };
+        let locks = match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_token_transfer(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {
@@ -106,10 +97,7 @@ async fn inner_token_transfer(
                             from: args.from,
                             amount: args.transfer_amount_without_fee,
                             to: args.to,
-                            fee: fee_to.map(|fee_to| TransferFee {
-                                fee: token.fee,
-                                fee_to,
-                            }),
+                            fee: fee_to.map(|fee_to| TransferFee { fee: token.fee, fee_to }),
                         },
                         memo: args.memo,
                         created: args.created,
@@ -147,10 +135,7 @@ async fn inner_token_transfer(
                             from: args.from,
                             amount: args.transfer_amount_without_fee,
                             to: args.to,
-                            fee: fee_to.map(|fee_to| TransferFee {
-                                fee: token.fee,
-                                fee_to,
-                            }),
+                            fee: fee_to.map(|fee_to| TransferFee { fee: token.fee, fee_to }),
                         },
                         memo: args.memo,
                         created: args.created,
