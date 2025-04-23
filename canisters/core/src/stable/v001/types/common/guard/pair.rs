@@ -6,15 +6,13 @@ use icrc_ledger_types::icrc1::account::Account;
 use crate::types::{SelfCanisterArg, TokenPairArg};
 
 use super::super::{
-    ArgWithMeta, BusinessError, DepositToken, FeeTo, PairCumulativePrice, PairOperation,
-    RequestTraceGuard, SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken,
-    SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard,
-    TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
-    TokenPairLiquidityRemoveSuccessView, TokenPairSwapByLoanArg,
-    TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg,
-    TokenPairSwapTokensSuccess, TokenPairSwapTokensSuccessView, TokenPairs, TransferToken,
-    WithdrawToken, display_account,
+    ArgWithMeta, BusinessError, DepositToken, FeeTo, PairCumulativePrice, PairOperation, RequestTraceGuard,
+    SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken,
+    SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard, TokenPairAmm, TokenPairLiquidityAddArg,
+    TokenPairLiquidityAddSuccess, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg,
+    TokenPairLiquidityRemoveSuccess, TokenPairLiquidityRemoveSuccessView, TokenPairSwapByLoanArg,
+    TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TokenPairSwapTokensSuccess,
+    TokenPairSwapTokensSuccessView, TokenPairs, TransferToken, WithdrawToken, display_account,
 };
 
 pub struct TokenPairSwapGuard<'a> {
@@ -122,9 +120,7 @@ impl<'a> TokenPairSwapGuard<'a> {
                     fee_to: self.fee_to,
                     arg,
                 };
-                let data = self
-                    .token_pairs
-                    .swap_exact_tokens_for_tokens(&mut inner, pas)?;
+                let data = self.token_pairs.swap_exact_tokens_for_tokens(&mut inner, pas)?;
                 trace.trace("Token Pair Swap Exact Tokens for Tokens Done.".into());
                 Ok(data)
             },
@@ -150,9 +146,7 @@ impl<'a> TokenPairSwapGuard<'a> {
                     fee_to: self.fee_to,
                     arg,
                 };
-                let data = self
-                    .token_pairs
-                    .swap_tokens_for_exact_tokens(&mut inner, pas)?;
+                let data = self.token_pairs.swap_tokens_for_exact_tokens(&mut inner, pas)?;
                 trace.trace("Token Pair Swap Tokens for Exact Tokens Done.".into());
                 Ok(data)
             },
@@ -202,11 +196,7 @@ pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
 }
 
 impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
-    pub fn handle_guard<R, D, F>(
-        &mut self,
-        arg: ArgWithMeta<D>,
-        handle: F,
-    ) -> Result<R, BusinessError>
+    pub fn handle_guard<R, D, F>(&mut self, arg: ArgWithMeta<D>, handle: F) -> Result<R, BusinessError>
     where
         F: FnOnce(&mut InnerTokenPairSwapGuard<'_, '_, '_, D>) -> Result<R, BusinessError>,
     {
@@ -221,11 +211,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         handle(&mut inner)
     }
 
-    pub fn token_balance_of(
-        &self,
-        token: CanisterId,
-        account: Account,
-    ) -> Result<candid::Nat, BusinessError> {
+    pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
         self.balances_guard.token_balance_of(token, account)
     }
 
@@ -249,9 +235,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
 
     pub fn token_transfer(&mut self, arg: TransferToken) -> Result<(), BusinessError> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
-        let changed = self
-            .balances_guard
-            .token_transfer(self.token_guard, arg.clone())?; // do transfer
+        let changed = self.balances_guard.token_transfer(self.token_guard, arg.clone())?; // do transfer
         self.trace_guard.trace(format!(
             "*Transfer Token* `token:[{}], from:({}), to:({}), amount:{}, done:{changed}`",
             arg.arg.token.to_text(),
@@ -334,15 +318,15 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     ) -> Result<(), BusinessError> {
         // cumulative price
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(
-                SwapV2Operation::CumulativePrice(PairCumulativePrice {
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::CumulativePrice(
+                PairCumulativePrice {
                     pa: self.arg.arg.get_pa().to_owned(),
                     block_timestamp: self.arg.now,
                     price_cumulative_exponent,
                     price0_cumulative: price0_cumulative.clone(),
                     price1_cumulative: price1_cumulative.clone(),
-                }),
-            )),
+                },
+            ))),
             memo: None,
             created: None,
         };
@@ -370,14 +354,12 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     ) -> Result<(), BusinessError> {
         // mint fee
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::MintFee(
-                SwapV2MintFeeToken {
-                    pa: self.arg.arg.get_pa().to_owned(),
-                    to,
-                    token,
-                    amount: amount.clone(),
-                },
-            ))),
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::MintFee(SwapV2MintFeeToken {
+                pa: self.arg.arg.get_pa().to_owned(),
+                to,
+                token,
+                amount: amount.clone(),
+            }))),
             memo: None,
             created: None,
         };
@@ -540,7 +522,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             WithdrawToken {
                 token,
                 from,
-                amount: amount.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(),
+                amount: amount.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(), // withdraw sum
                 to: self.arg.arg.to,
             },
         );
@@ -551,7 +533,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                 DepositToken {
                     token,
                     from,
-                    amount: fee,
+                    amount: fee, // deposit fee
                     to: fee_to,
                 },
             )

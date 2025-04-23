@@ -78,11 +78,7 @@ impl SwapV2MarketMaker {
         Nat::from(price_cumulative_unit)
     }
 
-    pub fn dummy_tokens(
-        &self,
-        tokens: &HashMap<CanisterId, TokenInfo>,
-        pa: &TokenPairAmm,
-    ) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         self.lp.dummy_tokens(tokens, pa)
     }
 
@@ -117,10 +113,7 @@ impl SwapV2MarketMaker {
     }
 
     /// Calculate the number of tokens required to add liquidity
-    fn inner_add_liquidity(
-        &self,
-        arg: &TokenPairLiquidityAddArg,
-    ) -> Result<(Nat, Nat), BusinessError> {
+    fn inner_add_liquidity(&self, arg: &TokenPairLiquidityAddArg) -> Result<(Nat, Nat), BusinessError> {
         let (reserve_a, reserve_b) = self.get_reserves(arg.token_a, arg.token_b);
 
         if reserve_a == *ZERO && reserve_b == *ZERO {
@@ -155,8 +148,7 @@ impl SwapV2MarketMaker {
         _reserve1: &Nat,
     ) -> Result<bool, BusinessError> {
         let fee_to = guard.fee_to.swap_fee_to;
-        let fee_on =
-            fee_to.is_some() && self.protocol_fee.as_ref().is_some_and(|fee| !fee.is_zero());
+        let fee_on = fee_to.is_some() && self.protocol_fee.as_ref().is_some_and(|fee| !fee.is_zero());
 
         let _k_last = self.k_last.clone();
         if fee_on {
@@ -182,8 +174,7 @@ impl SwapV2MarketMaker {
                         let n = Nat::from(protocol_fee.numerator);
                         let d = Nat::from(protocol_fee.denominator);
                         let total_supply = self.lp.get_total_supply();
-                        let numerator =
-                            (root_k.clone() - root_k_last.clone()) * total_supply * n.clone();
+                        let numerator = (root_k.clone() - root_k_last.clone()) * total_supply * n.clone();
                         let denominator = (d - n.clone()) * root_k + n * root_k_last;
                         let liquidity = numerator / denominator;
                         if liquidity > *ZERO {
@@ -262,8 +253,7 @@ impl SwapV2MarketMaker {
 
         // do mint，Mint LP tokens for users
         let arg = &guard.arg.arg;
-        self.lp
-            .mint(guard, amount_a, amount_b, arg.to, liquidity.clone())?;
+        self.lp.mint(guard, amount_a, amount_b, arg.to, liquidity.clone())?;
 
         // Update the current balance
         self.update(guard, balance0, balance1, _reserve0, _reserve1)?;
@@ -298,9 +288,7 @@ impl SwapV2MarketMaker {
         // calculate amount
         let arg = &guard.arg.arg;
         let (amount_a, amount_b) = self.inner_add_liquidity(arg)?;
-        guard.trace(format!(
-            "*Add Liquidity* `amount_a:{amount_a}, amount_b:{amount_b}`",
-        )); // * trace
+        guard.trace(format!("*Add Liquidity* `amount_a:{amount_a}, amount_b:{amount_b}`",)); // * trace
         // Pool token account
         let arg = &guard.arg.arg;
         let pool_account = Account {
@@ -334,10 +322,12 @@ impl SwapV2MarketMaker {
         token_balances: &TokenBalances,
         from: &Account,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         self.lp.check_liquidity_removable(
             |token| token_balances.token_balance_of(token, *from),
             liquidity_without_fee,
+            fee_to,
         )
     }
 
@@ -364,9 +354,7 @@ impl SwapV2MarketMaker {
         // ! check amount before change data
         let arg = &guard.arg.arg;
         if amount0 == *ZERO || amount1 == *ZERO {
-            return Err(BusinessError::Liquidity(
-                "INSUFFICIENT_LIQUIDITY_BURNED".into(),
-            ));
+            return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY_BURNED".into()));
         }
         let (amount_a, amount_b) = if arg.token_a == token0 {
             (amount0.clone(), amount1.clone())
@@ -388,7 +376,7 @@ impl SwapV2MarketMaker {
             &amount_b,
             arg.from,
             liquidity.clone(),
-            guard.fee_to.token_fee_to, // burn fee to use token fee to
+            arg.fee.clone(), // burn fee to use token fee to
         )?;
 
         // return token
@@ -433,6 +421,7 @@ impl SwapV2MarketMaker {
             self.lp.check_liquidity_removable(
                 |token| guard.token_balance_of(token, arg.from),
                 &arg.liquidity_without_fee,
+                arg.fee.as_ref().map(|fee| fee.fee_to),
             )?;
             guard.trace(format!(
                 "*Remove Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity_without_fee:{}, required: {} <= amount_a && {} <= amount_b`",
@@ -480,9 +469,7 @@ impl SwapV2MarketMaker {
         };
         let balance0_adjusted = balance0.clone() * d - amount0_in * n;
         let balance1_adjusted = balance1.clone() * d - amount1_in * n;
-        if balance0_adjusted * balance1_adjusted
-            < self.reserve0.clone() * self.reserve1.clone() * d * d
-        {
+        if balance0_adjusted * balance1_adjusted < self.reserve0.clone() * self.reserve1.clone() * d * d {
             return Err(BusinessError::Swap("K".into()));
         }
 
@@ -681,8 +668,7 @@ impl SwapV2MarketMaker {
             let d = self.fee_rate.denominator;
             let balance0_adjusted = balance0.clone() * d - amount0_in * n;
             let balance1_adjusted = balance1.clone() * d - amount1_in * n;
-            if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d
-            {
+            if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d {
                 // return back
                 let _token0 = self.token0;
                 let _token1 = self.token1;

@@ -8,7 +8,12 @@ use crate::types::*;
 
 // ============================== query ==============================
 
-#[ic_cdk::update(guard = "has_business_config_fee_to")]
+#[ic_cdk::query]
+fn config_fee_to_view_query() -> FeeToView {
+    with_state(|s| s.business_config_fee_to_query()).into()
+}
+
+#[ic_cdk::query(guard = "has_business_config_fee_to")]
 fn config_fee_to_query() -> FeeTo {
     with_state(|s| s.business_config_fee_to_query())
 }

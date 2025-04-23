@@ -7,9 +7,9 @@ use super::*;
 use crate::utils::math::zero;
 
 use super::{
-    BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairSwapToken, SelfCanister,
-    TokenBalances, TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
-    TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess, TokenPairSwapTokensSuccess,
+    BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairSwapToken, SelfCanister, TokenBalances, TokenInfo,
+    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
+    TokenPairLiquidityRemoveSuccess, TokenPairSwapTokensSuccess,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -34,15 +34,31 @@ impl TokenPairs {
             .collect()
     }
 
-    pub fn query_dummy_tokens(
-        &self,
-        tokens: &HashMap<CanisterId, TokenInfo>,
-    ) -> HashMap<CanisterId, TokenInfo> {
+    pub fn query_dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>) -> HashMap<CanisterId, TokenInfo> {
         self.query_all_token_pair_pools()
             .into_iter()
             .flat_map(|(pa, maker)| maker.dummy_tokens(tokens, &pa))
             .map(|info| (info.canister_id, info))
             .collect()
+    }
+
+    pub fn query_dummy_token_info(
+        &self,
+        tokens: &HashMap<CanisterId, TokenInfo>,
+        pa: &TokenPairAmm,
+    ) -> Option<TokenInfo> {
+        let mut tokens = self
+            .pairs
+            .get(pa)
+            .map(|maker| maker.dummy_tokens(tokens, pa))
+            .unwrap_or_default();
+        if tokens.is_empty() {
+            return None;
+        }
+        if 1 < tokens.len() {
+            ic_cdk::trap(&format!("too many dummy tokens for: {}", pa))
+        }
+        tokens.pop()
     }
 
     /// Query the accounts involved in this coin pair pool
@@ -77,8 +93,7 @@ impl TokenPairs {
         let maker = swap_guard.mint_block(arg.now, transaction, |_| {
             let TokenPairAmm { amm, .. } = &arg.arg;
             let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
-            let maker =
-                MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
+            let maker = MarketMaker::new_by_pair(amm, subaccount, dummy_canister_id, token0, token1);
             let maker = trace_guard.handle(
                 |trace| {
                     self.pairs.insert(arg.arg, maker.clone()); // do insert token pair pool
@@ -128,9 +143,10 @@ impl TokenPairs {
         pa: &TokenPairAmm,
         from: &Account,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
-        maker.check_liquidity_removable(token_balances, from, liquidity_without_fee)
+        maker.check_liquidity_removable(token_balances, from, liquidity_without_fee, fee_to)
     }
 
     pub fn remove_liquidity(
@@ -166,11 +182,7 @@ impl TokenPairs {
             } else {
                 (amount_out.clone(), zero())
             };
-            let to = if i < path.len() - 1 {
-                pool_accounts[i + 1]
-            } else {
-                _to
-            };
+            let to = if i < path.len() - 1 { pool_accounts[i + 1] } else { _to };
 
             let transaction = SwapTransaction {
                 operation: SwapOperation::Pair(PairOperation::Swap(PairSwapToken {
@@ -213,15 +225,7 @@ impl TokenPairs {
             };
             self.handle_maker(pa, |maker| {
                 guard.handle_guard(wpa, |guard| {
-                    maker.swap(
-                        guard,
-                        transaction,
-                        trace,
-                        &self_canister,
-                        amount0_out,
-                        amount1_out,
-                        to,
-                    )
+                    maker.swap(guard, transaction, trace, &self_canister, amount0_out, amount1_out, to)
                 })
             })?;
 
@@ -304,10 +308,7 @@ impl TokenPairs {
 
         // Determine whether the input quantity meets the requirements
         if *amount_in_max < amounts[0] {
-            return Err(BusinessError::Swap(format!(
-                "EXCESSIVE_INPUT_AMOUNT: {}",
-                amounts[0]
-            )));
+            return Err(BusinessError::Swap(format!("EXCESSIVE_INPUT_AMOUNT: {}", amounts[0])));
         }
 
         Ok((amounts, pool_accounts))
@@ -320,13 +321,8 @@ impl TokenPairs {
         pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         let arg = &guard.arg.arg;
-        let (amounts, pool_accounts) = self.get_amounts_out(
-            &arg.self_canister,
-            &arg.amount_in,
-            &arg.amount_out_min,
-            &arg.path,
-            &pas,
-        )?;
+        let (amounts, pool_accounts) =
+            self.get_amounts_out(&arg.self_canister, &arg.amount_in, &arg.amount_out_min, &arg.path, &pas)?;
 
         // transfer first
         guard.token_transfer(TransferToken {
@@ -339,14 +335,7 @@ impl TokenPairs {
 
         // do swap
         let arg = &guard.arg.arg;
-        self.swap(
-            guard,
-            &amounts,
-            &pool_accounts,
-            arg.from,
-            amounts[0].clone(),
-            arg.to,
-        )?;
+        self.swap(guard, &amounts, &pool_accounts, arg.from, amounts[0].clone(), arg.to)?;
 
         Ok(TokenPairSwapTokensSuccess { amounts })
     }
@@ -358,21 +347,13 @@ impl TokenPairs {
         pas: Vec<TokenPairAmm>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         let arg = &guard.arg.arg;
-        let (amounts, pool_accounts) = self.get_amounts_in(
-            &arg.self_canister,
-            &arg.amount_out,
-            &arg.amount_in_max,
-            &arg.path,
-            &pas,
-        )?;
+        let (amounts, pool_accounts) =
+            self.get_amounts_in(&arg.self_canister, &arg.amount_out, &arg.amount_in_max, &arg.path, &pas)?;
 
         // ! check balance in
         let balance_in = guard.token_balance_of(arg.path[0].token.0, arg.from)?;
         if balance_in < amounts[0] {
-            return Err(BusinessError::insufficient_balance(
-                arg.path[0].token.0,
-                balance_in,
-            ));
+            return Err(BusinessError::insufficient_balance(arg.path[0].token.0, balance_in));
         }
 
         // transfer first
@@ -386,14 +367,7 @@ impl TokenPairs {
 
         // do swap
         let arg = &guard.arg.arg;
-        self.swap(
-            guard,
-            &amounts,
-            &pool_accounts,
-            arg.from,
-            amounts[0].clone(),
-            arg.to,
-        )?;
+        self.swap(guard, &amounts, &pool_accounts, arg.from, amounts[0].clone(), arg.to)?;
 
         Ok(TokenPairSwapTokensSuccess { amounts })
     }
@@ -429,14 +403,7 @@ impl TokenPairs {
 
         // do swap
         let arg = &guard.arg.arg;
-        self.swap(
-            guard,
-            &amounts,
-            &pool_accounts,
-            loaner,
-            arg.loan.clone(),
-            arg.to,
-        )?;
+        self.swap(guard, &amounts, &pool_accounts, loaner, arg.loan.clone(), arg.to)?;
 
         // ! return loan
         let arg = &guard.arg.arg;

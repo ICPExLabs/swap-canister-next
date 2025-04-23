@@ -61,14 +61,10 @@ impl CheckArgs for TokenPairLiquidityAddArg {
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check 0
         if self.amount_a_desired == *ZERO {
-            return Err(BusinessError::Liquidity(
-                "INSUFFICIENT_A_AMOUNT_DESIRED".into(),
-            ));
+            return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT_DESIRED".into()));
         }
         if self.amount_b_desired == *ZERO {
-            return Err(BusinessError::Liquidity(
-                "INSUFFICIENT_B_AMOUNT_DESIRED".into(),
-            ));
+            return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT_DESIRED".into()));
         }
         // ? useless checking
         // if self.amount_a_min == *ZERO {
@@ -145,17 +141,13 @@ pub struct TokenPairLiquidityRemoveSuccess {
 #[derive(Debug, Deserialize, CandidType, Clone)]
 pub struct TokenPairLiquidityRemoveResult(Result<TokenPairLiquidityRemoveSuccess, BusinessError>);
 
-impl From<Result<TokenPairLiquidityRemoveSuccess, BusinessError>>
-    for TokenPairLiquidityRemoveResult
-{
+impl From<Result<TokenPairLiquidityRemoveSuccess, BusinessError>> for TokenPairLiquidityRemoveResult {
     fn from(value: Result<TokenPairLiquidityRemoveSuccess, BusinessError>) -> Self {
         Self(value)
     }
 }
 
-impl From<TokenPairLiquidityRemoveResult>
-    for Result<TokenPairLiquidityRemoveSuccess, BusinessError>
-{
+impl From<TokenPairLiquidityRemoveResult> for Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     fn from(value: TokenPairLiquidityRemoveResult) -> Self {
         value.0
     }
@@ -173,6 +165,8 @@ pub struct TokenPairLiquidityRemoveArg {
     pub amount_a_min: Nat,
     pub amount_b_min: Nat,
     pub to: Account,
+
+    pub fee: Option<BurnFee>,
 }
 
 // check amount

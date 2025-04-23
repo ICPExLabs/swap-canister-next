@@ -11,12 +11,7 @@ pub use std::fmt::Display;
 
 #[allow(unused_variables)]
 pub trait Business:
-    Pausable<PauseReason>
-    + ParsePermission
-    + Permissable<Permission>
-    + Schedulable
-    + ScheduleTask
-    + StableHeap
+    Pausable<PauseReason> + ParsePermission + Permissable<Permission> + Schedulable + ScheduleTask + StableHeap
 {
     fn business_updated(&self) -> u64 {
         ic_cdk::trap("Not supported operation by this version.")
@@ -67,19 +62,13 @@ pub trait Business:
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<TokenBlock>> {
+    fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
+    fn business_config_token_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -117,19 +106,13 @@ pub trait Business:
     fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_swap_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<SwapBlock>> {
+    fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_swap_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
+    fn business_config_swap_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -146,11 +129,7 @@ pub trait Business:
     fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_maintain_archives_cycles_recharged(
-        &mut self,
-        canister_id: CanisterId,
-        cycles: u128,
-    ) {
+    fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -216,7 +195,17 @@ pub trait Business:
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_token_balance_of_with_fee_to(
+        &self,
+        token: CanisterId,
+        account: Account,
+    ) -> (candid::Nat, Option<Account>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -416,25 +405,16 @@ impl Business for State {
             .business_config_token_current_archiving_replace(archiving)
     }
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_config_token_archive_current_canister()
+        self.get_mut().business_config_token_archive_current_canister()
     }
-    fn business_config_token_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<TokenBlock>> {
-        self.get()
-            .business_config_token_parent_hash_get(block_height)
+    fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
+        self.get().business_config_token_parent_hash_get(block_height)
     }
     fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         self.get().business_config_token_cached_block_get()
     }
-    fn business_config_token_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_config_token_block_archived(block_height)
+    fn business_config_token_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
+        self.get_mut().business_config_token_block_archived(block_height)
     }
 
     // swap
@@ -469,29 +449,19 @@ impl Business for State {
         &mut self,
         archiving: CurrentArchiving,
     ) -> Option<CurrentArchiving> {
-        self.get_mut()
-            .business_config_swap_current_archiving_replace(archiving)
+        self.get_mut().business_config_swap_current_archiving_replace(archiving)
     }
     fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_config_swap_archive_current_canister()
+        self.get_mut().business_config_swap_archive_current_canister()
     }
-    fn business_config_swap_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<SwapBlock>> {
-        self.get()
-            .business_config_swap_parent_hash_get(block_height)
+    fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
+        self.get().business_config_swap_parent_hash_get(block_height)
     }
     fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         self.get().business_config_swap_cached_block_get()
     }
-    fn business_config_swap_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
-        self.get_mut()
-            .business_config_swap_block_archived(block_height)
+    fn business_config_swap_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
+        self.get_mut().business_config_swap_block_archived(block_height)
     }
 
     // maintain archives
@@ -507,11 +477,7 @@ impl Business for State {
     fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
         self.get().business_config_maintain_canisters()
     }
-    fn business_config_maintain_archives_cycles_recharged(
-        &mut self,
-        canister_id: CanisterId,
-        cycles: u128,
-    ) {
+    fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
         self.get_mut()
             .business_config_maintain_archives_cycles_recharged(canister_id, cycles)
     }
@@ -578,8 +544,18 @@ impl Business for State {
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         self.get().business_token_query(token)
     }
+    fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
+        self.get().business_token_query_by_pa(pa)
+    }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         self.get().business_token_balance_of(token, account)
+    }
+    fn business_token_balance_of_with_fee_to(
+        &self,
+        token: CanisterId,
+        account: Account,
+    ) -> (candid::Nat, Option<Account>) {
+        self.get().business_token_balance_of_with_fee_to(token, account)
     }
 
     // ======================== update ========================
@@ -656,8 +632,7 @@ impl Business for State {
         locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: ArgWithMeta<TokenPairLiquidityRemoveArg>,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        self.get_mut()
-            .business_token_pair_liquidity_remove(locks, arg)
+        self.get_mut().business_token_pair_liquidity_remove(locks, arg)
     }
 
     // pair swap

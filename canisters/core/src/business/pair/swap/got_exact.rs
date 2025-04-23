@@ -58,13 +58,9 @@ impl CheckArgs for TokenPairSwapTokensForExactTokensArgs {
 
         // check arg again
         let (amounts, _) = with_state(|s| s.business_token_pair_swap_fixed_out_checking(&arg))?;
-        let balance_in =
-            with_state(|s| s.business_token_balance_of(self.path[0].token.0, self.from));
+        let balance_in = with_state(|s| s.business_token_balance_of(self.path[0].token.0, self.from));
         if balance_in < amounts[0] {
-            return Err(BusinessError::insufficient_balance(
-                arg.path[0].token.0,
-                balance_in,
-            ));
+            return Err(BusinessError::insufficient_balance(arg.path[0].token.0, balance_in));
         }
 
         Ok((now, fee_tokens, required, self_canister, caller, arg))
@@ -77,9 +73,7 @@ async fn pair_swap_tokens_for_exact_tokens(
     args: TokenPairSwapTokensForExactTokensArgs,
     retries: Option<u8>,
 ) -> TokenPairSwapTokensResult {
-    inner_pair_swap_tokens_for_exact_tokens(args, retries)
-        .await
-        .into()
+    inner_pair_swap_tokens_for_exact_tokens(args, retries).await.into()
 }
 #[inline]
 async fn inner_pair_swap_tokens_for_exact_tokens(
@@ -98,22 +92,16 @@ async fn inner_pair_swap_tokens_for_exact_tokens(
 
     let success = {
         // 3. lock
-        let locks =
-            match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_pair_swap_tokens_for_exact_tokens(
-                        self_canister.id(),
-                        args,
-                        retries,
-                    )
-                    .await;
-                }
-            };
+        let locks = match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_pair_swap_tokens_for_exact_tokens(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {

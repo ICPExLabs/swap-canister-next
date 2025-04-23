@@ -87,7 +87,7 @@ fn lock_token_block_chain_and_token_balances(
         LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
     };
 
-    // add fee token account
+    // add token fee token account
     if let Some(fee_to) = token_lock.fee_to {
         for token in fee_tokens {
             required.push(TokenAccount { token, account: fee_to });
@@ -127,13 +127,13 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
         }
     };
 
-    // add fee token account
+    // add token fee token account
     if let Some(fee_to) = token_lock.fee_to {
         for &token in &fee_tokens {
             required.push(TokenAccount { token, account: fee_to });
         }
     }
-    // add fee token account
+    // add swap fee token account
     if let Some(fee_to) = swap_lock.fee_to {
         for &token in &fee_tokens {
             required.push(TokenAccount { token, account: fee_to });

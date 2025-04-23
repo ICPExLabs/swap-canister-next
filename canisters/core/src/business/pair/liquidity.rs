@@ -23,8 +23,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, fee_tokens, required) =
-            check_pool(&self.swap_pair, &self_canister, Some(&self.to))?;
+        let (pa, fee_tokens, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.to))?;
 
         let arg = TokenPairLiquidityAddArg {
             self_canister,
@@ -66,10 +65,7 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_liquidity_add")]
-async fn pair_liquidity_add(
-    args: TokenPairLiquidityAddArgs,
-    retries: Option<u8>,
-) -> TokenPairLiquidityAddResult {
+async fn pair_liquidity_add(args: TokenPairLiquidityAddArgs, retries: Option<u8>) -> TokenPairLiquidityAddResult {
     inner_pair_liquidity_add(args, retries).await.into()
 }
 #[inline]
@@ -89,17 +85,16 @@ async fn inner_pair_liquidity_add(
 
     let success = {
         // 3. lock
-        let locks =
-            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_pair_liquidity_add(self_canister.id(), args, retries).await;
-                }
-            };
+        let locks = match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_pair_liquidity_add(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {
@@ -151,8 +146,15 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 
         // check pool
-        let (pa, fee_tokens, required) =
-            check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
+        let (pa, fee_tokens, required) = check_pool(&self.swap_pair, &self_canister, Some(&self.from))?;
+
+        // check liquidity balance and fee
+        let token = with_state(|s| s.business_token_query_by_pa(&pa)).ok_or_else(|| pa.not_exist())?;
+        let (balance, fee_to) = with_state(|s| s.business_token_balance_of_with_fee_to(token.canister_id, self.from));
+        let amount = self.liquidity_without_fee.clone() + fee_to.map(|_| token.fee.clone()).unwrap_or_default();
+        if balance < amount {
+            return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
+        }
 
         let arg = TokenPairLiquidityRemoveArg {
             self_canister,
@@ -164,19 +166,17 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
             amount_a_min: self.amount_min.0.clone(),
             amount_b_min: self.amount_min.1.clone(),
             to: self.to,
+            fee: fee_to.map(|fee_to| BurnFee {
+                fee: token.fee.clone(),
+                fee_to,
+            }),
         };
 
         // check amount
         arg.check_args()?;
 
         // check liquidity balance
-        with_state(|s| {
-            s.business_token_pair_check_liquidity_removable(
-                &pa,
-                &arg.from,
-                &arg.liquidity_without_fee,
-            )
-        })?;
+        with_state(|s| s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity_without_fee))?;
 
         // check deadline
         if let Some(deadline) = &self.deadline {
@@ -215,17 +215,16 @@ async fn inner_pair_liquidity_remove(
 
     let success = {
         // 3. lock
-        let locks =
-            match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_pair_liquidity_remove(self_canister.id(), args, retries).await;
-                }
-            };
+        let locks = match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_pair_liquidity_remove(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {
@@ -257,7 +256,5 @@ async fn retry_pair_liquidity_remove(
     retries: u8,
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     let service_swap = crate::services::swap::Service(self_canister_id);
-    return service_swap
-        .pair_liquidity_remove(args, Some(retries))
-        .await;
+    return service_swap.pair_liquidity_remove(args, Some(retries)).await;
 }

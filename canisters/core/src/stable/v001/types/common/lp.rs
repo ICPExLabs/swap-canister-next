@@ -15,11 +15,7 @@ pub enum PoolLp {
 }
 
 impl PoolLp {
-    pub fn dummy_tokens(
-        &self,
-        tokens: &HashMap<CanisterId, TokenInfo>,
-        pa: &TokenPairAmm,
-    ) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         match self {
             PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pa),
             PoolLp::OuterLP(_outer_lp) => vec![],
@@ -73,12 +69,10 @@ impl PoolLp {
         amount_b: &Nat,
         from: Account,
         amount: Nat,
-        fee_to: Option<Account>,
+        fee: Option<BurnFee>,
     ) -> Result<(), BusinessError> {
         match self {
-            PoolLp::InnerLP(inner_lp) => {
-                inner_lp.burn(guard, amount_a, amount_b, from, amount, fee_to)
-            }
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, amount_a, amount_b, from, amount, fee),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -87,14 +81,13 @@ impl PoolLp {
         &self,
         balance_of: F,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError>
     where
         F: Fn(CanisterId) -> Result<Nat, BusinessError>,
     {
         match self {
-            PoolLp::InnerLP(inner_lp) => {
-                inner_lp.check_liquidity_removable(balance_of, liquidity_without_fee)
-            }
+            PoolLp::InnerLP(inner_lp) => inner_lp.check_liquidity_removable(balance_of, liquidity_without_fee, fee_to),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -107,16 +100,12 @@ pub struct InnerLP {
 
     pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
     pub decimals: u8,      // Decimal places need to be recorded, display
-    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    pub fee: Nat,          // The handling fee needs to be recorded, and it is required to be used during transfer
     pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl InnerLP {
-    pub fn dummy_tokens(
-        &self,
-        tokens: &HashMap<CanisterId, TokenInfo>,
-        pa: &TokenPairAmm,
-    ) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         use ic_canister_kit::common::trap;
         let TokenPairAmm { pair, amm } = pa;
         let amm: AmmText = (*amm).into();
@@ -155,13 +144,7 @@ impl InnerLP {
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
-        guard.token_liquidity_mint(
-            amount_a,
-            amount_b,
-            self.dummy_canister_id.id(),
-            to,
-            amount.clone(),
-        )?;
+        guard.token_liquidity_mint(amount_a, amount_b, self.dummy_canister_id.id(), to, amount.clone())?;
         self.total_supply += amount; // Nat will not exceed the accuracy
         Ok(())
     }
@@ -173,20 +156,25 @@ impl InnerLP {
         amount_b: &Nat,
         from: Account,
         amount: Nat,
-        fee_to: Option<Account>,
+        fee: Option<BurnFee>,
     ) -> Result<(), BusinessError> {
+        if let Some(fee) = &fee {
+            if fee.fee != self.fee {
+                return Err(BusinessError::Liquidity(format!(
+                    "burn fee is not matched: {} != {}",
+                    fee.fee, self.fee
+                )));
+            }
+        }
         guard.token_liquidity_burn(
             amount_a,
             amount_b,
             self.dummy_canister_id.id(),
             from,
             amount.clone(),
-            fee_to.map(|fee_to| BurnFee {
-                fee: self.fee.clone(),
-                fee_to,
-            }),
+            fee.clone(),
         )?;
-        let fee = fee_to.map(|_| self.fee.clone()).unwrap_or_default();
+        let fee = fee.map(|_| self.fee.clone()).unwrap_or_default();
         let total = amount + fee;
         if self.total_supply < total {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
@@ -199,12 +187,13 @@ impl InnerLP {
         &self,
         balance_of: F,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError>
     where
         F: Fn(CanisterId) -> Result<Nat, BusinessError>,
     {
         // check balance
-        let required = liquidity_without_fee.clone() + self.fee.clone();
+        let required = liquidity_without_fee.clone() + fee_to.map(|_| self.fee.clone()).unwrap_or_default();
         let balance = balance_of(self.dummy_canister_id.id())?;
         if balance < required {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
@@ -213,9 +202,7 @@ impl InnerLP {
         // check minimum liquidity
         let remain = self.total_supply.clone() - required;
         if remain < self.minimum_liquidity {
-            return Err(BusinessError::Liquidity(
-                "REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into(),
-            ));
+            return Err(BusinessError::Liquidity("REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into()));
         }
 
         Ok(())
@@ -238,16 +225,12 @@ pub struct OuterLP {
 
     pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
     pub decimals: u8,      // Decimal places need to be recorded, display
-    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    pub fee: Nat,          // The handling fee needs to be recorded, and it is required to be used during transfer
     pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl PoolLp {
-    pub fn new_inner_lp(
-        dummy_canister_id: DummyCanisterId,
-        token0: &TokenInfo,
-        token1: &TokenInfo,
-    ) -> Self {
+    pub fn new_inner_lp(dummy_canister_id: DummyCanisterId, token0: &TokenInfo, token1: &TokenInfo) -> Self {
         let decimals = get_decimals(token0.decimals, token1.decimals);
         let fee = get_fee(&token0.fee, &token1.fee);
 

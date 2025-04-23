@@ -34,10 +34,7 @@ impl Business for InnerState {
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
-        self.updated(|s| {
-            s.token_block_chain
-                .set_token_current_archiving_max_length(max_length)
-        })
+        self.updated(|s| s.token_block_chain.set_token_current_archiving_max_length(max_length))
     }
     fn business_config_token_archive_config_replace(
         &mut self,
@@ -49,27 +46,18 @@ impl Business for InnerState {
         &mut self,
         archiving: CurrentArchiving,
     ) -> Option<CurrentArchiving> {
-        self.updated(|s| {
-            s.token_block_chain
-                .replace_token_current_archiving(archiving)
-        })
+        self.updated(|s| s.token_block_chain.replace_token_current_archiving(archiving))
     }
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         self.token_block_chain.archive_current_canister()
     }
-    fn business_config_token_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<TokenBlock>> {
+    fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
         self.token_block_chain.get_parent_hash(block_height)
     }
     fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         self.token_block_chain.get_cached_block_index()
     }
-    fn business_config_token_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
+    fn business_config_token_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         self.token_block_chain.archived_block(block_height)
     }
 
@@ -90,10 +78,7 @@ impl Business for InnerState {
         &mut self,
         max_length: u64,
     ) -> Option<CurrentArchiving> {
-        self.updated(|s| {
-            s.swap_block_chain
-                .set_swap_current_archiving_max_length(max_length)
-        })
+        self.updated(|s| s.swap_block_chain.set_swap_current_archiving_max_length(max_length))
     }
     fn business_config_swap_archive_config_replace(
         &mut self,
@@ -110,19 +95,13 @@ impl Business for InnerState {
     fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         self.swap_block_chain.archive_current_canister()
     }
-    fn business_config_swap_parent_hash_get(
-        &self,
-        block_height: BlockIndex,
-    ) -> Option<HashOf<SwapBlock>> {
+    fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
         self.swap_block_chain.get_parent_hash(block_height)
     }
     fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
         self.swap_block_chain.get_cached_block_index()
     }
-    fn business_config_swap_block_archived(
-        &mut self,
-        block_height: BlockIndex,
-    ) -> Result<(), BusinessError> {
+    fn business_config_swap_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         self.swap_block_chain.archived_block(block_height)
     }
 
@@ -144,11 +123,7 @@ impl Business for InnerState {
         canisters.extend_from_slice(&swaps);
         canisters
     }
-    fn business_config_maintain_archives_cycles_recharged(
-        &mut self,
-        canister_id: CanisterId,
-        cycles: u128,
-    ) {
+    fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
         self.business_data
             .maintain_archives
             .cycles_recharged(canister_id, cycles)
@@ -175,10 +150,7 @@ impl Business for InnerState {
         self.updated(|s| s.token_block_chain.archive_unlock())
     }
     fn business_token_block_chain_lock(&mut self) -> Option<TokenBlockChainLock> {
-        self.updated(|s| {
-            s.token_block_chain
-                .lock(s.business_data.fee_to.token_fee_to)
-        })
+        self.updated(|s| s.token_block_chain.lock(s.business_data.fee_to.token_fee_to))
     }
     fn business_token_block_chain_unlock(&mut self) {
         self.updated(|s| s.token_block_chain.unlock())
@@ -218,8 +190,7 @@ impl Business for InnerState {
         &TOKENS
     }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-        self.token_pairs
-            .query_dummy_tokens(self.business_tokens_query())
+        self.token_pairs.query_dummy_tokens(self.business_tokens_query())
     }
     fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         self.business_tokens_query()
@@ -238,8 +209,22 @@ impl Business for InnerState {
             .cloned()
             .or_else(|| self.business_dummy_tokens_query().remove(token))
     }
+    fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
+        self.token_pairs
+            .query_dummy_token_info(self.business_tokens_query(), pa)
+    }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
+    }
+    fn business_token_balance_of_with_fee_to(
+        &self,
+        token: CanisterId,
+        account: Account,
+    ) -> (candid::Nat, Option<Account>) {
+        (
+            ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account)),
+            self.business_data.fee_to.token_fee_to,
+        )
     }
 
     // ======================== update ========================
@@ -328,20 +313,12 @@ impl Business for InnerState {
                 .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
 
             let mut swap_guard = s.swap_block_chain.be_guard(lock);
-            let mut trace_guard = s.request_traces.be_guard(
-                arg.clone().into(),
-                None,
-                Some(&swap_guard),
-                None,
-                None,
-            )?;
-            let maker = s.token_pairs.create_token_pair_pool(
-                &mut swap_guard,
-                &mut trace_guard,
-                arg,
-                token0,
-                token1,
-            )?;
+            let mut trace_guard = s
+                .request_traces
+                .be_guard(arg.clone().into(), None, Some(&swap_guard), None, None)?;
+            let maker = s
+                .token_pairs
+                .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, token0, token1)?;
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })
@@ -370,6 +347,7 @@ impl Business for InnerState {
             pa,
             from,
             liquidity_without_fee,
+            self.business_data.fee_to.token_fee_to,
         )
     }
     fn business_token_pair_liquidity_remove(

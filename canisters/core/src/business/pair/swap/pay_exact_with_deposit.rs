@@ -23,9 +23,9 @@ impl CheckArgs for TokenPairSwapWithDepositAndWithdrawArgs {
         deposit_args.check_args()?;
 
         let swap_args: TokenPairSwapExactTokensForTokensArgs = self.into();
-        let (.., checking) =
+        let (.., (amounts, _)) =
             super::pay_exact::check_pay_exact(&swap_args, Some(deposit_args.deposit_amount_without_fee.clone()))?;
-        let got = checking.0[checking.0.len() - 1].clone();
+        let got = amounts[amounts.len() - 1].clone();
 
         // get token fee
         let token = self.path[self.path.len() - 1].token.1;

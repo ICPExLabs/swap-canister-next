@@ -81,6 +81,7 @@ type DepositToken = record {
   amount : nat;
 };
 type FeeTo = record { token_fee_to : opt Account; swap_fee_to : opt Account };
+type FeeToView = record { token_fee_to : bool; swap_fee_to : bool };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
 type InitArgs = variant { V0 : InitArg; V1 : InitArg };
 type InnerLP = record {
@@ -396,6 +397,7 @@ type TokenPairLiquidityAddSuccess = record {
 type TokenPairLiquidityRemoveArg = record {
   pa : TokenPairAmm;
   to : Account;
+  fee : opt BurnFee;
   amount_a_min : nat;
   token_a : principal;
   token_b : principal;
@@ -558,8 +560,9 @@ service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   block_swap_get : (nat64) -> (QuerySwapBlockResult) query;
   block_token_get : (nat64) -> (QueryTokenBlockResult) query;
-  config_fee_to_query : () -> (FeeTo);
+  config_fee_to_query : () -> (FeeTo) query;
   config_fee_to_replace : (FeeTo) -> (FeeTo);
+  config_fee_to_view_query : () -> (FeeToView) query;
   config_maintain_archives_query : () -> (MaintainArchives) query;
   config_maintain_archives_set : (MaintainArchivesConfig) -> ();
   config_swap_block_chain_query : (BlockChainArgs) -> (SwapBlockResult) query;
@@ -612,8 +615,8 @@ service : (opt InitArgs) -> {
   permission_roles_by_user : (principal) -> (opt vec text) query;
   permission_roles_query : () -> (opt vec text) query;
   permission_update : (vec PermissionUpdatedArg) -> ();
-  request_trace_get : (nat64) -> (opt RequestTrace);
-  request_trace_index_get : () -> (nat64, nat64);
+  request_trace_get : (nat64) -> (opt RequestTrace) query;
+  request_trace_index_get : () -> (nat64, nat64) query;
   request_trace_remove : (nat64) -> (opt RequestTrace);
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();

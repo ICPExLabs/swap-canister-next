@@ -38,8 +38,8 @@ impl CheckArgs for TokenTransferArgs {
         }
 
         // check balance
-        let balance = with_state(|s| s.business_token_balance_of(token.canister_id, self.from));
-        let amount = self.transfer_amount_without_fee.clone() + token.fee.clone();
+        let (balance, fee_to) = with_state(|s| s.business_token_balance_of_with_fee_to(token.canister_id, self.from));
+        let amount = self.transfer_amount_without_fee.clone() + fee_to.map(|_| token.fee.clone()).unwrap_or_default();
         if balance < amount {
             return Err(BusinessError::insufficient_balance(token.canister_id, balance));
         }

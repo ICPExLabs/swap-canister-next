@@ -76,12 +76,7 @@ fn tokens_balance_by(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     with_state(|s| {
         s.business_all_tokens_query()
             .keys()
-            .map(|&canister_id| {
-                (
-                    canister_id,
-                    s.business_token_balance_of(canister_id, account),
-                )
-            })
+            .map(|&canister_id| (canister_id, s.business_token_balance_of(canister_id, account)))
             .collect()
     })
 }

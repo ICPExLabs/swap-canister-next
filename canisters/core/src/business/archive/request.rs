@@ -6,12 +6,12 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
+#[ic_cdk::query(guard = "has_business_config_maintaining")]
 async fn request_trace_index_get() -> (RequestIndex, u64) {
     with_state(|s| s.business_request_index_get())
 }
 
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
+#[ic_cdk::query(guard = "has_business_config_maintaining")]
 async fn request_trace_get(index: RequestIndex) -> Option<RequestTrace> {
     with_state(|s| s.business_request_trace_get(&index))
 }
