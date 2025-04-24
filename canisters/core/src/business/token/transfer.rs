@@ -157,6 +157,7 @@ async fn retry_token_transfer(
     args: TokenTransferArgs,
     retries: u8,
 ) -> Result<candid::Nat, BusinessError> {
+    ic_cdk::println!("🔄 retry_token_transfer: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap.token_transfer(args, Some(retries)).await;
 }

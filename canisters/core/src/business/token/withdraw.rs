@@ -141,6 +141,7 @@ async fn retry_token_withdraw(
     args: TokenWithdrawArgs,
     retries: u8,
 ) -> Result<candid::Nat, BusinessError> {
+    ic_cdk::println!("🔄 retry_token_withdraw: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap.token_withdraw(args, Some(retries)).await;
 }

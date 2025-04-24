@@ -159,6 +159,7 @@ async fn retry_pair_swap_exact_tokens_for_tokens(
     args: TokenPairSwapExactTokensForTokensArgs,
     retries: u8,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    ic_cdk::println!("🔄 retry_pair_swap_exact_tokens_for_tokens: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap
         .pair_swap_exact_tokens_for_tokens(args, Some(retries))

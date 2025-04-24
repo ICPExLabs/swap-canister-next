@@ -77,10 +77,7 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_swap")]
-async fn pair_swap_by_loan(
-    args: TokenPairSwapByLoanArgs,
-    retries: Option<u8>,
-) -> TokenPairSwapTokensResult {
+async fn pair_swap_by_loan(args: TokenPairSwapByLoanArgs, retries: Option<u8>) -> TokenPairSwapTokensResult {
     inner_pair_swap_by_loan(args, retries).await.into()
 }
 #[inline]
@@ -98,17 +95,16 @@ async fn inner_pair_swap_by_loan(
 
     let success = {
         // 3. lock
-        let locks =
-            match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-                fee_tokens,
-                required,
-                retries.unwrap_or_default(),
-            )? {
-                LockResult::Locked(locks) => locks,
-                LockResult::Retry(retries) => {
-                    return retry_pair_swap_by_loan(self_canister.id(), args, retries).await;
-                }
-            };
+        let locks = match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
+            fee_tokens,
+            required,
+            retries.unwrap_or_default(),
+        )? {
+            LockResult::Locked(locks) => locks,
+            LockResult::Retry(retries) => {
+                return retry_pair_swap_by_loan(self_canister.id(), args, retries).await;
+            }
+        };
 
         // * 4. do business
         {
@@ -139,6 +135,7 @@ async fn retry_pair_swap_by_loan(
     args: TokenPairSwapByLoanArgs,
     retries: u8,
 ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
+    ic_cdk::println!("🔄 retry_pair_swap_by_loan: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap.pair_swap_by_loan(args, Some(retries)).await;
 }

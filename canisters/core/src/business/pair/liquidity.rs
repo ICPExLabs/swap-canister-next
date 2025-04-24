@@ -125,6 +125,7 @@ async fn retry_pair_liquidity_add(
     args: TokenPairLiquidityAddArgs,
     retries: u8,
 ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
+    ic_cdk::println!("🔄 retry_pair_liquidity_add: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap.pair_liquidity_add(args, Some(retries)).await;
 }
@@ -255,6 +256,7 @@ async fn retry_pair_liquidity_remove(
     args: TokenPairLiquidityRemoveArgs,
     retries: u8,
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
+    ic_cdk::println!("🔄 retry_pair_liquidity_remove: {}", retries);
     let service_swap = crate::services::swap::Service(self_canister_id);
     return service_swap.pair_liquidity_remove(args, Some(retries)).await;
 }
