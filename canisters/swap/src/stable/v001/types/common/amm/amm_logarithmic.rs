@@ -1,5 +1,5 @@
 /// Logarithmic market maker（Logarithmic AMM）
-/// - Core formula：y = k * ln(x)（x and y are the number of two assets, and k is the constant）
+/// - Formula：y = k * ln(x)（x and y are the number of two assets, and k is the constant）
 /// - Representative Project：Bancor V3、Balancer（Some pools）
 /// - Features
 ///   - Provides a smoother price curve with slippage below the product of the constant.

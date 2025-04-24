@@ -14,7 +14,7 @@ pub struct InitArgV1 {
     /// Maximum memory
     pub max_memory_size_bytes: Option<u64>,
     /// Host canister
-    pub core_canister_id: Option<CanisterId>,
+    pub host_canister_id: Option<CanisterId>,
     /// Block Offset
     pub block_offset: Option<(BlockIndex, HashOf<TokenBlock>)>,
 }

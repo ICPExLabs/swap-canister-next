@@ -92,7 +92,7 @@ blue "\n🚩 1 business"
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "get_block_pb" "$(dfx canister call archive_swap get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_swap remaining_capacity 2>&1)" '(10_737_418_240 : nat64)'
-test "❎ append_blocks" "$(dfx --identity alice canister call archive_swap append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "❎ append_blocks" "$(dfx --identity alice canister call archive_swap append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "append_blocks" "$(dfx canister call archive_swap append_blocks "(vec { blob \"\0a\22\0a\20\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\1a\36\0a\34\0a\32\0a\30\0a\2c\0a\1c\0a\0c\0a\0a\00\00\00\00\00\00\00\02\01\01\12\0c\0a\0a\00\00\00\00\02\00\01\31\01\01\12\0c\73\77\61\70\5f\76\32\5f\30\2e\33\25\12\00\" })" 2>&1)" '()'
 test "get_block_pb" "$(dfx canister call archive_swap get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 94, 10, 92, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 54, 10, 52, 10, 50, 10, 48, 10, 44, 10, 28, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 12, 10, 10, 0, 0, 0, 0, 2, 0, 1, 49, 1, 1, 18, 12, 115, 119, 97, 112, 95, 118, 50, 95, 48, 46, 51, 37, 18, 0 ]'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_swap remaining_capacity 2>&1)" '(10_737_418_148 : nat64)'
@@ -105,7 +105,7 @@ test "http /metrics" "$(curl "http://$archive_swap.raw.localhost:4943/metrics" 2
 test "get_encoded_blocks" "$(dfx canister call archive_swap get_encoded_blocks "(record { start=0:nat64; length=100:nat64})" --output json 2>&1)" '{ "Ok": [ [ 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 54, 10, 52, 10, 50, 10, 48, 10, 44, 10, 28, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 12, 10, 10, 0, 0, 0, 0, 2, 0, 1, 49, 1, 1, 18, 12, 115, 119, 97, 112, 95, 118, 50, 95, 48, 46, 51, 37, 18, 0 ] ] }'
 
 blue "\n🚩 2 business set_maintainers"
-test "set_maintainers" "$(dfx --identity alice canister call archive_swap set_maintainers "(null)" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "set_maintainers" "$(dfx --identity alice canister call archive_swap set_maintainers "(null)" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 94, 10, 92, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 54, 10, 52, 10, 50, 10, 48, 10, 44, 10, 28, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 12, 10, 10, 0, 0, 0, 0, 2, 0, 1, 49, 1, 1, 18, 12, 115, 119, 97, 112, 95, 118, 50, 95, 48, 46, 51, 37, 18, 0 ]'
 test "set_maintainers" "$(dfx canister call archive_swap set_maintainers "(opt vec {principal\"$DEFAULT\"})" 2>&1)" '()'
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_swap get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
@@ -118,7 +118,7 @@ test "query_metrics" "$(dfx canister call archive_swap query_metrics 2>&1)" '( r
 
 blue "\n🚩 4 business set_max_memory_size_bytes"
 test "query_metrics" "$(dfx canister call archive_swap query_metrics 2>&1)" '( record { stable_memory_pages = 257 : nat64; stable_memory_bytes = 16_842_752 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 10_737_418_240 : nat64; blocks = 1 : nat64; blocks_bytes = 92 : nat64; block_height_offset = 0 : nat64; }, )'
-test "set_max_memory_size_bytes" "$(dfx --identity alice canister call archive_swap set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "set_max_memory_size_bytes" "$(dfx --identity alice canister call archive_swap set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_swap set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Cannot set max_memory_size_bytes to 10, because it is lower than total_block_size 92.'
 test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_swap set_max_memory_size_bytes "(200:nat64)" 2>&1)" '()'
 test "query_metrics" "$(dfx canister call archive_swap query_metrics 2>&1)" '( record { stable_memory_pages = 257 : nat64; stable_memory_bytes = 16_842_752 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 200 : nat64; blocks = 1 : nat64; blocks_bytes = 92 : nat64; block_height_offset = 0 : nat64; }, )'

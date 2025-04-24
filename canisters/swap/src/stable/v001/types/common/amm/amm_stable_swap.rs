@@ -1,5 +1,5 @@
 /// Stablecoin market maker（StableSwap AMM）
-/// - Core formula：(x + y)^n = k（n is the regulation parameter）
+/// - Formula：(x + y)^n = k（n is the regulation parameter）
 /// - Representative Project：Curve、Fei Protocol
 /// - Features
 ///   - Designed for stable coins or similar assets, the slippage is extremely low.

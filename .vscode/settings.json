@@ -3,6 +3,7 @@
         "business": "interface",
         "stable": "store",
         "canisters": "server",
+        "swap": "core",
         "archive-token": "archive",
         "archive-swap": "archive",
     },

@@ -1,5 +1,5 @@
 /// Constant product market maker（Constant Product AMM）
-/// - Core formula：x * y = k（x and y are the number of two assets, and k is the constant）
+/// - Formula：x * y = k（x and y are the number of two assets, and k is the constant）
 /// - Representative Project：Uniswap V2/V3、SushiSwap、PancakeSwap
 /// - Features
 ///   - Simple and efficient, suitable for most trading scenarios.

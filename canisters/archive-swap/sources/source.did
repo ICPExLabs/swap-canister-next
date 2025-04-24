@@ -45,7 +45,7 @@ type GetSwapBlocksResult = variant {
 type InitArgV1 = record {
   maintainers : opt vec principal;
   block_offset : opt record { nat64; blob };
-  core_canister_id : opt principal;
+  host_canister_id : opt principal;
   max_memory_size_bytes : opt nat64;
 };
 type InitArgs = variant { V0 : record {}; V1 : InitArgV1 };

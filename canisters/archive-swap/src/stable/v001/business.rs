@@ -14,14 +14,10 @@ impl Business for InnerState {
         Err("Only Maintainers are allowed to query data".into())
     }
     fn business_blocks_append_authorized(&self, caller: &UserId) -> Result<(), String> {
-        if self
-            .business_data
-            .core_canister_id
-            .is_some_and(|core| core == *caller)
-        {
+        if self.business_data.host_canister_id.is_some_and(|host| host == *caller) {
             return Ok(());
         }
-        Err("'Only Core Canister is allowed to append blocks to an Archive Node'".into())
+        Err("'Only Swap Canister is allowed to append blocks to an Archive Node'".into())
     }
 
     fn business_block_query(&self, block_height: BlockIndex) -> Option<EncodedBlock> {
@@ -42,11 +38,7 @@ impl Business for InnerState {
         }
         blocks
     }
-    fn business_blocks_query(
-        &self,
-        height_start: BlockIndex,
-        length: u64,
-    ) -> Result<Vec<EncodedBlock>, String> {
+    fn business_blocks_query(&self, height_start: BlockIndex, length: u64) -> Result<Vec<EncodedBlock>, String> {
         use ::common::utils::range::*;
 
         let from_offset = self.business_data.block_height_offset();
@@ -56,16 +48,12 @@ impl Business for InnerState {
         if !is_sub_range(&requested_range, &local_blocks_range) {
             return Err(format!(
                 "Requested blocks outside the range stored in the archive node. Requested [{} .. {}]. Available [{} .. {}].",
-                requested_range.start,
-                requested_range.end,
-                local_blocks_range.start,
-                local_blocks_range.end
+                requested_range.start, requested_range.end, local_blocks_range.start, local_blocks_range.end
             ));
         }
 
         let mut blocks = Vec::with_capacity(length as usize);
-        let offset_requested_range =
-            requested_range.start - from_offset..requested_range.end - from_offset;
+        let offset_requested_range = requested_range.start - from_offset..requested_range.end - from_offset;
         for index in offset_requested_range {
             let block = self.blocks.get_block(index);
             let block = trap(block.ok_or(format!("can not find block by index: {index}")));
@@ -74,17 +62,10 @@ impl Business for InnerState {
 
         Ok(blocks)
     }
-    fn business_blocks_get(
-        &self,
-        height_start: BlockIndex,
-        length: u64,
-    ) -> Result<Vec<EncodedBlock>, GetBlocksError> {
+    fn business_blocks_get(&self, height_start: BlockIndex, length: u64) -> Result<Vec<EncodedBlock>, GetBlocksError> {
         use ::common::utils::range::*;
 
-        let block_range = make_range(
-            self.business_data.block_height_offset(),
-            self.blocks.blocks_len(),
-        );
+        let block_range = make_range(self.business_data.block_height_offset(), self.blocks.blocks_len());
 
         if height_start < block_range.start {
             return Err(GetBlocksError::BadFirstBlockIndex {
@@ -94,10 +75,7 @@ impl Business for InnerState {
         }
 
         let requested_range = make_range(height_start, length);
-        let effective_range = match intersect(
-            &block_range,
-            &take(&requested_range, MAX_BLOCKS_PER_REQUEST),
-        ) {
+        let effective_range = match intersect(&block_range, &take(&requested_range, MAX_BLOCKS_PER_REQUEST)) {
             Ok(range) => range,
             Err(NoIntersection) => return Ok(vec![]),
         };
@@ -201,8 +179,7 @@ impl Business for InnerState {
     }
 
     fn business_config_maintainers_set(&mut self, maintainers: Option<Vec<UserId>>) {
-        self.business_data.maintainers =
-            maintainers.map(|maintainers| maintainers.into_iter().collect());
+        self.business_data.maintainers = maintainers.map(|maintainers| maintainers.into_iter().collect());
     }
     fn business_config_max_memory_size_bytes_set(&mut self, max_memory_size_bytes: u64) {
         self.update_max_memory_size_bytes(max_memory_size_bytes)
@@ -224,8 +201,7 @@ impl Business for InnerState {
             stable_memory_pages: ic_cdk::api::stable::stable_size(),
             stable_memory_bytes: (ic_cdk::api::stable::stable_size() * 64 * 1024),
             heap_memory_bytes: common::utils::runtime::heap_memory_size_bytes() as u64,
-            last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns
-                / 1_000_000_000_u64,
+            last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns / 1_000_000_000_u64,
         }
     }
 }

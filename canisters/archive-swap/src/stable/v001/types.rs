@@ -22,8 +22,8 @@ pub type UpgradeArgV1 = ::common::archive::swap::UpgradeArgV1;
 
 #[allow(unused)]
 pub use crate::types::{
-    BlockIndex, DoHash, EncodedBlock, GetBlocksError, HashOf, IoResult, Message, MetricsEncoder,
-    SwapBlock, from_proto_bytes, trap,
+    BlockIndex, DoHash, EncodedBlock, GetBlocksError, HashOf, IoResult, Message, MetricsEncoder, SwapBlock,
+    from_proto_bytes, trap,
 };
 #[allow(unused)]
 pub use ::common::proto;
@@ -49,8 +49,8 @@ pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 pub struct BusinessData {
     pub maintainers: Option<HashSet<UserId>>, // None, readable by everyone, otherwise the designated person can read by
 
-    pub max_memory_size_bytes: u64,           // Maximum memory used
-    pub core_canister_id: Option<CanisterId>, // host canister, For business-related update interfaces, check whether the host can be initiated.
+    pub max_memory_size_bytes: u64,                    // Maximum memory used
+    pub host_canister_id: Option<CanisterId>, // host canister, For business-related update interfaces, check whether the host can be initiated.
     pub block_offset: (BlockIndex, HashOf<SwapBlock>), // Offset recorded in this canister
     pub last_upgrade_timestamp_ns: u64,       // Record the last upgrade time stamp
 
@@ -99,20 +99,16 @@ const MEMORY_ID_BLOCKS_INDEX: MemoryId = MemoryId::new(0); // blocks index
 const MEMORY_ID_BLOCKS_DATA: MemoryId = MemoryId::new(1); // blocks data
 
 fn init_blocks() -> Blocks {
-    Blocks::new(stable::init_log_data(
-        MEMORY_ID_BLOCKS_INDEX,
-        MEMORY_ID_BLOCKS_DATA,
-    ))
+    Blocks::new(stable::init_log_data(MEMORY_ID_BLOCKS_INDEX, MEMORY_ID_BLOCKS_DATA))
 }
 
 impl InnerState {
     pub fn do_init(&mut self, arg: InitArgV1) {
         self.business_data.maintainers = arg.maintainers.map(HashSet::from_iter);
 
-        self.business_data.max_memory_size_bytes =
-            arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
-        self.business_data.core_canister_id = match arg.core_canister_id {
-            Some(core_canister_id) => Some(core_canister_id),
+        self.business_data.max_memory_size_bytes = arg.max_memory_size_bytes.unwrap_or(DEFAULT_MAX_MEMORY_SIZE);
+        self.business_data.host_canister_id = match arg.host_canister_id {
+            Some(host_canister_id) => Some(host_canister_id),
             None => Some(ic_canister_kit::identity::caller()),
         };
         self.business_data.block_offset = arg.block_offset.unwrap_or_default();

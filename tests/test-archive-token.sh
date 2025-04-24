@@ -92,7 +92,7 @@ blue "\n🚩 1 business"
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
 test "get_block_pb" "$(dfx canister call archive_token get_block_pb "(blob \"\")" 2>&1)" '(blob "")'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_token remaining_capacity 2>&1)" '(10_737_418_240 : nat64)'
-test "❎ append_blocks" "$(dfx --identity alice canister call archive_token append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "❎ append_blocks" "$(dfx --identity alice canister call archive_token append_blocks "(vec { vec { 0:nat8 } })" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "append_blocks" "$(dfx canister call archive_token append_blocks "(vec { blob \"\0a\22\0a\20\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\1a\1b\0a\19\0a\17\0a\0c\0a\0a\00\00\00\00\00\00\00\02\01\01\12\00\1a\03\0a\01\64\22\00\" })" 2>&1)" '()'
 test "get_block_pb" "$(dfx canister call archive_token get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 67, 10, 65, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ]'
 test "remaining_capacity" "$(dfx --identity alice canister call archive_token remaining_capacity 2>&1)" '(10_737_418_175 : nat64)'
@@ -105,7 +105,7 @@ test "http /metrics" "$(curl "http://$archive_token.raw.localhost:4943/metrics" 
 test "get_encoded_blocks" "$(dfx canister call archive_token get_encoded_blocks "(record { start=0:nat64; length=100:nat64})" --output json 2>&1)" '{ "Ok": [ [ 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ] ] }'
 
 blue "\n🚩 2 business set_maintainers"
-test "set_maintainers" "$(dfx --identity alice canister call archive_token set_maintainers "(null)" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "set_maintainers" "$(dfx --identity alice canister call archive_token set_maintainers "(null)" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" 2>&1)" 'Only Maintainers are allowed to query data'
 test "set_maintainers" "$(dfx canister call archive_token set_maintainers "(null)" 2>&1)" '()'
 test "🙈 get_block_pb" "$(dfx --identity alice canister call archive_token get_block_pb "(blob \"\")" --output json 2>&1)" '[ 10, 67, 10, 65, 10, 34, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 27, 10, 25, 10, 23, 10, 12, 10, 10, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 18, 0, 26, 3, 10, 1, 100, 34, 0 ]'
@@ -118,7 +118,7 @@ test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( 
 
 blue "\n🚩 4 business set_max_memory_size_bytes"
 test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( record { stable_memory_pages = 257 : nat64; stable_memory_bytes = 16_842_752 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 10_737_418_240 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'
-test "set_max_memory_size_bytes" "$(dfx --identity alice canister call archive_token set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Only Core Canister is allowed to append blocks to an Archive Node'
+test "set_max_memory_size_bytes" "$(dfx --identity alice canister call archive_token set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Only Swap Canister is allowed to append blocks to an Archive Node'
 test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_token set_max_memory_size_bytes "(10:nat64)" 2>&1)" 'Cannot set max_memory_size_bytes to 10, because it is lower than total_block_size 65.'
 test "set_max_memory_size_bytes" "$(dfx --identity default canister call archive_token set_max_memory_size_bytes "(100:nat64)" 2>&1)" '()'
 test "query_metrics" "$(dfx canister call archive_token query_metrics 2>&1)" '( record { stable_memory_pages = 257 : nat64; stable_memory_bytes = 16_842_752 : nat64; heap_memory_bytes = 1_245_184 : nat64; last_upgrade_time_seconds = 0 : nat64; max_memory_size_bytes = 100 : nat64; blocks = 1 : nat64; blocks_bytes = 65 : nat64; block_height_offset = 0 : nat64; }, )'

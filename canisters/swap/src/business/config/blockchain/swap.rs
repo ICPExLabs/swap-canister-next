@@ -12,19 +12,17 @@ use crate::types::*;
 fn config_swap_block_chain_query(args: BlockChainArgs) -> SwapBlockResult {
     inner_config_swap_block_chain_query(args).into()
 }
-fn inner_config_swap_block_chain_query(
-    args: BlockChainArgs,
-) -> Result<SwapBlockResponse, BusinessError> {
+fn inner_config_swap_block_chain_query(args: BlockChainArgs) -> Result<SwapBlockResponse, BusinessError> {
     let response = match args {
-        BlockChainArgs::BlockChainQuery => BlockChainResponse::BlockChain(with_state(|s| {
-            s.business_config_swap_block_chain_query().into()
-        })),
+        BlockChainArgs::BlockChainQuery => {
+            BlockChainResponse::BlockChain(with_state(|s| s.business_config_swap_block_chain_query().into()))
+        }
         BlockChainArgs::WasmModuleQuery => BlockChainResponse::WasmModule(with_state(|s| {
             s.business_config_swap_archive_wasm_module_query().clone()
         })),
-        BlockChainArgs::CachedBlockQuery => BlockChainResponse::CachedBlock(with_state(|s| {
-            s.business_config_swap_cached_block_get()
-        })),
+        BlockChainArgs::CachedBlockQuery => {
+            BlockChainResponse::CachedBlock(with_state(|s| s.business_config_swap_cached_block_get()))
+        }
         BlockChainArgs::BlockQuery(_) => unimplemented!(),
         _ => ic_cdk::trap("not query args"),
     };
@@ -37,15 +35,11 @@ fn inner_config_swap_block_chain_query(
 async fn config_swap_block_chain_update(args: BlockChainArgs) -> SwapBlockResult {
     inner_config_swap_block_chain_update(args).await.into()
 }
-async fn inner_config_swap_block_chain_update(
-    args: BlockChainArgs,
-) -> Result<SwapBlockResponse, BusinessError> {
+async fn inner_config_swap_block_chain_update(args: BlockChainArgs) -> Result<SwapBlockResponse, BusinessError> {
     let response = match args {
-        BlockChainArgs::WasmModuleUpdate(wasm_module) => {
-            BlockChainResponse::WasmModule(with_mut_state(|s| {
-                s.business_config_swap_archive_wasm_module_replace(wasm_module)
-            })?)
-        }
+        BlockChainArgs::WasmModuleUpdate(wasm_module) => BlockChainResponse::WasmModule(with_mut_state(|s| {
+            s.business_config_swap_archive_wasm_module_replace(wasm_module)
+        })?),
         BlockChainArgs::CurrentArchivingMaxLengthUpdate(max_length) => {
             BlockChainResponse::CurrentArchivingMaxLength(with_mut_state(|s| {
                 s.business_config_swap_current_archiving_max_length_replace(max_length)
@@ -69,14 +63,10 @@ async fn inner_config_swap_block_chain_update(
             max_memory_size_bytes,
         } => {
             let service_archive = crate::services::archive::Service(canister_id);
-            service_archive
-                .set_max_memory_size_bytes(max_memory_size_bytes)
-                .await?;
+            service_archive.set_max_memory_size_bytes(max_memory_size_bytes).await?;
             BlockChainResponse::ArchivedCanisterMaxMemorySizeBytes
         }
-        BlockChainArgs::BlocksPush => {
-            BlockChainResponse::BlocksPush(inner_config_swap_blocks_push().await?)
-        }
+        BlockChainArgs::BlocksPush => BlockChainResponse::BlocksPush(inner_config_swap_blocks_push().await?),
         _ => ic_cdk::trap("not update args"),
     };
     Ok(response.into())
@@ -90,16 +80,14 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
 
     // 0. Must be non-pause state, obtain lock
     with_state(|s| s.pause_must_be_running()).map_err(BusinessError::system_error)?;
-    let _lock = with_mut_state(|s| s.business_swap_block_chain_archive_lock()).ok_or(
-        BusinessError::system_error("swap block chain archive locked"),
-    )?;
+    let _lock = with_mut_state(|s| s.business_swap_block_chain_archive_lock())
+        .ok_or(BusinessError::system_error("swap block chain archive locked"))?;
 
     // 1. If it is currently full, archive is required
     with_mut_state(|s| s.business_config_swap_archive_current_canister())?;
 
     // 2. Check if the canister is full
-    let mut view: BlockChainView<SwapBlock> =
-        with_state(|s| s.business_config_swap_block_chain_query().into());
+    let mut view: BlockChainView<SwapBlock> = with_state(|s| s.business_config_swap_block_chain_query().into());
     if let Some(current_archiving) = view.current_archiving {
         if current_archiving.is_full() {
             return Err(BusinessError::system_error(
@@ -120,10 +108,9 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
             )));
         }
         // Create a new canister
-        let wasm = with_state(|s| s.business_config_swap_archive_wasm_module_query().clone())
-            .ok_or(BusinessError::system_error(
-                "swap block chain wasm is none, can not deploy next archive canister",
-            ))?;
+        let wasm = with_state(|s| s.business_config_swap_archive_wasm_module_query().clone()).ok_or(
+            BusinessError::system_error("swap block chain wasm is none, can not deploy next archive canister"),
+        )?;
         let block_offset = {
             let mut block_offset = 0;
             for a in &view.archived {
@@ -135,29 +122,25 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
             if block_offset == 0 {
                 None
             } else {
-                let hash = with_state(|s| s.business_config_swap_parent_hash_get(block_offset))
-                    .ok_or(BusinessError::system_error(format!(
-                        "can not find parent hash by height: {block_offset}"
-                    )))?;
+                let hash = with_state(|s| s.business_config_swap_parent_hash_get(block_offset)).ok_or(
+                    BusinessError::system_error(format!("can not find parent hash by height: {block_offset}")),
+                )?;
                 Some((block_offset, hash))
             }
         };
         let init_args = ::common::archive::swap::InitArgV1 {
             maintainers: view.archive_config.maintainers,
             max_memory_size_bytes: view.archive_config.max_memory_size_bytes,
-            core_canister_id: Some(self_canister_id()),
+            host_canister_id: Some(self_canister_id()),
             block_offset,
         };
-        let init_args = candid::encode_args((Some(init_args.clone()),)).map_err(|err| {
-            BusinessError::system_error(format!("can not encode args: {init_args:?} {err:?}"))
-        })?;
+        let init_args = candid::encode_args((Some(init_args.clone()),))
+            .map_err(|err| BusinessError::system_error(format!("can not encode args: {init_args:?} {err:?}")))?;
         let mut trace = RequestTrace::from_args(RequestArgs::SwapBlockPush);
         let deploy_result = deploy_canister(&mut trace, INITIAL_CYCLES, wasm, init_args).await;
         with_mut_state(|s| s.business_request_trace_insert(trace));
         let canister_id = deploy_result.map_err(|err| {
-            BusinessError::system_error(format!(
-                "create and deploy new swap canister failed: {err:?}"
-            ))
+            BusinessError::system_error(format!("create and deploy new swap canister failed: {err:?}"))
         })?;
         // Set up a new archive canister
         with_mut_state(|s| {

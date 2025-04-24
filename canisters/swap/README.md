@@ -1,3 +1,3 @@
 # swap-canister-next
 
-## Core Canister
+## Swap Canister

@@ -1,6 +1,6 @@
 {
   "canisters": {
-    "core": {
+    "swap": {
       "type": "custom",
       "build": [
         "cargo build -p common --features \"full\"",
@@ -15,14 +15,14 @@
         "ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public",
         "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink",
         "",
-        "cargo test -p core update_candid -- --nocapture",
-        "cargo build -p core --target wasm32-unknown-unknown --release",
-        "ic-wasm target/wasm32-unknown-unknown/release/core.wasm -o canisters/core/sources/source_opt.wasm metadata candid:service -f canisters/core/sources/source.did -v public",
-        "ic-wasm canisters/core/sources/source_opt.wasm -o canisters/core/sources/source_opt.wasm shrink"
+        "cargo test -p swap update_candid -- --nocapture",
+        "cargo build -p swap --target wasm32-unknown-unknown --release",
+        "ic-wasm target/wasm32-unknown-unknown/release/swap.wasm -o canisters/swap/sources/source_opt.wasm metadata candid:service -f canisters/swap/sources/source.did -v public",
+        "ic-wasm canisters/swap/sources/source_opt.wasm -o canisters/swap/sources/source_opt.wasm shrink"
       ],
       "gzip": true,
-      "wasm": "canisters/core/sources/source_opt.wasm",
-      "candid": "canisters/core/sources/source.did"
+      "wasm": "canisters/swap/sources/source_opt.wasm",
+      "candid": "canisters/swap/sources/source.did"
     },
     "archive_token": {
       "type": "custom",

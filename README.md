@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project involves multiple smart contracts (canisters), primarily the **Core Canister**, the **Token Archive Canisters** and the **Swap Archive Canisters**, which handle token swaps, liquidity management, data archiving, and more. The project strictly follows Rust best practices:
+This project involves multiple smart contracts (canisters), primarily the **Swap Canister**, the **Token Archive Canisters** and the **Swap Archive Canisters**, which handle token swaps, liquidity management, data archiving, and more. The project strictly follows Rust best practices:
 
 - No unsafe code
 - Comprehensive documentation
@@ -13,7 +13,7 @@ This project involves multiple smart contracts (canisters), primarily the **Core
 
 ## Key Features
 
-### Core Canister
+### Swap Canister
 
 1. **Token Pair Liquidity Management**
 
@@ -56,13 +56,13 @@ This project involves multiple smart contracts (canisters), primarily the **Core
 
 ## Code Structure
 
-### Core Canister
+### Swap Canister
 
 - `services`: Canister interface definitions
 - `utils`: Utility functions
 - `types`: All type definitions
 - `stable`: Stable storage and migration logic
-- `business`: Core business logic
+- `business`: business logic
 - `common`: Common shared types and utilities (must be last due to candid interface)
 
 ### Archive Canisters
