@@ -18,6 +18,22 @@ impl From<TokenChangedResult> for Result<candid::Nat, BusinessError> {
     }
 }
 
+// many
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct ManyTokenChangedResult(Result<Vec<Result<candid::Nat, BusinessError>>, BusinessError>);
+
+impl From<Result<Vec<Result<candid::Nat, BusinessError>>, BusinessError>> for ManyTokenChangedResult {
+    fn from(value: Result<Vec<Result<candid::Nat, BusinessError>>, BusinessError>) -> Self {
+        Self(value)
+    }
+}
+impl From<ManyTokenChangedResult> for Result<Vec<Result<candid::Nat, BusinessError>>, BusinessError> {
+    fn from(value: ManyTokenChangedResult) -> Self {
+        value.0
+    }
+}
+
 // deposit
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
@@ -57,4 +73,12 @@ pub struct TokenTransferArgs {
 
     pub memo: Option<Vec<u8>>,
     pub created: Option<TimestampNanos>,
+}
+
+// ======================== many ========================
+
+// withdraw
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct TokenWithdrawManyArgs {
+    pub args: Vec<TokenWithdrawArgs>,
 }

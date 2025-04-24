@@ -28,7 +28,7 @@ impl Business for InnerState {
         &mut self,
         wasm_module: Vec<u8>,
     ) -> Result<Option<Vec<u8>>, BusinessError> {
-        self.token_block_chain.replace_wasm_module(wasm_module)
+        self.updated(|s| s.token_block_chain.replace_wasm_module(wasm_module))
     }
     fn business_config_token_current_archiving_max_length_replace(
         &mut self,
@@ -49,7 +49,7 @@ impl Business for InnerState {
         self.updated(|s| s.token_block_chain.replace_token_current_archiving(archiving))
     }
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.token_block_chain.archive_current_canister()
+        self.updated(|s| s.token_block_chain.archive_current_canister())
     }
     fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
         self.token_block_chain.get_parent_hash(block_height)
@@ -58,7 +58,7 @@ impl Business for InnerState {
         self.token_block_chain.get_cached_block_index()
     }
     fn business_config_token_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
-        self.token_block_chain.archived_block(block_height)
+        self.updated(|s| s.token_block_chain.archived_block(block_height))
     }
 
     // swap
@@ -72,7 +72,7 @@ impl Business for InnerState {
         &mut self,
         wasm_module: Vec<u8>,
     ) -> Result<Option<Vec<u8>>, BusinessError> {
-        self.swap_block_chain.replace_wasm_module(wasm_module)
+        self.updated(|s| s.swap_block_chain.replace_wasm_module(wasm_module))
     }
     fn business_config_swap_current_archiving_max_length_replace(
         &mut self,
@@ -93,7 +93,7 @@ impl Business for InnerState {
         self.updated(|s| s.swap_block_chain.replace_swap_current_archiving(archiving))
     }
     fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
-        self.swap_block_chain.archive_current_canister()
+        self.updated(|s| s.swap_block_chain.archive_current_canister())
     }
     fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
         self.swap_block_chain.get_parent_hash(block_height)
@@ -102,7 +102,7 @@ impl Business for InnerState {
         self.swap_block_chain.get_cached_block_index()
     }
     fn business_config_swap_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
-        self.swap_block_chain.archived_block(block_height)
+        self.updated(|s| s.swap_block_chain.archived_block(block_height))
     }
 
     // maintain archives
@@ -110,10 +110,10 @@ impl Business for InnerState {
         &self.business_data.maintain_archives
     }
     fn business_config_maintain_archives_set(&mut self, config: MaintainArchivesConfig) {
-        self.business_data.maintain_archives.update_config(config);
+        self.updated(|s| s.business_data.maintain_archives.update_config(config));
     }
     fn business_config_maintain_trigger(&mut self, now: TimestampNanos) -> bool {
-        self.business_data.maintain_archives.is_trigger(now)
+        self.updated(|s| s.business_data.maintain_archives.is_trigger(now))
     }
     fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
         let tokens = self.token_block_chain.get_maintain_canisters();
@@ -124,9 +124,7 @@ impl Business for InnerState {
         canisters
     }
     fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
-        self.business_data
-            .maintain_archives
-            .cycles_recharged(canister_id, cycles)
+        self.updated(|s| s.business_data.maintain_archives.cycles_recharged(canister_id, cycles))
     }
 
     // set_certified_data
@@ -459,6 +457,6 @@ impl Business for InnerState {
         self.updated(|s| s.request_traces.remove_request_trace(index))
     }
     fn business_request_trace_insert(&mut self, trace: RequestTrace) {
-        self.request_traces.insert_request_trace(trace)
+        self.updated(|s| s.request_traces.insert_request_trace(trace))
     }
 }

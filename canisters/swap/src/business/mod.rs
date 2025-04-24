@@ -152,6 +152,10 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
     Ok(LockResult::Locked((token_lock, swap_lock, balances_lock)))
 }
 
+fn delay_task(func: impl FnOnce() + 'static) {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), func);
+}
+
 // Query the latest update time
 #[ic_cdk::query]
 fn updated() -> u64 {

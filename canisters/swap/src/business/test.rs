@@ -77,15 +77,11 @@ async fn test_set_controller(canister_id: CanisterId) {
 // ============================== current archiving ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn test_config_token_current_archiving_replace(
-    archiving: CurrentArchiving,
-) -> Option<CurrentArchiving> {
+fn test_config_token_current_archiving_replace(archiving: CurrentArchiving) -> Option<CurrentArchiving> {
     with_mut_state(|s| s.business_config_token_current_archiving_replace(archiving))
 }
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn test_config_swap_current_archiving_replace(
-    archiving: CurrentArchiving,
-) -> Option<CurrentArchiving> {
+fn test_config_swap_current_archiving_replace(archiving: CurrentArchiving) -> Option<CurrentArchiving> {
     with_mut_state(|s| s.business_config_swap_current_archiving_replace(archiving))
 }

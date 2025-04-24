@@ -30,8 +30,11 @@ common = { path = "common" }
 
 candid = "0.10.13"
 ic-cdk = "0.17.1"
+ic-management-canister-types = "0.3.0"
 icrc-ledger-types = "0.1.8"
+ic-cdk-timers = "0.11"
 ic-metrics-encoder = "1.1.1"
+pocket-ic = "8.0.0"
 
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -54,3 +57,4 @@ hex = "0.4.3"
 num-bigint = "0.4.6"
 sha2 = "0.10.8"
 percent-encoding = "2.2"
+futures = "0.3"

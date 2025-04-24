@@ -103,6 +103,10 @@ type MaintainArchivesConfig = record {
   recharge_cycles : nat64;
   min_cycles_threshold : nat64;
 };
+type ManyTokenChangedResult = variant {
+  Ok : vec TokenChangedResult;
+  Err : BusinessError;
+};
 type MarketMakerView = variant { swap_v2 : SwapV2MarketMakerView };
 type NextArchiveCanisterConfig = record {
   maintainers : opt vec principal;
@@ -217,6 +221,7 @@ type RequestTrace = record {
 };
 type RequestTraceDone = record { result : RequestTraceResult; done : nat64 };
 type RequestTraceResult = variant { ok : text; err : text };
+type Result = variant { Ok : nat; Err : BusinessError };
 type SwapBlock = record {
   transaction : SwapTransaction;
   timestamp : nat64;
@@ -528,6 +533,7 @@ type TokenWithdrawArgs = record {
   memo : opt blob;
   withdraw_amount_without_fee : nat;
 };
+type TokenWithdrawManyArgs = record { args : vec TokenWithdrawArgs };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -576,6 +582,14 @@ service : (opt InitArgs) -> {
   pair_liquidity_remove : (TokenPairLiquidityRemoveArgs, opt nat8) -> (
       TokenPairLiquidityRemoveResult,
     );
+  pair_liquidity_remove_and_withdraw : (TokenPairLiquidityRemoveArgs) -> (
+      TokenPairLiquidityRemoveResult,
+      opt ManyTokenChangedResult,
+    );
+  pair_liquidity_remove_and_withdraw_async : (TokenPairLiquidityRemoveArgs) -> (
+      TokenPairLiquidityRemoveResult,
+      opt ManyTokenChangedResult,
+    );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
   pair_swap_by_loan : (TokenPairSwapByLoanArgs, opt nat8) -> (
       TokenPairSwapTokensResult,
@@ -595,7 +609,7 @@ service : (opt InitArgs) -> {
       opt TokenPairSwapTokensResult,
       opt TokenChangedResult,
     );
-  pair_swap_with_deposit_and_withdraw2 : (
+  pair_swap_with_deposit_and_withdraw_async : (
       TokenPairSwapWithDepositAndWithdrawArgs,
     ) -> (
       TokenChangedResult,
@@ -636,6 +650,9 @@ service : (opt InitArgs) -> {
   token_query : (principal) -> (opt TokenInfo) query;
   token_transfer : (TokenTransferArgs, opt nat8) -> (TokenChangedResult);
   token_withdraw : (TokenWithdrawArgs, opt nat8) -> (TokenChangedResult);
+  token_withdraw_many : (TokenWithdrawManyArgs, opt nat8) -> (
+      ManyTokenChangedResult,
+    );
   tokens_balance : (opt blob) -> (vec record { principal; nat }) query;
   tokens_balance_by : (Account) -> (vec record { principal; nat }) query;
   tokens_balance_of : (Account) -> (vec record { principal; nat }) query;
