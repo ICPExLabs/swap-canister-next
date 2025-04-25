@@ -10,8 +10,6 @@
 
 mod services; // canister services
 
-mod utils;
-
 mod types;
 
 mod stable;

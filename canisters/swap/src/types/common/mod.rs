@@ -10,11 +10,6 @@ mod deadline;
 #[allow(unused)]
 pub use deadline::*;
 
-// swap ratio
-mod ratio;
-#[allow(unused)]
-pub use ratio::*;
-
 // swap pool
 mod pair;
 #[allow(unused)]

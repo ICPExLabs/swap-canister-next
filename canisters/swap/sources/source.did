@@ -107,6 +107,7 @@ type ManyTokenChangedResult = variant {
   Ok : vec TokenChangedResult;
   Err : BusinessError;
 };
+type MarketMaker = variant { swap_v2 : SwapV2MarketMaker };
 type MarketMakerView = variant { swap_v2 : SwapV2MarketMakerView };
 type NextArchiveCanisterConfig = record {
   maintainers : opt vec principal;
@@ -240,6 +241,7 @@ type SwapBlockResponse = variant {
 };
 type SwapBlockResult = variant { Ok : SwapBlockResponse; Err : BusinessError };
 type SwapOperation = variant { pair : PairOperation };
+type SwapRatio = record { numerator : nat32; denominator : nat32 };
 type SwapTokenPair = record {
   amm : text;
   token : record { principal; principal };
@@ -260,6 +262,21 @@ type SwapV2BurnToken = record {
   token0 : principal;
   token1 : principal;
   amount : nat;
+};
+type SwapV2MarketMaker = record {
+  lp : PoolLp;
+  price_cumulative_exponent : nat8;
+  block_timestamp_last : nat64;
+  reserve0 : nat;
+  reserve1 : nat;
+  subaccount : blob;
+  price1_cumulative_last : nat;
+  token0 : principal;
+  token1 : principal;
+  fee_rate : SwapRatio;
+  k_last : nat;
+  protocol_fee : opt SwapRatio;
+  price0_cumulative_last : nat;
 };
 type SwapV2MarketMakerView = record {
   lp : PoolLp;
@@ -617,6 +634,7 @@ service : (opt InitArgs) -> {
       opt TokenChangedResult,
     );
   pairs_query : () -> (vec record { TokenPairPool; MarketMakerView }) query;
+  pairs_query_raw : () -> (vec record { TokenPairPool; MarketMaker }) query;
   pause_query : () -> (bool) query;
   pause_query_reason : () -> (opt PauseReason) query;
   pause_replace : (opt text) -> ();

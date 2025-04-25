@@ -37,9 +37,9 @@ pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::types::{
     Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DoHash, DummyCanisterId, EncodedBlock,
-    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf, QueryBlockResult, SelfCanister, SwapTokenPair,
-    TimestampNanos, TokenAccount, TokenInfo, TokenPair, TokenPairAmm, TokenPairPool, TransferFee, check_caller,
-    display_account,
+    GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf, MarketMaker, MarketMakerView, QueryBlockResult,
+    SelfCanister, SwapTokenPair, SwapV2MarketMaker, TimestampNanos, TokenAccount, TokenInfo, TokenPair, TokenPairAmm,
+    TokenPairPool, TransferFee, check_caller, display_account,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

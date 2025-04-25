@@ -30,14 +30,14 @@ fn token_query(token: CanisterId) -> Option<TokenInfo> {
 // anyone can query
 #[ic_cdk::query]
 fn token_balance_of(token: CanisterId, account: Account) -> candid::Nat {
-    crate::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
+    ::common::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
     token_balance_by(token, account)
 }
 
 // anyone can query
 #[ic_cdk::query]
 fn tokens_balance_of(account: Account) -> Vec<(CanisterId, candid::Nat)> {
-    crate::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
+    ::common::utils::owner::check_owner_for_token_balance_of(&account.owner); // ! must be owner or self canister
     tokens_balance_by(account)
 }
 

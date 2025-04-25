@@ -10,6 +10,17 @@ use crate::types::*;
 
 // anyone can query
 #[ic_cdk::query]
+fn pairs_query_raw() -> Vec<(TokenPairPool, MarketMaker)> {
+    with_state(|s| {
+        s.business_token_pair_pools_query()
+            .into_iter()
+            .map(|(pa, maker)| (pa.into(), maker))
+            .collect()
+    })
+}
+
+// anyone can query
+#[ic_cdk::query]
 fn pairs_query() -> Vec<(TokenPairPool, MarketMakerView)> {
     with_state(|s| {
         s.business_token_pair_pools_query()
@@ -27,8 +38,5 @@ fn pair_query(pool: TokenPairPool) -> Option<MarketMakerView> {
 
     let pa = TokenPairAmm { pair, amm };
 
-    with_state(|s| {
-        s.business_token_pair_pool_get(&pa)
-            .map(|maker| maker.clone().into())
-    })
+    with_state(|s| s.business_token_pair_pool_get(&pa).map(|maker| maker.clone().into()))
 }

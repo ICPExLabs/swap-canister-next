@@ -35,13 +35,13 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, HashOf, Nat, PairCreate, PairCumulativePrice, PairOperation, PairSwapToken,
-    QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock, SwapOperation,
-    SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2TransferToken,
-    TimestampNanos, TokenAccount, TokenBlock, TokenInfo, TokenOperation, TokenPair, TokenPairAmm,
-    TokenPairLiquidityAddSuccessView, TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
-    TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId, WithdrawToken,
-    display_account, proto,
+    DummyCanisterId, EncodedBlock, HashOf, MarketMaker, MarketMakerView, Nat, PairCreate, PairCumulativePrice,
+    PairOperation, PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister,
+    SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MarketMaker, SwapV2MintFeeToken, SwapV2MintToken,
+    SwapV2Operation, SwapV2TransferToken, TimestampNanos, TokenAccount, TokenBlock, TokenInfo, TokenOperation,
+    TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView, TokenPairPool, TokenPairSwapByLoanArg,
+    TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee,
+    TransferToken, UserId, WithdrawToken, display_account, proto,
 };
 
 mod common;

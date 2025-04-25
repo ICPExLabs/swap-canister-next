@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
+use ::common::utils::math::zero;
 use ::common::{types::SwapTokenPair, utils::principal::sort_tokens};
 
 use super::*;
-
-use crate::utils::math::zero;
 
 use super::{
     BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairSwapToken, SelfCanister, TokenBalances, TokenInfo,
@@ -134,7 +133,7 @@ impl TokenPairs {
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
         pa: TokenPairAmm,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        self.handle_maker(pa, |maker| maker.add_liquidity(guard))
+        self.handle_maker(pa, |maker| super::common::add_liquidity(maker, guard))
     }
 
     pub fn check_liquidity_removable(
@@ -146,7 +145,12 @@ impl TokenPairs {
         fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         let maker = self.pairs.get(pa).ok_or_else(|| pa.not_exist())?;
-        maker.check_liquidity_removable(token_balances, from, liquidity_without_fee, fee_to)
+        maker.check_liquidity_removable(
+            |token, account| token_balances.token_balance_of(token, account),
+            from,
+            liquidity_without_fee,
+            fee_to,
+        )
     }
 
     pub fn remove_liquidity(
@@ -154,7 +158,7 @@ impl TokenPairs {
         guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
         pa: TokenPairAmm,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        self.handle_maker(pa, |maker| maker.remove_liquidity(guard))
+        self.handle_maker(pa, |maker| super::common::remove_liquidity(maker, guard))
     }
 
     // ============================= swap =============================
@@ -225,7 +229,16 @@ impl TokenPairs {
             };
             self.handle_maker(pa, |maker| {
                 guard.handle_guard(wpa, |guard| {
-                    maker.swap(guard, transaction, trace, &self_canister, amount0_out, amount1_out, to)
+                    super::common::swap(
+                        maker,
+                        guard,
+                        transaction,
+                        trace,
+                        &self_canister,
+                        amount0_out,
+                        amount1_out,
+                        to,
+                    )
                 })
             })?;
 

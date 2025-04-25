@@ -6,7 +6,7 @@ use crate::types::CanisterId;
 // =================================== token info ===================================
 
 /// token info
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq)]
 pub struct TokenInfo {
     /// canister id
     pub canister_id: CanisterId,

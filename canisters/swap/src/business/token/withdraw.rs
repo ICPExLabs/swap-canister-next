@@ -30,7 +30,7 @@ impl CheckArgs for TokenWithdrawArgs {
 
         // check fee
         if let Some(fee) = &self.fee {
-            if *fee != *crate::utils::math::ZERO && *fee != token.fee {
+            if *fee != *::common::utils::math::ZERO && *fee != token.fee {
                 return Err(BusinessError::BadTransferFee {
                     expected_fee: token.fee,
                 });

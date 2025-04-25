@@ -215,6 +215,8 @@ dependencies = [
  "ic-canister-kit",
  "ic-cdk",
  "icrc-ledger-types",
+ "num-bigint",
+ "once_cell",
  "prost",
  "prost-build",
  "serde",

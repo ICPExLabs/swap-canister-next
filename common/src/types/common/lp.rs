@@ -1,20 +1,31 @@
+#[cfg(feature = "cdk")]
 use std::collections::HashMap;
+
+use candid::{CandidType, Nat};
+use icrc_ledger_types::icrc1::account::Account;
+use serde::{Deserialize, Serialize};
 
 use super::*;
 
-use crate::utils::math::zero;
+#[allow(unused)]
+use crate::{
+    types::{AmmText, CanisterId, TokenPairAmm},
+    utils::math::zero,
+};
 
-use super::{AmmText, BusinessError, DummyCanisterId, InnerTokenPairSwapGuard, TokenInfo};
-
-#[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
+/// pool lp
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum PoolLp {
+    /// inner
     #[serde(rename = "inner")]
     InnerLP(InnerLP),
+    /// outer
     #[serde(rename = "outer")]
     OuterLP(OuterLP),
 }
 
 impl PoolLp {
+    #[cfg(feature = "cdk")]
     pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         match self {
             PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pa),
@@ -36,43 +47,38 @@ impl PoolLp {
         }
     }
 
-    pub fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
-        &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
+    pub fn mint_fee<F>(&mut self, token_liquidity_mint_fee: F, to: Account, amount: Nat) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat) -> Result<(), BusinessError>,
+    {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.mint_fee(guard, to, amount),
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint_fee(token_liquidity_mint_fee, to, amount),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
 
-    pub fn mint(
-        &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
-        amount_a: &Nat,
-        amount_b: &Nat,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
+    pub fn mint<F>(&mut self, token_liquidity_mint: F, to: Account, amount: Nat) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat) -> Result<(), BusinessError>,
+    {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.mint(guard, amount_a, amount_b, to, amount),
+            PoolLp::InnerLP(inner_lp) => inner_lp.mint(token_liquidity_mint, to, amount),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
 
-    pub fn burn(
+    pub fn burn<F>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
-        amount_a: &Nat,
-        amount_b: &Nat,
+        token_liquidity_burn: F,
         from: Account,
         amount: Nat,
         fee: Option<BurnFee>,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat, Option<BurnFee>) -> Result<(), BusinessError>,
+    {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.burn(guard, amount_a, amount_b, from, amount, fee),
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(token_liquidity_burn, from, amount, fee),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -93,18 +99,24 @@ impl PoolLp {
     }
 }
 
-// Internal storage lp
+/// Internal storage lp
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub struct InnerLP {
+    /// dummy canister id
     pub dummy_canister_id: DummyCanisterId, // Generate a fake canister number to mark the pool lp
 
+    /// total supply
     pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
-    pub decimals: u8,      // Decimal places need to be recorded, display
-    pub fee: Nat,          // The handling fee needs to be recorded, and it is required to be used during transfer
+    /// decimals
+    pub decimals: u8, // Decimal places need to be recorded, display
+    /// fee
+    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    /// minimum liquidity
     pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl InnerLP {
+    #[cfg(feature = "cdk")]
     pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         use ic_canister_kit::common::trap;
         let TokenPairAmm { pair, amm } = pa;
@@ -125,39 +137,34 @@ impl InnerLP {
         vec![self.dummy_canister_id.id()]
     }
 
-    pub fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
-        &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
-        guard.token_liquidity_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
+    pub fn mint_fee<F>(&mut self, token_liquidity_mint_fee: F, to: Account, amount: Nat) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat) -> Result<(), BusinessError>,
+    {
+        token_liquidity_mint_fee(self.dummy_canister_id.id(), to, amount.clone())?;
         self.total_supply += amount; // Nat will not exceed the accuracy
         Ok(())
     }
 
-    pub fn mint(
-        &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
-        amount_a: &Nat,
-        amount_b: &Nat,
-        to: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
-        guard.token_liquidity_mint(amount_a, amount_b, self.dummy_canister_id.id(), to, amount.clone())?;
+    pub fn mint<F>(&mut self, token_liquidity_mint: F, to: Account, amount: Nat) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat) -> Result<(), BusinessError>,
+    {
+        token_liquidity_mint(self.dummy_canister_id.id(), to, amount.clone())?;
         self.total_supply += amount; // Nat will not exceed the accuracy
         Ok(())
     }
 
-    pub fn burn(
+    pub fn burn<F>(
         &mut self,
-        guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
-        amount_a: &Nat,
-        amount_b: &Nat,
+        token_liquidity_burn: F,
         from: Account,
         amount: Nat,
         fee: Option<BurnFee>,
-    ) -> Result<(), BusinessError> {
+    ) -> Result<(), BusinessError>
+    where
+        F: FnOnce(CanisterId, Account, Nat, Option<BurnFee>) -> Result<(), BusinessError>,
+    {
         if let Some(fee) = &fee {
             if fee.fee != self.fee {
                 return Err(BusinessError::Liquidity(format!(
@@ -166,14 +173,7 @@ impl InnerLP {
                 )));
             }
         }
-        guard.token_liquidity_burn(
-            amount_a,
-            amount_b,
-            self.dummy_canister_id.id(),
-            from,
-            amount.clone(),
-            fee.clone(),
-        )?;
+        token_liquidity_burn(self.dummy_canister_id.id(), from, amount.clone(), fee.clone())?;
         let fee = fee.map(|_| self.fee.clone()).unwrap_or_default();
         let total = amount + fee;
         if self.total_supply < total {
@@ -207,29 +207,26 @@ impl InnerLP {
 
         Ok(())
     }
-
-    // pub fn transfer(
-    //     &mut self,
-    //     guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
-    //     from: Account,
-    //     to: Account,
-    //     amount: Nat,
-    // ) -> Result<(), BusinessError> {
-    // }
 }
 
-// External storage lp, is a separate canister, with permission to its mint and burn LP tokens，// ! The canister handling fee should not be destroyed
+/// External storage lp, is a separate canister, with permission to its mint and burn LP tokens，// ! The canister handling fee should not be destroyed
 #[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
 pub struct OuterLP {
+    /// outer canister id
     pub token_canister_id: CanisterId, // Need to record the external canister id
 
+    /// total supply
     pub total_supply: Nat, // Total lp needs to be recorded, and the corresponding tokens need to be returned proportionally when adding and removing liquidity.
-    pub decimals: u8,      // Decimal places need to be recorded, display
-    pub fee: Nat,          // The handling fee needs to be recorded, and it is required to be used during transfer
+    /// decimals
+    pub decimals: u8, // Decimal places need to be recorded, display
+    /// fee
+    pub fee: Nat, // The handling fee needs to be recorded, and it is required to be used during transfer
+    /// minimum liquidity
     pub minimum_liquidity: Nat, // Minimum liquidity needs to be recorded, and when removing liquidity, you need to check whether it is achieved.
 }
 
 impl PoolLp {
+    /// new
     pub fn new_inner_lp(dummy_canister_id: DummyCanisterId, token0: &TokenInfo, token1: &TokenInfo) -> Self {
         let decimals = get_decimals(token0.decimals, token1.decimals);
         let fee = get_fee(&token0.fee, &token1.fee);
