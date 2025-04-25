@@ -65,7 +65,7 @@ async fn inner_pair_liquidity_remove_and_withdraw(
         created: None,
     };
     let withdraw_args_b = TokenWithdrawArgs {
-        token: token_a.canister_id,
+        token: token_b.canister_id,
         from: withdraw_from,
         withdraw_amount_without_fee: remove.amount.1.clone() - token_b.fee,
         to: withdraw_from,

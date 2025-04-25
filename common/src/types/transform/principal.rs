@@ -1,6 +1,7 @@
-use ic_canister_kit::types::{CanisterId, UserId};
-
-use crate::proto;
+use crate::{
+    proto,
+    types::{CanisterId, UserId},
+};
 
 impl From<CanisterId> for proto::CanisterId {
     fn from(value: CanisterId) -> Self {

@@ -1,5 +1,4 @@
 use candid::CandidType;
-use ic_canister_kit::types::CanisterId;
 use serde::{Deserialize, Serialize};
 
 /// amm
@@ -9,6 +8,8 @@ pub use amm::*;
 /// pair
 mod pair;
 pub use pair::*;
+
+use super::CanisterId;
 
 // =================== token pair pool ===================
 

@@ -1,11 +1,11 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::{CanisterId, UserId};
+#[cfg(feature = "cdk")]
 use ic_cdk::api::call::RejectionCode;
 use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::transfer_from::TransferFromError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::types::TokenPairAmm;
+use crate::types::{CanisterId, TokenPairAmm, UserId};
 
 use super::TokenAccount;
 
@@ -98,7 +98,7 @@ pub enum BusinessError {
     TokenAccountsUnlocked(Vec<TokenAccount>),
 
     // ================= swap =================
-    /// Invalid Ammm algorithm
+    /// Invalid Amm algorithm
     #[error("invalid amm:{0}.")]
     InvalidAmm(String),
     /// Token pool already exists and cannot be created again
@@ -128,20 +128,14 @@ pub enum BusinessError {
 fn display_token_accounts(accounts: &[TokenAccount]) -> String {
     format!(
         "[{}]",
-        accounts
-            .iter()
-            .map(|ta| ta.to_string())
-            .collect::<Vec<_>>()
-            .join(",")
+        accounts.iter().map(|ta| ta.to_string()).collect::<Vec<_>>().join(",")
     )
 }
 
+#[cfg(feature = "cdk")]
 impl From<(RejectionCode, String)> for BusinessError {
     fn from(value: (RejectionCode, String)) -> Self {
-        Self::CallCanisterError(format!(
-            "rejection code: {:?}, message: {}",
-            value.0, value.1
-        ))
+        Self::CallCanisterError(format!("rejection code: {:?}, message: {}", value.0, value.1))
     }
 }
 

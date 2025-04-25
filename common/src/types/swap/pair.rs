@@ -1,21 +1,21 @@
+#[allow(unused)]
 use std::{borrow::Cow, fmt::Display};
 
 use candid::CandidType;
-use ic_canister_kit::types::{Bound, CanisterId, Storable};
+#[cfg(feature = "cdk")]
+use ic_canister_kit::types::{Bound, Storable};
 use icrc_ledger_types::icrc1::account::Subaccount;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::{BusinessError, DummyCanisterId},
+    types::{BusinessError, CanisterId, DummyCanisterId},
     utils::{hash::hash_sha256, principal::sort_tokens},
 };
 
 use super::{Amm, AmmText};
 
 /// Sequential token pairs
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenPair {
     /// small one
     pub token0: CanisterId,
@@ -32,9 +32,7 @@ impl TokenPair {
 }
 
 /// Sequential token pairs and algorithms
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenPairAmm {
     /// Token pairs
     pub pair: TokenPair,
@@ -42,6 +40,7 @@ pub struct TokenPairAmm {
     pub amm: Amm,
 }
 
+#[cfg(feature = "cdk")]
 impl Storable for TokenPairAmm {
     fn to_bytes(&self) -> Cow<[u8]> {
         use ic_canister_kit::common::trap;

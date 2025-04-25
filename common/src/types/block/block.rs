@@ -1,6 +1,8 @@
+#[cfg(feature = "cdk")]
 use std::borrow::Cow;
 
 use candid::CandidType;
+#[cfg(feature = "cdk")]
 use ic_canister_kit::types::{Bound, Storable};
 use serde::{Deserialize, Serialize};
 
@@ -16,9 +18,7 @@ pub struct EncodedBlock(pub Vec<u8>);
 
 impl From<EncodedBlock> for proto::EncodedBlock {
     fn from(value: EncodedBlock) -> Self {
-        proto::EncodedBlock {
-            block: value.0.into(),
-        }
+        proto::EncodedBlock { block: value.0.into() }
     }
 }
 impl From<proto::EncodedBlock> for EncodedBlock {
@@ -32,6 +32,7 @@ impl From<Vec<u8>> for EncodedBlock {
     }
 }
 
+#[cfg(feature = "cdk")]
 impl Storable for EncodedBlock {
     fn to_bytes(&self) -> Cow<[u8]> {
         Cow::Borrowed(&self.0)

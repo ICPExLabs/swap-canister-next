@@ -27,7 +27,7 @@ impl CheckArgs for TokenWithdrawManyArgs {
 
         // check token
         let token = self.args.iter().map(|a| a.token).collect::<HashSet<_>>();
-        assert_eq!(token.len(), self.args.len(), "token must be different");
+        assert_eq!(token.len(), self.args.len(), "token must be different token");
 
         Ok(args)
     }

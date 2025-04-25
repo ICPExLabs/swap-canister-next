@@ -1,16 +1,20 @@
+#[allow(unused)]
 use std::{borrow::Cow, fmt::Display};
 
+#[allow(unused)]
 use candid::{CandidType, Principal};
-use ic_canister_kit::types::{Bound, CanisterId, Storable};
+#[cfg(feature = "cdk")]
+use ic_canister_kit::types::{Bound, Storable};
+#[allow(unused)]
 use icrc_ledger_types::icrc1::account::{Account, DEFAULT_SUBACCOUNT};
 use serde::{Deserialize, Serialize};
+
+use crate::types::CanisterId;
 
 // ============================ token account ============================
 
 /// Token Account
-#[derive(
-    Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenAccount {
     /// Token canister
     pub token: CanisterId,
@@ -29,12 +33,7 @@ pub fn display_account(account: &Account) -> String {
 
 impl Display for TokenAccount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[{}]({})",
-            self.token.to_text(),
-            display_account(&self.account)
-        )
+        write!(f, "[{}]({})", self.token.to_text(), display_account(&self.account))
     }
 }
 
@@ -45,6 +44,7 @@ impl TokenAccount {
     }
 }
 
+#[cfg(feature = "cdk")]
 impl Storable for TokenAccount {
     fn to_bytes(&self) -> Cow<[u8]> {
         let mut bytes = vec![];
@@ -59,11 +59,7 @@ impl Storable for TokenAccount {
         bytes.extend_from_slice(owner_bytes);
 
         // push subaccount // ? 32
-        let subaccount = self
-            .account
-            .subaccount
-            .as_ref()
-            .unwrap_or(DEFAULT_SUBACCOUNT);
+        let subaccount = self.account.subaccount.as_ref().unwrap_or(DEFAULT_SUBACCOUNT);
         if DEFAULT_SUBACCOUNT != subaccount {
             bytes.extend_from_slice(subaccount);
         }

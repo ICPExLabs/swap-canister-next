@@ -34,15 +34,14 @@ pub use crate::types::business::*;
 pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
-    Account, Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken,
-    DoHash, DummyCanisterId, EncodedBlock, HashOf, Nat, PairCreate, PairCumulativePrice,
-    PairOperation, PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult,
-    SelfCanister, SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken,
-    SwapV2MintToken, SwapV2Operation, SwapV2TransferToken, TimestampNanos, TokenAccount,
-    TokenBlock, TokenOperation, TokenPair, TokenPairAmm, TokenPairLiquidityAddSuccessView,
-    TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
-    TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId,
-    WithdrawToken, display_account, proto,
+    Account, Amm, AmmText, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken, DoHash,
+    DummyCanisterId, EncodedBlock, HashOf, Nat, PairCreate, PairCumulativePrice, PairOperation, PairSwapToken,
+    QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, SelfCanister, SwapBlock, SwapOperation,
+    SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2TransferToken,
+    TimestampNanos, TokenAccount, TokenBlock, TokenInfo, TokenOperation, TokenPair, TokenPairAmm,
+    TokenPairLiquidityAddSuccessView, TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
+    TokenPairSwapTokensForExactTokensArg, TokenTransaction, TransferFee, TransferToken, UserId, WithdrawToken,
+    display_account, proto,
 };
 
 mod common;
@@ -72,14 +71,14 @@ pub use request::*;
 // Data structures required by the framework
 #[derive(Serialize, Deserialize, Default)]
 pub struct CanisterKit {
-    pub pause: Pause, // Record maintenance status //  ? Heap memory Serialization
+    pub pause: Pause,             // Record maintenance status //  ? Heap memory Serialization
     pub permissions: Permissions, // Record your own permissions //  ? Heap memory Serialization
-    pub schedule: Schedule, // Record timing tasks //  ? Heap memory Serialization
+    pub schedule: Schedule,       // Record timing tasks //  ? Heap memory Serialization
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
-    pub updated: TimestampNanos, // Record the last update time of the canister
+    pub updated: TimestampNanos,             // Record the last update time of the canister
     pub fee_to: FeeTo, // Record the agreement fee collector account, lp token transfer also requires the collection of transfer fees
     pub maintain_archives: MaintainArchives, // Maintain canister information
 }
@@ -179,8 +178,7 @@ impl InnerState {
             let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
                 vec![ic_canister_kit::identity::caller()] // The default caller is the maintenance person
             });
-            s.token_block_chain
-                .set_archive_maintainers(Some(maintainers));
+            s.token_block_chain.set_archive_maintainers(Some(maintainers));
 
             let _ = s.token_block_chain.init_wasm_module();
             let _ = s.swap_block_chain.init_wasm_module();
@@ -215,13 +213,9 @@ impl InnerState {
     {
         let token_guard = self.token_block_chain.be_guard(&locks.0);
         let balances_guard = self.token_balances.be_guard(&locks.1);
-        let trace_guard = self.request_traces.be_guard(
-            arg.into(),
-            Some(&token_guard),
-            None,
-            Some(&balances_guard),
-            trace,
-        )?;
+        let trace_guard =
+            self.request_traces
+                .be_guard(arg.into(), Some(&token_guard), None, Some(&balances_guard), trace)?;
         Ok(TokenGuard::new(trace_guard, balances_guard, token_guard))
     }
 

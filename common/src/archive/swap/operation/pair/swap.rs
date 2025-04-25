@@ -1,9 +1,11 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::Amm};
+use crate::{
+    proto,
+    types::{Amm, CanisterId},
+};
 
 /// Create a pool
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
@@ -60,11 +62,7 @@ impl TryFrom<proto::PairSwapToken> for PairSwapToken {
             .token_b
             .ok_or_else(|| "token_b of pair swap token can not be none".to_string())?
             .into();
-        let amm = value
-            .amm
-            .as_str()
-            .try_into()
-            .map_err(|err| format!("{err:?}"))?;
+        let amm = value.amm.as_str().try_into().map_err(|err| format!("{err:?}"))?;
         let from = value
             .from
             .ok_or_else(|| "from of pair swap token can not be none".to_string())?

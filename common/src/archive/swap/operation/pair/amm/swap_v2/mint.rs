@@ -1,9 +1,11 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::TokenPairAmm};
+use crate::{
+    proto,
+    types::{CanisterId, TokenPairAmm},
+};
 
 // ==================== swap v2 mint ====================
 

@@ -1,9 +1,11 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::TokenPairAmm};
+use crate::{
+    proto,
+    types::{CanisterId, TokenPairAmm},
+};
 
 // ==================== swap v2 mint fee ====================
 
@@ -63,11 +65,6 @@ impl TryFrom<proto::SwapV2MintFeeToken> for SwapV2MintFeeToken {
             .ok_or_else(|| "from of swap v2 mint fee token can not be none".to_string())?
             .try_into()?;
 
-        Ok(Self {
-            pa,
-            to,
-            token,
-            amount,
-        })
+        Ok(Self { pa, to, token, amount })
     }
 }

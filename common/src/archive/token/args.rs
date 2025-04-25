@@ -1,7 +1,6 @@
-use ic_canister_kit::types::{CanisterId, UserId};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{BlockIndex, HashOf};
+use crate::types::{BlockIndex, CanisterId, HashOf, UserId};
 
 use super::TokenBlock;
 

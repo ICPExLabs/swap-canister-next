@@ -14,17 +14,18 @@ workspace = true
 default = []
 archive-token = []
 archive-swap = []
-full = ["archive-token", "archive-swap"]
+cdk = ["dep:ic-cdk", "dep:ic-canister-kit"]
+full = ["archive-token", "archive-swap", "cdk"]
 
 [dependencies]
 candid = { workspace = true }
-ic-cdk = { workspace = true }
+ic-cdk = { workspace = true, optional = true }
 icrc-ledger-types = { workspace = true }
+
+ic-canister-kit = { workspace = true, optional = true, features = ["identity"] }
 
 serde = { workspace = true }
 serde_bytes = { workspace = true }
-
-ic-canister-kit = { workspace = true, features = ["identity"] }
 
 thiserror = { workspace = true }
 hex = { workspace = true }

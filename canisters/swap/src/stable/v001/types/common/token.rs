@@ -1,44 +1,8 @@
-// cSpell:words eurc kinic dolr goldao trax neutrinite sneed elna icfc yuku motoko icpcc origyn dogmi icvc nfid nfidw draggin
+// cSpell:words eurc kinic dolr goldao trax neutrinite sneed elna icfc yuku motoko icpcc origyn dogmi icvc nfid nfidw draggin TCYCLES SWAMPDAO
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
 use super::*;
-
-// =================================== token info ===================================
-
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenInfo {
-    pub canister_id: CanisterId,
-    #[allow(unused)]
-    pub name: String,
-    #[allow(unused)]
-    pub symbol: String,
-    #[allow(unused)]
-    pub decimals: u8,
-    pub fee: Nat,
-    pub is_lp_token: bool,
-}
-
-impl TokenInfo {
-    fn new(
-        canister_id: &'static str,
-        name: &'static str,
-        symbol: &'static str,
-        decimals: u8,
-        fee: u128,
-        is_lp_token: bool,
-    ) -> Self {
-        use ic_canister_kit::common::trap;
-        Self {
-            canister_id: trap(CanisterId::from_text(canister_id)),
-            name: name.into(),
-            symbol: symbol.into(),
-            decimals,
-            fee: Nat::from(fee),
-            is_lp_token,
-        }
-    }
-}
 
 // =================================== tokens ===================================
 

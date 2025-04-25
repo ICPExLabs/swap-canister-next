@@ -1,9 +1,8 @@
 use candid::{CandidType, Nat};
-use ic_canister_kit::types::CanisterId;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::proto;
+use crate::{proto, types::CanisterId};
 
 /// Withdrawal transactions
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]

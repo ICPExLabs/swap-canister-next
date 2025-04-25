@@ -8,7 +8,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-common = { workspace = true, features = ["archive-swap"] }
+common = { workspace = true, features = ["archive-swap", "cdk"] }
 
 candid = { workspace = true }
 ic-cdk = { workspace = true }

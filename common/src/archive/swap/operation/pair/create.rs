@@ -1,8 +1,10 @@
 use candid::CandidType;
-use ic_canister_kit::types::UserId;
 use serde::{Deserialize, Serialize};
 
-use crate::{proto, types::TokenPairAmm};
+use crate::{
+    proto,
+    types::{TokenPairAmm, UserId},
+};
 
 /// Create a pool
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]

@@ -17,3 +17,6 @@ pub use principal::*;
 /// fee
 mod fee;
 pub use fee::*;
+/// token
+mod token;
+pub use token::*;

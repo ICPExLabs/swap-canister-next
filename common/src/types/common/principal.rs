@@ -1,10 +1,11 @@
 use candid::CandidType;
-use ic_canister_kit::{
-    identity::self_canister_id,
-    types::{CanisterId, UserId},
-};
+#[cfg(feature = "cdk")]
+use ic_canister_kit::identity::self_canister_id;
 use serde::{Deserialize, Serialize};
 
+use crate::types::{CanisterId, UserId};
+
+#[allow(unused)]
 use super::BusinessError;
 
 /// The canister itself
@@ -24,6 +25,7 @@ pub struct Caller(UserId);
 
 impl Caller {
     /// get
+    #[cfg(feature = "cdk")]
     pub fn get() -> Self {
         Self(ic_canister_kit::identity::caller())
     }
@@ -36,6 +38,7 @@ impl Caller {
 }
 
 /// Check whether the caller is consistent. If the caller is a self canister, the default owner is correct.
+#[cfg(feature = "cdk")]
 pub fn check_caller(owner: &UserId) -> Result<(SelfCanister, Caller), BusinessError> {
     let self_canister_id = self_canister_id();
     let mut caller = ic_canister_kit::identity::caller();

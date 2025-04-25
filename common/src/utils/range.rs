@@ -4,6 +4,7 @@ use std::ops::Range;
 /// Constructs a range starting at `start` and spanning `len` integers.
 /// If `start` + `len` overflows u64, the len is truncated to the largest value that doesn't overflow
 /// u64.
+#[cfg(feature = "cdk")]
 pub fn make_range(start: u64, len: u64) -> Range<u64> {
     Range {
         start,
