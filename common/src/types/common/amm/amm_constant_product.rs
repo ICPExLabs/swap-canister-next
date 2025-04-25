@@ -23,7 +23,7 @@ use crate::{
 };
 
 /// The required data under the current algorithm processing fee
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapV2MarketMaker {
     pub subaccount: Subaccount, // ! fixed. Fund balance storage location self_canister_id.subaccount
     pub fee_rate: SwapRatio,    // ! fixed. Transaction rates
@@ -265,6 +265,56 @@ impl SwapV2MarketMaker {
         self.check_k_on_calculate_amount(&token_out, &amount_in, amount_out)?;
 
         Ok((pool_account, amount_in))
+    }
+
+    pub fn text(&self) -> String {
+        format!(
+            "token0:[{}]({})\ntoken1:[{}]({})\nAmm:SwapV2({})\nProtocolFee:{}\nLP Supply:{}",
+            self.token0.to_text(),
+            self.reserve0,
+            self.token1.to_text(),
+            self.reserve1,
+            self.fee_rate,
+            self.protocol_fee
+                .as_ref()
+                .map(|v| v.to_string())
+                .unwrap_or("None".to_string()),
+            self.lp.get_total_supply()
+        )
+    }
+
+    pub fn delta(&self, next: &Self) -> String {
+        let delta_reserve0 = if self.reserve0 < next.reserve0 {
+            format!("+{}", next.reserve0.clone() - self.reserve0.clone())
+        } else {
+            format!("-{}", self.reserve0.clone() - next.reserve0.clone())
+        };
+        let delta_reserve1 = if self.reserve1 < next.reserve1 {
+            format!("+{}", next.reserve1.clone() - self.reserve1.clone())
+        } else {
+            format!("-{}", self.reserve1.clone() - next.reserve1.clone())
+        };
+        let delta_total_supply = if self.lp.get_total_supply() < next.lp.get_total_supply() {
+            format!("+{}", next.lp.get_total_supply() - self.lp.get_total_supply())
+        } else {
+            format!("-{}", self.lp.get_total_supply() - next.lp.get_total_supply())
+        };
+        format!(
+            "token0:[{}]({}->{}:{delta_reserve0})\ntoken1:[{}]({}->{}:{delta_reserve1})\nAmm:SwapV2({})\nProtocolFee:{}\nLP Supply:{}->{}:{delta_total_supply}",
+            self.token0.to_text(),
+            self.reserve0,
+            next.reserve0,
+            self.token1.to_text(),
+            self.reserve1,
+            next.reserve1,
+            self.fee_rate,
+            self.protocol_fee
+                .as_ref()
+                .map(|v| v.to_string())
+                .unwrap_or("None".to_string()),
+            self.lp.get_total_supply(),
+            next.lp.get_total_supply()
+        )
     }
 }
 

@@ -26,7 +26,7 @@ use super::{BusinessError, DummyCanisterId, PoolLp, SelfCanister, SwapRatio, Tok
 // pub use pmm_v1::*;
 
 /// market maker
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum MarketMaker {
     /// swap v2
     #[serde(rename = "swap_v2")]

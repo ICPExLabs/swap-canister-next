@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// pool lp
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum PoolLp {
     /// inner
     #[serde(rename = "inner")]
@@ -100,7 +100,7 @@ impl PoolLp {
 }
 
 /// Internal storage lp
-#[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct InnerLP {
     /// dummy canister id
     pub dummy_canister_id: DummyCanisterId, // Generate a fake canister number to mark the pool lp
@@ -210,7 +210,7 @@ impl InnerLP {
 }
 
 /// External storage lp, is a separate canister, with permission to its mint and burn LP tokens，// ! The canister handling fee should not be destroyed
-#[derive(Debug, Serialize, Deserialize, Clone, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct OuterLP {
     /// outer canister id
     pub token_canister_id: CanisterId, // Need to record the external canister id

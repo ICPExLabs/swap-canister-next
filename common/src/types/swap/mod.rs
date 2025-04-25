@@ -14,7 +14,7 @@ use super::CanisterId;
 // =================== token pair pool ===================
 
 /// (token0, token1, amm)
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenPairPool {
     /// token 0
     pub token0: CanisterId,

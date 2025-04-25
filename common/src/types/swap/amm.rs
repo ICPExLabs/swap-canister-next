@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::BusinessError;
 
 /// amm algorithm
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct AmmText(String);
 impl AsRef<str> for AmmText {
     fn as_ref(&self) -> &str {
@@ -13,9 +13,7 @@ impl AsRef<str> for AmmText {
 }
 
 /// Amm algorithm
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub enum Amm {
     /// fee 0.01%
     #[serde(rename = "swap_v2_0.01%")]

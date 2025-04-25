@@ -1,8 +1,10 @@
+use std::fmt::Display;
+
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub struct SwapRatio {
     pub numerator: u32,
     pub denominator: u32,
@@ -19,6 +21,12 @@ impl SwapRatio {
     /// zero
     pub fn is_zero(&self) -> bool {
         self.numerator == 0
+    }
+}
+
+impl Display for SwapRatio {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.numerator, self.denominator)
     }
 }
 
