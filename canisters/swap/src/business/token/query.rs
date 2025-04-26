@@ -12,7 +12,7 @@ use crate::types::*;
 #[ic_cdk::query]
 fn tokens_query() -> Vec<TokenInfo> {
     with_state(|s| {
-        s.business_all_tokens_query()
+        s.business_all_tokens_with_dummy_query()
             .into_values()
             .map(|token| token.into_owned())
             .collect()
@@ -74,7 +74,7 @@ fn token_balance_by(token: CanisterId, account: Account) -> candid::Nat {
 #[ic_cdk::query(guard = "has_business_token_balance_by")]
 fn tokens_balance_by(account: Account) -> Vec<(CanisterId, candid::Nat)> {
     with_state(|s| {
-        s.business_all_tokens_query()
+        s.business_all_tokens_with_dummy_query()
             .keys()
             .map(|&canister_id| (canister_id, s.business_token_balance_of(canister_id, account)))
             .collect()

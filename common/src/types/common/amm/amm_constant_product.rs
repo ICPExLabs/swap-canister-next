@@ -5,6 +5,7 @@
 ///   - Simple and efficient, suitable for most trading scenarios.
 ///   - There is significant slippage in large-scale transactions (significant price changes).
 ///   - Uniswap V3 introduces "concentrated liquidity", allowing LPs to set price ranges and improve capital efficiency.
+use std::borrow::Cow;
 #[cfg(feature = "cdk")]
 use std::collections::HashMap;
 
@@ -75,7 +76,7 @@ impl SwapV2MarketMaker {
     }
 
     #[cfg(feature = "cdk")]
-    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         self.lp.dummy_tokens(tokens, pa)
     }
 

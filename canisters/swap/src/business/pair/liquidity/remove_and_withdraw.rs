@@ -28,7 +28,14 @@ async fn inner_pair_liquidity_remove_and_withdraw(
     _async: bool,
 ) -> (TokenPairLiquidityRemoveResult, Option<ManyTokenChangedResult>) {
     // query data
-    let token_a = match with_state(|s| s.business_tokens_query().get(&args.swap_pair.token.0).cloned()) {
+    let (token_a, token_b) = with_state(|s| {
+        let tokens = s.business_tokens_query();
+        (
+            tokens.get(&args.swap_pair.token.0).map(|t| t.clone().into_owned()),
+            tokens.get(&args.swap_pair.token.1).map(|t| t.clone().into_owned()),
+        )
+    });
+    let token_a = match token_a {
         Some(token) => token,
         None => {
             return (
@@ -37,7 +44,7 @@ async fn inner_pair_liquidity_remove_and_withdraw(
             );
         }
     };
-    let token_b = match with_state(|s| s.business_tokens_query().get(&args.swap_pair.token.1).cloned()) {
+    let token_b = match token_b {
         Some(token) => token,
         None => {
             return (

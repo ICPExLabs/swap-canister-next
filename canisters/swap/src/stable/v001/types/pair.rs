@@ -33,7 +33,10 @@ impl TokenPairs {
             .collect()
     }
 
-    pub fn query_dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>) -> HashMap<CanisterId, TokenInfo> {
+    pub fn query_dummy_tokens(
+        &self,
+        tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>,
+    ) -> HashMap<CanisterId, TokenInfo> {
         self.query_all_token_pair_pools()
             .into_iter()
             .flat_map(|(pa, maker)| maker.dummy_tokens(tokens, &pa))
@@ -43,7 +46,7 @@ impl TokenPairs {
 
     pub fn query_dummy_token_info(
         &self,
-        tokens: &HashMap<CanisterId, TokenInfo>,
+        tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>,
         pa: &TokenPairAmm,
     ) -> Option<TokenInfo> {
         let mut tokens = self

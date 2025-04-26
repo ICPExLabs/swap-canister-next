@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 #[cfg(feature = "cdk")]
 use std::collections::HashMap;
 
@@ -26,7 +27,7 @@ pub enum PoolLp {
 
 impl PoolLp {
     #[cfg(feature = "cdk")]
-    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         match self {
             PoolLp::InnerLP(inner_lp) => inner_lp.dummy_tokens(tokens, pa),
             PoolLp::OuterLP(_outer_lp) => vec![],
@@ -124,7 +125,7 @@ pub struct InnerLP {
 
 impl InnerLP {
     #[cfg(feature = "cdk")]
-    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         use ic_canister_kit::common::trap;
         let TokenPairAmm { pair, amm } = pa;
         let amm: AmmText = (*amm).into();

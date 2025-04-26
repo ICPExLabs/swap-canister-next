@@ -16,8 +16,12 @@ impl CheckArgs for TokenWithdrawArgs {
     type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // ! must be token, can not be dummy lp token
-        let token = with_state(|s| s.business_tokens_query().get(&self.token).cloned())
-            .ok_or(BusinessError::NotSupportedToken(self.token))?;
+        let token = with_state(|s| {
+            s.business_tokens_query()
+                .get(&self.token)
+                .map(|t| t.clone().into_owned())
+        })
+        .ok_or(BusinessError::NotSupportedToken(self.token))?;
 
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;

@@ -14,7 +14,7 @@ impl CheckArgs for TokenTransferArgs {
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // check supported token, can be token or dummy lp token
         let token = with_state(|s| {
-            s.business_all_tokens_query()
+            s.business_all_tokens_with_dummy_query()
                 .remove(&self.token)
                 .map(|token| token.into_owned())
         })

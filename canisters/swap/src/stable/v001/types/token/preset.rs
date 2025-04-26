@@ -71,4 +71,4 @@ fn init_tokens() -> HashMap<CanisterId, TokenInfo> {
 }
 
 #[allow(unused)]
-pub static TOKENS: Lazy<HashMap<CanisterId, TokenInfo>> = Lazy::new(init_tokens);
+pub(super) static PRESET_TOKENS: Lazy<HashMap<CanisterId, TokenInfo>> = Lazy::new(init_tokens);

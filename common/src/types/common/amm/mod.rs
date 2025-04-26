@@ -90,7 +90,7 @@ impl MarketMaker {
     }
 
     #[cfg(feature = "cdk")]
-    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, TokenInfo>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
+    pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         match self {
             MarketMaker::SwapV2(value) => value.dummy_tokens(tokens, pa),
         }

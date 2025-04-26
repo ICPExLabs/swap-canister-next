@@ -1,4 +1,6 @@
 use candid::{CandidType, Nat};
+#[cfg(feature = "cdk")]
+use ic_canister_kit::types::{Bound, Cow, Storable};
 use serde::{Deserialize, Serialize};
 
 use crate::types::CanisterId;
@@ -23,6 +25,21 @@ pub struct TokenInfo {
     pub fee: Nat,
     /// is lp token or not
     pub is_lp_token: bool,
+}
+
+#[cfg(feature = "cdk")]
+impl Storable for TokenInfo {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        use ic_canister_kit::common::trap;
+        Cow::Owned(trap(ic_canister_kit::functions::stable::to_bytes(self)))
+    }
+
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        use ic_canister_kit::common::trap;
+        trap(ic_canister_kit::functions::stable::from_bytes(&bytes))
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 impl TokenInfo {

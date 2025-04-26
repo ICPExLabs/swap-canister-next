@@ -30,7 +30,7 @@ impl CheckArgs for TokenPairSwapWithDepositAndWithdrawArgs {
         // get token fee
         let token = self.path[self.path.len() - 1].token.1;
         // ! must be token, can not be dummy lp token
-        let token = with_state(|s| s.business_tokens_query().get(&token).cloned())
+        let token = with_state(|s| s.business_tokens_query().get(&token).map(|t| t.clone().into_owned()))
             .ok_or(BusinessError::NotSupportedToken(token))?;
         ic_cdk::println!(
             "token:[{}], fee:{}",

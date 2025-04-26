@@ -184,16 +184,15 @@ impl Business for InnerState {
     // ======================== query ========================
 
     // tokens query
-    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-        &TOKENS
+    fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.tokens.get_all_tokens()
     }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-        self.token_pairs.query_dummy_tokens(self.business_tokens_query())
+        self.token_pairs.query_dummy_tokens(&self.business_tokens_query())
     }
-    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+    fn business_all_tokens_with_dummy_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         self.business_tokens_query()
-            .iter()
-            .map(|(token, info)| (*token, Cow::Borrowed(info)))
+            .into_iter()
             .chain(
                 self.business_dummy_tokens_query()
                     .into_iter()
@@ -203,13 +202,13 @@ impl Business for InnerState {
     }
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         self.business_tokens_query()
-            .get(token)
-            .cloned()
+            .remove(token)
+            .map(|t| t.into_owned())
             .or_else(|| self.business_dummy_tokens_query().remove(token))
     }
     fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
         self.token_pairs
-            .query_dummy_token_info(self.business_tokens_query(), pa)
+            .query_dummy_token_info(&self.business_tokens_query(), pa)
     }
     fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
         ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
@@ -303,20 +302,25 @@ impl Business for InnerState {
         arg: ArgWithMeta<TokenPairAmm>,
     ) -> Result<MarketMaker, BusinessError> {
         self.updated(|s| {
-            let token0 = TOKENS
+            let tokens = s.business_tokens_query();
+            let token0 = tokens
                 .get(&arg.arg.pair.token0)
-                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?;
-            let token1 = TOKENS
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?
+                .clone()
+                .into_owned();
+            let token1 = tokens
                 .get(&arg.arg.pair.token1)
-                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?;
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?
+                .clone()
+                .into_owned();
 
             let mut swap_guard = s.swap_block_chain.be_guard(lock);
             let mut trace_guard = s
                 .request_traces
                 .be_guard(arg.clone().into(), None, Some(&swap_guard), None, None)?;
-            let maker = s
-                .token_pairs
-                .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, token0, token1)?;
+            let maker =
+                s.token_pairs
+                    .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, &token0, &token1)?;
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })

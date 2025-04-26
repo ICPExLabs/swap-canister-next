@@ -183,13 +183,13 @@ pub trait Business:
 
     // ======================== query ========================
 
-    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+    fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+    fn business_all_tokens_with_dummy_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
@@ -532,14 +532,14 @@ impl Business for State {
 
     // ======================== query ========================
 
-    fn business_tokens_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+    fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         self.get().business_tokens_query()
     }
     fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
         self.get().business_dummy_tokens_query()
     }
-    fn business_all_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-        self.get().business_all_tokens_query()
+    fn business_all_tokens_with_dummy_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.get().business_all_tokens_with_dummy_query()
     }
     fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
         self.get().business_token_query(token)

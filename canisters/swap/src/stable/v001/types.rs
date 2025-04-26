@@ -54,6 +54,7 @@ mod fee_to;
 mod maintain;
 mod pair;
 mod request;
+mod token;
 
 #[allow(unused)]
 pub use balance::*;
@@ -67,6 +68,8 @@ pub use maintain::*;
 pub use pair::*;
 #[allow(unused)]
 pub use request::*;
+#[allow(unused)]
+pub use token::*;
 
 // Data structures required by the framework
 #[derive(Serialize, Deserialize, Default)]
@@ -106,6 +109,7 @@ pub struct InnerState {
     pub business_data: BusinessData, // Business data //  ? Heap memory Serialization
 
     pub request_traces: RequestTraces, // Business data, Record request steps //  ? Heap memory Serialization Stable memory
+    pub tokens: Tokens,
     pub token_block_chain: TokenBlockChain, // Business data, Record Token block data //  ? Heap memory Serialization Stable memory
     pub swap_block_chain: SwapBlockChain, // Business data, Record Swap block data //  ? Heap memory Serialization Stable memory
 
@@ -123,6 +127,7 @@ impl Default for InnerState {
             business_data: Default::default(),
 
             request_traces: Default::default(),
+            tokens: Default::default(),
             token_block_chain: Default::default(),
             swap_block_chain: Default::default(),
 
@@ -137,6 +142,7 @@ use ic_canister_kit::stable;
 
 // stable memory
 const MEMORY_ID_REQUEST_TRACES: MemoryId = MemoryId::new(0); // request traces
+const MEMORY_ID_CUSTOM_TOKENS: MemoryId = MemoryId::new(1); // tokens
 
 const MEMORY_ID_TOKEN_BLOCKS: MemoryId = MemoryId::new(8); // token blocks
 const MEMORY_ID_TOKEN_WASM_MODULE: MemoryId = MemoryId::new(9); // token blocks
@@ -149,6 +155,9 @@ const MEMORY_ID_TOKEN_BALANCES: MemoryId = MemoryId::new(25); // token balances
 
 fn init_request_traces() -> StableBTreeMap<RequestIndex, RequestTrace> {
     stable::init_map_data(MEMORY_ID_REQUEST_TRACES)
+}
+fn init_custom_tokens() -> StableBTreeMap<CanisterId, TokenInfo> {
+    stable::init_map_data(MEMORY_ID_CUSTOM_TOKENS)
 }
 
 fn init_token_blocks() -> StableBTreeMap<BlockIndex, EncodedBlock> {
