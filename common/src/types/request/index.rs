@@ -50,3 +50,11 @@ impl AsRef<u64> for RequestIndex {
         &self.0
     }
 }
+
+impl std::ops::Add<u64> for RequestIndex {
+    type Output = RequestIndex;
+    fn add(mut self, rhs: u64) -> Self::Output {
+        self.0 += rhs;
+        self
+    }
+}

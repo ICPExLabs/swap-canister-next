@@ -1,3 +1,4 @@
+use ::common::types::TokenFrozenArg;
 #[allow(unused)]
 use ic_canister_kit::identity::caller;
 
@@ -16,6 +17,7 @@ fn config_token_frozen_query() -> HashSet<CanisterId> {
 // ============================== update ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn config_token_frozen(token: CanisterId, frozen: bool) {
-    with_mut_state(|s| s.business_config_token_frozen(token, frozen))
+fn config_token_frozen(arg: TokenFrozenArg) {
+    let arg = ArgWithMeta::data(arg);
+    with_mut_state(|s| s.business_config_token_frozen(arg))
 }

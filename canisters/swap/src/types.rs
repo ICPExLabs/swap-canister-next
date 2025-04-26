@@ -38,10 +38,11 @@ pub use ::common::proto;
 pub use ::common::types::{
     Amm, AmmText, ArgWithMeta, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, CheckArgs, DoHash,
     DummyCanisterId, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf, MarketMaker,
-    MarketMakerView, QueryBlockResult, SelfCanister, SwapTokenPair, SwapV2MarketMaker, TimestampNanos, TokenAccount,
-    TokenInfo, TokenPair, TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg, TokenPairPool,
-    TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TransferFee,
-    check_caller, check_meta, display_account,
+    MarketMakerView, QueryBlockResult, RequestArgs, RequestIndex, RequestTrace, SelfCanister, SwapTokenPair,
+    SwapV2MarketMaker, TimestampNanos, TokenAccount, TokenFrozenArg, TokenInfo, TokenPair, TokenPairAmm,
+    TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg, TokenPairPool, TokenPairSwapByLoanArg,
+    TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TransferFee, check_caller, check_meta,
+    display_account,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};

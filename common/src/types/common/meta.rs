@@ -50,4 +50,15 @@ impl<T> ArgWithMeta<T> {
             created: None,
         }
     }
+
+    #[cfg(feature = "cdk")]
+    pub fn data(arg: T) -> Self {
+        Self {
+            now: TimestampNanos::now(),
+            caller: Caller::get(),
+            arg,
+            memo: None,
+            created: None,
+        }
+    }
 }

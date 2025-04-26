@@ -204,8 +204,10 @@ type RequestArgs = variant {
   token_block_push;
   token_deposit : TokenDepositArgWithMeta;
   pair_create : PairCreateArgWithMeta;
+  token_custom_remove : TokenCustomRemoveArgWithMeta;
   pair_swap_exact_tokens_for_tokens : PairSwapExactTokensForTokensArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
+  token_custom_put : TokenCustomPutArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
   pair_swap_by_loan : PairSwapByLoanArgWithMeta;
   blocks_maintaining;
@@ -213,8 +215,10 @@ type RequestArgs = variant {
   pair_swap_tokens_for_exact_tokens : PairSwapTokensForExactTokensArgWithMeta;
   swap_block_push;
   token_withdraw : TokenDepositArgWithMeta;
+  token_frozen : TokenFrozenArgWithMeta;
 };
 type RequestTrace = record {
+  created : nat64;
   args : RequestArgs;
   done : opt RequestTraceDone;
   traces : vec record { nat64; text };
@@ -347,6 +351,20 @@ type TokenBlockResult = variant {
   Err : BusinessError;
 };
 type TokenChangedResult = variant { Ok : nat; Err : BusinessError };
+type TokenCustomPutArgWithMeta = record {
+  arg : TokenInfo;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
+type TokenCustomRemoveArgWithMeta = record {
+  arg : principal;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
+};
 type TokenDepositArgWithMeta = record {
   arg : DepositToken;
   now : nat64;
@@ -362,6 +380,14 @@ type TokenDepositArgs = record {
   from : Account;
   memo : opt blob;
   deposit_amount_without_fee : nat;
+};
+type TokenFrozenArg = record { token : principal; frozen : bool };
+type TokenFrozenArgWithMeta = record {
+  arg : TokenFrozenArg;
+  now : nat64;
+  created : opt nat64;
+  memo : opt blob;
+  caller : principal;
 };
 type TokenInfo = record {
   fee : nat;
@@ -595,7 +621,8 @@ service : (opt InitArgs) -> {
   config_token_block_chain_update : (BlockChainArgs) -> (TokenBlockResult);
   config_token_custom_put : (TokenInfo) -> ();
   config_token_custom_query : () -> (vec TokenInfo) query;
-  config_token_frozen : (principal, bool) -> ();
+  config_token_custom_remove : (principal) -> (opt TokenInfo);
+  config_token_frozen : (TokenFrozenArg) -> ();
   config_token_frozen_query : () -> (vec principal) query;
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (

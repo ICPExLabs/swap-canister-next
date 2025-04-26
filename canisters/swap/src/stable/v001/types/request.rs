@@ -4,19 +4,10 @@ use common::types::BusinessError;
 use ic_canister_kit::{common::trap, types::StableBTreeMap};
 use serde::{Deserialize, Serialize};
 
-mod index;
-pub use index::*;
-
-mod args;
-pub use args::*;
-
-mod lock;
-pub use lock::*;
-
-mod trace;
-pub use trace::*;
-
-use super::{SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard, init_request_traces};
+use super::{
+    RequestArgs, RequestIndex, RequestTrace, SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard,
+    init_request_traces,
+};
 
 // ============================ request traces ============================
 
@@ -65,6 +56,10 @@ impl RequestTraces {
         });
     }
 
+    pub fn be_guard_by(&mut self, args: RequestArgs) -> Result<RequestTraceGuard<'_>, BusinessError> {
+        self.be_guard(args, None, None, None, None)
+    }
+
     pub fn be_guard<'a>(
         &'a mut self,
         args: RequestArgs,
@@ -77,8 +72,15 @@ impl RequestTraces {
             .next_index
             .write()
             .map_err(|err| BusinessError::RequestTraceLocked(format!("{err}")))?;
-        let index = next_index.next();
-        let trace = RequestTrace::new(index, args, token, swap, balances, trace);
+        let index = next_index.increment();
+        let trace = RequestTrace::new(
+            index,
+            args,
+            token.map(|_| true),
+            swap.map(|_| true),
+            balances.map(|a| a.get_locked_balances()),
+            trace,
+        );
         self.traces.insert(index, trace); // insert
         let lock = RequestTraceLock { index };
         ic_cdk::println!("🔒 Locked request index: {}", index.as_ref());

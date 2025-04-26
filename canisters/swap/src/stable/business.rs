@@ -137,7 +137,7 @@ pub trait Business:
     fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
+    fn business_config_token_frozen(&mut self, arg: ArgWithMeta<TokenFrozenArg>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -148,10 +148,10 @@ pub trait Business:
     fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
+    fn business_config_token_custom_put(&mut self, arg: ArgWithMeta<TokenInfo>) {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
+    fn business_config_token_custom_remove(&mut self, arg: ArgWithMeta<CanisterId>) -> Option<TokenInfo> {
         ic_cdk::trap("Not supported operation by this version.")
     }
 
@@ -511,8 +511,8 @@ impl Business for State {
     fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
         self.get().business_config_token_frozen_query()
     }
-    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
-        self.get_mut().business_config_token_frozen(token, frozen)
+    fn business_config_token_frozen(&mut self, arg: ArgWithMeta<TokenFrozenArg>) {
+        self.get_mut().business_config_token_frozen(arg)
     }
 
     // token custom
@@ -522,11 +522,11 @@ impl Business for State {
     fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
         self.get().business_config_token_custom_query()
     }
-    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
-        self.get_mut().business_config_token_custom_put(token)
+    fn business_config_token_custom_put(&mut self, arg: ArgWithMeta<TokenInfo>) {
+        self.get_mut().business_config_token_custom_put(arg)
     }
-    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
-        self.get_mut().business_config_token_custom_remove(canister_id)
+    fn business_config_token_custom_remove(&mut self, arg: ArgWithMeta<CanisterId>) -> Option<TokenInfo> {
+        self.get_mut().business_config_token_custom_remove(arg)
     }
 
     // set_certified_data

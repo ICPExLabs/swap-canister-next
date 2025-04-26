@@ -2,8 +2,8 @@ use candid::Nat;
 use common::types::BusinessError;
 
 use super::super::{
-    ArgWithMeta, DepositToken, RequestTraceGuard, TokenBalancesGuard, TokenBlockChainGuard,
-    TransferToken, WithdrawToken, display_account,
+    ArgWithMeta, DepositToken, RequestTraceGuard, TokenBalancesGuard, TokenBlockChainGuard, TransferToken,
+    WithdrawToken, display_account,
 };
 
 pub struct TokenGuard<'a> {
@@ -25,11 +25,7 @@ impl<'a> TokenGuard<'a> {
         }
     }
 
-    pub fn token_deposit(
-        &mut self,
-        arg: ArgWithMeta<DepositToken>,
-        height: Nat,
-    ) -> Result<Nat, BusinessError> {
+    pub fn token_deposit(&mut self, arg: ArgWithMeta<DepositToken>, height: Nat) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
@@ -39,8 +35,7 @@ impl<'a> TokenGuard<'a> {
                     display_account(&arg.arg.to),
                     arg.arg.amount,
                 )); // * trace
-                self.balances_guard
-                    .token_deposit(&mut self.token_guard, arg)?; // do deposit
+                self.balances_guard.token_deposit(&mut self.token_guard, arg)?; // do deposit
                 trace.trace("Deposit Done.".into()); // * trace
                 Ok(height)
             },
@@ -48,11 +43,7 @@ impl<'a> TokenGuard<'a> {
         )
     }
 
-    pub fn token_withdraw(
-        &mut self,
-        arg: ArgWithMeta<WithdrawToken>,
-        height: Nat,
-    ) -> Result<Nat, BusinessError> {
+    pub fn token_withdraw(&mut self, arg: ArgWithMeta<WithdrawToken>, height: Nat) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
@@ -61,8 +52,7 @@ impl<'a> TokenGuard<'a> {
                     display_account(&arg.arg.to),
                     arg.arg.amount,
                 )); // * trace
-                self.balances_guard
-                    .token_withdraw(&mut self.token_guard, arg)?; // do withdraw
+                self.balances_guard.token_withdraw(&mut self.token_guard, arg)?; // do withdraw
                 trace.trace("Withdraw Done.".into()); // * trace
                 Ok(height)
             },
@@ -70,10 +60,7 @@ impl<'a> TokenGuard<'a> {
         )
     }
 
-    pub fn token_transfer(
-        &mut self,
-        arg: ArgWithMeta<TransferToken>,
-    ) -> Result<Nat, BusinessError> {
+    pub fn token_transfer(&mut self, arg: ArgWithMeta<TransferToken>) -> Result<Nat, BusinessError> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
@@ -83,9 +70,7 @@ impl<'a> TokenGuard<'a> {
                     display_account(&arg.arg.to),
                     arg.arg.amount,
                 )); // * trace
-                let changed = self
-                    .balances_guard
-                    .token_transfer(&mut self.token_guard, arg.clone())?; // do transfer
+                let changed = self.balances_guard.token_transfer(&mut self.token_guard, arg.clone())?; // do transfer
                 trace.trace(format!("Transfer Done: {changed}.",)); // * trace
                 Ok(changed)
             },

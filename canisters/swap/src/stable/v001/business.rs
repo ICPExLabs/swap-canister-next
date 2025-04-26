@@ -131,8 +131,20 @@ impl Business for InnerState {
     fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
         self.tokens.get_frozen_tokens()
     }
-    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
-        self.tokens.frozen_token(token, frozen)
+    fn business_config_token_frozen(&mut self, arg: ArgWithMeta<TokenFrozenArg>) {
+        let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
+        let _ = trace.handle(
+            |trace| {
+                trace.trace(format!(
+                    "*token frozen*: `token: [{}], frozen: {}`",
+                    arg.arg.token.to_text(),
+                    arg.arg.frozen
+                ));
+                self.tokens.frozen_token(arg.arg.token, arg.arg.frozen);
+                Ok(arg.arg.frozen)
+            },
+            |frozen| format!("{} Done", if *frozen { "Frozen" } else { "Unfrozen" }),
+        );
     }
 
     // token custom
@@ -146,11 +158,48 @@ impl Business for InnerState {
             .map(|(_, info)| info.clone())
             .collect()
     }
-    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
-        self.tokens.put_custom_token(token)
+    fn business_config_token_custom_put(&mut self, arg: ArgWithMeta<TokenInfo>) {
+        let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
+        let _ = trace.handle(
+            |trace| {
+                trace.trace(format!(
+                    "*token custom put*: `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
+                    arg.arg.canister_id.to_text(),
+                    arg.arg.name,
+                    arg.arg.symbol,
+                    arg.arg.decimals,
+                    arg.arg.fee,
+                ));
+                self.tokens.put_custom_token(arg.arg);
+                Ok(())
+            },
+            |_| "Put Custom Token Done".to_string(),
+        );
     }
-    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
-        self.tokens.remove_custom_token(canister_id)
+    fn business_config_token_custom_remove(&mut self, arg: ArgWithMeta<CanisterId>) -> Option<TokenInfo> {
+        let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
+        ic_canister_kit::common::trap(trace.handle(
+            |trace| {
+                trace.trace(format!("*token custom remove*: `token: [{}]`", arg.arg.to_text()));
+                let result = self.tokens.remove_custom_token(&arg.arg);
+                match &result {
+                    Some(info) => trace.trace(format!(
+                        "*token custom remove*: `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
+                        info.canister_id.to_text(),
+                        info.name,
+                        info.symbol,
+                        info.decimals,
+                        info.fee,
+                    )),
+                    None => trace.trace(format!(
+                        "*token custom remove*: `token: [{}] is not exist.`",
+                        arg.arg.to_text()
+                    )),
+                }
+                Ok(result)
+            },
+            |_| "Remove Custom Token Done".to_string(),
+        ))
     }
 
     // set_certified_data

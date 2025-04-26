@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "archive-token")]
 use crate::archive::token::{DepositToken, TransferToken, WithdrawToken};
-use crate::types::{ArgWithMeta, TokenPairAmm};
+use crate::types::{ArgWithMeta, CanisterId, TokenInfo, TokenPairAmm};
+
+mod frozen;
+pub use frozen::*;
 
 mod liquidity_add;
 pub use liquidity_add::*;
@@ -29,6 +32,13 @@ pub enum RequestArgs {
     SwapBlockPush,
     #[serde(rename = "blocks_maintaining")]
     CanistersMaintaining,
+    // config
+    #[serde(rename = "token_frozen")]
+    TokenFrozen(Box<TokenFrozenArgWithMeta>),
+    #[serde(rename = "token_custom_put")]
+    TokenCustomPut(Box<TokenCustomPutArgWithMeta>),
+    #[serde(rename = "token_custom_remove")]
+    TokenCustomRemove(Box<TokenCustomRemoveArgWithMeta>),
     // token
     #[cfg(feature = "archive-token")]
     #[serde(rename = "token_deposit")]
@@ -58,6 +68,13 @@ pub enum RequestArgs {
 
 // ============================= wrap =============================
 
+// config
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct TokenFrozenArgWithMeta(ArgWithMeta<TokenFrozenArg>);
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct TokenCustomPutArgWithMeta(ArgWithMeta<TokenInfo>);
+#[derive(Debug, Serialize, Deserialize, CandidType)]
+pub struct TokenCustomRemoveArgWithMeta(ArgWithMeta<CanisterId>);
 // token
 #[cfg(feature = "archive-token")]
 #[derive(Debug, Serialize, Deserialize, CandidType)]
@@ -85,6 +102,23 @@ pub struct PairSwapTokensForExactTokensArgWithMeta(ArgWithMeta<TokenPairSwapToke
 pub struct PairSwapByLoanArgWithMeta(ArgWithMeta<TokenPairSwapByLoanArg>);
 
 // ============================= from =============================
+
+// config
+impl From<ArgWithMeta<TokenFrozenArg>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenFrozenArg>) -> Self {
+        Self::TokenFrozen(Box::new(TokenFrozenArgWithMeta(value)))
+    }
+}
+impl From<ArgWithMeta<TokenInfo>> for RequestArgs {
+    fn from(value: ArgWithMeta<TokenInfo>) -> Self {
+        Self::TokenCustomPut(Box::new(TokenCustomPutArgWithMeta(value)))
+    }
+}
+impl From<ArgWithMeta<CanisterId>> for RequestArgs {
+    fn from(value: ArgWithMeta<CanisterId>) -> Self {
+        Self::TokenCustomRemove(Box::new(TokenCustomRemoveArgWithMeta(value)))
+    }
+}
 
 // token
 #[cfg(feature = "archive-token")]
