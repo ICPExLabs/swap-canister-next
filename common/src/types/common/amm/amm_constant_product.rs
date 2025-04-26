@@ -297,34 +297,34 @@ impl SwapV2MarketMaker {
         let delta_reserve0 = if self.reserve0 == next.reserve0 {
             None
         } else if self.reserve0 < next.reserve0 {
-            Some(format!("+{}", next.reserve0.clone() - self.reserve0.clone()))
+            Some(format!("+ {}", next.reserve0.clone() - self.reserve0.clone()))
         } else {
-            Some(format!("-{}", self.reserve0.clone() - next.reserve0.clone()))
+            Some(format!("- {}", self.reserve0.clone() - next.reserve0.clone()))
         };
         let delta_reserve1 = if self.reserve1 < next.reserve1 {
             None
         } else if self.reserve1 < next.reserve1 {
-            Some(format!("+{}", next.reserve1.clone() - self.reserve1.clone()))
+            Some(format!("+ {}", next.reserve1.clone() - self.reserve1.clone()))
         } else {
-            Some(format!("-{}", self.reserve1.clone() - next.reserve1.clone()))
+            Some(format!("- {}", self.reserve1.clone() - next.reserve1.clone()))
         };
         let delta_total_supply = if self.lp.get_total_supply() < next.lp.get_total_supply() {
             None
         } else if self.lp.get_total_supply() < next.lp.get_total_supply() {
-            Some(format!("+{}", next.lp.get_total_supply() - self.lp.get_total_supply()))
+            Some(format!("+ {}", next.lp.get_total_supply() - self.lp.get_total_supply()))
         } else {
-            Some(format!("-{}", self.lp.get_total_supply() - next.lp.get_total_supply()))
+            Some(format!("- {}", self.lp.get_total_supply() - next.lp.get_total_supply()))
         };
         format!(
             "token0({symbol0}): [{}]({})\ntoken1({symbol1}): [{}]({})\nAmm: SwapV2({})\nProtocolFee: {}\nLP Supply: [{}]({})",
             self.token0.to_text(),
             match delta_reserve0 {
-                Some(delta) => format!("{}{delta}={}", self.reserve0, next.reserve0),
+                Some(delta) => format!("{} {delta} = {}", self.reserve0, next.reserve0),
                 None => next.reserve0.to_string(),
             },
             self.token1.to_text(),
             match delta_reserve1 {
-                Some(delta) => format!("{}{delta}={}", self.reserve1, next.reserve1),
+                Some(delta) => format!("{} {delta} = {}", self.reserve1, next.reserve1),
                 None => next.reserve1.to_string(),
             },
             self.fee_rate,
@@ -334,7 +334,11 @@ impl SwapV2MarketMaker {
                 None => "".to_string(),
             },
             match delta_total_supply {
-                Some(delta) => format!("{}{delta}={}", self.lp.get_total_supply(), next.lp.get_total_supply()),
+                Some(delta) => format!(
+                    "{} {delta} = {}",
+                    self.lp.get_total_supply(),
+                    next.lp.get_total_supply()
+                ),
                 None => next.lp.get_total_supply().to_string(),
             },
         )
