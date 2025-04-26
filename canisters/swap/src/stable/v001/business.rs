@@ -127,6 +127,29 @@ impl Business for InnerState {
         self.updated(|s| s.business_data.maintain_archives.cycles_recharged(canister_id, cycles))
     }
 
+    // token frozen
+    fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
+        self.tokens.get_frozen_tokens()
+    }
+    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
+        self.tokens.frozen_token(token, frozen)
+    }
+
+    // token custom
+    fn business_config_token_preset_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        self.tokens.get_preset_tokens()
+    }
+    fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
+        self.tokens
+            .get_custom_tokens()
+            .iter()
+            .map(|(_, info)| info.clone())
+            .collect()
+    }
+    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
+        self.tokens.put_custom_token(token)
+    }
+
     // set_certified_data
     fn business_certified_data_refresh(&self) {
         let token_hash = self.token_block_chain.get_latest_hash();

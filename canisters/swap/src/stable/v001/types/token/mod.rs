@@ -38,6 +38,9 @@ impl Tokens {
         }
         self.custom_tokens = Some(self.get_stable_custom_tokens());
     }
+    pub fn get_preset_tokens(&self) -> &HashMap<CanisterId, TokenInfo> {
+        &PRESET_TOKENS
+    }
     pub fn get_custom_tokens(&self) -> Cow<'_, HashMap<CanisterId, TokenInfo>> {
         if let Some(custom_tokens) = &self.custom_tokens {
             return Cow::Borrowed(custom_tokens);
@@ -75,5 +78,24 @@ impl Tokens {
             return Err(BusinessError::FrozenToken(*canister_id));
         }
         Ok(())
+    }
+
+    pub fn get_frozen_tokens(&self) -> &HashSet<CanisterId> {
+        &self.frozen_tokens
+    }
+
+    pub fn frozen_token(&mut self, token: CanisterId, frozen: bool) {
+        if frozen {
+            self.frozen_tokens.insert(token);
+        } else {
+            self.frozen_tokens.remove(&token);
+        }
+    }
+
+    pub fn put_custom_token(&mut self, token: TokenInfo) {
+        self.stable_custom_tokens.insert(token.canister_id, token.clone());
+        if let Some(custom_tokens) = self.custom_tokens.as_mut() {
+            custom_tokens.insert(token.canister_id, token);
+        }
     }
 }

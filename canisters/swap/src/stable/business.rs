@@ -133,6 +133,25 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
+    // token frozen
+    fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
+    // token custom
+    fn business_config_token_preset_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     // set_certified_data
     fn business_certified_data_refresh(&self) {
         ic_cdk::trap("Not supported operation by this version.")
@@ -483,6 +502,25 @@ impl Business for State {
     fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
         self.get_mut()
             .business_config_maintain_archives_cycles_recharged(canister_id, cycles)
+    }
+
+    // token frozen
+    fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
+        self.get().business_config_token_frozen_query()
+    }
+    fn business_config_token_frozen(&mut self, token: CanisterId, frozen: bool) {
+        self.get_mut().business_config_token_frozen(token, frozen)
+    }
+
+    // token custom
+    fn business_config_token_preset_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        self.get().business_config_token_preset_query()
+    }
+    fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
+        self.get().business_config_token_custom_query()
+    }
+    fn business_config_token_custom_put(&mut self, token: TokenInfo) {
+        self.get_mut().business_config_token_custom_put(token)
     }
 
     // set_certified_data

@@ -56,6 +56,7 @@ type BusinessError = variant {
   TokenBlockChainError : text;
   TransferFromError : TransferFromError;
   TokenAccountsUnlocked : vec TokenAccount;
+  FrozenToken : principal;
   NotOwner : principal;
   BadTransferFee : record { expected_fee : nat };
   SwapBlockChainError : text;
@@ -592,6 +593,10 @@ service : (opt InitArgs) -> {
   config_swap_block_chain_update : (BlockChainArgs) -> (SwapBlockResult);
   config_token_block_chain_query : (BlockChainArgs) -> (TokenBlockResult) query;
   config_token_block_chain_update : (BlockChainArgs) -> (TokenBlockResult);
+  config_token_custom_put : (TokenInfo) -> ();
+  config_token_custom_query : () -> (vec TokenInfo) query;
+  config_token_frozen : (principal, bool) -> ();
+  config_token_frozen_query : () -> (vec principal) query;
   pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
