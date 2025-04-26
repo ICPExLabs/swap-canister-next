@@ -30,13 +30,10 @@ pub enum RequestArgs {
     #[serde(rename = "blocks_maintaining")]
     CanistersMaintaining,
     // token
-    #[cfg(feature = "archive-token")]
     #[serde(rename = "token_deposit")]
     TokenDeposit(Box<TokenDepositArgWithMeta>),
-    #[cfg(feature = "archive-token")]
     #[serde(rename = "token_withdraw")]
     TokenWithdraw(Box<TokenWithdrawArgWithMeta>),
-    #[cfg(feature = "archive-token")]
     #[serde(rename = "token_transfer")]
     TokenTransfer(Box<TokenTransferArgWithMeta>),
     // pair create

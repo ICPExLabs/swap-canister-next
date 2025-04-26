@@ -322,12 +322,14 @@ impl SwapV2MarketMaker {
             text
         }
         fn get_delta(previous: &Nat, next: &Nat, decimals: u8) -> Option<String> {
-            if previous == next {
-                None
-            } else if previous < next {
-                Some(format!("+ {}", show_nat(&(next.clone() - previous.clone()), decimals)))
-            } else {
-                Some(format!("- {}", show_nat(&(previous.clone() - next.clone()), decimals)))
+            match previous.cmp(next) {
+                std::cmp::Ordering::Less => {
+                    Some(format!("+ {}", show_nat(&(next.clone() - previous.clone()), decimals)))
+                }
+                std::cmp::Ordering::Equal => None,
+                std::cmp::Ordering::Greater => {
+                    Some(format!("- {}", show_nat(&(previous.clone() - next.clone()), decimals)))
+                }
             }
         }
 

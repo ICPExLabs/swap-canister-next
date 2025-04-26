@@ -28,6 +28,7 @@ pub struct RequestTraceDone {
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct RequestTrace {
     index: RequestIndex,
+    created: TimestampNanos,
     pub args: RequestArgs,
     locks: BusinessLocks,
     pub traces: Vec<(TimestampNanos, String)>,
@@ -61,6 +62,7 @@ impl RequestTrace {
     ) -> Self {
         let mut request_trace = Self {
             index,
+            created: TimestampNanos::now(),
             args,
             locks: BusinessLocks::new(token, swap, balances),
             traces: vec![],
@@ -72,9 +74,11 @@ impl RequestTrace {
         request_trace
     }
 
+    #[cfg(feature = "cdk")]
     pub fn from_args(args: RequestArgs) -> Self {
         Self {
             index: Default::default(),
+            created: TimestampNanos::now(),
             args,
             locks: BusinessLocks::default(),
             traces: vec![],
