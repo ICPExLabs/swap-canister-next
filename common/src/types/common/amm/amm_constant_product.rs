@@ -305,13 +305,19 @@ impl SwapV2MarketMaker {
             .map(|t| t.decimals)
             .unwrap_or_default();
         let decimals_lp = self.lp.get_decimals();
-        fn show_nat(v: Nat, decimals: u8) -> String {
+        fn show_nat(v: &Nat, decimals: u8) -> String {
             let mut text = v.0.to_string();
             if decimals > 0 {
-                if text.len() <= decimals as usize {
-                    text = "0".repeat(decimals as usize - text.len()) + &text;
+                if text.len() <= decimals as usize + 1 {
+                    text = "0".repeat(decimals as usize + 1 - text.len()) + &text;
                 }
                 text.insert(text.len() - decimals as usize, '.');
+                while text.ends_with('0') {
+                    text.pop();
+                }
+                if text.ends_with('.') {
+                    text.pop();
+                }
             }
             text
         }
@@ -319,9 +325,9 @@ impl SwapV2MarketMaker {
             if previous == next {
                 None
             } else if previous < next {
-                Some(format!("+ {}", show_nat(next.clone() - previous.clone(), decimals)))
+                Some(format!("+ {}", show_nat(&(next.clone() - previous.clone()), decimals)))
             } else {
-                Some(format!("- {}", show_nat(previous.clone() - next.clone(), decimals)))
+                Some(format!("- {}", show_nat(&(previous.clone() - next.clone()), decimals)))
             }
         }
 
@@ -329,17 +335,42 @@ impl SwapV2MarketMaker {
         let delta_reserve1 = get_delta(&self.reserve1, &next.reserve1, decimals1);
         let delta_total_supply = get_delta(&self.lp.get_total_supply(), &next.lp.get_total_supply(), decimals_lp);
 
-        format!(
-            "token0 ({symbol0}): [{}]({})\ntoken1 ({symbol1}): [{}]({})\nAmm: SwapV2({})\nProtocolFee: {}\nLP Supply: [{}]({})",
+        let token0 = format!(
+            "token0 ({symbol0}): [{}]({})",
             self.token0.to_text(),
-            match delta_reserve0 {
-                Some(delta) => format!("{} {delta} = {}", self.reserve0, next.reserve0),
-                None => next.reserve0.to_string(),
-            },
+            match &delta_reserve0 {
+                Some(delta) => format!(
+                    "{} {delta} = {}",
+                    show_nat(&self.reserve0, decimals0),
+                    show_nat(&next.reserve0, decimals0)
+                ),
+                None => show_nat(&next.reserve0, decimals0),
+            }
+        );
+        let token1 = format!(
+            "token1 ({symbol1}): [{}]({})",
             self.token1.to_text(),
-            match delta_reserve1 {
-                Some(delta) => format!("{} {delta} = {}", self.reserve1, next.reserve1),
-                None => next.reserve1.to_string(),
+            match &delta_reserve1 {
+                Some(delta) => format!(
+                    "{} {delta} = {}",
+                    show_nat(&self.reserve1, decimals1),
+                    show_nat(&next.reserve1, decimals1)
+                ),
+                None => show_nat(&next.reserve1, decimals1),
+            }
+        );
+
+        format!(
+            "{}\n{}\nAmm: SwapV2({})\nProtocolFee: {}\nLP Supply: [{}]({})",
+            if delta_reserve1.as_ref().is_some_and(|d| d.starts_with("+")) {
+                &token1
+            } else {
+                &token0
+            },
+            if delta_reserve1.as_ref().is_some_and(|d| d.starts_with("+")) {
+                &token0
+            } else {
+                &token1
             },
             self.fee_rate,
             self.protocol_fee.as_ref().map(|v| v.to_string()).unwrap_or_default(),
@@ -350,10 +381,10 @@ impl SwapV2MarketMaker {
             match delta_total_supply {
                 Some(delta) => format!(
                     "{} {delta} = {}",
-                    self.lp.get_total_supply(),
-                    next.lp.get_total_supply()
+                    show_nat(&self.lp.get_total_supply(), decimals_lp),
+                    show_nat(&next.lp.get_total_supply(), decimals_lp)
                 ),
-                None => next.lp.get_total_supply().to_string(),
+                None => show_nat(&next.lp.get_total_supply(), decimals_lp),
             },
         )
     }
