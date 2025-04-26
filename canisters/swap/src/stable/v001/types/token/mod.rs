@@ -69,4 +69,11 @@ impl Tokens {
         }
         all_tokens
     }
+
+    pub fn token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
+        if self.frozen_tokens.contains(canister_id) {
+            return Err(BusinessError::FrozenToken(*canister_id));
+        }
+        Ok(())
+    }
 }

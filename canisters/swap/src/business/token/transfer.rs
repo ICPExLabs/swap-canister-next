@@ -12,6 +12,9 @@ use crate::types::*;
 impl CheckArgs for TokenTransferArgs {
     type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        with_state(|s| s.business_token_alive(&self.token))?;
+        
         // check supported token, can be token or dummy lp token
         let token = with_state(|s| {
             s.business_all_tokens_with_dummy_query()

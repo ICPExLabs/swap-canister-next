@@ -13,6 +13,11 @@ use crate::types::*;
 impl CheckArgs for TokenWithdrawManyArgs {
     type Result = Vec<(TimestampNanos, SelfCanister, Caller, TokenInfo)>;
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        for a in &self.args {
+            with_state(|s| s.business_token_alive(&a.token))?;
+        }
+
         let mut args = Vec::with_capacity(self.args.len());
 
         for a in &self.args {

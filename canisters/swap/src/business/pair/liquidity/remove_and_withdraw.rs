@@ -27,6 +27,11 @@ async fn inner_pair_liquidity_remove_and_withdraw(
     args: TokenPairLiquidityRemoveArgs,
     _async: bool,
 ) -> (TokenPairLiquidityRemoveResult, Option<ManyTokenChangedResult>) {
+    // will check in remove step
+    // ! refuse all action about frozen token
+    // with_state(|s| s.business_token_alive(&args.swap_pair.token.0))?;
+    // with_state(|s| s.business_token_alive(&args.swap_pair.token.1))?;
+
     // query data
     let (token_a, token_b) = with_state(|s| {
         let tokens = s.business_tokens_query();

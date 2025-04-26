@@ -183,6 +183,9 @@ pub trait Business:
 
     // ======================== query ========================
 
+    fn business_token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
     fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -532,6 +535,9 @@ impl Business for State {
 
     // ======================== query ========================
 
+    fn business_token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
+        self.get().business_token_alive(canister_id)
+    }
     fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         self.get().business_tokens_query()
     }

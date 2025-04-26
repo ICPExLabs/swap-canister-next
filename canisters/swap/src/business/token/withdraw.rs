@@ -15,6 +15,9 @@ pub mod many;
 impl CheckArgs for TokenWithdrawArgs {
     type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        with_state(|s| s.business_token_alive(&self.token))?;
+
         // ! must be token, can not be dummy lp token
         let token = with_state(|s| {
             s.business_tokens_query()

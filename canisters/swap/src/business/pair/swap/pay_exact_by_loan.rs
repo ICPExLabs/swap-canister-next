@@ -19,6 +19,12 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         TokenPairSwapByLoanArg,
     );
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        for p in &self.path {
+            with_state(|s| s.business_token_alive(&p.token.0))?;
+            with_state(|s| s.business_token_alive(&p.token.1))?;
+        }
+
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 

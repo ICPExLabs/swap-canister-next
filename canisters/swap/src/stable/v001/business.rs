@@ -184,6 +184,9 @@ impl Business for InnerState {
     // ======================== query ========================
 
     // tokens query
+    fn business_token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
+        self.tokens.token_alive(canister_id)
+    }
     fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
         self.tokens.get_all_tokens()
     }

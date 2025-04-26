@@ -19,6 +19,10 @@ impl CheckArgs for TokenPairLiquidityAddArgs {
         TokenPairLiquidityAddArg,
     );
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        with_state(|s| s.business_token_alive(&self.swap_pair.token.0))?;
+        with_state(|s| s.business_token_alive(&self.swap_pair.token.1))?;
+
         // check owner
         let (self_canister, caller) = check_caller(&self.from.owner)?;
 

@@ -76,6 +76,9 @@ pub enum BusinessError {
     /// Unsupported token canisters
     #[error("token:[{0}] is not supported.")]
     NotSupportedToken(CanisterId),
+    /// frozen token
+    #[error("token:[{0}] is frozen.")]
+    FrozenToken(CanisterId),
     /// Unsupported token pairs
     #[error("token pair is not supported. ([{0}],[{1}])")]
     InvalidTokenPair(CanisterId, CanisterId),

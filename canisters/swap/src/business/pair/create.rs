@@ -12,6 +12,10 @@ use crate::types::*;
 impl CheckArgs for TokenPairCreateArgs {
     type Result = (TimestampNanos, Caller, TokenPairAmm);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
+        // ! refuse all action about frozen token
+        with_state(|s| s.business_token_alive(&self.pool.token0))?;
+        with_state(|s| s.business_token_alive(&self.pool.token1))?;
+
         let TokenPairPool {
             token0: token_a,
             token1: token_b,
