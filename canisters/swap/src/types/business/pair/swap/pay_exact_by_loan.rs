@@ -15,17 +15,6 @@ pub struct TokenPairSwapByLoanArgs {
     pub created: Option<TimestampNanos>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenPairSwapByLoanArg {
-    pub self_canister: SelfCanister,
-    pub pas: Vec<TokenPairAmm>,
-
-    pub from: Account,
-    pub loan: Nat,                // pay loaned token
-    pub path: Vec<SwapTokenPair>, // pay exact tokens
-    pub to: Account,
-}
-
 impl SelfCanisterArg for TokenPairSwapByLoanArg {
     fn get_self_canister(&self) -> SelfCanister {
         self.self_canister

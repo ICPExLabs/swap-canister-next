@@ -16,18 +16,6 @@ pub struct TokenPairSwapTokensForExactTokensArgs {
     pub created: Option<TimestampNanos>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenPairSwapTokensForExactTokensArg {
-    pub self_canister: SelfCanister,
-    pub pas: Vec<TokenPairAmm>,
-
-    pub from: Account,
-    pub amount_out: Nat,    // got
-    pub amount_in_max: Nat, // max pay
-    pub path: Vec<SwapTokenPair>,
-    pub to: Account,
-}
-
 impl SelfCanisterArg for TokenPairSwapTokensForExactTokensArg {
     fn get_self_canister(&self) -> SelfCanister {
         self.self_canister

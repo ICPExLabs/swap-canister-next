@@ -1,16 +1,18 @@
+#[allow(unused)]
 use std::time::Duration;
 
 use candid::CandidType;
-use common::types::{BusinessError, Caller, TimestampNanos};
 use serde::{Deserialize, Serialize};
 
+#[allow(unused)]
+use super::{BusinessError, Caller, TimestampNanos};
+
 // Default 1 day time
+#[cfg(feature = "cdk")]
 const TRANSACTION_WINDOW: Duration = Duration::from_secs(24 * 60 * 60);
 
-pub fn check_meta(
-    memo: &Option<Vec<u8>>,
-    created: &Option<TimestampNanos>,
-) -> Result<TimestampNanos, BusinessError> {
+#[cfg(feature = "cdk")]
+pub fn check_meta(memo: &Option<Vec<u8>>, created: &Option<TimestampNanos>) -> Result<TimestampNanos, BusinessError> {
     let now = TimestampNanos::now();
 
     if let Some(memo) = memo.as_ref() {

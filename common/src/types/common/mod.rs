@@ -35,3 +35,8 @@ pub use lp::*;
 #[allow(missing_docs)]
 mod amm;
 pub use amm::*;
+
+/// meta
+#[allow(missing_docs)]
+mod meta;
+pub use meta::*;
