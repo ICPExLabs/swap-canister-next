@@ -294,29 +294,43 @@ impl SwapV2MarketMaker {
             .find(|v| v.canister_id == self.token1)
             .map(|t| t.symbol.clone())
             .unwrap_or_default();
-        let delta_reserve0 = if self.reserve0 == next.reserve0 {
-            None
-        } else if self.reserve0 < next.reserve0 {
-            Some(format!("+ {}", next.reserve0.clone() - self.reserve0.clone()))
-        } else {
-            Some(format!("- {}", self.reserve0.clone() - next.reserve0.clone()))
-        };
-        let delta_reserve1 = if self.reserve1 < next.reserve1 {
-            None
-        } else if self.reserve1 < next.reserve1 {
-            Some(format!("+ {}", next.reserve1.clone() - self.reserve1.clone()))
-        } else {
-            Some(format!("- {}", self.reserve1.clone() - next.reserve1.clone()))
-        };
-        let delta_total_supply = if self.lp.get_total_supply() < next.lp.get_total_supply() {
-            None
-        } else if self.lp.get_total_supply() < next.lp.get_total_supply() {
-            Some(format!("+ {}", next.lp.get_total_supply() - self.lp.get_total_supply()))
-        } else {
-            Some(format!("- {}", self.lp.get_total_supply() - next.lp.get_total_supply()))
-        };
+        let decimals0 = tokens
+            .iter()
+            .find(|v| v.canister_id == self.token0)
+            .map(|t| t.decimals)
+            .unwrap_or_default();
+        let decimals1 = tokens
+            .iter()
+            .find(|v| v.canister_id == self.token1)
+            .map(|t| t.decimals)
+            .unwrap_or_default();
+        let decimals_lp = self.lp.get_decimals();
+        fn show_nat(v: Nat, decimals: u8) -> String {
+            let mut text = v.0.to_string();
+            if decimals > 0 {
+                if text.len() <= decimals as usize {
+                    text = "0".repeat(decimals as usize - text.len()) + &text;
+                }
+                text.insert(text.len() - decimals as usize, '.');
+            }
+            text
+        }
+        fn get_delta(previous: &Nat, next: &Nat, decimals: u8) -> Option<String> {
+            if previous == next {
+                None
+            } else if previous < next {
+                Some(format!("+ {}", show_nat(next.clone() - previous.clone(), decimals)))
+            } else {
+                Some(format!("- {}", show_nat(previous.clone() - next.clone(), decimals)))
+            }
+        }
+
+        let delta_reserve0 = get_delta(&self.reserve0, &next.reserve0, decimals0);
+        let delta_reserve1 = get_delta(&self.reserve1, &next.reserve1, decimals1);
+        let delta_total_supply = get_delta(&self.lp.get_total_supply(), &next.lp.get_total_supply(), decimals_lp);
+
         format!(
-            "token0({symbol0}): [{}]({})\ntoken1({symbol1}): [{}]({})\nAmm: SwapV2({})\nProtocolFee: {}\nLP Supply: [{}]({})",
+            "token0 ({symbol0}): [{}]({})\ntoken1 ({symbol1}): [{}]({})\nAmm: SwapV2({})\nProtocolFee: {}\nLP Supply: [{}]({})",
             self.token0.to_text(),
             match delta_reserve0 {
                 Some(delta) => format!("{} {delta} = {}", self.reserve0, next.reserve0),

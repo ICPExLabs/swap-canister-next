@@ -47,6 +47,13 @@ impl PoolLp {
         }
     }
 
+    pub fn get_decimals(&self) -> u8 {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.decimals,
+            PoolLp::OuterLP(outer_lp) => outer_lp.decimals,
+        }
+    }
+
     pub fn mint_fee<F>(&mut self, token_liquidity_mint_fee: F, to: Account, amount: Nat) -> Result<(), BusinessError>
     where
         F: FnOnce(CanisterId, Account, Nat) -> Result<(), BusinessError>,
