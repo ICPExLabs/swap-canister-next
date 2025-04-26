@@ -1,4 +1,7 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    ops::{Add, AddAssign},
+};
 
 use candid::CandidType;
 use ic_canister_kit::{
@@ -7,20 +10,7 @@ use ic_canister_kit::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Serialize,
-    Deserialize,
-    CandidType,
-)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct RequestIndex(u64);
 
 impl Storable for RequestIndex {
@@ -57,5 +47,19 @@ impl RequestIndex {
 impl AsRef<u64> for RequestIndex {
     fn as_ref(&self) -> &u64 {
         &self.0
+    }
+}
+
+impl Add<u64> for RequestIndex {
+    type Output = RequestIndex;
+    fn add(mut self, rhs: u64) -> Self::Output {
+        self.0 += rhs;
+        self
+    }
+}
+
+impl AddAssign<u64> for RequestIndex {
+    fn add_assign(&mut self, rhs: u64) {
+        self.0 += rhs;
     }
 }

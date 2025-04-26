@@ -650,6 +650,8 @@ service : (opt InitArgs) -> {
   request_trace_get : (nat64) -> (opt RequestTrace) query;
   request_trace_index_get : () -> (nat64, nat64) query;
   request_trace_remove : (nat64) -> (opt RequestTrace);
+  request_traces_get : (nat64, nat64) -> (vec opt RequestTrace) query;
+  request_traces_remove : (nat64, nat64) -> (vec opt RequestTrace);
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
