@@ -98,4 +98,12 @@ impl Tokens {
             custom_tokens.insert(token.canister_id, token);
         }
     }
+
+    pub fn remove_custom_token(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
+        let removed = self.stable_custom_tokens.remove(canister_id);
+        if let Some(custom_tokens) = self.custom_tokens.as_mut() {
+            custom_tokens.remove(canister_id);
+        }
+        removed
+    }
 }

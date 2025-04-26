@@ -149,6 +149,9 @@ impl Business for InnerState {
     fn business_config_token_custom_put(&mut self, token: TokenInfo) {
         self.tokens.put_custom_token(token)
     }
+    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
+        self.tokens.remove_custom_token(canister_id)
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {

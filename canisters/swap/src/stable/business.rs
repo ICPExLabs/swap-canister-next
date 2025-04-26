@@ -151,6 +151,9 @@ pub trait Business:
     fn business_config_token_custom_put(&mut self, token: TokenInfo) {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // set_certified_data
     fn business_certified_data_refresh(&self) {
@@ -521,6 +524,9 @@ impl Business for State {
     }
     fn business_config_token_custom_put(&mut self, token: TokenInfo) {
         self.get_mut().business_config_token_custom_put(token)
+    }
+    fn business_config_token_custom_remove(&mut self, canister_id: &CanisterId) -> Option<TokenInfo> {
+        self.get_mut().business_config_token_custom_remove(canister_id)
     }
 
     // set_certified_data
