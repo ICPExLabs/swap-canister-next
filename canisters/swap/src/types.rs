@@ -24,8 +24,9 @@ pub use business::*;
 
 #[allow(unused)]
 pub use ::common::archive::swap::{
-    PairCreate, PairCumulativePrice, PairOperation, PairSwapToken, QuerySwapBlockResult, SwapBlock, SwapOperation,
-    SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2TransferToken,
+    PairCreate, PairCumulativePrice, PairOperation, PairRemove, PairSwapToken, QuerySwapBlockResult, SwapBlock,
+    SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation,
+    SwapV2TransferToken,
 };
 #[allow(unused)]
 pub use ::common::archive::token::{

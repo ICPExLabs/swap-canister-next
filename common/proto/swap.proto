@@ -28,6 +28,12 @@ message PairCreate {
     common.UserId creator = 2;
 }
 
+// remove
+message PairRemove {
+    TokenPairAmm pa = 1;
+    common.UserId remover = 2;
+}
+
 // swap
 message PairSwapToken {
     // which token pair, token_a -> token_b
@@ -132,9 +138,11 @@ message SwapV2Operation {
 message PairOperation {
     oneof pair_operation {
         PairCreate create = 1;
-        PairSwapToken swap = 2;
-        // swap v2
-        SwapV2Operation swap_v2 = 10; // start at 10
+        PairRemove remove = 2;
+        // swap // * start at 16
+        PairSwapToken swap = 16;
+        // swap v2 // * start at 32
+        SwapV2Operation swap_v2 = 32;
     }
 }
 

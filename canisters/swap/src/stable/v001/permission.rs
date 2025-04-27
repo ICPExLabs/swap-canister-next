@@ -12,8 +12,7 @@ use super::types::{InnerState, ParsePermission};
 // General permissions
 pub use super::super::v000::types::{
     ACTION_PAUSE_QUERY, ACTION_PAUSE_REPLACE, ACTION_PERMISSION_FIND, ACTION_PERMISSION_QUERY,
-    ACTION_PERMISSION_UPDATE, ACTION_SCHEDULE_FIND, ACTION_SCHEDULE_REPLACE,
-    ACTION_SCHEDULE_TRIGGER,
+    ACTION_PERMISSION_UPDATE, ACTION_SCHEDULE_FIND, ACTION_SCHEDULE_REPLACE, ACTION_SCHEDULE_TRIGGER,
 };
 
 // Business permissions
@@ -26,7 +25,7 @@ pub const ACTION_BUSINESS_TOKEN_DEPOSIT: &str = "BusinessTokenDeposit"; // Depos
 pub const ACTION_BUSINESS_TOKEN_WITHDRAW: &str = "BusinessTokenWithdraw"; // Retrieve token permissions
 pub const ACTION_BUSINESS_TOKEN_TRANSFER: &str = "BusinessTokenTransfer"; // Internal transfer permissions for tokens
 // pair
-pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE: &str = "BusinessTokenPairCreate"; // Create token pair pool permissions
+pub const ACTION_BUSINESS_TOKEN_PAIR_CREATE_OR_REMOVE: &str = "BusinessTokenPairCreateOrRemove"; // Create or Remove token pair pool permissions
 pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD: &str = "BusinessTokenPairLiquidityAdd"; // Add liquidity permissions to the token pair pool
 pub const ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE: &str = "BusinessTokenPairLiquidityRemove"; // Remove liquidity permissions from token pair pools
 pub const ACTION_BUSINESS_TOKEN_PAIR_SWAP: &str = "BusinessTokenPairSwap"; // Token exchange permissions for tokens on pools
@@ -53,7 +52,7 @@ pub const ACTIONS: [&str; 18] = [
     ACTION_BUSINESS_TOKEN_WITHDRAW,
     ACTION_BUSINESS_TOKEN_TRANSFER,
     // pair
-    ACTION_BUSINESS_TOKEN_PAIR_CREATE,
+    ACTION_BUSINESS_TOKEN_PAIR_CREATE_OR_REMOVE,
     ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD,
     ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE,
     ACTION_BUSINESS_TOKEN_PAIR_SWAP,
@@ -92,10 +91,10 @@ impl ParsePermission for InnerState {
             ACTION_BUSINESS_TOKEN_WITHDRAW => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_TRANSFER => Permission::by_forbid(name), // default anyone
             // pair
-            ACTION_BUSINESS_TOKEN_PAIR_CREATE => Permission::by_permit(name),
+            ACTION_BUSINESS_TOKEN_PAIR_CREATE_OR_REMOVE => Permission::by_permit(name),
             ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_ADD => Permission::by_forbid(name), // default anyone
             ACTION_BUSINESS_TOKEN_PAIR_LIQUIDITY_REMOVE => Permission::by_forbid(name), // default anyone
-            ACTION_BUSINESS_TOKEN_PAIR_SWAP => Permission::by_forbid(name), // default anyone
+            ACTION_BUSINESS_TOKEN_PAIR_SWAP => Permission::by_forbid(name),          // default anyone
             // Other errors
             _ => return Err(ParsePermissionError(name)),
         })
@@ -105,8 +104,8 @@ impl ParsePermission for InnerState {
 // General permissions
 #[allow(unused)]
 pub use super::super::v000::types::{
-    has_pause_query, has_pause_replace, has_permission_find, has_permission_query,
-    has_permission_update, has_schedule_find, has_schedule_replace, has_schedule_trigger,
+    has_pause_query, has_pause_replace, has_permission_find, has_permission_query, has_permission_update,
+    has_schedule_find, has_schedule_replace, has_schedule_trigger,
 };
 
 // Business permissions
@@ -151,8 +150,8 @@ pub fn has_business_token_transfer() -> Result<(), String> {
 
 // pair
 #[allow(unused)]
-pub fn has_business_token_pair_create() -> Result<(), String> {
-    check_permission(ACTION_BUSINESS_TOKEN_PAIR_CREATE, true) // ! required running, not paused
+pub fn has_business_token_pair_create_or_remove() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_TOKEN_PAIR_CREATE_OR_REMOVE, true) // ! required running, not paused
 }
 #[allow(unused)]
 pub fn has_business_token_pair_liquidity_add() -> Result<(), String> {

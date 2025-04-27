@@ -10,6 +10,8 @@ mod query;
 
 mod create;
 
+mod remove;
+
 mod liquidity;
 
 mod swap;

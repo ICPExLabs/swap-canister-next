@@ -23,6 +23,14 @@ pub struct PairCreate {
     #[prost(message, optional, tag = "2")]
     pub creator: ::core::option::Option<super::common::UserId>,
 }
+/// remove
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PairRemove {
+    #[prost(message, optional, tag = "1")]
+    pub pa: ::core::option::Option<TokenPairAmm>,
+    #[prost(message, optional, tag = "2")]
+    pub remover: ::core::option::Option<super::common::UserId>,
+}
 /// swap
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PairSwapToken {
@@ -173,7 +181,7 @@ pub mod swap_v2_operation {
 /// pair operation
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PairOperation {
-    #[prost(oneof = "pair_operation::PairOperation", tags = "1, 2, 10")]
+    #[prost(oneof = "pair_operation::PairOperation", tags = "1, 2, 16, 32")]
     pub pair_operation: ::core::option::Option<pair_operation::PairOperation>,
 }
 /// Nested message and enum types in `PairOperation`.
@@ -184,11 +192,12 @@ pub mod pair_operation {
         #[prost(message, tag = "1")]
         Create(super::PairCreate),
         #[prost(message, tag = "2")]
+        Remove(super::PairRemove),
+        /// swap // * start at 16
+        #[prost(message, tag = "16")]
         Swap(super::PairSwapToken),
-        /// swap v2
-        ///
-        /// start at 10
-        #[prost(message, tag = "10")]
+        /// swap v2 // * start at 32
+        #[prost(message, tag = "32")]
         SwapV2(super::SwapV2Operation),
     }
 }

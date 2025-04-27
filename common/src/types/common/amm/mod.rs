@@ -148,6 +148,12 @@ impl MarketMaker {
             MarketMaker::SwapV2(value) => value.get_amount_in(self_canister, amount_out, token_in, token_out),
         }
     }
+
+    pub fn removable(&self) -> bool {
+        match self {
+            MarketMaker::SwapV2(value) => value.removable(),
+        }
+    }
 }
 
 fn new_swap_v2_market_maker(

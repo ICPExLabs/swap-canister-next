@@ -58,10 +58,12 @@ type PairCumulativePrice = record {
   price1_cumulative : nat;
 };
 type PairOperation = variant {
+  remove : PairRemove;
   swap : PairSwapToken;
   swap_v2 : SwapV2Operation;
   create : PairCreate;
 };
+type PairRemove = record { pa : TokenPairAmm; remover : principal };
 type PairSwapToken = record {
   to : Account;
   amm : Amm;

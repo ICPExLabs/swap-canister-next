@@ -6,10 +6,10 @@ use crate::stable::*;
 #[allow(unused)]
 use crate::types::*;
 
-// ========================== create ==========================
+// ========================== remove ==========================
 
-// create
-fn check_pair_create_args(
+// remove
+fn check_pair_remove_args(
     _self: &TokenPairCreateOrRemoveArgs,
 ) -> Result<(TimestampNanos, Caller, TokenPairAmm), BusinessError> {
     // ! refuse all action about frozen token
@@ -27,9 +27,11 @@ fn check_pair_create_args(
 
     let pa = TokenPairAmm { pair, amm };
 
-    // check exist
-    if with_state(|s| s.business_token_pair_pool_get(&pa).is_some()) {
-        return Err(BusinessError::TokenPairAmmExist(pa));
+    // check exist and removable
+    match with_state(|s| s.business_token_pair_pool_get(&pa)) {
+        Some(maker) if !maker.removable() => return Err(BusinessError::TokenPairAmmStillAlive(pa)),
+        None => return Err(BusinessError::TokenPairAmmNotExist(pa)),
+        _ => {}
     }
 
     // check meta
@@ -40,12 +42,12 @@ fn check_pair_create_args(
 
 // check forbidden
 #[ic_cdk::update(guard = "has_business_token_pair_create_or_remove")]
-async fn pair_create(args: TokenPairCreateOrRemoveArgs) -> TokenPairCreateOrRemoveResult {
-    inner_pair_create(args).await.map(|m| m.into()).into()
+async fn pair_remove(args: TokenPairCreateOrRemoveArgs) -> TokenPairCreateOrRemoveResult {
+    inner_pair_remove(args).await.map(|m| m.into()).into()
 }
-async fn inner_pair_create(args: TokenPairCreateOrRemoveArgs) -> Result<MarketMaker, BusinessError> {
+async fn inner_pair_remove(args: TokenPairCreateOrRemoveArgs) -> Result<MarketMaker, BusinessError> {
     // 1. check args
-    let (now, caller, pa) = check_pair_create_args(&args)?;
+    let (now, caller, pa) = check_pair_remove_args(&args)?;
 
     // 2. some value
 
@@ -59,7 +61,7 @@ async fn inner_pair_create(args: TokenPairCreateOrRemoveArgs) -> Result<MarketMa
         // * 4. do business
         {
             with_mut_state(|s| {
-                s.business_token_pair_pool_create(
+                s.business_token_pair_pool_remove(
                     &lock,
                     ArgWithMeta {
                         now,

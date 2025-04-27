@@ -1,14 +1,13 @@
-mod create;
 use common::types::{SelfCanister, SwapTokenPair, TokenPairAmm};
-pub use create::*;
+
+mod create_or_remove;
+pub use create_or_remove::*;
 
 mod liquidity;
 pub use liquidity::*;
 
 mod swap;
 pub use swap::*;
-
-
 
 pub trait SelfCanisterArg {
     fn get_self_canister(&self) -> SelfCanister;

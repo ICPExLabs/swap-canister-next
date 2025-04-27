@@ -373,7 +373,7 @@ impl Business for InnerState {
     fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
         self.token_pairs.get_token_pair_pool(pa)
     }
-    // create
+    // create and remove
     fn business_token_pair_pool_create(
         &mut self,
         lock: &SwapBlockChainLock,
@@ -393,12 +393,37 @@ impl Business for InnerState {
                 .into_owned();
 
             let mut swap_guard = s.swap_block_chain.be_guard(lock);
-            let mut trace_guard = s
-                .request_traces
-                .be_guard(arg.clone().into(), None, Some(&swap_guard), None, None)?;
+            let mut trace_guard = s.request_traces.be_guard(
+                arg.clone().into_pair_create_request_args(),
+                None,
+                Some(&swap_guard),
+                None,
+                None,
+            )?;
             let maker =
                 s.token_pairs
                     .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, &token0, &token1)?;
+            s.business_certified_data_refresh(); // set certified data
+            Ok(maker)
+        })
+    }
+    fn business_token_pair_pool_remove(
+        &mut self,
+        lock: &SwapBlockChainLock,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<MarketMaker, BusinessError> {
+        self.updated(|s| {
+            let mut swap_guard = s.swap_block_chain.be_guard(lock);
+            let mut trace_guard = s.request_traces.be_guard(
+                arg.clone().into_pair_remove_request_args(),
+                None,
+                Some(&swap_guard),
+                None,
+                None,
+            )?;
+            let maker = s
+                .token_pairs
+                .remove_token_pair_pool(&mut swap_guard, &mut trace_guard, arg)?;
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })

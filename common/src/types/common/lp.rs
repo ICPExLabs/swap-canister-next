@@ -106,6 +106,13 @@ impl PoolLp {
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
+
+    pub fn removable(&self) -> bool {
+        match self {
+            PoolLp::InnerLP(inner_lp) => inner_lp.total_supply == *ZERO,
+            PoolLp::OuterLP(outer_lp) => outer_lp.total_supply == *ZERO,
+        }
+    }
 }
 
 /// Internal storage lp

@@ -6,8 +6,8 @@ use ::common::{types::SwapTokenPair, utils::principal::sort_tokens};
 use super::*;
 
 use super::{
-    BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairSwapToken, SelfCanister, TokenBalances, TokenInfo,
-    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
+    BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairRemove, PairSwapToken, SelfCanister, TokenBalances,
+    TokenInfo, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess, TokenPairLiquidityRemoveArg,
     TokenPairLiquidityRemoveSuccess, TokenPairSwapTokensSuccess,
 };
 
@@ -101,6 +101,56 @@ impl TokenPairs {
                     self.pairs.insert(arg.arg, maker.clone()); // do insert token pair pool
                     trace.trace(format!(
                         "*CreateTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
+                        arg.arg.pair.token0.to_text(),
+                        arg.arg.pair.token1.to_text(),
+                        arg.arg.amm.into_text().as_ref(),
+                        hex::encode(subaccount),
+                        dummy_canister_id.id().to_text()
+                    ));
+                    Ok(maker)
+                },
+                |data| {
+                    let view: MarketMakerView = data.clone().into();
+                    serde_json::to_string(&view).unwrap_or_default()
+                },
+            )?;
+            Ok(maker)
+        })?;
+        Ok(maker)
+    }
+
+    // ============================= remove pair pool =============================
+
+    pub fn remove_token_pair_pool(
+        &mut self,
+        swap_guard: &mut SwapBlockChainGuard,
+        trace_guard: &mut RequestTraceGuard,
+        arg: ArgWithMeta<TokenPairAmm>,
+    ) -> Result<MarketMaker, BusinessError> {
+        let maker = self.get_token_pair_pool(&arg.arg);
+        let maker = match maker {
+            Some(maker) if !maker.removable() => return Err(BusinessError::TokenPairAmmStillAlive(arg.arg)),
+            None => return Err(BusinessError::TokenPairAmmNotExist(arg.arg)),
+            Some(maker) => maker,
+        };
+
+        // 1. get token block
+        let transaction = SwapTransaction {
+            operation: SwapOperation::Pair(PairOperation::Remove(PairRemove {
+                pa: arg.arg,
+                remover: arg.caller.id(),
+            })),
+            memo: arg.memo,
+            created: arg.created,
+        };
+        // 2. do create and mint block
+        let maker = swap_guard.mint_block(arg.now, transaction, |_| {
+            let (subaccount, dummy_canister_id) = arg.arg.get_subaccount_and_dummy_canister_id();
+            let maker = trace_guard.handle(
+                |trace| {
+                    self.pairs.remove(&arg.arg); // do remove token pair pool
+                    trace.trace(format!(
+                        "*RemoveTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
                         arg.arg.pair.token0.to_text(),
                         arg.arg.pair.token1.to_text(),
                         arg.arg.amm.into_text().as_ref(),

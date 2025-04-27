@@ -1,8 +1,8 @@
 use super::super::*;
 
-// create token pair pool
+// create or remove token pair pool
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct TokenPairCreateArgs {
+pub struct TokenPairCreateOrRemoveArgs {
     pub pool: TokenPairPool,
 
     pub memo: Option<Vec<u8>>,
@@ -10,9 +10,9 @@ pub struct TokenPairCreateArgs {
 }
 
 #[derive(Debug, Deserialize, CandidType, Clone)]
-pub struct TokenPairCreateResult(Result<MarketMakerView, BusinessError>);
+pub struct TokenPairCreateOrRemoveResult(Result<MarketMakerView, BusinessError>);
 
-impl From<Result<MarketMakerView, BusinessError>> for TokenPairCreateResult {
+impl From<Result<MarketMakerView, BusinessError>> for TokenPairCreateOrRemoveResult {
     fn from(value: Result<MarketMakerView, BusinessError>) -> Self {
         Self(value)
     }

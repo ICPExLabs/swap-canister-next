@@ -43,6 +43,7 @@ type BusinessError = variant {
   NotSupportedToken : principal;
   Swap : text;
   TokenPairAmmNotExist : TokenPairAmm;
+  TokenPairAmmStillAlive : TokenPairAmm;
   TokenAccountsLocked : vec TokenAccount;
   SystemError : text;
   MemoTooLong;
@@ -152,10 +153,12 @@ type PairLiquidityRemoveArgWithMeta = record {
   caller : principal;
 };
 type PairOperation = variant {
+  remove : PairRemove;
   swap : PairSwapToken;
   swap_v2 : SwapV2Operation;
   create : PairCreate;
 };
+type PairRemove = record { pa : TokenPairAmm; remover : principal };
 type PairSwapByLoanArgWithMeta = record {
   arg : TokenPairSwapByLoanArg;
   now : nat64;
@@ -213,6 +216,7 @@ type RequestArgs = variant {
   blocks_maintaining;
   pair_liquidity_remove : PairLiquidityRemoveArgWithMeta;
   pair_swap_tokens_for_exact_tokens : PairSwapTokensForExactTokensArgWithMeta;
+  pair_remove : PairCreateArgWithMeta;
   swap_block_push;
   token_withdraw : TokenDepositArgWithMeta;
   token_frozen : TokenFrozenArgWithMeta;
@@ -404,12 +408,12 @@ type TokenOperation = variant {
 };
 type TokenPair = record { token0 : principal; token1 : principal };
 type TokenPairAmm = record { amm : Amm; pair : TokenPair };
-type TokenPairCreateArgs = record {
+type TokenPairCreateOrRemoveArgs = record {
   created : opt nat64;
   memo : opt blob;
   pool : TokenPairPool;
 };
-type TokenPairCreateResult = variant {
+type TokenPairCreateOrRemoveResult = variant {
   Ok : MarketMakerView;
   Err : BusinessError;
 };
@@ -624,7 +628,9 @@ service : (opt InitArgs) -> {
   config_token_custom_remove : (principal) -> (opt TokenInfo);
   config_token_frozen : (TokenFrozenArg) -> ();
   config_token_frozen_query : () -> (vec principal) query;
-  pair_create : (TokenPairCreateArgs) -> (TokenPairCreateResult);
+  pair_create : (TokenPairCreateOrRemoveArgs) -> (
+      TokenPairCreateOrRemoveResult,
+    );
   pair_liquidity_add : (TokenPairLiquidityAddArgs, opt nat8) -> (
       TokenPairLiquidityAddResult,
     );
@@ -640,6 +646,9 @@ service : (opt InitArgs) -> {
       opt ManyTokenChangedResult,
     );
   pair_query : (TokenPairPool) -> (opt MarketMakerView) query;
+  pair_remove : (TokenPairCreateOrRemoveArgs) -> (
+      TokenPairCreateOrRemoveResult,
+    );
   pair_swap_by_loan : (TokenPairSwapByLoanArgs, opt nat8) -> (
       TokenPairSwapTokensResult,
     );

@@ -110,6 +110,9 @@ pub enum BusinessError {
     /// The token pool does not exist and cannot be operated
     #[error("token pair amm is not exist. ({0})")]
     TokenPairAmmNotExist(TokenPairAmm),
+    /// The token pool is alive, can not remove
+    #[error("token pair amm is still alive. ({0})")]
+    TokenPairAmmStillAlive(TokenPairAmm),
     /// Liquidity errors
     #[error("liquidity error: {0}.")]
     Liquidity(String),

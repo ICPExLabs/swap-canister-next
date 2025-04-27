@@ -268,6 +268,10 @@ impl SwapV2MarketMaker {
         Ok((pool_account, amount_in))
     }
 
+    pub fn removable(&self) -> bool {
+        self.lp.removable()
+    }
+
     pub fn text(&self) -> String {
         format!(
             "token0:[{}]({})\ntoken1:[{}]({})\nAmm:SwapV2({})\nProtocolFee:{}\nLP Supply:{}",

@@ -9,6 +9,9 @@ mod common;
 mod create;
 pub use create::*;
 
+mod remove;
+pub use remove::*;
+
 mod swap;
 pub use swap::*;
 
@@ -21,6 +24,9 @@ pub enum PairOperation {
     /// create pair
     #[serde(rename = "create")]
     Create(PairCreate),
+    /// remove pair
+    #[serde(rename = "remove")]
+    Remove(PairRemove),
     /// swap
     #[serde(rename = "swap")]
     Swap(PairSwapToken),
@@ -37,6 +43,7 @@ impl TryFrom<PairOperation> for proto::PairOperation {
 
         let pair_operation = match value {
             PairOperation::Create(value) => Create(value.into()),
+            PairOperation::Remove(value) => Remove(value.into()),
             PairOperation::Swap(value) => Swap(value.try_into()?),
             PairOperation::SwapV2(value) => SwapV2(value.try_into()?),
         };
@@ -59,6 +66,7 @@ impl TryFrom<proto::PairOperation> for PairOperation {
 
         let value = match value {
             Create(value) => PairOperation::Create(value.try_into()?),
+            Remove(value) => PairOperation::Remove(value.try_into()?),
             Swap(value) => PairOperation::Swap(value.try_into()?),
             SwapV2(value) => PairOperation::SwapV2(value.try_into()?),
         };
