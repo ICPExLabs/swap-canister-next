@@ -57,7 +57,7 @@ fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
     _reserve0: &Nat,
     _reserve1: &Nat,
 ) -> Result<bool, BusinessError> {
-    let fee_to = guard.fee_to.swap_fee_to;
+    let fee_to = guard.get_swap_fee_to();
     let fee_on = fee_to.is_some() && _self.protocol_fee.as_ref().is_some_and(|fee| !fee.is_zero());
 
     let _k_last = _self.k_last.clone();

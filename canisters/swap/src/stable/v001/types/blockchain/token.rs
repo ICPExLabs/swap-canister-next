@@ -7,15 +7,14 @@ use serde::{Deserialize, Serialize};
 use crate::types::with_mut_state;
 
 use super::super::{
-    Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving,
-    EncodedBlock, HashOf, NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock,
-    TokenTransaction, init_token_blocks, init_token_wasm_module,
+    Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving, EncodedBlock, HashOf,
+    NextArchiveCanisterConfig, QueryBlockResult, TimestampNanos, TokenBlock, TokenTransaction, init_token_blocks,
+    init_token_wasm_module,
 };
 
 use super::BlockChain;
 
-const WASM_MODULE: &[u8] =
-    include_bytes!("../../../../../../archive-token/sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../../../../../../archive-token/sources/source_opt.wasm");
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenBlockChain {
@@ -57,9 +56,7 @@ impl TokenBlockChain {
         if self.wasm_module.get().is_none() {
             self.wasm_module
                 .set(Some(WASM_MODULE.to_vec()))
-                .map_err(|err| {
-                    BusinessError::system_error(format!("init wasm module failed: {err:?}"))
-                })?;
+                .map_err(|err| BusinessError::system_error(format!("init wasm module failed: {err:?}")))?;
         }
         Ok(())
     }
@@ -69,33 +66,20 @@ impl TokenBlockChain {
     pub fn query_wasm_module(&self) -> &Option<Vec<u8>> {
         self.wasm_module.get()
     }
-    pub fn replace_wasm_module(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    pub fn replace_wasm_module(&mut self, wasm_module: Vec<u8>) -> Result<Option<Vec<u8>>, BusinessError> {
         let old = self.wasm_module.get().clone();
-        self.wasm_module.set(Some(wasm_module)).map_err(|err| {
-            BusinessError::system_error(format!("replace wasm module failed: {err:?}"))
-        })?;
+        self.wasm_module
+            .set(Some(wasm_module))
+            .map_err(|err| BusinessError::system_error(format!("replace wasm module failed: {err:?}")))?;
         Ok(old)
     }
-    pub fn set_token_current_archiving_max_length(
-        &mut self,
-        max_length: u64,
-    ) -> Option<CurrentArchiving> {
-        self.block_chain
-            .set_current_archiving_max_length(max_length)
+    pub fn set_token_current_archiving_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
+        self.block_chain.set_current_archiving_max_length(max_length)
     }
-    pub fn set_token_archive_config(
-        &mut self,
-        archive_config: NextArchiveCanisterConfig,
-    ) -> NextArchiveCanisterConfig {
+    pub fn set_token_archive_config(&mut self, archive_config: NextArchiveCanisterConfig) -> NextArchiveCanisterConfig {
         self.block_chain.set_archive_config(archive_config)
     }
-    pub fn replace_token_current_archiving(
-        &mut self,
-        archiving: CurrentArchiving,
-    ) -> Option<CurrentArchiving> {
+    pub fn replace_token_current_archiving(&mut self, archiving: CurrentArchiving) -> Option<CurrentArchiving> {
         self.block_chain.replace_current_archiving(archiving)
     }
     pub fn archive_current_canister(&mut self) -> Result<(), BusinessError> {
@@ -193,7 +177,7 @@ impl TokenBlockChain {
     pub fn be_guard<'a>(&'a mut self, lock: &'a TokenBlockChainLock) -> TokenBlockChainGuard<'a> {
         TokenBlockChainGuard {
             token_block_chain: self,
-            _lock: lock,
+            lock,
         }
     }
 
@@ -226,10 +210,14 @@ impl Drop for TokenBlockChainLock {
 
 pub struct TokenBlockChainGuard<'a> {
     token_block_chain: &'a mut TokenBlockChain,
-    _lock: &'a TokenBlockChainLock,
+    lock: &'a TokenBlockChainLock,
 }
 
 impl TokenBlockChainGuard<'_> {
+    pub fn get_fee_to(&self) -> Option<Account> {
+        self.lock.fee_to
+    }
+
     fn get_next_token_block(
         &self,
         now: TimestampNanos,
@@ -254,9 +242,7 @@ impl TokenBlockChainGuard<'_> {
             timestamp: now,
             transaction,
         });
-        let hash = block
-            .do_hash()
-            .map_err(BusinessError::TokenBlockChainError)?;
+        let hash = block.do_hash().map_err(BusinessError::TokenBlockChainError)?;
         let block: proto::TokenBlock = block
             .try_into()
             .map_err(|err| BusinessError::TokenBlockChainError(format!("{err:?}")))?;
@@ -267,9 +253,7 @@ impl TokenBlockChainGuard<'_> {
 
     fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<TokenBlock>) {
         let block_height = self.token_block_chain.block_chain.next_block_index;
-        self.token_block_chain
-            .cached
-            .insert(block_height, encoded_block);
+        self.token_block_chain.cached.insert(block_height, encoded_block);
         self.token_block_chain.block_chain.next_block(block_hash);
     }
 

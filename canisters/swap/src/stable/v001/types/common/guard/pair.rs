@@ -6,7 +6,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use crate::types::{SelfCanisterArg, TokenPairArg};
 
 use super::super::{
-    ArgWithMeta, BusinessError, DepositToken, FeeTo, PairCumulativePrice, PairOperation, RequestTraceGuard,
+    ArgWithMeta, BusinessError, DepositToken, PairCumulativePrice, PairOperation, RequestTraceGuard,
     SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken,
     SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard, TokenPairAmm, TokenPairLiquidityAddArg,
     TokenPairLiquidityAddSuccess, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg,
@@ -21,7 +21,6 @@ pub struct TokenPairSwapGuard<'a> {
     token_guard: TokenBlockChainGuard<'a>,
     swap_guard: SwapBlockChainGuard<'a>,
     token_pairs: &'a mut TokenPairs,
-    fee_to: FeeTo,
 }
 
 impl<'a> TokenPairSwapGuard<'a> {
@@ -31,7 +30,6 @@ impl<'a> TokenPairSwapGuard<'a> {
         token_guard: TokenBlockChainGuard<'a>,
         swap_guard: SwapBlockChainGuard<'a>,
         token_pairs: &'a mut TokenPairs,
-        fee_to: FeeTo,
     ) -> Self {
         Self {
             trace_guard,
@@ -39,7 +37,6 @@ impl<'a> TokenPairSwapGuard<'a> {
             token_guard,
             swap_guard,
             token_pairs,
-            fee_to,
         }
     }
 
@@ -65,7 +62,6 @@ impl<'a> TokenPairSwapGuard<'a> {
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
-                    fee_to: self.fee_to,
                     arg,
                 };
                 let data = self.token_pairs.add_liquidity(&mut inner, pa)?;
@@ -91,7 +87,6 @@ impl<'a> TokenPairSwapGuard<'a> {
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
-                    fee_to: self.fee_to,
                     arg,
                 };
                 let data = self.token_pairs.remove_liquidity(&mut inner, pa)?;
@@ -117,7 +112,6 @@ impl<'a> TokenPairSwapGuard<'a> {
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
-                    fee_to: self.fee_to,
                     arg,
                 };
                 let data = self.token_pairs.swap_exact_tokens_for_tokens(&mut inner, pas)?;
@@ -143,7 +137,6 @@ impl<'a> TokenPairSwapGuard<'a> {
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
-                    fee_to: self.fee_to,
                     arg,
                 };
                 let data = self.token_pairs.swap_tokens_for_exact_tokens(&mut inner, pas)?;
@@ -169,7 +162,6 @@ impl<'a> TokenPairSwapGuard<'a> {
                     balances_guard: &mut self.balances_guard,
                     token_guard: &mut self.token_guard,
                     swap_guard: &mut self.swap_guard,
-                    fee_to: self.fee_to,
                     arg,
                 };
                 let data = self.token_pairs.swap_by_loan(&mut inner, pas)?;
@@ -191,7 +183,6 @@ pub struct InnerTokenPairSwapGuard<'a, 'b, 'c, T> {
     balances_guard: &'a mut TokenBalancesGuard<'b>,
     token_guard: &'a mut TokenBlockChainGuard<'b>,
     swap_guard: &'a mut SwapBlockChainGuard<'b>,
-    pub fee_to: FeeTo,
     pub arg: ArgWithMeta<T>,
 }
 
@@ -205,7 +196,6 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             balances_guard: self.balances_guard,
             token_guard: self.token_guard,
             swap_guard: self.swap_guard,
-            fee_to: self.fee_to,
             arg,
         };
         handle(&mut inner)
@@ -213,6 +203,10 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
 
     pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
         self.balances_guard.token_balance_of(token, account)
+    }
+
+    pub fn get_swap_fee_to(&self) -> Option<Account> {
+        self.swap_guard.get_fee_to()
     }
 
     /// Check whether the balance meets the requirements
@@ -293,7 +287,6 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
                 balances_guard: self.balances_guard,
                 token_guard: self.token_guard,
                 swap_guard,
-                fee_to: self.fee_to,
                 arg: ArgWithMeta {
                     now: self.arg.now,
                     caller: self.arg.caller,

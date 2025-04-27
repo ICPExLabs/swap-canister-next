@@ -1,6 +1,7 @@
 use candid::CandidType;
 #[cfg(feature = "cdk")]
 use ic_canister_kit::identity::self_canister_id;
+use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{CanisterId, UserId};
@@ -34,6 +35,14 @@ impl Caller {
     #[allow(unused)]
     pub fn id(&self) -> UserId {
         self.0
+    }
+
+    /// ! check token fee to required or not
+    pub fn fee_to(&self, fee_to: Option<Account>) -> Option<Account> {
+        if fee_to.is_some_and(|fee_to| fee_to.owner == self.0) {
+            return None;
+        }
+        fee_to
     }
 }
 

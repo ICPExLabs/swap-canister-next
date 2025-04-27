@@ -254,7 +254,6 @@ impl InnerState {
             token_guard,
             swap_guard,
             &mut self.token_pairs,
-            self.business_data.fee_to,
         ))
     }
 }

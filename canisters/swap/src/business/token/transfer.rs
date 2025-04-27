@@ -14,7 +14,7 @@ impl CheckArgs for TokenTransferArgs {
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // ! refuse all action about frozen token
         with_state(|s| s.business_token_alive(&self.token))?;
-        
+
         // check supported token, can be token or dummy lp token
         let token = with_state(|s| {
             s.business_all_tokens_with_dummy_query()
@@ -71,6 +71,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
     let required = vec![token_account_from, token_account_to];
 
     let changed = if token.is_lp_token {
+        // ? LP token should produce 'swap transaction block'
         // 3. lock
         let locks = match super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
             fee_tokens,
@@ -86,7 +87,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
         // * 4. do business
         {
             // ? 0. get transfer fee
-            let fee_to = locks.0.fee_to; // token fee to
+            let fee_to = caller.fee_to(locks.0.fee_to); // ! check token fee to required or not
 
             // ? 1. transfer
             with_mut_state(|s| {
@@ -124,7 +125,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
         // * 4. do business
         {
             // ? 0. get transfer fee
-            let fee_to = locks.0.fee_to; // token fee to
+            let fee_to = caller.fee_to(locks.0.fee_to); // ! check token fee to required or not
 
             // ? 1. transfer
             with_mut_state(|s| {
