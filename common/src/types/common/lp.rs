@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
+use crate::utils::math::ZERO;
 #[allow(unused)]
 use crate::{
     types::{AmmText, CanisterId, TokenPairAmm},
@@ -209,7 +210,7 @@ impl InnerLP {
 
         // check minimum liquidity
         let remain = self.total_supply.clone() - required;
-        if remain < self.minimum_liquidity {
+        if *ZERO < remain && remain < self.minimum_liquidity {
             return Err(BusinessError::Liquidity("REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into()));
         }
 
