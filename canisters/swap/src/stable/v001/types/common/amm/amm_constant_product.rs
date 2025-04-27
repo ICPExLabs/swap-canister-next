@@ -192,7 +192,7 @@ pub fn add_liquidity(
         guard.assert_token_balance(arg.token_a, arg.from, &arg.amount_a_desired)?;
         guard.assert_token_balance(arg.token_b, arg.from, &arg.amount_b_desired)?;
         guard.trace(format!(
-            "*Add Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, required: {} <= amount_a <= {} && {} <= amount_b <= {}`",
+            "*PairLiquidityAdd* `tokenA:[{}], tokenB:[{}], amm:{}, required: {} <= amount_a <= {} && {} <= amount_b <= {}`",
             arg.token_a.to_text(),
             arg.token_b.to_text(),
             arg.pa.amm.into_text().as_ref(),
@@ -206,8 +206,8 @@ pub fn add_liquidity(
     // calculate amount
     let arg = &guard.arg.arg;
     let (amount_a, amount_b) = inner_add_liquidity(_self, arg)?;
-    guard.trace(format!("*Add Liquidity* `amount_a:{amount_a}, amount_b:{amount_b}`",)); // * trace
     // Pool token account
+    let message = format!("*PairLiquidityAdd* `amount_a:{amount_a}, amount_b:{amount_b}`");
     let arg = &guard.arg.arg;
     let pool_account = Account {
         owner: arg.self_canister.id(),
@@ -228,6 +228,8 @@ pub fn add_liquidity(
         to: pool_account,
         fee: None,
     })?; // * transfer and trace
+    guard.trace(message); // * trace
+
     let liquidity = mint(_self, guard, &amount_a, &amount_b, &pool_account)?;
     Ok(TokenPairLiquidityAddSuccess {
         amount: (amount_a, amount_b),
@@ -283,6 +285,7 @@ fn burn(
     )?;
 
     // return token
+    let message = format!("*PairLiquidityRemove* `amount0:{amount0}, amount1:{amount1}`");
     let arg = &guard.arg.arg;
     guard.token_transfer(TransferToken {
         token: _token0,
@@ -299,6 +302,7 @@ fn burn(
         to: arg.to,
         fee: None,
     })?; // * transfer and trace
+    guard.trace(message); // * trace
 
     let balance0 = guard.token_balance_of(_token0, *pool_account)?;
     let balance1 = guard.token_balance_of(_token1, *pool_account)?;
@@ -327,7 +331,7 @@ pub fn remove_liquidity(
             arg.fee.as_ref().map(|fee| fee.fee_to),
         )?;
         guard.trace(format!(
-            "*Remove Liquidity* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity_without_fee:{}, required: {} <= amount_a && {} <= amount_b`",
+            "*PairLiquidityRemove* `tokenA:[{}], tokenB:[{}], amm:{}, liquidity_without_fee:{}, required: {} <= amount_a && {} <= amount_b`",
             arg.token_a.to_text(),
             arg.token_b.to_text(),
             arg.pa.amm.into_text().as_ref(),

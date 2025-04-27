@@ -231,7 +231,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
         let changed = self.balances_guard.token_transfer(self.token_guard, arg.clone())?; // do transfer
         self.trace_guard.trace(format!(
-            "*Transfer Token* `token:[{}], from:({}), to:({}), amount:{}, done:{changed}`",
+            "*TokenTransfer* `token:[{}], from:({}), to:({}), amount:{}, done:{changed}`",
             arg.arg.token.to_text(),
             display_account(&arg.arg.from),
             display_account(&arg.arg.to),
@@ -244,7 +244,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     pub fn token_loan(&mut self, arg: DepositToken) -> Result<(), BusinessError> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
         let trace = format!(
-            "*Loan Token* `token:[{}], from:({}), to:({}), amount:{}`",
+            "*TokenLoan* `token:[{}], from:({}), to:({}), amount:{}`",
             arg.arg.token.to_text(),
             display_account(&arg.arg.from),
             display_account(&arg.arg.to),
@@ -258,7 +258,7 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     pub fn token_repay(&mut self, arg: WithdrawToken) -> Result<(), BusinessError> {
         let arg = ArgWithMeta::simple(self.arg.now, self.arg.caller, arg);
         let trace = format!(
-            "*Repay Token* `token:[{}], from:({}), to:({}), amount:{}`",
+            "*TokenRepay* `token:[{}], from:({}), to:({}), amount:{}`",
             arg.arg.token.to_text(),
             display_account(&arg.arg.from),
             display_account(&arg.arg.to),
@@ -328,7 +328,7 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Pair Cumulative Price* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
+            "*PairCumulativePrice* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
             self.arg.arg.get_pa(),
             self.arg.now.into_inner(),
         )); // * trace
@@ -372,7 +372,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         );
         self.swap_guard.mint_block(self.arg.now, transaction, |_| {
             let trace = format!(
-                "*Mint Fee (Deposit)* `token:[{}], from:({}), to:({}), amount:{}`",
+                "*PairFeeMint(Deposit)* `token:[{}], from:({}), to:({}), amount:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
@@ -383,7 +383,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Mint Fee*. `token:[{}], to:({}), amount:{amount}`",
+            "*PairFeeMint*. `token:[{}], to:({}), amount:{amount}`",
             token.to_text(),
             display_account(&to),
         )); // * trace
@@ -445,7 +445,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
         );
         self.swap_guard.mint_block(self.arg.now, transaction, |_| {
             let trace = format!(
-                "*Mint Liquidity (Deposit)* `token:[{}], from[transferred 2 tokens]:({}), to[minted liquidity]:({}), amount:{}`",
+                "*PairLiquidityMint(Deposit)* `token:[{}], from[transferred 2 tokens]:({}), to[minted liquidity]:({}), amount:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
@@ -456,7 +456,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Mint Liquidity* `token:[{}], to:({}), amount:{amount}`",
+            "*PairLiquidityMint* `token:[{}], to:({}), amount:{amount}`",
             token.to_text(),
             display_account(&to),
         )); // * trace
@@ -533,7 +533,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
         });
         self.swap_guard.mint_block(self.arg.now, transaction, |_| {
             let trace = format!(
-                "*Burn Liquidity (Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
+                "*PairLiquidityBurn(Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
@@ -545,7 +545,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             self.trace_guard.trace(trace); // * trace
             if let Some(deposit_fee) = deposit_fee {
                 let trace = format!(
-                    "*Mint Burn Fee (Deposit)*. `token:[{}], to:({}), amount:{}`",
+                    "*PairBurnFeeMint(Deposit)*. `token:[{}], to:({}), amount:{}`",
                     deposit_fee.arg.token.to_text(),
                     display_account(&deposit_fee.arg.to),
                     deposit_fee.arg.amount,
@@ -557,7 +557,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             Ok(())
         })?;
         self.trace(format!(
-            "*Burn Liquidity* `token:[{}], from:({}), amount:{amount}`",
+            "*PairLiquidityBurn* `token:[{}], from:({}), amount:{amount}`",
             token.to_text(),
             display_account(&from),
         )); // * trace

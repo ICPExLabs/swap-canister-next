@@ -136,7 +136,7 @@ impl Business for InnerState {
         let _ = trace.handle(
             |trace| {
                 trace.trace(format!(
-                    "*token frozen*: `token: [{}], frozen: {}`",
+                    "*TokenFrozen* `token: [{}], frozen: {}`",
                     arg.arg.token.to_text(),
                     arg.arg.frozen
                 ));
@@ -163,7 +163,7 @@ impl Business for InnerState {
         let _ = trace.handle(
             |trace| {
                 trace.trace(format!(
-                    "*token custom put*: `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
+                    "*TokenCustomPut* `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
                     arg.arg.canister_id.to_text(),
                     arg.arg.name,
                     arg.arg.symbol,
@@ -180,11 +180,11 @@ impl Business for InnerState {
         let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
         ic_canister_kit::common::trap(trace.handle(
             |trace| {
-                trace.trace(format!("*token custom remove*: `token: [{}]`", arg.arg.to_text()));
+                trace.trace(format!("*TokenCustomRemove* `token: [{}]`", arg.arg.to_text()));
                 let result = self.tokens.remove_custom_token(&arg.arg);
                 match &result {
                     Some(info) => trace.trace(format!(
-                        "*token custom remove*: `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
+                        "*TokenCustomRemove* `token: [{}], name: {}, symbol: {}, decimals: {}, fee: {}`",
                         info.canister_id.to_text(),
                         info.name,
                         info.symbol,
@@ -192,7 +192,7 @@ impl Business for InnerState {
                         info.fee,
                     )),
                     None => trace.trace(format!(
-                        "*token custom remove*: `token: [{}] is not exist.`",
+                        "*TokenCustomRemove* `token: [{}] is not exist.`",
                         arg.arg.to_text()
                     )),
                 }

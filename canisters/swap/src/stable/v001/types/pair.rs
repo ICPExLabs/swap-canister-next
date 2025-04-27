@@ -100,7 +100,7 @@ impl TokenPairs {
                 |trace| {
                     self.pairs.insert(arg.arg, maker.clone()); // do insert token pair pool
                     trace.trace(format!(
-                        "*CreateTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
+                        "*TokenPairCreate* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
                         arg.arg.pair.token0.to_text(),
                         arg.arg.pair.token1.to_text(),
                         arg.arg.amm.into_text().as_ref(),
@@ -150,7 +150,7 @@ impl TokenPairs {
                 |trace| {
                     self.pairs.remove(&arg.arg); // do remove token pair pool
                     trace.trace(format!(
-                        "*RemoveTokenPair* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
+                        "*TokenPairRemove* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
                         arg.arg.pair.token0.to_text(),
                         arg.arg.pair.token1.to_text(),
                         arg.arg.amm.into_text().as_ref(),
@@ -255,7 +255,7 @@ impl TokenPairs {
                 created: guard.arg.created,
             };
             let trace = format!(
-                "*Pair Swap Token* `swap_pair:([{}],[{}],{}), from:({}), to:({}), pay_amount:{}, got_amount:{}`",
+                "*TokenPairSwap* `swap_pair:([{}],[{}],{}), from:({}), to:({}), pay_amount:{}, got_amount:{}`",
                 input.to_text(),
                 output.to_text(),
                 pa.amm.into_text().as_ref(),

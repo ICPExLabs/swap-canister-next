@@ -87,7 +87,7 @@ pub async fn inner_token_deposit(
                 created_at_time: None,
             };
             ic_cdk::println!(
-                "*call canister transfer_from_arg* `token:[{}], from:({}), to:({}), amount:{}, fee:0`",
+                "*CallIcrc2TransferFrom* `token:[{}], from:({}), to:({}), amount:{}, fee:0`",
                 args.token.to_string(),
                 display_account(&transfer_from_arg.from),
                 display_account(&transfer_from_arg.to),

@@ -96,7 +96,7 @@ pub async fn inner_token_withdraw_many(
                         created_at_time: None,
                     };
                     ic_cdk::println!(
-                        "*call canister transfer_arg* `token:[{}], to:({}), amount:{}, fee:{}`",
+                        "*CallIcrc1Transfer* `token:[{}], to:({}), amount:{}, fee:{}`",
                         args.token.to_string(),
                         display_account(&transfer_arg.to),
                         transfer_arg.amount.to_string(),
