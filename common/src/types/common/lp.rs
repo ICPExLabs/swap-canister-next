@@ -1,3 +1,4 @@
+#[cfg(feature = "cdk")]
 use std::borrow::Cow;
 #[cfg(feature = "cdk")]
 use std::collections::HashMap;

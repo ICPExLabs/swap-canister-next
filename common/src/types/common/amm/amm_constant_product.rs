@@ -5,6 +5,7 @@
 ///   - Simple and efficient, suitable for most trading scenarios.
 ///   - There is significant slippage in large-scale transactions (significant price changes).
 ///   - Uniswap V3 introduces "concentrated liquidity", allowing LPs to set price ranges and improve capital efficiency.
+#[cfg(feature = "cdk")]
 use std::borrow::Cow;
 #[cfg(feature = "cdk")]
 use std::collections::HashMap;
