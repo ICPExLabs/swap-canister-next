@@ -23,7 +23,7 @@ pub use got_exact::*;
 mod pay_exact_by_loan;
 pub use pay_exact_by_loan::*;
 
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum RequestArgs {
     // no arg
     #[serde(rename = "token_block_push")]
@@ -71,38 +71,38 @@ pub enum RequestArgs {
 // ============================= wrap =============================
 
 // config
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenFrozenArgWithMeta(ArgWithMeta<TokenFrozenArg>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenCustomPutArgWithMeta(ArgWithMeta<TokenInfo>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenCustomRemoveArgWithMeta(ArgWithMeta<CanisterId>);
 // token
 #[cfg(feature = "archive-token")]
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenDepositArgWithMeta(ArgWithMeta<DepositToken>);
 #[cfg(feature = "archive-token")]
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenWithdrawArgWithMeta(ArgWithMeta<WithdrawToken>);
 #[cfg(feature = "archive-token")]
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenTransferArgWithMeta(ArgWithMeta<TransferToken>);
 // pair create
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairCreateArgWithMeta(ArgWithMeta<TokenPairAmm>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairRemoveArgWithMeta(ArgWithMeta<TokenPairAmm>);
 // pair liquidity
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairLiquidityAddArgWithMeta(ArgWithMeta<TokenPairLiquidityAddArg>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairLiquidityRemoveArgWithMeta(ArgWithMeta<TokenPairLiquidityRemoveArg>);
 // pair swap
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairSwapExactTokensForTokensArgWithMeta(ArgWithMeta<TokenPairSwapExactTokensForTokensArg>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairSwapTokensForExactTokensArgWithMeta(ArgWithMeta<TokenPairSwapTokensForExactTokensArg>);
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct PairSwapByLoanArgWithMeta(ArgWithMeta<TokenPairSwapByLoanArg>);
 
 // ============================= from =============================

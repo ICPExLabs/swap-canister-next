@@ -36,7 +36,9 @@ pub struct ArgWithMeta<T> {
     pub now: TimestampNanos,
     pub caller: Caller,
     pub arg: T,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub memo: Option<Vec<u8>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub created: Option<TimestampNanos>,
 }
 

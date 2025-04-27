@@ -20,6 +20,7 @@ pub struct TokenPairLiquidityRemoveArg {
     pub amount_b_min: Nat,
     pub to: Account,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fee: Option<BurnFee>,
 }
 

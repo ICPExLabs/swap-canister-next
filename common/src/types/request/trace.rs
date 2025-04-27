@@ -11,7 +11,7 @@ use crate::types::{TimestampNanos, TokenAccount};
 
 use super::{BusinessLocks, RequestArgs, RequestIndex};
 
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum RequestTraceResult {
     #[serde(rename = "ok")]
     Ok(String),
@@ -19,18 +19,18 @@ pub enum RequestTraceResult {
     Err(String),
 }
 
-#[derive(Debug, Serialize, Deserialize, CandidType)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct RequestTraceDone {
-    done: TimestampNanos,
-    result: RequestTraceResult,
+    pub done: TimestampNanos,
+    pub result: RequestTraceResult,
 }
 
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct RequestTrace {
-    index: RequestIndex,
-    created: TimestampNanos,
+    pub index: RequestIndex,
+    pub created: TimestampNanos,
     pub args: RequestArgs,
-    locks: BusinessLocks,
+    pub locks: BusinessLocks,
     pub traces: Vec<(TimestampNanos, String)>,
     pub done: Option<RequestTraceDone>,
 }
