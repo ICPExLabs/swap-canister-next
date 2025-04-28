@@ -24,18 +24,25 @@ async fn config_token_custom_put(token: TokenInfo) {
 
     // check standard
     let service = crate::services::icrc2::Service(token.canister_id);
-    let (name, symbol, decimals, fee) = futures::future::join4(
+    let (name, symbol, decimals, fee, supported) = futures::future::join5(
         service.icrc_1_name(),
         service.icrc_1_symbol(),
         service.icrc_1_decimals(),
         service.icrc_1_fee(),
+        service.icrc_1_supported_standards(),
     )
     .await;
     let name = ic_canister_kit::common::trap_debug(name).0;
     let symbol = ic_canister_kit::common::trap_debug(symbol).0;
     let decimals = ic_canister_kit::common::trap_debug(decimals).0;
     let fee = ic_canister_kit::common::trap_debug(fee).0;
-    if token.name != name || token.symbol != symbol || token.decimals != decimals || token.fee != fee {
+    let supported = ic_canister_kit::common::trap_debug(supported).0;
+    if token.name != name
+        || token.symbol != symbol
+        || token.decimals != decimals
+        || token.fee != fee
+        || supported.iter().find(|s| s.name == "ICRC-2").is_none()
+    {
         ic_cdk::trap("token standard not match");
     }
 
