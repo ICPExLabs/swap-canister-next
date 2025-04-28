@@ -15,7 +15,7 @@ fn config_token_custom_query() -> Vec<TokenInfo> {
 
 // ============================== update ==============================
 
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
+#[ic_cdk::update(guard = "has_business_config_custom_token")]
 async fn config_token_custom_put(token: TokenInfo) {
     // preset can not modify
     if with_state(|s| s.business_config_token_preset_query().contains_key(&token.canister_id)) {
@@ -41,7 +41,7 @@ async fn config_token_custom_put(token: TokenInfo) {
         || token.symbol != symbol
         || token.decimals != decimals
         || token.fee != fee
-        || supported.iter().find(|s| s.name == "ICRC-2").is_none()
+        || !supported.iter().any(|s| s.name == "ICRC-2")
     {
         ic_cdk::trap("token standard not match");
     }
@@ -52,7 +52,7 @@ async fn config_token_custom_put(token: TokenInfo) {
     with_mut_state(|s| s.business_config_token_custom_put(arg))
 }
 
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
+#[ic_cdk::update(guard = "has_business_config_custom_token")]
 async fn config_token_custom_remove(canister_id: CanisterId) -> Option<TokenInfo> {
     // preset can not modify
     if with_state(|s| s.business_config_token_preset_query().contains_key(&canister_id)) {

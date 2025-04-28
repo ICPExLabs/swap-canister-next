@@ -18,6 +18,7 @@ pub use super::super::v000::types::{
 // Business permissions
 // config
 pub const ACTION_BUSINESS_CONFIG_FEE_TO: &str = "BusinessConfigFeeTo"; // Query and set the handling fee receiving address permissions
+pub const ACTION_BUSINESS_CONFIG_CUSTOM_TOKEN: &str = "BusinessConfigCustomToken"; // put custom token
 pub const ACTION_BUSINESS_CONFIG_MAINTAINING: &str = "BusinessConfigMaintaining"; // Maintain permissions
 // token
 pub const ACTION_BUSINESS_TOKEN_BALANCE_BY: &str = "BusinessTokenBalanceBy"; // Query the permissions for the specified account balance
@@ -32,7 +33,7 @@ pub const ACTION_BUSINESS_TOKEN_PAIR_SWAP: &str = "BusinessTokenPairSwap"; // To
 
 // All permission list
 #[allow(unused)]
-pub const ACTIONS: [&str; 18] = [
+pub const ACTIONS: [&str; 19] = [
     // General permissions
     ACTION_PAUSE_QUERY,
     ACTION_PAUSE_REPLACE,
@@ -45,6 +46,7 @@ pub const ACTIONS: [&str; 18] = [
     // Business permissions
     // config
     ACTION_BUSINESS_CONFIG_FEE_TO,
+    ACTION_BUSINESS_CONFIG_CUSTOM_TOKEN,
     ACTION_BUSINESS_CONFIG_MAINTAINING,
     // token
     ACTION_BUSINESS_TOKEN_BALANCE_BY,
@@ -84,6 +86,7 @@ impl ParsePermission for InnerState {
             // Business permissions
             // config
             ACTION_BUSINESS_CONFIG_FEE_TO => Permission::by_permit(name),
+            ACTION_BUSINESS_CONFIG_CUSTOM_TOKEN => Permission::by_permit(name),
             ACTION_BUSINESS_CONFIG_MAINTAINING => Permission::by_permit(name),
             // token
             ACTION_BUSINESS_TOKEN_BALANCE_BY => Permission::by_permit(name),
@@ -124,6 +127,10 @@ pub fn has_business_swap_queryable() -> Result<(), String> {
 #[allow(unused)]
 pub fn has_business_config_fee_to() -> Result<(), String> {
     check_permission(ACTION_BUSINESS_CONFIG_FEE_TO, false)
+}
+#[allow(unused)]
+pub fn has_business_config_custom_token() -> Result<(), String> {
+    check_permission(ACTION_BUSINESS_CONFIG_CUSTOM_TOKEN, false)
 }
 #[allow(unused)]
 pub fn has_business_config_maintaining() -> Result<(), String> {
