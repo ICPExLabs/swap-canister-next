@@ -87,7 +87,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
         // * 4. do business
         {
             // ? 0. get transfer fee
-            let fee_to = caller.fee_to(locks.0.fee_to); // ! check token fee to required or not
+            let fee_to = caller.fee_to(locks.0.fee_to, args.to); // ! check token fee to required or not
 
             // ? 1. transfer
             with_mut_state(|s| {
@@ -125,7 +125,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
         // * 4. do business
         {
             // ? 0. get transfer fee
-            let fee_to = caller.fee_to(locks.0.fee_to); // ! check token fee to required or not
+            let fee_to = caller.fee_to(locks.0.fee_to, args.to); // ! check token fee to required or not
 
             // ? 1. transfer
             with_mut_state(|s| {

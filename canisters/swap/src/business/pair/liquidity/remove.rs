@@ -33,7 +33,7 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         let token = with_state(|s| s.business_token_query_by_pa(&pa)).ok_or_else(|| pa.not_exist())?;
         let (balance, mut fee_to) =
             with_state(|s| s.business_token_balance_of_with_fee_to(token.canister_id, self.from));
-        fee_to = caller.fee_to(fee_to); // ! check token fee to required or not
+        fee_to = caller.fee_to(fee_to, self.to); // ! check token fee to required or not
         let amount = self.liquidity_without_fee.clone() + fee_to.map(|_| token.fee.clone()).unwrap_or_default();
         if balance < amount {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));

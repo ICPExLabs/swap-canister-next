@@ -38,8 +38,8 @@ impl Caller {
     }
 
     /// ! check token fee to required or not
-    pub fn fee_to(&self, fee_to: Option<Account>) -> Option<Account> {
-        if fee_to.is_some_and(|fee_to| fee_to.owner == self.0) {
+    pub fn fee_to(&self, fee_to: Option<Account>, to: Account) -> Option<Account> {
+        if fee_to.is_some_and(|fee_to| fee_to.owner == self.0 || fee_to == to) {
             return None;
         }
         fee_to
