@@ -50,24 +50,13 @@ impl Default for TokenBalances {
 }
 
 impl TokenBalances {
-    pub fn token_balance_of(
-        &self,
-        token: CanisterId,
-        account: Account,
-    ) -> Result<candid::Nat, BusinessError> {
+    pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
         let token_account = TokenAccount::new(token, account);
-        Ok(self
-            .balances
-            .get(&token_account)
-            .map(|b| b.0)
-            .unwrap_or_default())
+        Ok(self.balances.get(&token_account).map(|b| b.0).unwrap_or_default())
     }
 
     // locks
-    pub fn lock(
-        &mut self,
-        required: Vec<TokenAccount>,
-    ) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
+    pub fn lock(&mut self, required: Vec<TokenAccount>) -> Result<TokenBalancesLock, Vec<TokenAccount>> {
         let mut locks = trap(self.locks.write()); // ! what if failed ?
 
         // duplicate removal
@@ -94,11 +83,7 @@ impl TokenBalances {
                 "🔒 Locked token account: [{}]({}.{})",
                 account.token.to_text(),
                 account.account.owner.to_text(),
-                account
-                    .account
-                    .subaccount
-                    .map(hex::encode)
-                    .unwrap_or_default()
+                account.account.subaccount.map(hex::encode).unwrap_or_default()
             );
         }
 
@@ -118,11 +103,7 @@ impl TokenBalances {
                 "Unlock token account (\"{}|{}.{}\") that is not locked.",
                 token_account.token.to_text(),
                 token_account.account.owner.to_text(),
-                token_account
-                    .account
-                    .subaccount
-                    .map(hex::encode)
-                    .unwrap_or_default()
+                token_account.account.subaccount.map(hex::encode).unwrap_or_default()
             );
             ic_cdk::trap(&tips); // never be here
         }
@@ -190,12 +171,7 @@ impl TokenBalancesGuard<'_> {
         }
     }
     // deposit token
-    fn do_token_deposit(
-        &mut self,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
+    fn do_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) -> Result<(), BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
             return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
@@ -204,12 +180,7 @@ impl TokenBalancesGuard<'_> {
         Ok(())
     }
     // withdraw token
-    fn do_token_withdraw(
-        &mut self,
-        token: CanisterId,
-        account: Account,
-        amount: Nat,
-    ) -> Result<(), BusinessError> {
+    fn do_token_withdraw(&mut self, token: CanisterId, account: Account, amount: Nat) -> Result<(), BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
             return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
@@ -251,22 +222,14 @@ impl TokenBalancesGuard<'_> {
         Ok(changed)
     }
 
-    pub fn token_balance_of(
-        &self,
-        token: CanisterId,
-        account: Account,
-    ) -> Result<candid::Nat, BusinessError> {
+    pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
         let token_account = TokenAccount::new(token, account);
         if !self.lock.locked.contains(&token_account) {
             return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
         }
 
         let token_account = TokenAccount::new(token, account);
-        Ok(self
-            .balances
-            .get(&token_account)
-            .map(|b| b.0)
-            .unwrap_or_default())
+        Ok(self.balances.get(&token_account).map(|b| b.0).unwrap_or_default())
     }
 
     // deposit token
@@ -319,13 +282,7 @@ impl TokenBalancesGuard<'_> {
         };
         // 2. do transfer and mint block
         let changed = guard.mint_block(arg.now, transaction, |_| {
-            self.do_token_transfer(
-                arg.arg.token,
-                arg.arg.from,
-                arg.arg.amount,
-                arg.arg.to,
-                arg.arg.fee,
-            )
+            self.do_token_transfer(arg.arg.token, arg.arg.from, arg.arg.amount, arg.arg.to, arg.arg.fee)
         })?;
         Ok(changed)
     }
@@ -339,22 +296,19 @@ impl TokenBalancesGuard<'_> {
     ) -> Result<Nat, BusinessError> {
         // 1. get swap block
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Transfer(
-                SwapV2TransferToken {
-                    pa,
-                    from: arg.arg.from,
-                    amount: arg.arg.amount.clone(),
-                    to: arg.arg.to,
-                    fee: arg.arg.fee.clone(),
-                },
-            ))),
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Transfer(SwapV2TransferToken {
+                pa,
+                from: arg.arg.from,
+                token: arg.arg.token,
+                amount: arg.arg.amount.clone(),
+                to: arg.arg.to,
+                fee: arg.arg.fee.clone(),
+            }))),
             memo: arg.memo.clone(),
             created: arg.created,
         };
         // 2. do transfer and mint block
-        let changed = swap_guard.mint_block(arg.now, transaction, |_| {
-            self.token_transfer(token_guard, arg)
-        })?;
+        let changed = swap_guard.mint_block(arg.now, transaction, |_| self.token_transfer(token_guard, arg))?;
         Ok(changed)
     }
 }

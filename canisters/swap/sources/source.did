@@ -331,6 +331,7 @@ type SwapV2TransferToken = record {
   pa : TokenPairAmm;
   to : Account;
   fee : opt BurnFee;
+  token : principal;
   from : Account;
   amount : nat;
 };

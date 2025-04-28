@@ -149,10 +149,12 @@ pub struct SwapV2TransferToken {
     #[prost(message, optional, tag = "2")]
     pub from: ::core::option::Option<super::common::Account>,
     #[prost(message, optional, tag = "3")]
-    pub amount: ::core::option::Option<super::common::Nat>,
+    pub token: ::core::option::Option<super::common::CanisterId>,
     #[prost(message, optional, tag = "4")]
-    pub to: ::core::option::Option<super::common::Account>,
+    pub amount: ::core::option::Option<super::common::Nat>,
     #[prost(message, optional, tag = "5")]
+    pub to: ::core::option::Option<super::common::Account>,
+    #[prost(message, optional, tag = "6")]
     pub fee: ::core::option::Option<super::common::TransferFee>,
 }
 /// swap v2 operation

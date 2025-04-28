@@ -116,9 +116,10 @@ message SwapV2TransferToken {
     // which token pair
     TokenPairAmm pa = 1;
     common.Account from = 2;
-    common.Nat amount = 3;
-    common.Account to = 4;
-    optional common.TransferFee fee = 5;
+    common.CanisterId token = 3;
+    common.Nat amount = 4;
+    common.Account to = 5;
+    optional common.TransferFee fee = 6;
 }
 
 // swap v2 operation

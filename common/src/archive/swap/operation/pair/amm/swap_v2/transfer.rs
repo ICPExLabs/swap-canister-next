@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     proto,
-    types::{TokenPairAmm, TransferFee},
+    types::{CanisterId, TokenPairAmm, TransferFee},
 };
 
 /// transfer
@@ -14,6 +14,8 @@ pub struct SwapV2TransferToken {
     pub pa: TokenPairAmm,
     /// from
     pub from: Account,
+    /// token
+    pub token: CanisterId,
     /// Transfer quantity, not including handling fee
     pub amount: Nat,
     /// Target account
@@ -28,6 +30,7 @@ impl TryFrom<SwapV2TransferToken> for proto::SwapV2TransferToken {
     fn try_from(value: SwapV2TransferToken) -> Result<Self, Self::Error> {
         let pa = value.pa.into();
         let from = value.from.into();
+        let token = value.token.into();
         let amount = value.amount.try_into()?;
         let to = value.to.into();
         let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
@@ -35,6 +38,7 @@ impl TryFrom<SwapV2TransferToken> for proto::SwapV2TransferToken {
         Ok(Self {
             pa: Some(pa),
             from: Some(from),
+            token: Some(token),
             amount: Some(amount),
             to: Some(to),
             fee,
@@ -48,26 +52,31 @@ impl TryFrom<proto::SwapV2TransferToken> for SwapV2TransferToken {
     fn try_from(value: proto::SwapV2TransferToken) -> Result<Self, Self::Error> {
         let pa = value
             .pa
-            .ok_or_else(|| "pa of swap v2 burn token can not be none".to_string())?
+            .ok_or_else(|| "pa of swap v2 transfer token can not be none".to_string())?
             .try_into()?;
         let from = value
             .from
-            .ok_or_else(|| "from of withdraw can not be none".to_string())?
+            .ok_or_else(|| "from of swap v2 transfer can not be none".to_string())?
             .try_into()?;
+        let token = value
+            .token
+            .ok_or_else(|| "token of swap v2 transfer token can not be none".to_string())?
+            .into();
         let amount = value
             .amount
-            .ok_or_else(|| "amount of withdraw can not be none".to_string())?
+            .ok_or_else(|| "amount of swap v2 transfer can not be none".to_string())?
             .try_into()
-            .map_err(|_| "restore amount of withdraw failed".to_string())?;
+            .map_err(|_| "restore amount of swap v2 transfer failed".to_string())?;
         let to = value
             .to
-            .ok_or_else(|| "to of withdraw can not be none".to_string())?
+            .ok_or_else(|| "to of swap v2 transfer can not be none".to_string())?
             .try_into()?;
         let fee = value.fee.map(|fee| fee.try_into()).transpose()?;
 
         Ok(Self {
             pa,
             from,
+            token,
             amount,
             to,
             fee,
