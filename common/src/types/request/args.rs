@@ -30,7 +30,7 @@ pub enum RequestArgs {
     TokenBlockPush,
     #[serde(rename = "swap_block_push")]
     SwapBlockPush,
-    #[serde(rename = "blocks_maintaining")]
+    #[serde(rename = "canisters_maintaining")]
     CanistersMaintaining,
     // config
     #[serde(rename = "token_frozen")]

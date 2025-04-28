@@ -209,12 +209,12 @@ type RequestArgs = variant {
   token_deposit : TokenDepositArgWithMeta;
   pair_create : PairCreateArgWithMeta;
   token_custom_remove : TokenCustomRemoveArgWithMeta;
+  canisters_maintaining;
   pair_swap_exact_tokens_for_tokens : PairSwapExactTokensForTokensArgWithMeta;
   pair_liquidity_add : PairLiquidityAddArgWithMeta;
   token_custom_put : TokenCustomPutArgWithMeta;
   token_transfer : TokenTransferArgWithMeta;
   pair_swap_by_loan : PairSwapByLoanArgWithMeta;
-  blocks_maintaining;
   pair_liquidity_remove : PairLiquidityRemoveArgWithMeta;
   pair_swap_tokens_for_exact_tokens : PairSwapTokensForExactTokensArgWithMeta;
   pair_remove : PairCreateArgWithMeta;

@@ -38,6 +38,10 @@ impl RequestIndex {
         Self(previous)
     }
 
+    pub fn from_inner(inner: u64) -> Self {
+        Self(inner)
+    }
+
     pub fn increment(&mut self) -> Self {
         let current = self.0;
         self.0 += 1;
