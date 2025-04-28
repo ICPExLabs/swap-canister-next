@@ -1,7 +1,11 @@
-use candid::CandidType;
+use candid::{CandidType, Nat};
+use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 
-use crate::proto;
+use crate::{
+    proto,
+    types::{CanisterId, TransferFee},
+};
 
 /// Deposit tokens
 mod deposit;
@@ -65,5 +69,52 @@ impl TryFrom<proto::TokenOperation> for TokenOperation {
         };
 
         Ok(value)
+    }
+}
+
+impl TokenOperation {
+    /// token
+    pub fn get_token(&self) -> CanisterId {
+        match self {
+            TokenOperation::Deposit(value) => value.token,
+            TokenOperation::Withdraw(value) => value.token,
+            TokenOperation::Transfer(value) => value.token,
+        }
+    }
+
+    /// from
+    pub fn get_from(&self) -> Account {
+        match self {
+            TokenOperation::Deposit(value) => value.from,
+            TokenOperation::Withdraw(value) => value.from,
+            TokenOperation::Transfer(value) => value.from,
+        }
+    }
+
+    /// amount
+    pub fn get_amount(&self) -> &Nat {
+        match self {
+            TokenOperation::Deposit(value) => &value.amount,
+            TokenOperation::Withdraw(value) => &value.amount,
+            TokenOperation::Transfer(value) => &value.amount,
+        }
+    }
+
+    /// to
+    pub fn get_to(&self) -> Account {
+        match self {
+            TokenOperation::Deposit(value) => value.to,
+            TokenOperation::Withdraw(value) => value.to,
+            TokenOperation::Transfer(value) => value.to,
+        }
+    }
+
+    /// fee
+    pub fn get_transfer_fee(&self) -> Option<&TransferFee> {
+        match self {
+            TokenOperation::Deposit(_) => None,
+            TokenOperation::Withdraw(_) => None,
+            TokenOperation::Transfer(value) => value.fee.as_ref(),
+        }
     }
 }

@@ -22,3 +22,8 @@ fn inner_block_token_get(block_height: BlockIndex) -> QueryBlockResult<TokenBloc
         Archive(canister_id) => Archive(canister_id),
     }
 }
+
+#[ic_cdk::query(guard = "has_business_token_queryable")]
+fn encoded_blocks_token_get(block_height: BlockIndex) -> QueryBlocksResult {
+    with_state(|s| s.business_token_blocks_get(block_height)).into()
+}

@@ -368,6 +368,13 @@ pub trait Business:
         ic_cdk::trap("Not supported operation by this version.")
     }
 
+    fn business_token_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+    fn business_swap_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
+
     // ======================== request ========================
 
     fn business_request_index_get(&self) -> (RequestIndex, u64) {
@@ -750,6 +757,13 @@ impl Business for State {
     }
     fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
         self.get().business_swap_block_get(block_height)
+    }
+
+    fn business_token_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.get().business_token_blocks_get(block_height)
+    }
+    fn business_swap_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.get().business_swap_blocks_get(block_height)
     }
 
     // ======================== request ========================

@@ -552,6 +552,13 @@ impl Business for InnerState {
         self.swap_block_chain.query(block_height)
     }
 
+    fn business_token_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.token_block_chain.query_blocks(block_height)
+    }
+    fn business_swap_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.swap_block_chain.query_blocks(block_height)
+    }
+
     // ======================== request ========================
 
     fn business_request_index_get(&self) -> (RequestIndex, u64) {

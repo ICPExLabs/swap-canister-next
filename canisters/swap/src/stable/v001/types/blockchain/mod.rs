@@ -4,7 +4,7 @@ use candid::CandidType;
 use ic_canister_kit::types::{CanisterId, UserId};
 use serde::{Deserialize, Serialize};
 
-use common::types::{BlockIndex, BusinessError, HashOf};
+use common::types::{BlockIndex, BusinessError, EncodedBlock, HashOf, QueryBlockResult};
 
 mod token;
 pub use token::*;
@@ -15,9 +15,9 @@ pub use swap::*;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockChain<T> {
     // Archive related
-    pub archived: Vec<ArchivedBlocks>, // Archived blocks
+    pub archived: Vec<ArchivedBlocks>,               // Archived blocks
     pub current_archiving: Option<CurrentArchiving>, // The block currently being archived
-    pub archive_config: NextArchiveCanisterConfig, // The configuration of the next archive
+    pub archive_config: NextArchiveCanisterConfig,   // The configuration of the next archive
     pub archive_locked: RwLock<bool>, // Tag whether to acquire the lock, only if you hold the lock can be modified
     // Add transaction related
     pub locked: RwLock<bool>, // Tag whether to acquire the lock, only if you hold the lock can be modified
@@ -59,6 +59,29 @@ impl<T> BlockChain<T> {
         }
         None
     }
+    pub fn query_blocks<F>(
+        &self,
+        block_height: BlockIndex,
+        cached: F,
+    ) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)>
+    where
+        F: Fn(&BlockIndex) -> Option<EncodedBlock>,
+    {
+        let mut blocks = Vec::new();
+        for i in 0..100 {
+            let block_height = block_height + i;
+            if let Some(canister_id) = self.query(block_height) {
+                blocks.push((block_height, QueryBlockResult::Archive(canister_id)));
+                continue;
+            }
+            if let Some(block) = cached(&block_height) {
+                blocks.push((block_height, QueryBlockResult::Block(block.clone())));
+                continue;
+            }
+            break;
+        }
+        blocks
+    }
 
     pub fn set_archive_maintainers(&mut self, maintainers: Option<Vec<UserId>>) {
         self.archive_config.maintainers = maintainers;
@@ -76,16 +99,10 @@ impl<T> BlockChain<T> {
         }
         self.current_archiving
     }
-    fn set_archive_config(
-        &mut self,
-        archive_config: NextArchiveCanisterConfig,
-    ) -> NextArchiveCanisterConfig {
+    fn set_archive_config(&mut self, archive_config: NextArchiveCanisterConfig) -> NextArchiveCanisterConfig {
         std::mem::replace(&mut self.archive_config, archive_config)
     }
-    fn replace_current_archiving(
-        &mut self,
-        archiving: CurrentArchiving,
-    ) -> Option<CurrentArchiving> {
+    fn replace_current_archiving(&mut self, archiving: CurrentArchiving) -> Option<CurrentArchiving> {
         std::mem::replace(&mut self.current_archiving, Some(archiving))
     }
 
@@ -113,11 +130,7 @@ impl<T> BlockChain<T> {
     }
 
     fn get_maintain_canisters(&self) -> Vec<CanisterId> {
-        let mut canisters = self
-            .archived
-            .iter()
-            .map(|a| a.canister_id)
-            .collect::<Vec<_>>();
+        let mut canisters = self.archived.iter().map(|a| a.canister_id).collect::<Vec<_>>();
         if let Some(current_archiving) = &self.current_archiving {
             canisters.push(current_archiving.canister_id);
         }
@@ -155,7 +168,7 @@ pub struct CurrentArchiving {
     pub canister_id: CanisterId,
     pub block_height_offset: BlockIndex, // The starting offset, if any, the first one is
     pub length: u64,                     // The number of stored canisters
-    pub max_length: u64, // If it exceeds this length, it should not be stored in this
+    pub max_length: u64,                 // If it exceeds this length, it should not be stored in this
 }
 
 impl CurrentArchiving {

@@ -46,6 +46,10 @@ impl SwapBlockChain {
         let block = self.cached.get(&block_height).map(QueryBlockResult::Block);
         trap(block.ok_or("invalid block height"))
     }
+    pub fn query_blocks(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.block_chain
+            .query_blocks(block_height, |block_height| self.cached.get(block_height))
+    }
 
     pub fn set_archive_maintainers(&mut self, maintainers: Option<Vec<UserId>>) {
         self.block_chain.set_archive_maintainers(maintainers);

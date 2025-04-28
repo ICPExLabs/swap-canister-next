@@ -198,6 +198,7 @@ type PermissionUpdatedArg = variant {
 };
 type PoolLp = variant { outer : OuterLP; inner : InnerLP };
 type PushBlocks = record { block_height_start : nat64; length : nat64 };
+type QueryBlockResult = variant { archive : principal; block : blob };
 type QuerySwapBlockResult = variant { archive : principal; block : SwapBlock };
 type QueryTokenBlockResult = variant {
   archive : principal;
@@ -628,6 +629,12 @@ service : (opt InitArgs) -> {
   config_token_custom_remove : (principal) -> (opt TokenInfo);
   config_token_frozen : (TokenFrozenArg) -> ();
   config_token_frozen_query : () -> (vec principal) query;
+  encoded_blocks_swap_get : (nat64) -> (
+      vec record { nat64; QueryBlockResult },
+    ) query;
+  encoded_blocks_token_get : (nat64) -> (
+      vec record { nat64; QueryBlockResult },
+    ) query;
   pair_create : (TokenPairCreateOrRemoveArgs) -> (
       TokenPairCreateOrRemoveResult,
     );

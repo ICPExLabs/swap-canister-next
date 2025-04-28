@@ -22,3 +22,8 @@ fn inner_block_swap_get(block_height: BlockIndex) -> QueryBlockResult<SwapBlock>
         Archive(canister_id) => Archive(canister_id),
     }
 }
+
+#[ic_cdk::query(guard = "has_business_swap_queryable")]
+fn encoded_blocks_swap_get(block_height: BlockIndex) -> QueryBlocksResult {
+    with_state(|s| s.business_swap_blocks_get(block_height)).into()
+}
