@@ -21,6 +21,9 @@ async fn config_token_custom_put(token: TokenInfo) {
     if with_state(|s| s.business_config_token_preset_query().contains_key(&token.canister_id)) {
         ic_cdk::trap("can not put preset token");
     }
+    if with_state(|s| s.business_dummy_tokens_query().contains_key(&token.canister_id)) {
+        ic_cdk::trap("can not put dummy token");
+    }
 
     // check standard
     let service = crate::services::icrc2::Service(token.canister_id);
@@ -44,6 +47,10 @@ async fn config_token_custom_put(token: TokenInfo) {
         || !supported.iter().any(|s| s.name == "ICRC-2")
     {
         ic_cdk::trap("token standard not match");
+    }
+
+    if token.is_lp_token {
+        ic_cdk::trap("custom token can not be lp token");
     }
 
     // ? check controller
