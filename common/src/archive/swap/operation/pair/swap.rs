@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     proto,
-    types::{Amm, CanisterId},
+    types::{Amm, CanisterId, TokenPair, TokenPairAmm},
 };
 
 /// Create a pool
@@ -91,5 +91,15 @@ impl TryFrom<proto::PairSwapToken> for PairSwapToken {
             amount_a,
             amount_b,
         })
+    }
+}
+
+impl PairSwapToken {
+    /// pa
+    pub fn get_pa(&self) -> TokenPairAmm {
+        TokenPairAmm {
+            pair: TokenPair::new(self.token_a, self.token_b),
+            amm: self.amm,
+        }
     }
 }
