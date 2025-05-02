@@ -6,13 +6,13 @@ use icrc_ledger_types::icrc1::account::Account;
 use crate::types::{SelfCanisterArg, TokenPairArg};
 
 use super::super::{
-    ArgWithMeta, BusinessError, DepositToken, PairCumulativePrice, PairOperation, RequestTraceGuard,
-    SwapBlockChainGuard, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken,
-    SwapV2Operation, TokenBalancesGuard, TokenBlockChainGuard, TokenPairAmm, TokenPairLiquidityAddArg,
-    TokenPairLiquidityAddSuccess, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg,
-    TokenPairLiquidityRemoveSuccess, TokenPairLiquidityRemoveSuccessView, TokenPairSwapByLoanArg,
-    TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TokenPairSwapTokensSuccess,
-    TokenPairSwapTokensSuccessView, TokenPairs, TransferToken, WithdrawToken, display_account,
+    ArgWithMeta, BusinessError, DepositToken, PairOperation, RequestTraceGuard, SwapBlockChainGuard, SwapOperation,
+    SwapTransaction, SwapV2BurnToken, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2State,
+    TokenBalancesGuard, TokenBlockChainGuard, TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccess,
+    TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairLiquidityRemoveSuccess,
+    TokenPairLiquidityRemoveSuccessView, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg,
+    TokenPairSwapTokensForExactTokensArg, TokenPairSwapTokensSuccess, TokenPairSwapTokensSuccessView, TokenPairs,
+    TransferToken, WithdrawToken, display_account,
 };
 
 pub struct TokenPairSwapGuard<'a> {
@@ -303,23 +303,32 @@ impl<T> InnerTokenPairSwapGuard<'_, '_, '_, T> {
 }
 
 impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
-    pub fn mint_cumulative_price(
+    pub fn push_state(
         &mut self,
+        reserve0: Nat,
+        reserve1: Nat,
+        supply: Nat,
         price_cumulative_exponent: u8,
         price0_cumulative: Nat,
         price1_cumulative: Nat,
     ) -> Result<(), BusinessError> {
-        // cumulative price
+        let message = format!(
+            "*SwapV2State* `pa:({}), timestamp:{}, reserve0:{reserve0},  reserve1:{reserve1},  supply:{supply},  exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
+            self.arg.arg.get_pa(),
+            self.arg.now.into_inner(),
+        );
+        // reserve and cumulative price
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::CumulativePrice(
-                PairCumulativePrice {
-                    pa: self.arg.arg.get_pa().to_owned(),
-                    block_timestamp: self.arg.now,
-                    price_cumulative_exponent,
-                    price0_cumulative: price0_cumulative.clone(),
-                    price1_cumulative: price1_cumulative.clone(),
-                },
-            ))),
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::State(SwapV2State {
+                pa: self.arg.arg.get_pa().to_owned(),
+                block_timestamp: self.arg.now,
+                reserve0,
+                reserve1,
+                supply,
+                price_cumulative_exponent,
+                price0_cumulative,
+                price1_cumulative,
+            }))),
             memo: None,
             created: None,
         };
@@ -327,11 +336,7 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             // do nothing
             Ok(())
         })?;
-        self.trace(format!(
-            "*PairCumulativePrice* `pa:({}), timestamp:{}, exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
-            self.arg.arg.get_pa(),
-            self.arg.now.into_inner(),
-        )); // * trace
+        self.trace(message); // * trace
         Ok(())
     }
 }

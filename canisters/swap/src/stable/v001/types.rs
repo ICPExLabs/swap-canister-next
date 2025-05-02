@@ -35,10 +35,10 @@ pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
     Account, Amm, AmmText, ArgWithMeta, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, HashOf, MarketMaker, MarketMakerView, Nat, PairCreate, PairCumulativePrice,
-    PairOperation, PairRemove, PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult,
-    RequestArgs, RequestIndex, RequestTrace, SelfCanister, SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken,
-    SwapV2MarketMaker, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2TransferToken, TimestampNanos,
+    DummyCanisterId, EncodedBlock, HashOf, MarketMaker, MarketMakerView, Nat, PairCreate, PairOperation, PairRemove,
+    PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, RequestArgs, RequestIndex,
+    RequestTrace, SelfCanister, SwapBlock, SwapOperation, SwapTransaction, SwapV2BurnToken, SwapV2MarketMaker,
+    SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2State, SwapV2TransferToken, TimestampNanos,
     TokenAccount, TokenBlock, TokenFrozenArg, TokenInfo, TokenOperation, TokenPair, TokenPairAmm,
     TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairPool,
     TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg,

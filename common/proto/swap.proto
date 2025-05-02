@@ -53,13 +53,20 @@ message PairSwapToken {
 
 // ========================= basic operation pair swap v2 =========================
 
-// cumulative price
-message PairCumulativePrice {
+// reserve and cumulative price
+message SwapV2State {
     TokenPairAmm pa = 1;
     uint64 block_timestamp = 2;
-    uint32 price_cumulative_exponent = 3;
-    common.Nat price0_cumulative = 4;
-    common.Nat price1_cumulative = 5;
+    // balance of token0
+    common.Nat reserve0 = 3;
+    // balance of token1
+    common.Nat reserve1 = 4;
+    // total supply of lp token
+    common.Nat supply = 5;
+    // cumulative price
+    uint32 price_cumulative_exponent = 6;
+    common.Nat price0_cumulative = 7;
+    common.Nat price1_cumulative = 8;
 }
 
 // mint
@@ -125,7 +132,7 @@ message SwapV2TransferToken {
 // swap v2 operation
 message SwapV2Operation {
     oneof swap_v2_operation {
-        PairCumulativePrice cumulative_price = 1;
+        SwapV2State state = 1;
         SwapV2MintToken mint = 2;
         SwapV2BurnToken burn = 3;
         SwapV2MintFeeToken mint_fee = 4;

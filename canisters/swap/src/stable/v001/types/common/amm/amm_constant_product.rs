@@ -121,16 +121,18 @@ fn update<T: TokenPairArg>(
             e.clone() * _reserve1.clone() * price_cumulative_unit.clone() / _reserve0.clone();
         _self.price1_cumulative_last +=
             e.clone() * _reserve0.clone() * price_cumulative_unit.clone() / _reserve1.clone();
-
-        guard.mint_cumulative_price(
-            _self.price_cumulative_exponent,
-            _self.price0_cumulative_last.clone(),
-            _self.price1_cumulative_last.clone(),
-        )?;
     }
     _self.reserve0 = balance0;
     _self.reserve1 = balance1;
     _self.block_timestamp_last = block_timestamp;
+    guard.push_state(
+        _self.reserve0.clone(),
+        _self.reserve1.clone(),
+        _self.lp.get_total_supply(),
+        _self.price_cumulative_exponent,
+        _self.price0_cumulative_last.clone(),
+        _self.price1_cumulative_last.clone(),
+    )?;
     Ok(())
 }
 

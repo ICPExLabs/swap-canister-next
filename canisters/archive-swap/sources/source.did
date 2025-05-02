@@ -50,13 +50,6 @@ type InitArgV1 = record {
 };
 type InitArgs = variant { V0 : record {}; V1 : InitArgV1 };
 type PairCreate = record { pa : TokenPairAmm; creator : principal };
-type PairCumulativePrice = record {
-  pa : TokenPairAmm;
-  price_cumulative_exponent : nat8;
-  price0_cumulative : nat;
-  block_timestamp : nat64;
-  price1_cumulative : nat;
-};
 type PairOperation = variant {
   remove : PairRemove;
   swap : PairSwapToken;
@@ -134,8 +127,18 @@ type SwapV2Operation = variant {
   burn : SwapV2BurnToken;
   mint : SwapV2MintToken;
   mint_fee : SwapV2MintFeeToken;
-  cumulative_price : PairCumulativePrice;
+  state : SwapV2State;
   transfer : SwapV2TransferToken;
+};
+type SwapV2State = record {
+  pa : TokenPairAmm;
+  price_cumulative_exponent : nat8;
+  reserve0 : nat;
+  reserve1 : nat;
+  price0_cumulative : nat;
+  supply : nat;
+  block_timestamp : nat64;
+  price1_cumulative : nat;
 };
 type SwapV2TransferToken = record {
   pa : TokenPairAmm;

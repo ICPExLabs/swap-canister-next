@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::proto;
 
-mod cumulative;
-pub use cumulative::*;
+mod state;
+pub use state::*;
 
 mod mint;
 pub use mint::*;
@@ -22,8 +22,8 @@ pub use transfer::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
 pub enum SwapV2Operation {
     /// Price accumulation, used to calculate the average price
-    #[serde(rename = "cumulative_price")]
-    CumulativePrice(PairCumulativePrice),
+    #[serde(rename = "state")]
+    State(SwapV2State),
     /// Add liquidity
     #[serde(rename = "mint")]
     Mint(SwapV2MintToken),
@@ -45,7 +45,7 @@ impl TryFrom<SwapV2Operation> for proto::SwapV2Operation {
         use proto::swap_v2_operation::SwapV2Operation::*;
 
         let swap_v2_operation = match value {
-            SwapV2Operation::CumulativePrice(value) => CumulativePrice(value.try_into()?),
+            SwapV2Operation::State(value) => State(value.try_into()?),
             SwapV2Operation::Mint(value) => Mint(value.try_into()?),
             SwapV2Operation::Burn(value) => Burn(value.try_into()?),
             SwapV2Operation::MintFee(value) => MintFee(value.try_into()?),
@@ -69,7 +69,7 @@ impl TryFrom<proto::SwapV2Operation> for SwapV2Operation {
             .ok_or_else(|| "swap_v2_operation can not be none".to_string())?;
 
         let value = match value {
-            CumulativePrice(value) => SwapV2Operation::CumulativePrice(value.try_into()?),
+            State(value) => SwapV2Operation::State(value.try_into()?),
             Mint(value) => SwapV2Operation::Mint(value.try_into()?),
             Burn(value) => SwapV2Operation::Burn(value.try_into()?),
             MintFee(value) => SwapV2Operation::MintFee(value.try_into()?),

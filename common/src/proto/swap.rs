@@ -54,18 +54,28 @@ pub struct PairSwapToken {
     #[prost(message, optional, tag = "7")]
     pub amount_b: ::core::option::Option<super::common::Nat>,
 }
-/// cumulative price
+/// reserve and cumulative price
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PairCumulativePrice {
+pub struct SwapV2State {
     #[prost(message, optional, tag = "1")]
     pub pa: ::core::option::Option<TokenPairAmm>,
     #[prost(uint64, tag = "2")]
     pub block_timestamp: u64,
-    #[prost(uint32, tag = "3")]
-    pub price_cumulative_exponent: u32,
+    /// balance of token0
+    #[prost(message, optional, tag = "3")]
+    pub reserve0: ::core::option::Option<super::common::Nat>,
+    /// balance of token1
     #[prost(message, optional, tag = "4")]
-    pub price0_cumulative: ::core::option::Option<super::common::Nat>,
+    pub reserve1: ::core::option::Option<super::common::Nat>,
+    /// total supply of lp token
     #[prost(message, optional, tag = "5")]
+    pub supply: ::core::option::Option<super::common::Nat>,
+    /// cumulative price
+    #[prost(uint32, tag = "6")]
+    pub price_cumulative_exponent: u32,
+    #[prost(message, optional, tag = "7")]
+    pub price0_cumulative: ::core::option::Option<super::common::Nat>,
+    #[prost(message, optional, tag = "8")]
     pub price1_cumulative: ::core::option::Option<super::common::Nat>,
 }
 /// mint
@@ -169,7 +179,7 @@ pub mod swap_v2_operation {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum SwapV2Operation {
         #[prost(message, tag = "1")]
-        CumulativePrice(super::PairCumulativePrice),
+        State(super::SwapV2State),
         #[prost(message, tag = "2")]
         Mint(super::SwapV2MintToken),
         #[prost(message, tag = "3")]
