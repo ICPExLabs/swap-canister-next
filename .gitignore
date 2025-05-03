@@ -3,5 +3,6 @@ target/
 .dfx/
 source_opt.wasm
 deploy.sh
+reinstall.sh
 test-replace.sh
 speed.sh
