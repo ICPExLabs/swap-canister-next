@@ -313,7 +313,7 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
         price1_cumulative: Nat,
     ) -> Result<(), BusinessError> {
         let message = format!(
-            "*SwapV2State* `pa:({}), timestamp:{}, reserve0:{reserve0},  reserve1:{reserve1},  supply:{supply},  exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
+            "*SwapV2State* `pa:({}), timestamp:{}, supply:{supply}, reserve0:{reserve0}, reserve1:{reserve1}, exponent:{price_cumulative_exponent}, price0_cumulative:{price0_cumulative}, price1_cumulative:{price1_cumulative}`",
             self.arg.arg.get_pa(),
             self.arg.now.into_inner(),
         );
@@ -322,9 +322,9 @@ impl<T: TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::State(SwapV2State {
                 pa: self.arg.arg.get_pa().to_owned(),
                 block_timestamp: self.arg.now,
+                supply,
                 reserve0,
                 reserve1,
-                supply,
                 price_cumulative_exponent,
                 price0_cumulative,
                 price1_cumulative,

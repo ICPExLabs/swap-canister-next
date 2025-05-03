@@ -61,15 +61,15 @@ pub struct SwapV2State {
     pub pa: ::core::option::Option<TokenPairAmm>,
     #[prost(uint64, tag = "2")]
     pub block_timestamp: u64,
-    /// balance of token0
+    /// total supply of lp token
     #[prost(message, optional, tag = "3")]
+    pub supply: ::core::option::Option<super::common::Nat>,
+    /// balance of token0
+    #[prost(message, optional, tag = "4")]
     pub reserve0: ::core::option::Option<super::common::Nat>,
     /// balance of token1
-    #[prost(message, optional, tag = "4")]
-    pub reserve1: ::core::option::Option<super::common::Nat>,
-    /// total supply of lp token
     #[prost(message, optional, tag = "5")]
-    pub supply: ::core::option::Option<super::common::Nat>,
+    pub reserve1: ::core::option::Option<super::common::Nat>,
     /// cumulative price
     #[prost(uint32, tag = "6")]
     pub price_cumulative_exponent: u32,

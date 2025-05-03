@@ -15,8 +15,8 @@ pub use remove::*;
 mod swap;
 pub use swap::*;
 
-mod amm;
-pub use amm::*;
+mod swap_v2;
+pub use swap_v2::*;
 
 /// pair operation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]

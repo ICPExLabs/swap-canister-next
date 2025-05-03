@@ -57,12 +57,12 @@ message PairSwapToken {
 message SwapV2State {
     TokenPairAmm pa = 1;
     uint64 block_timestamp = 2;
-    // balance of token0
-    common.Nat reserve0 = 3;
-    // balance of token1
-    common.Nat reserve1 = 4;
     // total supply of lp token
-    common.Nat supply = 5;
+    common.Nat supply = 3;
+    // balance of token0
+    common.Nat reserve0 = 4;
+    // balance of token1
+    common.Nat reserve1 = 5;
     // cumulative price
     uint32 price_cumulative_exponent = 6;
     common.Nat price0_cumulative = 7;
