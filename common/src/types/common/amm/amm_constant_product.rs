@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use candid::{CandidType, Nat};
 use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
 #[allow(unused)]
@@ -395,6 +396,38 @@ impl SwapV2MarketMaker {
                 None => show_nat(&next.lp.get_total_supply(), decimals_lp),
             },
         )
+    }
+
+    pub fn swap_to(&self, from: &CanisterId, from_amount: f64) -> Option<(CanisterId, f64)> {
+        if self.token0 == *from {
+            Some((
+                self.token1,
+                from_amount * self.reserve1.0.to_f64()? / self.reserve0.0.to_f64()?,
+            ))
+        } else if self.token1 == *from {
+            Some((
+                self.token0,
+                from_amount * self.reserve0.0.to_f64()? / self.reserve1.0.to_f64()?,
+            ))
+        } else {
+            None
+        }
+    }
+
+    pub fn get_reserve(&self, token: &CanisterId) -> Option<f64> {
+        if self.token0 == *token {
+            self.reserve0.0.to_f64()
+        } else if self.token1 == *token {
+            self.reserve1.0.to_f64()
+        } else {
+            None
+        }
+    }
+
+    pub fn get_fee(&self, amount_in: f64) -> f64 {
+        let n = self.fee_rate.numerator as f64;
+        let d = self.fee_rate.denominator as f64;
+        amount_in * n / d
     }
 }
 

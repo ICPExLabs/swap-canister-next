@@ -154,6 +154,24 @@ impl MarketMaker {
             MarketMaker::SwapV2(value) => value.removable(),
         }
     }
+
+    pub fn swap_to(&self, from: &CanisterId, from_amount: f64) -> Option<(CanisterId, f64)> {
+        match self {
+            MarketMaker::SwapV2(value) => value.swap_to(from, from_amount),
+        }
+    }
+
+    pub fn get_reserve(&self, token: &CanisterId) -> Option<f64> {
+        match self {
+            MarketMaker::SwapV2(value) => value.get_reserve(token),
+        }
+    }
+
+    pub fn get_fee(&self, amount_in: f64) -> f64 {
+        match self {
+            MarketMaker::SwapV2(value) => value.get_fee(amount_in),
+        }
+    }
 }
 
 fn new_swap_v2_market_maker(
