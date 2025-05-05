@@ -429,6 +429,10 @@ impl SwapV2MarketMaker {
         let d = self.fee_rate.denominator as f64;
         amount_in * n / d
     }
+
+    pub fn get_subaccount(&self) -> &Subaccount {
+        &self.subaccount
+    }
 }
 
 // ========================== view ==========================

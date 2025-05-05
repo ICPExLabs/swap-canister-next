@@ -172,6 +172,12 @@ impl MarketMaker {
             MarketMaker::SwapV2(value) => value.get_fee(amount_in),
         }
     }
+
+    pub fn get_subaccount(&self) -> &Subaccount {
+        match self {
+            MarketMaker::SwapV2(value) => value.get_subaccount(),
+        }
+    }
 }
 
 fn new_swap_v2_market_maker(
