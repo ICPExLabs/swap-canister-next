@@ -55,29 +55,24 @@ async fn maintaining_canisters(trace: &mut RequestTrace) -> Result<(), BusinessE
     // 2. Traverse each canister to determine whether it is necessary to recharge
     for (i, &canister_id) in canisters.iter().enumerate() {
         let prefix = format!("# {} *[{}]* ", i + 1, canister_id.to_text());
-        let status = match ic_cdk::api::call::call::<
-            (),
-            (ic_cdk::api::management_canister::main::CanisterStatusResponse,),
-        >(canister_id, "canister_status", ())
-        .await
-        .map(|(s,)| s)
-        {
-            Ok(status) => status,
-            Err(err) => {
-                let err: BusinessError = err.into();
-                let message = format!("{prefix}`query canister status failed: {err}`");
-                ic_cdk::println!("{}", message);
-                trace.trace(message);
-                continue;
-            }
-        };
+        let status: ic_cdk::management_canister::CanisterStatusResult =
+            match ic_cdk::call::Call::unbounded_wait(canister_id, "canister_status").await {
+                Ok(status) => status.candid()?,
+                Err(err) => {
+                    let err: BusinessError = err.into();
+                    let message = format!("{prefix}`query canister status failed: {err}`");
+                    ic_cdk::println!("{}", message);
+                    trace.trace(message);
+                    continue;
+                }
+            };
         let cycles_balance = status.cycles;
         trace.trace(format!("{prefix}`cycles_balance: {cycles_balance}`"));
         if cycles_balance <= threshold {
             // do recharge
             let recharge = Nat::from(config.recharge_cycles);
-            if let Err(err) = ic_cdk::api::management_canister::main::deposit_cycles(
-                ic_cdk::api::management_canister::provisional::CanisterIdRecord { canister_id },
+            if let Err(err) = ic_cdk::management_canister::deposit_cycles(
+                &ic_cdk::management_canister::DepositCyclesArgs { canister_id },
                 config.recharge_cycles as u128,
             )
             .await

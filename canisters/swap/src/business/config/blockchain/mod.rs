@@ -16,36 +16,33 @@ async fn deploy_canister(
     wasm: Vec<u8>,
     arg: Vec<u8>,
 ) -> Result<CanisterId, BusinessError> {
-    use ic_cdk::api::management_canister::main::{
-        CanisterIdRecord, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument,
-        create_canister, install_code, start_canister,
+    use ic_cdk::management_canister::{
+        CanisterInstallMode, CreateCanisterArgs, CreateCanisterResult, InstallCodeArgs, StartCanisterArgs,
+        create_canister_with_extra_cycles, install_code, start_canister,
     };
 
     // 1. Create a new canister
-    let canister_id =
-        match create_canister(CreateCanisterArgument { settings: None }, initial_cycles)
-            .await
-            .map(|(CanisterIdRecord { canister_id },)| canister_id)
-            .map_err(|err| {
-                let err: BusinessError = err.into();
-                err
-            }) {
-            Ok(canister_id) => canister_id,
-            Err(err) => {
-                trace.failed(format!("create token archive canister failed: {err}"));
-                return Err(err);
-            }
-        };
+    let canister_id = match create_canister_with_extra_cycles(&CreateCanisterArgs { settings: None }, initial_cycles)
+        .await
+        .map(|CreateCanisterResult { canister_id }| canister_id)
+        .map_err(|err| {
+            let err: BusinessError = err.into();
+            err
+        }) {
+        Ok(canister_id) => canister_id,
+        Err(err) => {
+            trace.failed(format!("create token archive canister failed: {err}"));
+            return Err(err);
+        }
+    };
     trace.trace(format!(
         "create token archive canister success: [{}]",
         canister_id.to_text()
     ));
-    with_mut_state(|s| {
-        s.business_config_maintain_archives_cycles_recharged(canister_id, initial_cycles)
-    });
+    with_mut_state(|s| s.business_config_maintain_archives_cycles_recharged(canister_id, initial_cycles));
 
     // 2. Installation code
-    if let Err(err) = install_code(InstallCodeArgument {
+    if let Err(err) = install_code(&InstallCodeArgs {
         mode: CanisterInstallMode::Install,
         canister_id,
         wasm_module: wasm,
@@ -65,13 +62,10 @@ async fn deploy_canister(
     ));
 
     // 3. start
-    if let Err(err) = start_canister(CanisterIdRecord { canister_id })
-        .await
-        .map_err(|err| {
-            let err: BusinessError = err.into();
-            err
-        })
-    {
+    if let Err(err) = start_canister(&StartCanisterArgs { canister_id }).await.map_err(|err| {
+        let err: BusinessError = err.into();
+        err
+    }) {
         trace.failed(format!("start token archive canister failed: {err}"));
         return Err(err);
     }

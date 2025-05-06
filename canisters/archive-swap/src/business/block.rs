@@ -9,9 +9,9 @@ use crate::types::*;
 /// Arguments:
 ///
 /// * `args`: The `args` parameter in the `get_blocks` function likely represents the arguments needed
-/// to retrieve blocks for swapping. These arguments could include information such as block height,
-/// block timestamp, or any other parameters necessary to query and retrieve the desired blocks for
-/// swapping.
+///   to retrieve blocks for swapping. These arguments could include information such as block height,
+///   block timestamp, or any other parameters necessary to query and retrieve the desired blocks for
+///   swapping.
 ///
 /// Returns:
 ///
@@ -41,9 +41,9 @@ fn inner_get_blocks(args: GetBlocksArgs) -> Result<SwapBlockRange, GetBlocksErro
 /// Arguments:
 ///
 /// * `args`: The `args` parameter in the `get_encoded_blocks` function likely represents the arguments
-/// needed to retrieve encoded blocks. These arguments could include information such as block height,
-/// timestamps, or any other parameters required to fetch the encoded blocks from the underlying data
-/// source. The specific structure and content of the `Get
+///   needed to retrieve encoded blocks. These arguments could include information such as block height,
+///   timestamps, or any other parameters required to fetch the encoded blocks from the underlying data
+///   source. The specific structure and content of the `Get
 ///
 /// Returns:
 ///

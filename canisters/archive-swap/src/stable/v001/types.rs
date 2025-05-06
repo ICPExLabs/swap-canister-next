@@ -136,7 +136,7 @@ impl InnerState {
     pub fn update_max_memory_size_bytes(&mut self, max_memory_size_bytes: u64) {
         let total_block_size = self.blocks.total_block_size();
         if max_memory_size_bytes < total_block_size {
-            ic_cdk::trap(&format!(
+            ic_cdk::trap(format!(
                 "Cannot set max_memory_size_bytes to {max_memory_size_bytes}, because it is lower than total_block_size {total_block_size}.",
             ));
         }

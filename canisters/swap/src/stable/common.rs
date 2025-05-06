@@ -187,7 +187,7 @@ fn static_schedule_task() {
         return; // Tasks are not allowed during maintenance
     }
 
-    ic_cdk::spawn(async move { schedule_task(None).await });
+    ic_cdk::futures::spawn(async move { schedule_task(None).await });
 }
 
 pub trait ScheduleTask: Schedulable {

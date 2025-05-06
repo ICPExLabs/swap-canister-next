@@ -16,7 +16,8 @@ fn __get_candid_interface_tmp_hack() -> String {
 
 // =========== print did ===========
 
-/// `cargo test -p swap update_candid -- --nocapture`
+/// `cargo test -p swap update_candid -- --ignored --nocapture`
+#[ignore]
 #[test]
 fn update_candid() {
     #[allow(unused_imports)]

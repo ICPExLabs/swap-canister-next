@@ -22,8 +22,8 @@ fn get_block_pb(arg: Vec<u8>) -> Vec<u8> {
 /// Arguments:
 ///
 /// * `arg`: The `arg` parameter for the `iter_blocks_pb` function is of type `Vec<u8>`, which
-/// represents a vector of bytes. This parameter is used to pass the request data in the form of a
-/// serialized protobuf message of type `IterBlocksRequest`. note: start means the index at this canister.
+///   represents a vector of bytes. This parameter is used to pass the request data in the form of a
+///   serialized protobuf message of type `IterBlocksRequest`. note: start means the index at this canister.
 ///
 /// Returns:
 ///
@@ -50,8 +50,8 @@ fn iter_blocks_pb(arg: Vec<u8>) -> Vec<u8> {
 /// Arguments:
 ///
 /// * `arg`: The `arg` parameter in the `get_blocks_pb` function represents the input argument for
-/// retrieving blocks. It is of type `Vec<u8>`, which is a vector of unsigned bytes. The function
-/// decodes this argument into a `GetBlocksRequest` struct. note: start means block height.
+///   retrieving blocks. It is of type `Vec<u8>`, which is a vector of unsigned bytes. The function
+///   decodes this argument into a `GetBlocksRequest` struct. note: start means block height.
 ///
 /// Returns:
 ///

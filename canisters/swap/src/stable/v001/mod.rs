@@ -102,9 +102,7 @@ impl Permissable<Permission> for InnerState {
         self.canister_kit.permissions.permission_user_roles(user_id)
     }
     fn permission_has(&self, user_id: &UserId, permission: &Permission) -> bool {
-        self.canister_kit
-            .permissions
-            .permission_has(user_id, permission)
+        self.canister_kit.permissions.permission_has(user_id, permission)
     }
     fn permission_owned(&self, user_id: &UserId) -> HashMap<&Permission, bool> {
         self.canister_kit.permissions.permission_owned(user_id)

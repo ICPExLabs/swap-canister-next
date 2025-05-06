@@ -35,11 +35,11 @@ async fn config_token_custom_put(token: TokenInfo) {
         service.icrc_1_supported_standards(),
     )
     .await;
-    let name = ic_canister_kit::common::trap_debug(name).0;
-    let symbol = ic_canister_kit::common::trap_debug(symbol).0;
-    let decimals = ic_canister_kit::common::trap_debug(decimals).0;
-    let fee = ic_canister_kit::common::trap_debug(fee).0;
-    let supported = ic_canister_kit::common::trap_debug(supported).0;
+    let name = ic_canister_kit::common::trap_debug(name);
+    let symbol = ic_canister_kit::common::trap_debug(symbol);
+    let decimals = ic_canister_kit::common::trap_debug(decimals);
+    let fee = ic_canister_kit::common::trap_debug(fee);
+    let supported = ic_canister_kit::common::trap_debug(supported);
     if token.name != name
         || token.symbol != symbol
         || token.decimals != decimals
@@ -75,10 +75,9 @@ async fn config_token_custom_remove(canister_id: CanisterId) -> Option<TokenInfo
                 subaccount: None,
             })
             .await,
-    )
-    .0;
+    );
     if *::common::utils::math::ZERO < balance {
-        ic_cdk::trap(&format!("still has balance of token: [{}]", canister_id.to_text()));
+        ic_cdk::trap(format!("still has balance of token: [{}]", canister_id.to_text()));
     }
 
     let arg = ArgWithMeta::data(canister_id);

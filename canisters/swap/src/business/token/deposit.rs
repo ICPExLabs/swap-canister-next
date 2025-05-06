@@ -93,7 +93,7 @@ pub async fn inner_token_deposit(
                 display_account(&transfer_from_arg.to),
                 transfer_from_arg.amount.to_string(),
             );
-            let height = service_icrc2.icrc_2_transfer_from(transfer_from_arg).await?.0?;
+            let height = service_icrc2.icrc_2_transfer_from(transfer_from_arg).await??;
 
             // ? 2. record changed
             let amount = args.deposit_amount_without_fee; // ! Actual deposit

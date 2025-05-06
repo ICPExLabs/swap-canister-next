@@ -102,7 +102,7 @@ pub async fn inner_token_withdraw_many(
                         transfer_arg.amount.to_string(),
                         token.fee.to_string()
                     );
-                    let height = service_icrc2.icrc_1_transfer(transfer_arg).await?.0?;
+                    let height = service_icrc2.icrc_1_transfer(transfer_arg).await??;
 
                     // ? 2. record changed
                     let amount = args.withdraw_amount_without_fee + fee; // Total withdrawal

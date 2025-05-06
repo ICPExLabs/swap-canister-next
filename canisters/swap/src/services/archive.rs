@@ -5,29 +5,29 @@ use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
 use common::types::{BusinessError, EncodedBlock};
 use ic_canister_kit::types::UserId;
 
+type CallResult<T> = Result<T, BusinessError>;
+
 pub struct Service(pub Principal);
 impl Service {
-    pub async fn set_maintainers(
-        &self,
-        maintainers: Option<Vec<UserId>>,
-    ) -> Result<(), BusinessError> {
-        ic_cdk::call::<_, ()>(self.0, "set_maintainers", (maintainers,)).await?;
+    pub async fn set_maintainers(&self, maintainers: Option<Vec<UserId>>) -> CallResult<()> {
+        ic_cdk::call::Call::unbounded_wait(self.0, "set_maintainers")
+            .with_arg(maintainers)
+            .await?
+            .candid::<()>()?;
         Ok(())
     }
-    pub async fn set_max_memory_size_bytes(
-        &self,
-        max_memory_size_bytes: u64,
-    ) -> Result<(), BusinessError> {
-        ic_cdk::call::<_, ()>(
-            self.0,
-            "set_max_memory_size_bytes",
-            (max_memory_size_bytes,),
-        )
-        .await?;
+    pub async fn set_max_memory_size_bytes(&self, max_memory_size_bytes: u64) -> CallResult<()> {
+        ic_cdk::call::Call::unbounded_wait(self.0, "set_max_memory_size_bytes")
+            .with_arg(max_memory_size_bytes)
+            .await?
+            .candid::<()>()?;
         Ok(())
     }
-    pub async fn append_blocks(&self, args: Vec<EncodedBlock>) -> Result<(), BusinessError> {
-        ic_cdk::call::<_, ()>(self.0, "append_blocks", (args,)).await?;
+    pub async fn append_blocks(&self, args: Vec<EncodedBlock>) -> CallResult<()> {
+        ic_cdk::call::Call::unbounded_wait(self.0, "append_blocks")
+            .with_arg(args)
+            .await?
+            .candid::<()>()?;
         Ok(())
     }
 }

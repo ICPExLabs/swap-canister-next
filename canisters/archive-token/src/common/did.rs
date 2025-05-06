@@ -14,7 +14,8 @@ fn __get_candid_interface_tmp_hack() -> String {
     __export_service()
 }
 
-/// `cargo test update_candid -- --nocapture`
+/// `cargo test -p archive-token update_candid -- --ignored --nocapture`
+#[ignore]
 #[test]
 fn update_candid() {
     #[allow(unused_imports)]

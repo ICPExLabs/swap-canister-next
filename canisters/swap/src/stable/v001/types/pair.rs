@@ -58,7 +58,7 @@ impl TokenPairs {
             return None;
         }
         if 1 < tokens.len() {
-            ic_cdk::trap(&format!("too many dummy tokens for: {}", pa))
+            ic_cdk::trap(format!("too many dummy tokens for: {}", pa))
         }
         tokens.pop()
     }

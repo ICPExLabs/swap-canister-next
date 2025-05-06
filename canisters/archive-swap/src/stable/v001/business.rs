@@ -122,12 +122,12 @@ impl Business for InnerState {
         )?;
         w.encode_gauge(
             "archive_node_stable_memory_pages",
-            ic_cdk::api::stable::stable_size() as f64,
+            ic_cdk::stable::stable_size() as f64,
             "Size of the stable memory allocated by this canister measured in 64K Wasm pages.",
         )?;
         w.encode_gauge(
             "stable_memory_bytes",
-            (ic_cdk::api::stable::stable_size() * 64 * 1024) as f64,
+            (ic_cdk::stable::stable_size() * 64 * 1024) as f64,
             "Size of the stable memory allocated by this canister measured in bytes.",
         )?;
         w.encode_gauge(
@@ -156,7 +156,7 @@ impl Business for InnerState {
             let token_block: SwapBlock = trap(token_block.try_into());
             // 2. check block hash before append
             if token_block.0.parent_hash != self.business_data.latest_block_hash {
-                ic_cdk::trap(&format!(
+                ic_cdk::trap(format!(
                     "Parent hash mismatch. Expected: {}, got: {}",
                     self.business_data.latest_block_hash.hex(),
                     token_block.0.parent_hash.hex()
@@ -198,8 +198,8 @@ impl Business for InnerState {
             max_memory_size_bytes: self.business_data.max_memory_size_bytes,
             blocks: self.blocks.blocks_len(),
             blocks_bytes: self.blocks.total_block_size(),
-            stable_memory_pages: ic_cdk::api::stable::stable_size(),
-            stable_memory_bytes: (ic_cdk::api::stable::stable_size() * 64 * 1024),
+            stable_memory_pages: ic_cdk::stable::stable_size(),
+            stable_memory_bytes: (ic_cdk::stable::stable_size() * 64 * 1024),
             heap_memory_bytes: common::utils::runtime::heap_memory_size_bytes() as u64,
             last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns / 1_000_000_000_u64,
         }

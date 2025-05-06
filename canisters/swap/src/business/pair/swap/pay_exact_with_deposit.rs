@@ -127,7 +127,7 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
     );
 
     let withdraw_result = if _async {
-        ic_cdk::spawn(async move {
+        ic_cdk::futures::spawn(async move {
             let withdraw_result =
                 super::super::super::token::withdraw::inner_token_withdraw(withdraw, Some(3), false).await;
             ic_cdk::println!("pair_swap_with_deposit_and_async_withdraw #4: {:?}", withdraw_result);

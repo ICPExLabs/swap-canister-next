@@ -1,6 +1,4 @@
 use candid::{CandidType, Nat};
-#[cfg(feature = "cdk")]
-use ic_cdk::api::call::RejectionCode;
 use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::transfer_from::TransferFromError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -139,9 +137,21 @@ fn display_token_accounts(accounts: &[TokenAccount]) -> String {
 }
 
 #[cfg(feature = "cdk")]
-impl From<(RejectionCode, String)> for BusinessError {
-    fn from(value: (RejectionCode, String)) -> Self {
-        Self::CallCanisterError(format!("rejection code: {:?}, message: {}", value.0, value.1))
+impl From<ic_cdk::call::Error> for BusinessError {
+    fn from(value: ic_cdk::call::Error) -> Self {
+        Self::CallCanisterError(value.to_string())
+    }
+}
+#[cfg(feature = "cdk")]
+impl From<ic_cdk::call::CallFailed> for BusinessError {
+    fn from(value: ic_cdk::call::CallFailed) -> Self {
+        Self::CallCanisterError(value.to_string())
+    }
+}
+#[cfg(feature = "cdk")]
+impl From<ic_cdk::call::CandidDecodeFailed> for BusinessError {
+    fn from(value: ic_cdk::call::CandidDecodeFailed) -> Self {
+        Self::CallCanisterError(value.to_string())
     }
 }
 

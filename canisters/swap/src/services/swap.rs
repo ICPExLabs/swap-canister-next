@@ -11,36 +11,38 @@ use crate::types::{
     TokenPairSwapTokensSuccess, TokenTransferArgs, TokenWithdrawArgs, TokenWithdrawManyArgs,
 };
 
+type CallResult<T> = Result<T, BusinessError>;
+
 pub struct Service(pub Principal);
 impl Service {
     // token
-    pub async fn token_deposit(&self, args: TokenDepositArgs, retries: Option<u8>) -> Result<Nat, BusinessError> {
-        ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_deposit", (args, retries))
+    pub async fn token_deposit(&self, args: TokenDepositArgs, retries: Option<u8>) -> CallResult<Nat> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "token_deposit")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
-    pub async fn token_withdraw(&self, args: TokenWithdrawArgs, retries: Option<u8>) -> Result<Nat, BusinessError> {
-        ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_withdraw", (args, retries))
+    pub async fn token_withdraw(&self, args: TokenWithdrawArgs, retries: Option<u8>) -> CallResult<Nat> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "token_withdraw")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
     pub async fn token_withdraw_many(
         &self,
         args: TokenWithdrawManyArgs,
         retries: Option<u8>,
-    ) -> Result<Vec<Result<Nat, BusinessError>>, BusinessError> {
-        ic_cdk::call::<_, (ManyTokenChangedResult,)>(self.0, "token_withdraw_many", (args, retries))
+    ) -> CallResult<Vec<CallResult<Nat>>> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "token_withdraw_many")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
-    pub async fn token_transfer(&self, args: TokenTransferArgs, retries: Option<u8>) -> Result<Nat, BusinessError> {
-        ic_cdk::call::<_, (TokenChangedResult,)>(self.0, "token_transfer", (args, retries))
+    pub async fn token_transfer(&self, args: TokenTransferArgs, retries: Option<u8>) -> CallResult<Nat> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "token_transfer")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
 
     // pair liquidity
@@ -48,21 +50,21 @@ impl Service {
         &self,
         args: TokenPairLiquidityAddArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairLiquidityAddResult,)>(self.0, "pair_liquidity_add", (args, retries))
+    ) -> CallResult<TokenPairLiquidityAddSuccess> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "pair_liquidity_add")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
     pub async fn pair_liquidity_remove(
         &self,
         args: TokenPairLiquidityRemoveArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairLiquidityRemoveResult,)>(self.0, "pair_liquidity_remove", (args, retries))
+    ) -> CallResult<TokenPairLiquidityRemoveSuccess> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "pair_liquidity_remove")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
 
     // pair swap
@@ -70,30 +72,34 @@ impl Service {
         &self,
         args: TokenPairSwapExactTokensForTokensArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(self.0, "pair_swap_exact_tokens_for_tokens", (args, retries))
-            .await?
-            .0
-            .into()
+    ) -> CallResult<TokenPairSwapTokensSuccess> {
+        Ok(
+            ic_cdk::call::Call::unbounded_wait(self.0, "pair_swap_exact_tokens_for_tokens")
+                .with_args(&(args, retries))
+                .await?
+                .candid()?,
+        )
     }
     pub async fn pair_swap_tokens_for_exact_tokens(
         &self,
         args: TokenPairSwapTokensForExactTokensArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(self.0, "pair_swap_tokens_for_exact_tokens", (args, retries))
-            .await?
-            .0
-            .into()
+    ) -> CallResult<TokenPairSwapTokensSuccess> {
+        Ok(
+            ic_cdk::call::Call::unbounded_wait(self.0, "pair_swap_tokens_for_exact_tokens")
+                .with_args(&(args, retries))
+                .await?
+                .candid()?,
+        )
     }
     pub async fn pair_swap_by_loan(
         &self,
         args: TokenPairSwapByLoanArgs,
         retries: Option<u8>,
-    ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
-        ic_cdk::call::<_, (TokenPairSwapTokensResult,)>(self.0, "pair_swap_by_loan", (args, retries))
+    ) -> CallResult<TokenPairSwapTokensSuccess> {
+        Ok(ic_cdk::call::Call::unbounded_wait(self.0, "pair_swap_by_loan")
+            .with_args(&(args, retries))
             .await?
-            .0
-            .into()
+            .candid()?)
     }
 }

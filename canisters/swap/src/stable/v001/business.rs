@@ -210,7 +210,7 @@ impl Business for InnerState {
         data.extend_from_slice(token_hash);
         data.extend_from_slice(swap_hash);
         let hash = common::utils::hash::hash_sha256(&data);
-        ic_cdk::api::set_certified_data(&hash);
+        ic_cdk::api::certified_data_set(hash);
     }
 
     // ======================== locks ========================

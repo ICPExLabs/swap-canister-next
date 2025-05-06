@@ -44,7 +44,7 @@ impl RequestTraces {
         // must be min
         let min = self.traces.keys().min()?;
         if *index != min {
-            ic_cdk::trap(&format!("must remove min request index: {}", min.as_ref()));
+            ic_cdk::trap(format!("must remove min request index: {}", min.as_ref()));
         }
         self.traces.remove(index)
     }

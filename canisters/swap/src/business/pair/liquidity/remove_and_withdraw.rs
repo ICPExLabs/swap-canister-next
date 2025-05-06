@@ -87,7 +87,7 @@ async fn inner_pair_liquidity_remove_and_withdraw(
     };
     let args = vec![withdraw_args_a, withdraw_args_b];
     let withdraw_many = if _async {
-        ic_cdk::spawn(async move {
+        ic_cdk::futures::spawn(async move {
             let _withdraw_many = super::super::super::token::withdraw::many::inner_token_withdraw_many(
                 TokenWithdrawManyArgs { args },
                 None,

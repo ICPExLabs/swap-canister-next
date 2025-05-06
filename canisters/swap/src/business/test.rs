@@ -23,13 +23,12 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
                 subaccount: None,
             })
             .await
-            .unwrap()
-            .0;
+            .unwrap();
         if balance == 0_u32 {
             continue;
         }
 
-        let fee = service.icrc_1_fee().await.unwrap().0;
+        let fee = service.icrc_1_fee().await.unwrap();
         let amount = balance - fee;
         service
             .icrc_1_transfer(crate::services::icrc2::TransferArg {
@@ -45,7 +44,6 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
             })
             .await
             .unwrap()
-            .0
             .unwrap();
 
         results.push(format!("fetch: {} {}", token.to_text(), amount));
@@ -60,7 +58,7 @@ async fn test_set_controller(canister_id: CanisterId) {
     let caller = caller();
     ic_canister_kit::canister::settings::update_settings(
         canister_id,
-        ic_cdk::api::management_canister::main::CanisterSettings {
+        ic_cdk::management_canister::CanisterSettings {
             controllers: Some(vec![caller]),
             compute_allocation: None,
             memory_allocation: None,
@@ -68,6 +66,7 @@ async fn test_set_controller(canister_id: CanisterId) {
             reserved_cycles_limit: None,
             log_visibility: None,
             wasm_memory_limit: None,
+            wasm_memory_threshold: None,
         },
     )
     .await
