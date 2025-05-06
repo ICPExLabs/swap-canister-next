@@ -21,7 +21,7 @@ fn test_archive_swap_common_apis() {
     let carol_identity = Principal::from_text("jmf34-nyd").unwrap();
     let anonymous_identity = Principal::from_text("2vxsx-fae").unwrap();
 
-    let canister_id = Principal::from_text("lxzze-o7777-77777-aaaaa-cai").unwrap();
+    let canister_id = Principal::from_text("hcnys-xiaaa-aaaai-q3w4q-cai").unwrap();
 
     pic.create_canister_with_id(Some(default_identity), None, canister_id).unwrap();
     pic.add_cycles(canister_id, INIT_CYCLES);
