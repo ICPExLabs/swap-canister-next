@@ -38,3 +38,7 @@ hex = { workspace = true }
 num-bigint = { workspace = true }
 sha2 = { workspace = true }
 futures = { workspace = true }
+
+[dev-dependencies]
+pocket-ic = { workspace = true }
+# serde_bytes = { workspace = true }
