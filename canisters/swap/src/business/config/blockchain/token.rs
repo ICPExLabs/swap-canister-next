@@ -181,6 +181,20 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
     }
     // 5. Push new block and remove after success
     let service = crate::services::archive::Service(current_archiving.canister_id);
+    // push_block(num, height_start, service).await?;
+    push_blocks(num, height_start, service).await?;
+    Ok(Some(PushBlocks {
+        block_height_start: height_start,
+        length: num,
+    }))
+}
+
+#[allow(unused)]
+async fn push_block(
+    num: u64,
+    height_start: BlockIndex,
+    service: crate::services::archive::Service,
+) -> Result<(), BusinessError> {
     for i in 0..num {
         let block_height = height_start + i;
         let block = match with_state(|s| s.business_token_block_get(block_height)) {
@@ -192,12 +206,45 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
                 )));
             }
         };
+        let s = ic_cdk::api::time();
         service.append_blocks(vec![block]).await?;
+        let e = ic_cdk::api::time();
+        ic_cdk::println!("🕓 append token block({block_height}) spend: {} ns", e - s);
         // After successful insertion, remove the cache and update the sequence number
         with_mut_state(|s| s.business_config_token_block_archived(block_height))?;
     }
-    Ok(Some(PushBlocks {
-        block_height_start: height_start,
-        length: num,
-    }))
+    Ok(())
+}
+
+#[allow(unused)]
+async fn push_blocks(
+    num: u64,
+    height_start: BlockIndex,
+    service: crate::services::archive::Service,
+) -> Result<(), BusinessError> {
+    let mut block_height_list = Vec::with_capacity(num as usize);
+    let mut blocks = Vec::with_capacity(num as usize);
+    for i in 0..num {
+        let block_height = height_start + i;
+        let block = match with_state(|s| s.business_token_block_get(block_height)) {
+            QueryBlockResult::Block(block) => block,
+            QueryBlockResult::Archive(principal) => {
+                return Err(BusinessError::SystemError(format!(
+                    "token block: {block_height} already archived in [{}]",
+                    principal.to_text()
+                )));
+            }
+        };
+        block_height_list.push(block_height);
+        blocks.push(block);
+    }
+    let s = ic_cdk::api::time();
+    service.append_blocks(blocks).await?;
+    let e = ic_cdk::api::time();
+    ic_cdk::println!("🕓 append token blocks[{height_start}, #{num}) spend: {} ns", e - s);
+    for block_height in block_height_list {
+        // After successful insertion, remove the cache and update the sequence number
+        with_mut_state(|s| s.business_config_token_block_archived(block_height))?;
+    }
+    Ok(())
 }

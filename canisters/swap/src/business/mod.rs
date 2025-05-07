@@ -16,13 +16,18 @@ pub mod pair;
 
 pub mod test;
 
+#[inline]
+fn check_retries(retries: u8) {
+    assert!(retries < 10, "Too many retries");
+}
+
 #[allow(unused)]
 #[inline(always)]
 fn lock_token_balances(
     required: Vec<TokenAccount>,
     retries: u8,
 ) -> Result<LockResult<TokenBalancesLock>, BusinessError> {
-    assert!(retries < 10, "Too many retries");
+    check_retries(retries);
     ic_cdk::println!("lock_token_balances: {retries}");
 
     match with_mut_state(|s| s.business_token_balance_lock(required)) {
@@ -40,7 +45,7 @@ fn lock_token_balances(
 #[allow(unused)]
 #[inline(always)]
 fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>, BusinessError> {
-    assert!(retries < 10, "Too many retries");
+    check_retries(retries);
     ic_cdk::println!("lock_token_block_chain: {retries}");
 
     match with_mut_state(|s| s.business_token_block_chain_lock()) {
@@ -58,7 +63,7 @@ fn lock_token_block_chain(retries: u8) -> Result<LockResult<TokenBlockChainLock>
 #[allow(unused)]
 #[inline(always)]
 fn lock_swap_block_chain(retries: u8) -> Result<LockResult<SwapBlockChainLock>, BusinessError> {
-    assert!(retries < 10, "Too many retries");
+    check_retries(retries);
     ic_cdk::println!("lock_swap_block_chain: {retries}");
 
     match with_mut_state(|s| s.business_swap_block_chain_lock()) {
@@ -80,6 +85,7 @@ fn lock_token_block_chain_and_token_balances(
     mut required: Vec<TokenAccount>,
     retries: u8,
 ) -> Result<LockResult<(TokenBlockChainLock, TokenBalancesLock)>, BusinessError> {
+    check_retries(retries);
     ic_cdk::println!("lock_token_block_chain_and_token_balances: {retries}");
 
     let token_lock = match lock_token_block_chain(retries)? {
