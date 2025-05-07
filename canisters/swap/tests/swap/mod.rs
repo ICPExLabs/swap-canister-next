@@ -23,13 +23,13 @@ pub enum InitArgs {
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub enum Amm {
     #[serde(rename = "swap_v2_1%")]
-    _1538359691_,
+    SwapV2H1,
     #[serde(rename = "swap_v2_0.01%")]
-    _1543943535_,
+    SwapV2M100,
     #[serde(rename = "swap_v2_0.05%")]
-    _1543944427_,
+    SwapV2M500,
     #[serde(rename = "swap_v2_0.3%")]
-    _3415934087_,
+    SwapV2T3,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
@@ -1064,7 +1064,7 @@ impl Service<'_> {
         self.query_call("encoded_blocks_token_get", encode_one(arg0).unwrap())
     }
     pub fn pair_create(&self, arg0: TokenPairCreateOrRemoveArgs) -> Result<TokenPairCreateOrRemoveResult> {
-        self.query_call("pair_create", encode_one(arg0).unwrap())
+        self.update_call("pair_create", encode_one(arg0).unwrap())
     }
     pub fn pair_liquidity_add(
         &self,

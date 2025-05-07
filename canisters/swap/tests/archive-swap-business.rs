@@ -59,7 +59,7 @@ fn test_archive_swap_business_apis() {
                         token0: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
                         token1: Principal::from_text("lvfsa-2aaaa-aaaaq-aaeyq-cai").unwrap(),
                     },
-                    amm: Amm::_3415934087_, // swap_v2_0.3%
+                    amm: Amm::SwapV2T3, // swap_v2_0.3%
                 },
                 creator: Principal::from_text("aaaaa-aa").unwrap(),
             })),

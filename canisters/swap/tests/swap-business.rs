@@ -54,6 +54,9 @@ fn test_swap_business_apis() {
     fn nat(value: u64) -> candid::Nat {
         Nat::from(value)
     }
+    fn principal(text: &str) -> Principal {
+        Principal::from_text(text).unwrap()
+    }
 
     pic.create_canister_with_id(Some(default_identity), None, canister_id).unwrap();
     pic.add_cycles(canister_id, 20_000_000_000_000);
@@ -116,7 +119,7 @@ fn test_swap_business_apis() {
     assert_eq!(alice.token_balance_of(token_sns_icx_canister_id, account(default_identity)).unwrap_err().reject_message.contains("You can only query your own balance"), true);
     assert_eq!(default.token_balance_by(token_sns_icx_canister_id, account(alice_identity)).unwrap(), nat(0));
     assert_eq!(default.token_balance_of(token_sns_icx_canister_id, account(default_identity)).unwrap(), nat(0));
-    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_sns_icx_canister_id, nat(0))), true);
+    assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_sns_icx_canister_id, nat(0))]);
 
     // 🚩 1.1 business tokens deposit
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, Some(100)).unwrap_err().reject_message.contains("Too many retries"), true);
@@ -145,7 +148,7 @@ fn test_swap_business_apis() {
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(4_999_994_000_000_000_000));
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_002_000_000_000_000));
     assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(5_000_000_000_000_000_000));
-    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(5_000_000_000_000_000_000))), true);
+    assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(5_000_000_000_000_000_000))]);
 
     // 🚩 1.3 business tokens withdraw
     assert_eq!(default.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(default_identity), withdraw_amount_without_fee: nat(15_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Err(BusinessError::InsufficientBalance { token: token_ck_eth_canister_id, balance: nat(5_000_000_000_000_000_000) }));
@@ -157,13 +160,13 @@ fn test_swap_business_apis() {
     assert_token_block_withdraw(archive_token.sender(default_identity).get_block(1).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(1).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(1).unwrap().unwrap().traces[0].1, format!("*Withdraw* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, height:5`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
-    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))), true);
+    assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))]);
 
     // 🚩 1.4 business tokens balance of
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(5_999_992_000_000_000_000));
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_004_000_000_000_000));
     assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(4_000_000_000_000_000_000));
-    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))), true);
+    assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))]);
 
     // 🚩 1.5 business tokens transfer
     assert_eq!(alice.token_balance_of(token_ck_eth_canister_id, account(alice_identity)).unwrap(), nat(0));
@@ -179,28 +182,29 @@ fn test_swap_business_apis() {
     assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(3_000_000_000_000_000_000));
     assert_eq!(alice.token_balance_of(token_ck_eth_canister_id, account(alice_identity)).unwrap(), nat(1_000_000_000_000_000_000));
 
-
-// blue "\n🚩 2 business pairs"
-// test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '(vec {})'
-// test "pair_query" "$(dfx --identity alice canister call swap pair_query "(record { token0 = principal \"$token_ckETH\"; token1 = principal \"$token_ckUSDT\"; amm = \"swap_v2_0.3%\"; })" >&1)" '(null)'
-// test "pair_create" "$(dfx --identity alice canister call swap pair_create "(record { pool=record { token0 = principal \"$token_ckETH\"; token1 = principal \"$token_ckUSDT\"; amm=\"swap_v2_0.3%\"; } })" 2>&1)" "Permission 'BusinessTokenPairCreateOrRemove'"
-// test "block_swap_get" "$(dfx --identity alice canister call swap block_swap_get "(1:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(3:nat64)" 2>&1)" '(null)'
-// test "👁︎ block_swap_get" "$(dfx --identity default canister call swap block_swap_get "(0:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ get_swap_block" "$(dfx --identity default canister call $archive_swap get_block "(0:nat64)" 2>&1)" '(null)'
-// test "pair_create" "$(dfx --identity default canister call swap pair_create "(record { pool=record { token0 = principal \"$token_ckETH\"; token1 = principal \"$token_ckUSDT\"; amm=\"swap_v2_0.3%\"; }})" 2>&1)" '( variant { Ok = variant { swap_v2 = record { lp = variant { inner = record { fee = 100_000_000 : nat; decimals = 12 : nat8; dummy_canister_id = principal "vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4"; minimum_liquidity = 100_000_000_000 : nat; total_supply = 0 : nat; } }; price_cumulative_exponent = 64 : nat8; block_timestamp_last = 0 : nat64; reserve0 = "0"; reserve1 = "0"; subaccount = "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c"; price1_cumulative_last = "0"; token0 = "ss2fx-dyaaa-aaaar-qacoq-cai"; token1 = "cngnf-vqaaa-aaaar-qag4q-cai"; fee_rate = "3/1000"; k_last = "0"; protocol_fee = opt "1/6"; price0_cumulative_last = "0"; } } }, )'
-// sleep 2
-// test "👁︎ get_swap_block" "$(dfx --identity default canister call $archive_swap get_block "(0:nat64)" --output json 2>&1)" '[ { "parent_hash": [' '], "timestamp": "' '", "transaction": { "created": [], "memo": [], "operation": { "pair": { "create": { "creator": "'"$DEFAULT"'", "pa": { "amm": { "swap_v2_0.3%": null }, "pair": { "token0": "ss2fx-dyaaa-aaaar-qacoq-cai", "token1": "cngnf-vqaaa-aaaar-qag4q-cai" } } } } } } } ]'
-// test "👁︎ block_swap_get" "$(dfx --identity default canister call swap block_swap_get "(0:nat64)" 2>&1)" '(variant { archive = principal "hcnys-xiaaa-aaaai-q3w4q-cai" })'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(3:nat64)" 2>&1)" '( opt record { created = ' ' : nat64; args = variant { pair_create = record { arg = record { amm = variant { "swap_v2_0.3%" }; pair = record { token0 = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; token1 = principal "cngnf-vqaaa-aaaar-qag4q-cai"; }; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { result = variant { ok = "{\"swap_v2\":{\"subaccount\":\"11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c\",\"fee_rate\":\"3/1000\",\"token0\":\"ss2fx-dyaaa-aaaar-qacoq-cai\",\"token1\":\"cngnf-vqaaa-aaaar-qag4q-cai\",\"reserve0\":\"0\",\"reserve1\":\"0\",'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(3:nat64)" 2>&1)" '\"block_timestamp_last\":0,\"price_cumulative_exponent\":64,\"price0_cumulative_last\":\"0\",\"price1_cumulative_last\":\"0\",\"k_last\":\"0\",\"lp\":{\"inner\":{\"dummy_canister_id\":\"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\",\"total_supply\":[],\"decimals\":12,\"fee\":[100000000],\"minimum_liquidity\":[1215752192,23]}},\"protocol_fee\":\"1/6\"}}" }; done = '
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(3:nat64)" 2>&1)" ' : nat64; }; traces = vec { record { ' ' : nat64; "*TokenPairCreate* `token0:[ss2fx-dyaaa-aaaar-qacoq-cai], token1:[cngnf-vqaaa-aaaar-qag4q-cai], amm:swap_v2_0.3%, subaccount:(11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c), dummyCanisterId:[vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4]`"; }; }; locks = record { token = null; swap = opt true; balances = null }; index = 3 : nat64; }, )'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(4:nat64)" 2>&1)" '(null)'
-// test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '( vec { record { record { amm = "swap_v2_0.3%"; token0 = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; token1 = principal "cngnf-vqaaa-aaaar-qag4q-cai"; }; variant { swap_v2 = record { lp = variant { inner = record { fee = 100_000_000 : nat; decimals = 12 : nat8; dummy_canister_id = principal "vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4"; minimum_liquidity = 100_000_000_000 : nat; total_supply = 0 : nat; } }; price_cumulative_exponent = 64 : nat8; block_timestamp_last = 0 : nat64; reserve0 = "0"; reserve1 = "0"; subaccount = "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c"; price1_cumulative_last = "0"; token0 = "ss2fx-dyaaa-aaaar-qacoq-cai"; token1 = "cngnf-vqaaa-aaaar-qag4q-cai"; fee_rate = "3/1000"; k_last = "0"; protocol_fee = opt "1/6"; price0_cumulative_last = "0"; } }; }; }, )'
-// test "pair_query" "$(dfx --identity alice canister call swap pair_query "(record { token0 = principal \"$token_ckETH\"; token1 = principal \"$token_ckUSDT\"; amm = \"swap_v2_0.3%\"; })" >&1)" '( opt variant { swap_v2 = record { lp = variant { inner = record { fee = 100_000_000 : nat; decimals = 12 : nat8; dummy_canister_id = principal "vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4"; minimum_liquidity = 100_000_000_000 : nat; total_supply = 0 : nat; } }; price_cumulative_exponent = 64 : nat8; block_timestamp_last = 0 : nat64; reserve0 = "0"; reserve1 = "0"; subaccount = "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c"; price1_cumulative_last = "0"; token0 = "ss2fx-dyaaa-aaaar-qacoq-cai"; token1 = "cngnf-vqaaa-aaaar-qag4q-cai"; fee_rate = "3/1000"; k_last = "0"; protocol_fee = opt "1/6"; price0_cumulative_last = "0"; } }, )'
-// test "tokens_balance_of" "$(dfx --identity default canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4"; 0 : nat;}'
-// token_ckETH_token_ckUSDT_subaccount="\11\df\fa\35\fd\42\81\0f\9b\24\9c\39\74\9d\4a\dc\73\a3\97\f7\99\f9\07\03\bf\6d\8f\cc\1e\f7\d9\2c"
-// test "tokens_balance_of" "$(dfx --identity alice canister call swap tokens_balance_of "(record { owner=principal \"$swap\"; subaccount=opt blob \"$token_ckETH_token_ckUSDT_subaccount\"})" 2>&1)" '( vec { record { principal "' 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 0 : nat;}' 'record { principal "cngnf-vqaaa-aaaar-qag4q-cai"; 0 : nat;}'
+    // 🚩 2 business pairs
+    let token_ck_eth_token_ck_usdt_dummy_canister_id = Principal::from_text("vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4").unwrap();
+    assert_eq!(alice.pairs_query().unwrap(), Vec::new());
+    assert_eq!(alice.pair_query(TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }).unwrap(), None);
+    assert_eq!(alice.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap_err().reject_message, "Permission 'BusinessTokenPairCreateOrRemove' is required".to_string());
+    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))), false);
+    assert_eq!(alice.block_swap_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(default.request_trace_get(3).unwrap(), None); // 👁︎
+    assert_eq!(default.block_swap_get(0).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(archive_swap.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
+    assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLp::Inner(InnerLp { fee: nat(100_000_000), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id, minimum_liquidity: nat(100_000_000_000), total_supply: nat(0) }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c".to_string(), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: Some("1/6".to_string()), price0_cumulative_last: "0".to_string() })));
+    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
+    assert_eq!(default.block_swap_get(0).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
+    assert_swap_block_pair_create(archive_swap.sender(default_identity).get_block(0).unwrap().unwrap(), archive_swap::PairCreate { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id  }, amm: archive_swap::Amm::SwapV2T3 }, creator: default_identity  }); // 👁︎
+    assert_eq!(default.block_swap_get(0).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
+    assert_eq!(default.request_trace_get(3).unwrap().unwrap().traces[0].1, format!("*TokenPairCreate* `token0:[{}], token1:[{}], amm:swap_v2_0.3%, subaccount:(11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c), dummyCanisterId:[{}]`", token_ck_eth_canister_id.to_text(), token_ck_usdt_canister_id.to_text(), token_ck_eth_token_ck_usdt_dummy_canister_id.to_text())); // 👁︎
+    assert_eq!(default.request_trace_get(4).unwrap(), None); // 👁︎
+    assert_eq!(alice.pairs_query().unwrap()[0], (TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLp::Inner(InnerLp { fee: nat(100_000_000), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id, minimum_liquidity: nat(100_000_000_000), total_supply: nat(0) }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c".to_string(), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: Some("1/6".to_string()), price0_cumulative_last: "0".to_string() })));
+    assert_eq!(alice.pair_query(TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }).unwrap().unwrap(), MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLp::Inner(InnerLp { fee: nat(100_000_000), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id, minimum_liquidity: nat(100_000_000_000), total_supply: nat(0) }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: "11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c".to_string(), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: Some("1/6".to_string()), price0_cumulative_last: "0".to_string() }));
+    assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(3_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
+    let token_ck_eth_token_ck_usdt_subaccount = hex::decode("11dffa35fd42810f9b249c39749d4adc73a397f799f90703bf6d8fcc1ef7d92c").unwrap();
+    assert_tokens_balance(alice.tokens_balance_of(Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.into()) }).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
 
 // blue "\n🚩 2.1 business pair liquidity add"
 // test "pair_liquidity_add" "$(dfx --identity alice canister call swap pair_liquidity_add "(record { from=record{owner=principal\"$DEFAULT\"}; swap_pair=record { token = record { principal \"$token_ckETH\"; principal \"$token_ckUSDT\" }; amm=\"swap_v2_0.3%\"; }; amount_desired=record{1:nat;1:nat}; amount_min=record{1:nat;1:nat}; to=record{owner=principal\"$DEFAULT\"}; deadline=null } , null)" 2>&1)" "( variant { Err = variant { NotOwner = principal \"$DEFAULT\" } }, )"
@@ -747,5 +751,34 @@ fn assert_token_block_transfer(block: archive_token::TokenBlock, transfer: archi
         assert_eq!(transfer_token, transfer);
     } else {
         panic!("Expected TransferToken, got {:?}", block);
+    }
+}
+
+fn assert_tokens_balance(balances: Vec<(Principal, Nat)>, required: Vec<(Principal, Nat)>) {
+    for r in required {
+        if !balances.contains(&r) {
+            if let Some((p, b)) = balances.iter().find(|(p, _)| *p == r.0) {
+                panic!(
+                    "Expected balance ({}, {}) but got ({}, {b:?})",
+                    r.0.to_text(),
+                    r.1,
+                    p.to_text(),
+                );
+            } else {
+                panic!(
+                    "Expected balance ({}, {}) but not found, got {balances:?}",
+                    r.0.to_text(),
+                    r.1,
+                );
+            }
+        }
+    }
+}
+
+fn assert_swap_block_pair_create(block: archive_swap::SwapBlock, create: archive_swap::PairCreate) {
+    if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::Create(c)) = block.transaction.operation {
+        assert_eq!(c, create);
+    } else {
+        panic!("Expected PairCreate, got {:?}", block);
     }
 }
