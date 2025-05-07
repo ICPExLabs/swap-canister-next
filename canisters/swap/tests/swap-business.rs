@@ -1,4 +1,6 @@
 //! https://github.com/dfinity/pocketic
+use std::str::FromStr;
+
 use candid::{Nat, Principal, encode_one};
 use pocket_ic::PocketIc;
 
@@ -134,7 +136,7 @@ fn test_swap_business_apis() {
     assert_eq!(default.block_token_get(0).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(4)));
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     assert_token_block_deposit(archive_token.sender(default_identity).get_block(0).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(5_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(0).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(0).unwrap().unwrap().traces[0].1, format!("*Deposit* `token:[{}], from:({}.), to:({}.), amount:5_000_000_000_000_000_000, height:4`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
@@ -151,33 +153,32 @@ fn test_swap_business_apis() {
     assert_eq!(default.block_token_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(1).unwrap(), None); // 👁︎
     assert_eq!(default.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(default_identity), withdraw_amount_without_fee: nat(999_998_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(5)));
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     assert_token_block_withdraw(archive_token.sender(default_identity).get_block(1).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(1).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(1).unwrap().unwrap().traces[0].1, format!("*Withdraw* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, height:5`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
     assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))), true);
 
+    // 🚩 1.4 business tokens balance of
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(5_999_992_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_004_000_000_000_000));
+    assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(4_000_000_000_000_000_000));
+    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))), true);
 
-// blue "\n🚩 1.4 business tokens balance of"
-// test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(5_999_992_000_000_000_000 : nat)'
-// test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_004_000_000_000_000 : nat)'
-// test "token_balance_of" "$(dfx --identity default canister call swap token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(4_000_000_000_000_000_000 : nat)'
-// test "tokens_balance_of" "$(dfx --identity default canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 4_000_000_000_000_000_000 : nat;}'
+    // 🚩 1.5 business tokens transfer
+    assert_eq!(alice.token_balance_of(token_ck_eth_canister_id, account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_canister_id, from: account(default_identity), transfer_amount_without_fee: Nat::from_str("1_000_000_000_000_000_000_000").unwrap(), to: account(alice_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Err(BusinessError::InsufficientBalance { token: token_ck_eth_canister_id, balance: nat(4_000_000_000_000_000_000) }));
+    assert_eq!(default.request_trace_get(2).unwrap(), None); // 👁︎
+    assert_eq!(default.block_token_get(2).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(archive_token.sender(default_identity).get_block(2).unwrap(), None); // 👁︎
+    assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_canister_id, from: account(default_identity), transfer_amount_without_fee: nat(1_000_000_000_000_000_000), to: account(alice_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(1_000_000_000_000_000_000)));
+    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    assert_token_block_transfer(archive_token.sender(default_identity).get_block(2).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(alice_identity), fee: None }); // 👁︎
+    assert_eq!(default.block_token_get(2).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    assert_eq!(default.request_trace_get(2).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), alice_identity.to_text())); // 👁︎
+    assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(3_000_000_000_000_000_000));
+    assert_eq!(alice.token_balance_of(token_ck_eth_canister_id, account(alice_identity)).unwrap(), nat(1_000_000_000_000_000_000));
 
-// blue "\n🚩 1.5 business tokens transfer"
-// test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(0 : nat)'
-// test "token_transfer" "$(dfx --identity default canister call swap token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; transfer_amount_without_fee=1_000_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; balance = 4_000_000_000_000_000_000 : nat; } } }, )'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(2:nat64)" 2>&1)" '(null)'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(2:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(2:nat64)" 2>&1)" '(null)'
-// test "token_transfer" "$(dfx --identity default canister call swap token_transfer "(record { token=principal \"$token_ckETH\"; from=record {owner=principal \"$DEFAULT\"}; transfer_amount_without_fee=1_000_000_000_000_000_000 : nat; to=record {owner=principal \"$ALICE\"} }, null)" 2>&1)" '(variant { Ok = 1_000_000_000_000_000_000 : nat })'
-// sleep 2
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(2:nat64)" --output json 2>&1)" '[ { "parent_hash": [' '], "timestamp": "' '", "transaction": { "created": [], "memo": [], "operation": { "transfer": { "amount": "1_000_000_000_000_000_000", "fee": [], "from": { "owner": "'"$DEFAULT"'", "subaccount": [] }, "to": { "owner": "'"$ALICE"'", "subaccount": [] }, "token": "ss2fx-dyaaa-aaaar-qacoq-cai" } } } } ]'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(2:nat64)" 2>&1)" '(variant { archive = principal "ykio2-paaaa-aaaaj-az5ka-cai" })'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(2:nat64)" 2>&1)" '( opt record { created = ' ' : nat64; args = variant { token_transfer = record { arg = record { to = record { owner = principal "'"$ALICE"'"; subaccount = null; }; fee = null; token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; from = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { result = variant { ok = "1_000_000_000_000_000_000" }; done = ' ' : nat64; }; traces = vec { record { '
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(2:nat64)" 2>&1)" ' : nat64; "*Transfer* `token:[ss2fx-dyaaa-aaaar-qacoq-cai], from:('"$DEFAULT"'.), to:('"$ALICE"'.), amount:1_000_000_000_000_000_000`"; }; record { ' ' : nat64; "Transfer Done: 1_000_000_000_000_000_000."; }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; }; record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$ALICE"'"; subaccount = null; }; }; }; }; index = 2 : nat64; }, )'
-// test "token_balance_of" "$(dfx --identity default canister call swap token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(3_000_000_000_000_000_000 : nat)'
-// test "token_balance_of" "$(dfx --identity alice canister call swap token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$ALICE\"; subaccount=null})" 2>&1)" '(1_000_000_000_000_000_000 : nat)'
 
 // blue "\n🚩 2 business pairs"
 // test "pairs_query" "$(dfx --identity alice canister call swap pairs_query 2>&1)" '(vec {})'
