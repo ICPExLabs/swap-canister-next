@@ -1013,7 +1013,7 @@ impl Service<'_> {
     }
     pub fn block_token_get(&self, arg0: u64) -> Result<QueryTokenBlockResult> {
         self.query_call("block_token_get", encode_one(arg0).unwrap())
-    } 
+    }
     pub fn config_fee_to_query(&self) -> Result<FeeTo> {
         self.query_call("config_fee_to_query", Encode!(&()).unwrap())
     }
@@ -1028,7 +1028,7 @@ impl Service<'_> {
     }
     pub fn config_maintain_archives_set(&self, arg0: MaintainArchivesConfig) -> Result<()> {
         self.query_call("config_maintain_archives_set", encode_one(arg0).unwrap())
-    } 
+    }
     pub fn config_swap_block_chain_query(&self, arg0: BlockChainArgs) -> Result<SwapBlockResult> {
         self.query_call("config_swap_block_chain_query", encode_one(arg0).unwrap())
     }
@@ -1214,13 +1214,13 @@ impl Service<'_> {
         &self,
         arg0: CurrentArchiving,
     ) -> Result<Option<CurrentArchiving>> {
-        self.query_call("test_config_swap_current_archiving_replace", encode_one(arg0).unwrap())
+        self.update_call("test_config_swap_current_archiving_replace", encode_one(arg0).unwrap())
     }
     pub fn test_config_token_current_archiving_replace(
         &self,
         arg0: CurrentArchiving,
     ) -> Result<Option<CurrentArchiving>> {
-        self.query_call("test_config_token_current_archiving_replace", encode_one(arg0).unwrap())
+        self.update_call("test_config_token_current_archiving_replace", encode_one(arg0).unwrap())
     }
     pub fn test_set_controller(&self, arg0: Principal) -> Result<()> {
         self.query_call("test_set_controller", encode_one(arg0).unwrap())
@@ -1249,11 +1249,7 @@ impl Service<'_> {
     pub fn token_withdraw(&self, arg0: TokenWithdrawArgs, arg1: Option<u8>) -> Result<TokenChangedResult> {
         self.query_call("token_withdraw", encode_args((&arg0, &arg1)).unwrap())
     }
-    pub fn token_withdraw_many(
-        &self,
-        arg0: TokenWithdrawManyArgs,
-        arg1: Option<u8>,
-    ) -> Result<ManyTokenChangedResult> {
+    pub fn token_withdraw_many(&self, arg0: TokenWithdrawManyArgs, arg1: Option<u8>) -> Result<ManyTokenChangedResult> {
         self.query_call("token_withdraw_many", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn tokens_balance(&self, arg0: Option<serde_bytes::ByteBuf>) -> Result<Vec<(Principal, candid::Nat)>> {

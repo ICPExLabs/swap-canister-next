@@ -1,13 +1,19 @@
 //! https://github.com/dfinity/pocketic
-use candid::{Principal, encode_one};
+use candid::{Nat, Principal, encode_one};
 use pocket_ic::PocketIc;
 
+mod archive_swap;
+mod archive_token;
+mod icrc2;
 mod swap;
 
 // 2T cycles
-const INIT_CYCLES: u128 = 20_000_000_000_000;
+const INIT_CYCLES: u128 = 2_000_000_000_000;
 
 const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm");
+const ICRC2_WASM_MODULE: &[u8] = include_bytes!("../../../ledger/ic-icrc1-ledger.wasm");
+const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm");
+const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm");
 
 #[ignore]
 #[test]
@@ -22,11 +28,34 @@ fn test_swap_business_apis() {
     let anonymous_identity = Principal::from_text("2vxsx-fae").unwrap();
 
     let canister_id = Principal::from_text("piwiu-wiaaa-aaaaj-azzka-cai").unwrap();
+    let token_sns_icx_canister_id = Principal::from_text("lvfsa-2aaaa-aaaaq-aaeyq-cai").unwrap();
+    let token_ck_btc_canister_id = Principal::from_text("mxzaz-hqaaa-aaaar-qaada-cai").unwrap();
+    let token_ck_eth_canister_id = Principal::from_text("ss2fx-dyaaa-aaaar-qacoq-cai").unwrap();
+    let token_ck_usdt_canister_id = Principal::from_text("cngnf-vqaaa-aaaar-qag4q-cai").unwrap();
+    let token_sns_chat_canister_id = Principal::from_text("2ouva-viaaa-aaaaq-aaamq-cai").unwrap();
+    let archive_token_canister_id = Principal::from_text("ykio2-paaaa-aaaaj-az5ka-cai").unwrap();
+    let archive_swap_canister_id = Principal::from_text("hcnys-xiaaa-aaaai-q3w4q-cai").unwrap();
 
     pic.create_canister_with_id(Some(default_identity), None, canister_id).unwrap();
-    pic.add_cycles(canister_id, INIT_CYCLES);
-
+    pic.add_cycles(canister_id, 20_000_000_000_000);
     pic.install_canister(canister_id, WASM_MODULE.to_vec(), encode_one(None::<()>).unwrap(), Some(default_identity));
+
+    pic.create_canister_with_id(Some(default_identity), None, archive_token_canister_id).unwrap();
+    pic.add_cycles(archive_token_canister_id, INIT_CYCLES);
+    pic.install_canister(archive_token_canister_id, ARCHIVE_TOKEN_WASM_MODULE.to_vec(), encode_one(Some(archive_token::InitArgs::V1(archive_token::InitArgV1{ maintainers: Some(vec![default_identity]), block_offset: None, host_canister_id: Some(canister_id), max_memory_size_bytes: None }))).unwrap(), Some(default_identity));
+    #[allow(unused)] let archive_token = archive_token::PocketedCanisterId::new(archive_token_canister_id, &pic);
+
+    pic.create_canister_with_id(Some(default_identity), None, archive_swap_canister_id).unwrap();
+    pic.add_cycles(archive_swap_canister_id, INIT_CYCLES);
+    pic.install_canister(archive_swap_canister_id, ARCHIVE_SWAP_WASM_MODULE.to_vec(), encode_one(Some(archive_swap::InitArgs::V1(archive_swap::InitArgV1{ maintainers: None, block_offset: None, host_canister_id: Some(canister_id), max_memory_size_bytes: None }))).unwrap(), Some(default_identity));
+    #[allow(unused)] let archive_swap = archive_swap::PocketedCanisterId::new(archive_swap_canister_id, &pic);
+
+    // ! 0. deploy tokens
+    #[allow(unused)] let token_sns_icx = deploy_icrc2(&pic, default_identity, token_sns_icx_canister_id, "snsICX", 8, 100000, default_identity, vec![(default_identity, 1_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_btc = deploy_icrc2(&pic, default_identity, token_ck_btc_canister_id, "ckBTC", 8, 10, default_identity, vec![(default_identity, 100_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_eth = deploy_icrc2(&pic, default_identity, token_ck_eth_canister_id, "ckETH", 18, 2_000_000_000_000, default_identity, vec![(default_identity, 10_000_000_000_000_000_000), (alice_identity, 8_000_000_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_usdt = deploy_icrc2(&pic, default_identity, token_ck_usdt_canister_id, "ckUSDT", 6, 10000, default_identity, vec![(default_identity, 100_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_sns_chat = deploy_icrc2(&pic, default_identity, token_sns_chat_canister_id, "snsCHAT", 8, 100000, default_identity, vec![(default_identity, 1_000_000_000_000)], alice_identity);
 
     use swap::*;
 
@@ -37,188 +66,28 @@ fn test_swap_business_apis() {
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
 
+    default.test_config_token_current_archiving_replace(CurrentArchiving { canister_id: archive_token_canister_id, length: 0, max_length: 1_000_000, block_height_offset: 0 }).unwrap();
+    default.test_config_swap_current_archiving_replace(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 1_000_000, block_height_offset: 0 }).unwrap();
+
+    // 🚩 0 query balances
+    assert_eq!(token_sns_icx.sender(default_identity).icrc_1_balance_of(icrc2::Account{ owner: default_identity, subaccount: None}).unwrap(), Nat::from(1_000_000_000_000_u64));
+    assert_eq!(token_sns_icx.sender(alice_identity).icrc_1_balance_of(icrc2::Account{ owner: alice_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_sns_icx.sender(bob_identity).icrc_1_balance_of(icrc2::Account{ owner: bob_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_ck_btc.sender(default_identity).icrc_1_balance_of(icrc2::Account{ owner: default_identity, subaccount: None}).unwrap(), Nat::from(100_000_000_u64));
+    assert_eq!(token_ck_btc.sender(alice_identity).icrc_1_balance_of(icrc2::Account{ owner: alice_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_ck_btc.sender(bob_identity).icrc_1_balance_of(icrc2::Account{ owner: bob_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc_1_balance_of(icrc2::Account{ owner: default_identity, subaccount: None}).unwrap(), Nat::from(10_000_000_000_000_000_000_u64));
+    assert_eq!(token_ck_eth.sender(alice_identity).icrc_1_balance_of(icrc2::Account{ owner: alice_identity, subaccount: None}).unwrap(), Nat::from(8_000_000_000_000_000_000_u64));
+    assert_eq!(token_ck_eth.sender(bob_identity).icrc_1_balance_of(icrc2::Account{ owner: bob_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_ck_usdt.sender(default_identity).icrc_1_balance_of(icrc2::Account{ owner: default_identity, subaccount: None}).unwrap(), Nat::from(100_000_000_000_000_u64));
+    assert_eq!(token_ck_usdt.sender(alice_identity).icrc_1_balance_of(icrc2::Account{ owner: alice_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_ck_usdt.sender(bob_identity).icrc_1_balance_of(icrc2::Account{ owner: bob_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_sns_chat.sender(default_identity).icrc_1_balance_of(icrc2::Account{ owner: default_identity, subaccount: None}).unwrap(), Nat::from(1_000_000_000_000_u64));
+    assert_eq!(token_sns_chat.sender(alice_identity).icrc_1_balance_of(icrc2::Account{ owner: alice_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_sns_chat.sender(bob_identity).icrc_1_balance_of(icrc2::Account{ owner: bob_identity, subaccount: None}).unwrap(), Nat::from(0_u64));
+
     // 🚩 1 version
     assert_eq!(alice.version().unwrap(), 1_u32, "version");
-
-
-// # ! 0. deploy tokens
-// token_ICP="ryjl3-tyaaa-aaaaa-aaaba-cai"
-// dfx canister create token_ICP --specified-id "$token_ICP"
-// dfx deploy token_ICP --argument "(variant {\
-//     Init = record {\
-//         token_name = \"ICP\";\
-//         token_symbol = \"ICP\";\
-//         decimals = opt (8 : nat8);\
-//         transfer_fee = 10000 : nat;\
-//         metadata = vec {};\
-//         minting_account = record {\
-//             owner = principal \"${BOB}\";\
-//             subaccount = null;\
-//         };
-//         initial_balances = vec {\
-//             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1_000_000_000_000:nat }\
-//         };\
-//         fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
-//         archive_options = record {\
-//             num_blocks_to_archive = 1000 : nat64;\
-//             max_transactions_per_response = null;\
-//             trigger_threshold = 1000 : nat64;\
-//             more_controller_ids = null;\
-//             max_message_size_bytes = null;\
-//             cycles_for_archive_creation = null;\
-//             node_max_memory_size_bytes = null;\
-//             controller_id = principal \"aaaaa-aa\";\
-//         };\
-//         max_memo_length = null;\
-//         feature_flags = opt record { icrc2 = true };\
-//     }\
-// })"
-
-// token_ckBTC="mxzaz-hqaaa-aaaar-qaada-cai"
-// dfx canister create token_ckBTC --specified-id "$token_ckBTC"
-// dfx deploy token_ckBTC --argument "(variant {\
-//     Init = record {\
-//         token_name = \"ckBTC\";\
-//         token_symbol = \"ckBTC\";\
-//         decimals = opt (8 : nat8);\
-//         transfer_fee = 10 : nat;\
-//         metadata = vec {};\
-//         minting_account = record {\
-//             owner = principal \"${BOB}\";\
-//             subaccount = null;\
-//         };
-//         initial_balances = vec {\
-//             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100000000:nat }\
-//         };\
-//         fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
-//         archive_options = record {\
-//             num_blocks_to_archive = 1000 : nat64;\
-//             max_transactions_per_response = null;\
-//             trigger_threshold = 1000 : nat64;\
-//             more_controller_ids = null;\
-//             max_message_size_bytes = null;\
-//             cycles_for_archive_creation = null;\
-//             node_max_memory_size_bytes = null;\
-//             controller_id = principal \"aaaaa-aa\";\
-//         };\
-//         max_memo_length = null;\
-//         feature_flags = opt record { icrc2 = true };\
-//     }\
-// })"
-
-// token_ckETH="ss2fx-dyaaa-aaaar-qacoq-cai"
-// dfx canister create token_ckETH --specified-id "$token_ckETH"
-// dfx deploy token_ckETH --argument "(variant {\
-//     Init = record {\
-//         token_name = \"ckETH\";\
-//         token_symbol = \"ckETH\";\
-//         decimals = opt (18 : nat8);\
-//         transfer_fee = 2_000_000_000_000 : nat;\
-//         metadata = vec {};\
-//         minting_account = record {\
-//             owner = principal \"${BOB}\";\
-//             subaccount = null;\
-//         };
-//         initial_balances = vec {\
-//             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 10_000_000_000_000_000_000:nat };\
-//             record { record { owner=principal \"$ALICE\"; subaccount=null }; 8_000_000_000_000_000_000:nat }\
-//         };\
-//         fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
-//         archive_options = record {\
-//             num_blocks_to_archive = 1000 : nat64;\
-//             max_transactions_per_response = null;\
-//             trigger_threshold = 1000 : nat64;\
-//             more_controller_ids = null;\
-//             max_message_size_bytes = null;\
-//             cycles_for_archive_creation = null;\
-//             node_max_memory_size_bytes = null;\
-//             controller_id = principal \"aaaaa-aa\";\
-//         };\
-//         max_memo_length = null;\
-//         feature_flags = opt record { icrc2 = true };\
-//     }\
-// })"
-
-// token_ckUSDT="cngnf-vqaaa-aaaar-qag4q-cai"
-// dfx canister create token_ckUSDT --specified-id "$token_ckUSDT"
-// dfx deploy token_ckUSDT --argument "(variant {\
-//     Init = record {\
-//         token_name = \"ckUSDT\";\
-//         token_symbol = \"ckUSDT\";\
-//         decimals = opt (6 : nat8);\
-//         transfer_fee = 10000 : nat;\
-//         metadata = vec {};\
-//         minting_account = record {\
-//             owner = principal \"${BOB}\";\
-//             subaccount = null;\
-//         };
-//         initial_balances = vec {\
-//             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 100_000_000_000_000:nat }\
-//         };\
-//         fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
-//         archive_options = record {\
-//             num_blocks_to_archive = 1000 : nat64;\
-//             max_transactions_per_response = null;\
-//             trigger_threshold = 1000 : nat64;\
-//             more_controller_ids = null;\
-//             max_message_size_bytes = null;\
-//             cycles_for_archive_creation = null;\
-//             node_max_memory_size_bytes = null;\
-//             controller_id = principal \"aaaaa-aa\";\
-//         };\
-//         max_memo_length = null;\
-//         feature_flags = opt record { icrc2 = true };\
-//     }\
-// })"
-
-// token_snsCHAT="2ouva-viaaa-aaaaq-aaamq-cai"
-// dfx canister create token_snsCHAT --specified-id "$token_snsCHAT"
-// dfx deploy token_snsCHAT --argument "(variant {\
-//     Init = record {\
-//         token_name = \"CHAT\";\
-//         token_symbol = \"CHAT\";\
-//         decimals = opt (8 : nat8);\
-//         transfer_fee = 100000 : nat;\
-//         metadata = vec {};\
-//         minting_account = record {\
-//             owner = principal \"${BOB}\";\
-//             subaccount = null;\
-//         };
-//         initial_balances = vec {\
-//             record { record { owner=principal \"$DEFAULT\"; subaccount=null }; 1000000000000:nat }\
-//         };\
-//         fee_collector_account = opt record { owner=principal \"$ALICE\"; subaccount=null };\
-//         archive_options = record {\
-//             num_blocks_to_archive = 1000 : nat64;\
-//             max_transactions_per_response = null;\
-//             trigger_threshold = 1000 : nat64;\
-//             more_controller_ids = null;\
-//             max_message_size_bytes = null;\
-//             cycles_for_archive_creation = null;\
-//             node_max_memory_size_bytes = null;\
-//             controller_id = principal \"aaaaa-aa\";\
-//         };\
-//         max_memo_length = null;\
-//         feature_flags = opt record { icrc2 = true };\
-//     }\
-// })"
-
-// blue "\n0 query balances"
-// test "icrc1_balance_of ICP/default" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(1_000_000_000_000 : nat)'
-// test "icrc1_balance_of ICP/alice" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ICP/bob" "$(dfx --identity default canister call token_ICP icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ckBTC/default" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000 : nat)'
-// test "icrc1_balance_of ckBTC/alice" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ckBTC/bob" "$(dfx --identity default canister call token_ckBTC icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(10_000_000_000_000_000_000 : nat)'
-// test "icrc1_balance_of ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_000_000_000_000_000 : nat)'
-// test "icrc1_balance_of ckETH/bob" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ckUSDT/default" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(100_000_000_000_000 : nat)'
-// test "icrc1_balance_of ckUSDT/alice" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of ckUSDT/bob" "$(dfx --identity default canister call token_ckUSDT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of snsCHAT/default" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(1_000_000_000_000 : nat)'
-// test "icrc1_balance_of snsCHAT/alice" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(0 : nat)'
-// test "icrc1_balance_of snsCHAT/bob" "$(dfx --identity default canister call token_snsCHAT icrc1_balance_of "(record{owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
 
 // # ! 1. Test swap
 // red "\n=========== 1. swap ===========\n"
@@ -805,4 +674,68 @@ fn test_swap_business_apis() {
 // test "request_trace_index_get" "$(dfx --identity default canister call swap request_trace_index_get 2>&1)" '(1 : nat64, 21 : nat64)'
 // test "request_trace_remove" "$(dfx --identity default canister call swap request_trace_remove "(10:nat64)" 2>&1)" 'must remove min request index: 1'
 
+}
+
+fn deploy_icrc2<'a>(
+    pic: &'a PocketIc,
+    sender: Principal,
+    canister_id: Principal,
+    symbol: &str,
+    decimals: u8,
+    transfer_fee: u64,
+    mint_owner: Principal,
+    initial_balances: Vec<(Principal, u64)>,
+    fee_collector: Principal,
+) -> icrc2::PocketedCanisterId<'a> {
+    use icrc2::*;
+
+    pic.create_canister_with_id(Some(sender), None, canister_id).unwrap();
+    pic.add_cycles(canister_id, INIT_CYCLES);
+    pic.install_canister(
+        canister_id,
+        ICRC2_WASM_MODULE.to_vec(),
+        encode_one(LedgerArgument::Init(InitArgs {
+            token_name: symbol.to_string(),
+            token_symbol: symbol.to_string(),
+            decimals: Some(decimals),
+            transfer_fee: Nat::from(transfer_fee),
+            metadata: vec![],
+            minting_account: Account {
+                owner: mint_owner,
+                subaccount: None,
+            },
+            initial_balances: initial_balances
+                .into_iter()
+                .map(|(owner, balance)| {
+                    (
+                        Account {
+                            owner,
+                            subaccount: None,
+                        },
+                        Nat::from(balance),
+                    )
+                })
+                .collect(),
+            fee_collector_account: Some(Account {
+                owner: fee_collector,
+                subaccount: None,
+            }),
+            archive_options: ArchiveOptions {
+                num_blocks_to_archive: 1000,
+                max_transactions_per_response: None,
+                trigger_threshold: 1000,
+                more_controller_ids: None,
+                max_message_size_bytes: None,
+                cycles_for_archive_creation: None,
+                node_max_memory_size_bytes: None,
+                controller_id: Principal::from_text("aaaaa-aa").unwrap(),
+            },
+            max_memo_length: None,
+            feature_flags: Some(FeatureFlags { icrc2: true }),
+        }))
+        .unwrap(),
+        Some(sender),
+    );
+
+    icrc2::PocketedCanisterId::new(canister_id, &pic)
 }
