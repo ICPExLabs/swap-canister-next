@@ -43,6 +43,15 @@ fn test_swap_business_apis() {
     fn icrc2_account(owner: Principal) -> icrc2::Account {
         icrc2::Account { owner, subaccount: None }
     }
+    fn archive_token_account(owner: Principal) -> archive_token::Account {
+        archive_token::Account { owner, subaccount: None }
+    }
+    fn archive_swap_account(owner: Principal) -> archive_swap::Account {
+        archive_swap::Account { owner, subaccount: None }
+    }
+    fn nat(value: u64) -> candid::Nat {
+        Nat::from(value)
+    }
 
     pic.create_canister_with_id(Some(default_identity), None, canister_id).unwrap();
     pic.add_cycles(canister_id, 20_000_000_000_000);
@@ -59,11 +68,11 @@ fn test_swap_business_apis() {
     #[allow(unused)] let archive_swap = archive_swap::PocketedCanisterId::new(archive_swap_canister_id, &pic);
 
     // ! 0. deploy tokens
-    #[allow(unused)] let token_sns_icx = deploy_icrc2(&pic, default_identity, token_sns_icx_canister_id, "snsICX", 8, 100000, default_identity, vec![(default_identity, 1_000_000_000_000)], alice_identity);
-    #[allow(unused)] let token_ck_btc = deploy_icrc2(&pic, default_identity, token_ck_btc_canister_id, "ckBTC", 8, 10, default_identity, vec![(default_identity, 100_000_000)], alice_identity);
-    #[allow(unused)] let token_ck_eth = deploy_icrc2(&pic, default_identity, token_ck_eth_canister_id, "ckETH", 18, 2_000_000_000_000, default_identity, vec![(default_identity, 10_000_000_000_000_000_000), (alice_identity, 8_000_000_000_000_000_000)], alice_identity);
-    #[allow(unused)] let token_ck_usdt = deploy_icrc2(&pic, default_identity, token_ck_usdt_canister_id, "ckUSDT", 6, 10000, default_identity, vec![(default_identity, 100_000_000_000_000)], alice_identity);
-    #[allow(unused)] let token_sns_chat = deploy_icrc2(&pic, default_identity, token_sns_chat_canister_id, "snsCHAT", 8, 100000, default_identity, vec![(default_identity, 1_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_sns_icx = deploy_icrc2(&pic, default_identity, token_sns_icx_canister_id, "snsICX", 8, 100000, vec![(default_identity, 1_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_btc = deploy_icrc2(&pic, default_identity, token_ck_btc_canister_id, "ckBTC", 8, 10, vec![(default_identity, 100_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_eth = deploy_icrc2(&pic, default_identity, token_ck_eth_canister_id, "ckETH", 18, 2_000_000_000_000, vec![(default_identity, 10_000_000_000_000_000_000), (alice_identity, 8_000_000_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_ck_usdt = deploy_icrc2(&pic, default_identity, token_ck_usdt_canister_id, "ckUSDT", 6, 10000, vec![(default_identity, 100_000_000_000_000)], alice_identity);
+    #[allow(unused)] let token_sns_chat = deploy_icrc2(&pic, default_identity, token_sns_chat_canister_id, "snsCHAT", 8, 100000, vec![(default_identity, 1_000_000_000_000)], alice_identity);
 
     use swap::*;
 
@@ -78,21 +87,21 @@ fn test_swap_business_apis() {
     default.test_config_swap_current_archiving_replace(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 1_000_000, block_height_offset: 0 }).unwrap();
 
     // 🚩 0 query balances
-    assert_eq!(token_sns_icx.sender(default_identity).icrc_1_balance_of(icrc2_account(default_identity)).unwrap(), Nat::from(1_000_000_000_000_u64));
-    assert_eq!(token_sns_icx.sender(alice_identity).icrc_1_balance_of(icrc2_account(alice_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_sns_icx.sender(bob_identity).icrc_1_balance_of(icrc2_account(bob_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_ck_btc.sender(default_identity).icrc_1_balance_of(icrc2_account(default_identity)).unwrap(), Nat::from(100_000_000_u64));
-    assert_eq!(token_ck_btc.sender(alice_identity).icrc_1_balance_of(icrc2_account(alice_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_ck_btc.sender(bob_identity).icrc_1_balance_of(icrc2_account(bob_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_ck_eth.sender(default_identity).icrc_1_balance_of(icrc2_account(default_identity)).unwrap(), Nat::from(10_000_000_000_000_000_000_u64));
-    assert_eq!(token_ck_eth.sender(alice_identity).icrc_1_balance_of(icrc2_account(alice_identity)).unwrap(), Nat::from(8_000_000_000_000_000_000_u64));
-    assert_eq!(token_ck_eth.sender(bob_identity).icrc_1_balance_of(icrc2_account(bob_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_ck_usdt.sender(default_identity).icrc_1_balance_of(icrc2_account(default_identity)).unwrap(), Nat::from(100_000_000_000_000_u64));
-    assert_eq!(token_ck_usdt.sender(alice_identity).icrc_1_balance_of(icrc2_account(alice_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_ck_usdt.sender(bob_identity).icrc_1_balance_of(icrc2_account(bob_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_sns_chat.sender(default_identity).icrc_1_balance_of(icrc2_account(default_identity)).unwrap(), Nat::from(1_000_000_000_000_u64));
-    assert_eq!(token_sns_chat.sender(alice_identity).icrc_1_balance_of(icrc2_account(alice_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(token_sns_chat.sender(bob_identity).icrc_1_balance_of(icrc2_account(bob_identity)).unwrap(), Nat::from(0_u64));
+    assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(1_000_000_000_000));
+    assert_eq!(token_sns_icx.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(token_sns_icx.sender(bob_identity).icrc1_balance_of(icrc2_account(bob_identity)).unwrap(), nat(0));
+    assert_eq!(token_ck_btc.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(100_000_000));
+    assert_eq!(token_ck_btc.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(token_ck_btc.sender(bob_identity).icrc1_balance_of(icrc2_account(bob_identity)).unwrap(), nat(0));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(10_000_000_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_000_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(bob_identity).icrc1_balance_of(icrc2_account(bob_identity)).unwrap(), nat(0));
+    assert_eq!(token_ck_usdt.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(100_000_000_000_000));
+    assert_eq!(token_ck_usdt.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(token_ck_usdt.sender(bob_identity).icrc1_balance_of(icrc2_account(bob_identity)).unwrap(), nat(0));
+    assert_eq!(token_sns_chat.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(1_000_000_000_000));
+    assert_eq!(token_sns_chat.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(token_sns_chat.sender(bob_identity).icrc1_balance_of(icrc2_account(bob_identity)).unwrap(), nat(0));
 
     assert_eq!(alice.permission_query().unwrap(), ["PauseQuery", "PermissionQuery", "BusinessTokenDeposit", "BusinessTokenWithdraw", "BusinessTokenTransfer", "BusinessTokenPairLiquidityAdd", "BusinessTokenPairLiquidityRemove", "BusinessTokenPairSwap"].iter().map(|p| p.to_string()).collect::<Vec<_>>());
     assert_eq!(default.permission_query().unwrap(), ["PauseQuery", "PauseReplace", "PermissionQuery", "PermissionFind", "PermissionUpdate", "ScheduleFind", "ScheduleReplace", "ScheduleTrigger", "BusinessConfigFeeTo", "BusinessConfigCustomToken", "BusinessConfigMaintaining", "BusinessTokenBalanceBy", "BusinessTokenDeposit", "BusinessTokenWithdraw", "BusinessTokenTransfer", "BusinessTokenPairCreateOrRemove", "BusinessTokenPairLiquidityAdd", "BusinessTokenPairLiquidityRemove", "BusinessTokenPairSwap"].iter().map(|p| p.to_string()).collect::<Vec<_>>());
@@ -103,50 +112,51 @@ fn test_swap_business_apis() {
     assert_eq!(symbols.contains(&"ckUSDT".to_string()), true);
     assert_eq!(alice.token_query(token_icp_canister_id).unwrap().unwrap().name, "Internet Computer".to_string());
     assert_eq!(alice.token_balance_of(token_sns_icx_canister_id, account(default_identity)).unwrap_err().reject_message.contains("You can only query your own balance"), true);
-    assert_eq!(default.token_balance_by(token_sns_icx_canister_id, account(alice_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(default.token_balance_of(token_sns_icx_canister_id, account(default_identity)).unwrap(), Nat::from(0_u64));
-    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_sns_icx_canister_id, Nat::from(0_u64))), true);
+    assert_eq!(default.token_balance_by(token_sns_icx_canister_id, account(alice_identity)).unwrap(), nat(0));
+    assert_eq!(default.token_balance_of(token_sns_icx_canister_id, account(default_identity)).unwrap(), nat(0));
+    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_sns_icx_canister_id, nat(0))), true);
 
-// blue "\n🚩 1.1 business tokens deposit"
-// test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; deposit_amount_without_fee=5_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, opt 100)" 2>&1)" 'Too many retries'
-// test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; deposit_amount_without_fee=5_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '( variant { Err = variant { TransferFromError = variant { InsufficientAllowance = record { allowance = 0 : nat } } } }, )'
-// test "icrc2_approve token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc2_approve "(record { spender=record{owner=principal \"$swap\";}; amount=1_000_000_000_000_000_000:nat })" 2>&1)" '(variant { Ok = 2 : nat })'
-// test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(9_999_998_000_000_000_000 : nat)'
-// test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_000_000_000_000_000 : nat)'
-// test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; deposit_amount_without_fee=5_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '( variant { Err = variant { TransferFromError = variant { InsufficientAllowance = record { allowance = 1_000_000_000_000_000_000 : nat; } } } }, )'
-// test "icrc2_approve token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc2_approve "(record { spender=record{owner=principal \"$swap\";}; amount=10_000_000_000_000_000_000:nat })" 2>&1)" '(variant { Ok = 3 : nat })'
-// test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(9_999_996_000_000_000_000 : nat)'
-// test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_000_000_000_000_000 : nat)'
-// test "🙈 request_trace_index_get" "$(dfx --identity alice canister call swap request_trace_index_get 2>&1)" "Permission 'BusinessConfigMaintaining' is required"
-// test "request_trace_index_get" "$(dfx --identity default canister call swap request_trace_index_get 2>&1)" '(0 : nat64, 0 : nat64)'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(0:nat64)" 2>&1)" '(null)'
-// test "🙈 block_token_get" "$(dfx --identity alice canister call swap block_token_get "(1:nat64)" 2>&1)" 'Only Maintainers are allowed to query data'
-// test "block_token_get" "$(dfx --identity default canister call swap block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(0:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(0:nat64)" 2>&1)" '(null)'
-// test "token_deposit" "$(dfx --identity default canister call swap token_deposit "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; deposit_amount_without_fee=5_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 4 : nat })'
-// sleep 2
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(0:nat64)" --output json 2>&1)" '[ { "parent_hash": [' '], "timestamp": "' '", "transaction": { "created": [], "memo": [], "operation": { "deposit": { "amount": "5_000_000_000_000_000_000", "from": { "owner": "'"$DEFAULT"'", "subaccount": [] }, "to": { "owner": "'"$DEFAULT"'", "subaccount": [] }, "token": "ss2fx-dyaaa-aaaar-qacoq-cai" } } } } ]'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(0:nat64)" 2>&1)" '(variant { archive = principal "ykio2-paaaa-aaaaj-az5ka-cai" })'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(0:nat64)" 2>&1)" '( opt record { created = ' ' : nat64; args = variant { token_deposit = record { arg = record { to = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; from = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; amount = 5_000_000_000_000_000_000 : nat; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { result = variant { ok = "4" }; done = ' ' : nat64; }; traces = vec { record { ' ' : nat64; "*Deposit* `token:[ss2fx-dyaaa-aaaar-qacoq-cai], from:('"$DEFAULT"'.), to:('"$DEFAULT"'.), amount:5_000_000_000_000_000_000, height:4`"; }; record { ' ' : nat64; "Deposit Done." }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; }; }; }; index = 0 : nat64; }, )'
+    // 🚩 1.1 business tokens deposit
+    assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, Some(100)).unwrap_err().reject_message.contains("Too many retries"), true);
+    assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Err(BusinessError::TransferFromError(TransferFromError::InsufficientAllowance { allowance: nat(0) })));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc2_approve(icrc2::ApproveArgs::new(icrc2_account(canister_id), nat(1_000_000_000_000_000_000))).unwrap(), icrc2::Result2::Ok(nat(2)));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(9_999_998_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_000_000_000_000_000));
+    assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Err(BusinessError::TransferFromError(TransferFromError::InsufficientAllowance { allowance: nat(1_000_000_000_000_000_000) })));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc2_approve(icrc2::ApproveArgs::new(icrc2_account(canister_id), nat(10_000_000_000_000_000_000))).unwrap(), icrc2::Result2::Ok(nat(3)));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(9_999_996_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_000_000_000_000_000));
+    assert_eq!(alice.request_trace_index_get().unwrap_err().reject_message, "Permission 'BusinessConfigMaintaining' is required".to_string());
+    assert_eq!(default.request_trace_index_get().unwrap(), (0, 0));
+    assert_eq!(default.request_trace_get(0).unwrap(), None); // 👁︎
+    assert_eq!(alice.block_token_get(1).unwrap_err().reject_message, "Only Maintainers are allowed to query data".to_string()); // 👁︎
+    assert_eq!(default.block_token_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(default.block_token_get(0).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(archive_token.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
+    assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(4)));
+    std::thread::sleep(std::time::Duration::from_secs(2));
+    assert_token_block_deposit(archive_token.sender(default_identity).get_block(0).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(5_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
+    assert_eq!(default.block_token_get(0).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    assert_eq!(default.request_trace_get(0).unwrap().unwrap().traces[0].1, format!("*Deposit* `token:[{}], from:({}.), to:({}.), amount:5_000_000_000_000_000_000, height:4`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
 
-// blue "\n🚩 1.2 business tokens balance of"
-// test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(4_999_994_000_000_000_000 : nat)'
-// test "icrc1_balance_of token_ckETH/alice" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$ALICE\"})" 2>&1)" '(8_000_002_000_000_000_000 : nat)'
-// test "token_balance_of" "$(dfx --identity default canister call swap token_balance_of "(principal \"$token_ckETH\", record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '(5_000_000_000_000_000_000 : nat)'
-// test "tokens_balance_of" "$(dfx --identity default canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 5_000_000_000_000_000_000 : nat;}'
+    // 🚩 1.2 business tokens balance of
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(4_999_994_000_000_000_000));
+    assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(8_000_002_000_000_000_000));
+    assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(5_000_000_000_000_000_000));
+    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(5_000_000_000_000_000_000))), true);
 
-// blue "\n🚩 1.3 business tokens withdraw"
-// test "token_withdraw" "$(dfx --identity default canister call swap token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; withdraw_amount_without_fee=15_000_000_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '( variant { Err = variant { InsufficientBalance = record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; balance = 5_000_000_000_000_000_000 : nat; } } }, )'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(1:nat64)" 2>&1)" '(null)'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(1:nat64)" 2>&1)" 'invalid block height'
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(1:nat64)" 2>&1)" '(null)'
-// test "token_withdraw" "$(dfx --identity default canister call swap token_withdraw "(record { token=principal \"$token_ckETH\"; from=record{owner=principal \"$DEFAULT\"; subaccount=null}; withdraw_amount_without_fee=999_998_000_000_000_000: nat; to=record{owner=principal \"$DEFAULT\"; subaccount=null}; }, null)" 2>&1)" '(variant { Ok = 5 : nat })'
-// sleep 2
-// test "👁︎ get_token_block" "$(dfx --identity default canister call $archive_token get_block "(1:nat64)" --output json 2>&1)" '[ { "parent_hash": [' '], "timestamp": "' '", "transaction": { "created": [], "memo": [], "operation": { "withdraw": { "amount": "1_000_000_000_000_000_000", "from": { "owner": "'"$DEFAULT"'", "subaccount": [] }, "to": { "owner": "'"$DEFAULT"'", "subaccount": [] }, "token": "ss2fx-dyaaa-aaaar-qacoq-cai" } } } } ]'
-// test "👁︎ block_token_get" "$(dfx --identity default canister call swap block_token_get "(1:nat64)" 2>&1)" '(variant { archive = principal "ykio2-paaaa-aaaaj-az5ka-cai" })'
-// test "👁︎ request_trace_get" "$(dfx --identity default canister call swap request_trace_get "(1:nat64)" 2>&1)" '( opt record { created = ' ' : nat64; args = variant { token_withdraw = record { arg = record { to = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; from = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; amount = 1_000_000_000_000_000_000 : nat; }; now = ' ' : nat64; created = null; memo = null; caller = principal "'"$DEFAULT"'"; } }; done = opt record { result = variant { ok = "5" }; done = ' ' : nat64; }; traces = vec { record { ' ' : nat64; "*Withdraw* `token:[ss2fx-dyaaa-aaaar-qacoq-cai], to:('"$DEFAULT"'.), amount:1_000_000_000_000_000_000, height:5`"; }; record { ' ' : nat64; "Withdraw Done." }; }; locks = record { token = opt true; swap = null; balances = opt vec { record { token = principal "ss2fx-dyaaa-aaaar-qacoq-cai"; account = record { owner = principal "'"$DEFAULT"'"; subaccount = null; }; }; }; }; index = 1 : nat64; }, )'
-// test "tokens_balance_of" "$(dfx --identity default canister call swap tokens_balance_of "(record { owner=principal \"$DEFAULT\"; subaccount=null})" 2>&1)" '( vec { record { principal "' 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 4_000_000_000_000_000_000 : nat;}'
+    // 🚩 1.3 business tokens withdraw
+    assert_eq!(default.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(default_identity), withdraw_amount_without_fee: nat(15_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Err(BusinessError::InsufficientBalance { token: token_ck_eth_canister_id, balance: nat(5_000_000_000_000_000_000) }));
+    assert_eq!(default.request_trace_get(1).unwrap(), None); // 👁︎
+    assert_eq!(default.block_token_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(archive_token.sender(default_identity).get_block(1).unwrap(), None); // 👁︎
+    assert_eq!(default.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(default_identity), withdraw_amount_without_fee: nat(999_998_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(5)));
+    std::thread::sleep(std::time::Duration::from_secs(2));
+    assert_token_block_withdraw(archive_token.sender(default_identity).get_block(1).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
+    assert_eq!(default.block_token_get(1).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    assert_eq!(default.request_trace_get(1).unwrap().unwrap().traces[0].1, format!("*Withdraw* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, height:5`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
+    assert_eq!(default.tokens_balance_of(account(default_identity)).unwrap().contains(&(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))), true);
+
 
 // blue "\n🚩 1.4 business tokens balance of"
 // test "icrc1_balance_of token_ckETH/default" "$(dfx --identity default canister call token_ckETH icrc1_balance_of "(record{owner=principal \"$DEFAULT\"})" 2>&1)" '(5_999_992_000_000_000_000 : nat)'
@@ -661,7 +671,6 @@ fn deploy_icrc2<'a>(
     symbol: &str,
     decimals: u8,
     transfer_fee: u64,
-    mint_owner: Principal,
     initial_balances: Vec<(Principal, u64)>,
     fee_collector: Principal,
 ) -> icrc2::PocketedCanisterId<'a> {
@@ -679,7 +688,7 @@ fn deploy_icrc2<'a>(
             transfer_fee: Nat::from(transfer_fee),
             metadata: vec![],
             minting_account: Account {
-                owner: mint_owner,
+                owner: Principal::from_text("aaaaa-aa").unwrap(),
                 subaccount: None,
             },
             initial_balances: initial_balances
@@ -716,4 +725,26 @@ fn deploy_icrc2<'a>(
     );
 
     icrc2::PocketedCanisterId::new(canister_id, &pic)
+}
+
+fn assert_token_block_deposit(block: archive_token::TokenBlock, deposit: archive_token::DepositToken) {
+    if let archive_token::TokenOperation::Deposit(deposit_token) = block.transaction.operation {
+        assert_eq!(deposit_token, deposit);
+    } else {
+        panic!("Expected DepositToken, got {:?}", block);
+    }
+}
+fn assert_token_block_withdraw(block: archive_token::TokenBlock, withdraw: archive_token::DepositToken) {
+    if let archive_token::TokenOperation::Withdraw(withdraw_token) = block.transaction.operation {
+        assert_eq!(withdraw_token, withdraw);
+    } else {
+        panic!("Expected WithdrawToken, got {:?}", block);
+    }
+}
+fn assert_token_block_transfer(block: archive_token::TokenBlock, transfer: archive_token::TransferToken) {
+    if let archive_token::TokenOperation::Transfer(transfer_token) = block.transaction.operation {
+        assert_eq!(transfer_token, transfer);
+    } else {
+        panic!("Expected TransferToken, got {:?}", block);
+    }
 }

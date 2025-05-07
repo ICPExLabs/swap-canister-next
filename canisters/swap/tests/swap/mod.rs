@@ -2,7 +2,8 @@
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
 use candid::{
-    self, CandidType, Decode, Deserialize, Encode, Principal, encode_args, encode_one, utils::ArgumentEncoder,
+    self, CandidType, Decode, Deserialize, Encode, Principal, decode_args, encode_args, encode_one,
+    utils::ArgumentEncoder,
 };
 use pocket_ic::RejectResponse;
 use serde::de::DeserializeOwned;
@@ -1184,31 +1185,39 @@ impl Service<'_> {
         self.query_call("permission_roles_query", Encode!(&()).unwrap())
     }
     pub fn permission_update(&self, arg0: Vec<PermissionUpdatedArg>) -> Result<()> {
-        self.query_call("permission_update", encode_one(arg0).unwrap())
+        self.update_call("permission_update", encode_one(arg0).unwrap())
     }
     pub fn request_trace_get(&self, arg0: u64) -> Result<Option<RequestTrace>> {
         self.query_call("request_trace_get", encode_one(arg0).unwrap())
     }
     pub fn request_trace_index_get(&self) -> Result<(u64, u64)> {
-        self.query_call("request_trace_index_get", Encode!(&()).unwrap())
+        let response = self.pocket.pic.query_call(
+            self.pocket.canister_id,
+            self.sender,
+            "request_trace_index_get",
+            Encode!(&()).unwrap(),
+        )?;
+        let result = decode_args(response.as_slice()).unwrap();
+        Ok(result)
+        // self.query_call("request_trace_index_get", Encode!(&()).unwrap())
     }
     pub fn request_trace_remove(&self, arg0: u64) -> Result<Option<RequestTrace>> {
-        self.query_call("request_trace_remove", encode_one(arg0).unwrap())
+        self.update_call("request_trace_remove", encode_one(arg0).unwrap())
     }
     pub fn request_traces_get(&self, arg0: u64, arg1: u64) -> Result<Vec<Option<RequestTrace>>> {
         self.query_call("request_traces_get", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn request_traces_remove(&self, arg0: u64, arg1: u64) -> Result<Vec<Option<RequestTrace>>> {
-        self.query_call("request_traces_remove", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("request_traces_remove", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn schedule_find(&self) -> Result<Option<u64>> {
         self.query_call("schedule_find", Encode!(&()).unwrap())
     }
     pub fn schedule_replace(&self, arg0: Option<u64>) -> Result<()> {
-        self.query_call("schedule_replace", encode_one(arg0).unwrap())
+        self.update_call("schedule_replace", encode_one(arg0).unwrap())
     }
     pub fn schedule_trigger(&self) -> Result<()> {
-        self.query_call("schedule_trigger", Encode!(&()).unwrap())
+        self.update_call("schedule_trigger", Encode!(&()).unwrap())
     }
     pub fn test_config_swap_current_archiving_replace(
         &self,
@@ -1223,10 +1232,10 @@ impl Service<'_> {
         self.update_call("test_config_token_current_archiving_replace", encode_one(arg0).unwrap())
     }
     pub fn test_set_controller(&self, arg0: Principal) -> Result<()> {
-        self.query_call("test_set_controller", encode_one(arg0).unwrap())
+        self.update_call("test_set_controller", encode_one(arg0).unwrap())
     }
     pub fn test_withdraw_all_tokens(&self, arg0: Vec<Principal>) -> Result<Vec<String>> {
-        self.query_call("test_withdraw_all_tokens", encode_one(arg0).unwrap())
+        self.update_call("test_withdraw_all_tokens", encode_one(arg0).unwrap())
     }
     pub fn token_balance(&self, arg0: Principal, arg1: Option<serde_bytes::ByteBuf>) -> Result<candid::Nat> {
         self.query_call("token_balance", encode_args((&arg0, &arg1)).unwrap())
@@ -1238,19 +1247,19 @@ impl Service<'_> {
         self.query_call("token_balance_of", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn token_deposit(&self, arg0: TokenDepositArgs, arg1: Option<u8>) -> Result<TokenChangedResult> {
-        self.query_call("token_deposit", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("token_deposit", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn token_query(&self, arg0: Principal) -> Result<Option<TokenInfo>> {
         self.query_call("token_query", encode_one(arg0).unwrap())
     }
     pub fn token_transfer(&self, arg0: TokenTransferArgs, arg1: Option<u8>) -> Result<TokenChangedResult> {
-        self.query_call("token_transfer", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("token_transfer", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn token_withdraw(&self, arg0: TokenWithdrawArgs, arg1: Option<u8>) -> Result<TokenChangedResult> {
-        self.query_call("token_withdraw", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("token_withdraw", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn token_withdraw_many(&self, arg0: TokenWithdrawManyArgs, arg1: Option<u8>) -> Result<ManyTokenChangedResult> {
-        self.query_call("token_withdraw_many", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("token_withdraw_many", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn tokens_balance(&self, arg0: Option<serde_bytes::ByteBuf>) -> Result<Vec<(Principal, candid::Nat)>> {
         self.query_call("tokens_balance", encode_one(arg0).unwrap())

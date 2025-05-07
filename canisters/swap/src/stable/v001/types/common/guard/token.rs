@@ -47,8 +47,9 @@ impl<'a> TokenGuard<'a> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
-                    "*Withdraw* `token:[{}], to:({}), amount:{}, height:{height}`",
+                    "*Withdraw* `token:[{}], from:({}), to:({}), amount:{}, height:{height}`",
                     arg.arg.token.to_text(),
+                    display_account(&arg.arg.from),
                     display_account(&arg.arg.to),
                     arg.arg.amount,
                 )); // * trace
