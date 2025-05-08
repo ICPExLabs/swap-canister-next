@@ -1057,13 +1057,13 @@ impl Service<'_> {
         self.query_call("config_swap_block_chain_query", encode_one(arg0).unwrap())
     }
     pub fn config_swap_block_chain_update(&self, arg0: BlockChainArgs) -> Result<SwapBlockResult> {
-        self.query_call("config_swap_block_chain_update", encode_one(arg0).unwrap())
+        self.update_call("config_swap_block_chain_update", encode_one(arg0).unwrap())
     }
     pub fn config_token_block_chain_query(&self, arg0: BlockChainArgs) -> Result<TokenBlockResult> {
         self.query_call("config_token_block_chain_query", encode_one(arg0).unwrap())
     }
     pub fn config_token_block_chain_update(&self, arg0: BlockChainArgs) -> Result<TokenBlockResult> {
-        self.query_call("config_token_block_chain_update", encode_one(arg0).unwrap())
+        self.update_call("config_token_block_chain_update", encode_one(arg0).unwrap())
     }
     pub fn config_token_custom_put(&self, arg0: TokenInfo) -> Result<()> {
         self.query_call("config_token_custom_put", encode_one(arg0).unwrap())
