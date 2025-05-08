@@ -16,6 +16,7 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
+use crate::types::PoolLpView;
 #[allow(unused)]
 use crate::{
     types::{BusinessError, CanisterId, PoolLp, SelfCanister, SwapRatio, SwapRatioView, TokenInfo, TokenPairAmm},
@@ -458,7 +459,7 @@ pub struct SwapV2MarketMakerView {
     price1_cumulative_last: String,
     k_last: String,
 
-    lp: PoolLp,
+    lp: PoolLpView,
     protocol_fee: Option<SwapRatioView>,
 }
 
@@ -476,7 +477,7 @@ impl From<SwapV2MarketMaker> for SwapV2MarketMakerView {
             price0_cumulative_last: value.price0_cumulative_last.to_string(),
             price1_cumulative_last: value.price1_cumulative_last.to_string(),
             k_last: value.k_last.to_string(),
-            lp: value.lp,
+            lp: value.lp.into(),
             protocol_fee: value.protocol_fee.map(|f| f.into()),
         }
     }

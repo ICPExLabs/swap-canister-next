@@ -170,7 +170,7 @@ fn mint(
     // do mint，Mint LP tokens for users
     let arg_to = guard.arg.arg.to;
     _self.lp.mint(
-        |token, to, amount| guard.token_liquidity_mint(amount_a, amount_b, token, to, amount),
+        |token, to, amount| guard.token_liquidity_mint(amount_a, amount_b, token, *pool_account, to, amount),
         arg_to,
         liquidity.clone(),
     )?;
@@ -280,7 +280,9 @@ fn burn(
     let arg_from = guard.arg.arg.from;
     let arg_fee = guard.arg.arg.fee.clone();
     _self.lp.burn(
-        |token, from, amount, fee| guard.token_liquidity_burn(&amount_a, &amount_b, token, from, amount, fee),
+        |token, from, amount, fee| {
+            guard.token_liquidity_burn(&amount_a, &amount_b, token, from, *pool_account, amount, fee)
+        },
         arg_from,
         liquidity.clone(),
         arg_fee, // burn fee to use token fee to

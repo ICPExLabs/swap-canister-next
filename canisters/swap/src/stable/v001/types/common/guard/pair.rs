@@ -402,38 +402,36 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
         amount_a: &Nat,
         amount_b: &Nat,
         token: CanisterId,
+        pool_account: Account,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
         // mint
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Mint(
-                if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
-                    SwapV2MintToken {
-                        pa: self.arg.arg.pa,
-                        from: self.arg.arg.from,
-                        token0: self.arg.arg.token_a,
-                        token1: self.arg.arg.token_b,
-                        amount0: amount_a.clone(),
-                        amount1: amount_b.clone(),
-                        token,
-                        amount: amount.clone(),
-                        to,
-                    }
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Mint({
+                let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
+                    (
+                        (self.arg.arg.token_a, self.arg.arg.token_b),
+                        (amount_a.clone(), amount_b.clone()),
+                    )
                 } else {
-                    SwapV2MintToken {
-                        pa: self.arg.arg.pa,
-                        from: self.arg.arg.from,
-                        token0: self.arg.arg.token_b,
-                        token1: self.arg.arg.token_a,
-                        amount0: amount_b.clone(),
-                        amount1: amount_a.clone(),
-                        token,
-                        amount: amount.clone(),
-                        to,
-                    }
-                },
-            ))),
+                    (
+                        (self.arg.arg.token_b, self.arg.arg.token_a),
+                        (amount_b.clone(), amount_a.clone()),
+                    )
+                };
+                SwapV2MintToken {
+                    pa: self.arg.arg.pa,
+                    from: self.arg.arg.from,
+                    token0,
+                    token1,
+                    amount0,
+                    amount1,
+                    token,
+                    amount: amount.clone(),
+                    to,
+                }
+            }))),
             memo: self.arg.memo.clone(),
             created: self.arg.created,
         };
@@ -443,7 +441,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             self.arg.caller,
             DepositToken {
                 token,
-                from: self.arg.arg.from,
+                from: pool_account,
                 amount: amount.clone(),
                 to,
             },
@@ -452,7 +450,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
             let trace = format!(
                 "*PairLiquidityMint(Deposit)* `token:[{}], from[transferred 2 tokens]:({}), to[minted liquidity]:({}), amount:{}`",
                 arg.arg.token.to_text(),
-                display_account(&arg.arg.from),
+                display_account(&pool_account),
                 display_account(&arg.arg.to),
                 arg.arg.amount,
             );
@@ -470,46 +468,44 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
 }
 
 impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
+    #[allow(clippy::too_many_arguments)]
     pub fn token_liquidity_burn(
         &mut self,
         amount_a: &Nat,
         amount_b: &Nat,
         token: CanisterId,
         from: Account,
+        pool_account: Account,
         amount: Nat,
         fee: Option<BurnFee>,
     ) -> Result<(), BusinessError> {
         // burn
         let transaction = SwapTransaction {
-            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Burn(
-                if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
-                    SwapV2BurnToken {
-                        pa: self.arg.arg.pa,
-                        from,
-                        token0: self.arg.arg.token_a,
-                        token1: self.arg.arg.token_b,
-                        amount0: amount_a.clone(),
-                        amount1: amount_b.clone(),
-                        token,
-                        amount: amount.clone(),
-                        to: self.arg.arg.to,
-                        fee: fee.clone(),
-                    }
+            operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Burn({
+                let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.token0 == self.arg.arg.token_a {
+                    (
+                        (self.arg.arg.token_a, self.arg.arg.token_b),
+                        (amount_a.clone(), amount_b.clone()),
+                    )
                 } else {
-                    SwapV2BurnToken {
-                        pa: self.arg.arg.pa,
-                        from,
-                        token0: self.arg.arg.token_b,
-                        token1: self.arg.arg.token_a,
-                        amount0: amount_b.clone(),
-                        amount1: amount_a.clone(),
-                        token,
-                        amount: amount.clone(),
-                        to: self.arg.arg.to,
-                        fee: fee.clone(),
-                    }
-                },
-            ))),
+                    (
+                        (self.arg.arg.token_b, self.arg.arg.token_a),
+                        (amount_b.clone(), amount_a.clone()),
+                    )
+                };
+                SwapV2BurnToken {
+                    pa: self.arg.arg.pa,
+                    from,
+                    token0,
+                    token1,
+                    amount0,
+                    amount1,
+                    token,
+                    amount: amount.clone(),
+                    to: self.arg.arg.to,
+                    fee: fee.clone(),
+                }
+            }))),
             memo: self.arg.memo.clone(),
             created: self.arg.created,
         };
@@ -521,7 +517,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                 token,
                 from,
                 amount: amount.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(), // withdraw sum
-                to: self.arg.arg.to,
+                to: pool_account,
             },
         );
         let deposit_fee = fee.map(|BurnFee { fee, fee_to }| {
@@ -541,7 +537,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                 "*PairLiquidityBurn(Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
-                display_account(&arg.arg.to),
+                display_account(&pool_account),
                 arg.arg.amount,
                 display_option(&deposit_fee.as_ref().map(|d|d.arg.amount.to_string()))
             );

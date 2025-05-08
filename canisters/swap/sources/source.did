@@ -93,6 +93,13 @@ type InnerLP = record {
   minimum_liquidity : nat;
   total_supply : nat;
 };
+type InnerLPView = record {
+  fee : text;
+  decimals : nat8;
+  dummy_canister_id : text;
+  minimum_liquidity : text;
+  total_supply : text;
+};
 type MaintainArchives = record {
   recharged : vec record { principal; nat };
   checking_interval_ns : nat64;
@@ -122,6 +129,13 @@ type OuterLP = record {
   token_canister_id : principal;
   minimum_liquidity : nat;
   total_supply : nat;
+};
+type OuterLPView = record {
+  fee : text;
+  decimals : nat8;
+  token_canister_id : text;
+  minimum_liquidity : text;
+  total_supply : text;
 };
 type PairCreate = record { pa : TokenPairAmm; creator : principal };
 type PairCreateArgWithMeta = record {
@@ -190,6 +204,7 @@ type PermissionUpdatedArg = variant {
   UpdateUserRole : record { principal; opt vec text };
 };
 type PoolLp = variant { outer : OuterLP; inner : InnerLP };
+type PoolLpView = variant { outer : OuterLPView; inner : InnerLPView };
 type PushBlocks = record { block_height_start : nat64; length : nat64 };
 type QueryBlockResult = variant { archive : principal; block : blob };
 type QuerySwapBlockResult = variant { archive : principal; block : SwapBlock };
@@ -282,7 +297,7 @@ type SwapV2MarketMaker = record {
   price0_cumulative_last : nat;
 };
 type SwapV2MarketMakerView = record {
-  lp : PoolLp;
+  lp : PoolLpView;
   price_cumulative_exponent : nat8;
   block_timestamp_last : nat64;
   reserve0 : text;

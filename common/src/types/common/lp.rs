@@ -274,6 +274,68 @@ fn get_fee(fee1: &Nat, fee2: &Nat) -> Nat {
     Nat::from(10_u64.pow(size as u32))
 }
 
+// ========================= view =========================
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
+pub enum PoolLpView {
+    /// inner
+    #[serde(rename = "inner")]
+    InnerLP(InnerLPView),
+    /// outer
+    #[serde(rename = "outer")]
+    OuterLP(OuterLPView),
+}
+
+impl From<PoolLp> for PoolLpView {
+    fn from(value: PoolLp) -> Self {
+        match value {
+            PoolLp::InnerLP(inner_lp) => Self::InnerLP(inner_lp.into()),
+            PoolLp::OuterLP(outer_lp) => Self::OuterLP(outer_lp.into()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
+pub struct InnerLPView {
+    pub dummy_canister_id: String,
+    pub total_supply: String,
+    pub decimals: u8,
+    pub fee: String,
+    pub minimum_liquidity: String,
+}
+impl From<InnerLP> for InnerLPView {
+    fn from(value: InnerLP) -> Self {
+        Self {
+            dummy_canister_id: value.dummy_canister_id.id().to_text(),
+            total_supply: value.total_supply.to_string(),
+            decimals: value.decimals,
+            fee: value.fee.to_string(),
+            minimum_liquidity: value.minimum_liquidity.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, CandidType)]
+pub struct OuterLPView {
+    pub token_canister_id: String,
+    pub total_supply: String,
+    pub decimals: u8,
+    pub fee: String,
+    pub minimum_liquidity: String,
+}
+
+impl From<OuterLP> for OuterLPView {
+    fn from(value: OuterLP) -> Self {
+        Self {
+            token_canister_id: value.token_canister_id.to_text(),
+            total_supply: value.total_supply.to_string(),
+            decimals: value.decimals,
+            fee: value.fee.to_string(),
+            minimum_liquidity: value.minimum_liquidity.to_string(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
