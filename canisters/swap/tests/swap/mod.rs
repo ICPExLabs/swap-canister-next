@@ -1071,46 +1071,46 @@ impl Service<'_> {
         arg0: TokenPairLiquidityAddArgs,
         arg1: Option<u8>,
     ) -> Result<TokenPairLiquidityAddResult> {
-        self.query_call("pair_liquidity_add", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("pair_liquidity_add", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn pair_liquidity_remove(
         &self,
         arg0: TokenPairLiquidityRemoveArgs,
         arg1: Option<u8>,
     ) -> Result<TokenPairLiquidityRemoveResult> {
-        self.query_call("pair_liquidity_remove", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("pair_liquidity_remove", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn pair_liquidity_remove_and_withdraw(
         &self,
         arg0: TokenPairLiquidityRemoveArgs,
     ) -> Result<(TokenPairLiquidityRemoveResult, Option<ManyTokenChangedResult>)> {
-        self.query_call("pair_liquidity_remove_and_withdraw", encode_one(arg0).unwrap())
+        self.update_call("pair_liquidity_remove_and_withdraw", encode_one(arg0).unwrap())
     }
     pub fn pair_liquidity_remove_and_withdraw_async(
         &self,
         arg0: TokenPairLiquidityRemoveArgs,
     ) -> Result<(TokenPairLiquidityRemoveResult, Option<ManyTokenChangedResult>)> {
-        self.query_call("pair_liquidity_remove_and_withdraw_async", encode_one(arg0).unwrap())
+        self.update_call("pair_liquidity_remove_and_withdraw_async", encode_one(arg0).unwrap())
     }
     pub fn pair_query(&self, arg0: TokenPairPool) -> Result<Option<MarketMakerView>> {
         self.query_call("pair_query", encode_one(arg0).unwrap())
     }
     pub fn pair_remove(&self, arg0: TokenPairCreateOrRemoveArgs) -> Result<TokenPairCreateOrRemoveResult> {
-        self.query_call("pair_remove", encode_one(arg0).unwrap())
+        self.update_call("pair_remove", encode_one(arg0).unwrap())
     }
     pub fn pair_swap_by_loan(
         &self,
         arg0: TokenPairSwapByLoanArgs,
         arg1: Option<u8>,
     ) -> Result<TokenPairSwapTokensResult> {
-        self.query_call("pair_swap_by_loan", encode_args((&arg0, &arg1)).unwrap())
+        self.update_call("pair_swap_by_loan", encode_args((&arg0, &arg1)).unwrap())
     }
     pub fn pair_swap_exact_tokens_for_tokens(
         &self,
         arg0: TokenPairSwapExactTokensForTokensArgs,
         arg1: Option<u8>,
     ) -> Result<TokenPairSwapTokensResult> {
-        self.query_call(
+        self.update_call(
             "pair_swap_exact_tokens_for_tokens",
             encode_args((&arg0, &arg1)).unwrap(),
         )
@@ -1120,7 +1120,7 @@ impl Service<'_> {
         arg0: TokenPairSwapTokensForExactTokensArgs,
         arg1: Option<u8>,
     ) -> Result<TokenPairSwapTokensResult> {
-        self.query_call(
+        self.update_call(
             "pair_swap_tokens_for_exact_tokens",
             encode_args((&arg0, &arg1)).unwrap(),
         )
@@ -1133,7 +1133,7 @@ impl Service<'_> {
         Option<TokenPairSwapTokensResult>,
         Option<TokenChangedResult>,
     )> {
-        self.query_call("pair_swap_with_deposit_and_withdraw", encode_one(arg0).unwrap())
+        self.update_call("pair_swap_with_deposit_and_withdraw", encode_one(arg0).unwrap())
     }
     pub fn pair_swap_with_deposit_and_withdraw_async(
         &self,
@@ -1143,7 +1143,7 @@ impl Service<'_> {
         Option<TokenPairSwapTokensResult>,
         Option<TokenChangedResult>,
     )> {
-        self.query_call("pair_swap_with_deposit_and_withdraw_async", encode_one(arg0).unwrap())
+        self.update_call("pair_swap_with_deposit_and_withdraw_async", encode_one(arg0).unwrap())
     }
     pub fn pairs_query(&self) -> Result<Vec<(TokenPairPool, MarketMakerView)>> {
         self.query_call("pairs_query", Encode!(&()).unwrap())
@@ -1158,7 +1158,7 @@ impl Service<'_> {
         self.query_call("pause_query_reason", Encode!(&()).unwrap())
     }
     pub fn pause_replace(&self, arg0: Option<String>) -> Result<()> {
-        self.query_call("pause_replace", encode_one(arg0).unwrap())
+        self.update_call("pause_replace", encode_one(arg0).unwrap())
     }
     pub fn permission_all(&self) -> Result<Vec<Permission>> {
         self.query_call("permission_all", Encode!(&()).unwrap())
