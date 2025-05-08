@@ -1042,7 +1042,7 @@ impl Service<'_> {
         self.query_call("config_fee_to_query", Encode!(&()).unwrap())
     }
     pub fn config_fee_to_replace(&self, arg0: FeeTo) -> Result<FeeTo> {
-        self.query_call("config_fee_to_replace", encode_one(arg0).unwrap())
+        self.update_call("config_fee_to_replace", encode_one(arg0).unwrap())
     }
     pub fn config_fee_to_view_query(&self) -> Result<FeeToView> {
         self.query_call("config_fee_to_view_query", Encode!(&()).unwrap())

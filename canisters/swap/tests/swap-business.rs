@@ -111,6 +111,15 @@ fn test_swap_business_apis() {
     assert_eq!(alice.permission_query().unwrap(), ["PauseQuery", "PermissionQuery", "BusinessTokenDeposit", "BusinessTokenWithdraw", "BusinessTokenTransfer", "BusinessTokenPairLiquidityAdd", "BusinessTokenPairLiquidityRemove", "BusinessTokenPairSwap"].iter().map(|p| p.to_string()).collect::<Vec<_>>());
     assert_eq!(default.permission_query().unwrap(), ["PauseQuery", "PauseReplace", "PermissionQuery", "PermissionFind", "PermissionUpdate", "ScheduleFind", "ScheduleReplace", "ScheduleTrigger", "BusinessConfigFeeTo", "BusinessConfigCustomToken", "BusinessConfigMaintaining", "BusinessTokenBalanceBy", "BusinessTokenDeposit", "BusinessTokenWithdraw", "BusinessTokenTransfer", "BusinessTokenPairCreateOrRemove", "BusinessTokenPairLiquidityAdd", "BusinessTokenPairLiquidityRemove", "BusinessTokenPairSwap"].iter().map(|p| p.to_string()).collect::<Vec<_>>());
 
+    // 🚩 0 business config fee to update
+    assert_eq!(bob.config_fee_to_query().unwrap_err().reject_message, "Permission 'BusinessConfigFeeTo' is required".to_string());
+    assert_eq!(default.config_fee_to_query().unwrap(), FeeTo { token_fee_to: None, swap_fee_to: None });
+    assert_eq!(bob.config_fee_to_replace(FeeTo { token_fee_to: Some(account(alice_identity)), swap_fee_to: Some(account(bob_identity)) }).unwrap_err().reject_message, "Permission 'BusinessConfigFeeTo' is required".to_string());
+    assert_eq!(default.config_fee_to_replace(FeeTo { token_fee_to: Some(account(alice_identity)), swap_fee_to: Some(account(bob_identity)) }).unwrap(), FeeTo { token_fee_to: None, swap_fee_to: None });
+    assert_eq!(default.config_fee_to_query().unwrap(), FeeTo { token_fee_to: Some(account(alice_identity)), swap_fee_to: Some(account(bob_identity)) });
+    assert_eq!(default.config_fee_to_replace(FeeTo { token_fee_to: None, swap_fee_to: None }).unwrap(), FeeTo { token_fee_to: Some(account(alice_identity)), swap_fee_to: Some(account(bob_identity)) });
+    assert_eq!(default.config_fee_to_query().unwrap(), FeeTo { token_fee_to: None, swap_fee_to: None });
+
     // 🚩 1 business tokens
     let symbols = alice.tokens_query().unwrap().iter().map(|t| t.symbol.clone()).collect::<Vec<_>>();
     assert_eq!(symbols.contains(&"ICP".to_string()), true);
@@ -513,94 +522,6 @@ fn test_swap_business_apis() {
     assert_eq!(default.block_swap_get(23).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(979_799_700_000));
     assert_eq!(token_ck_usdt.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(99_203_806_157_431));
-    
-// blue "\n🚩 3 business config fee to"
-// blue "\n🚩 3.1 business config fee to update"
-// test "🙈 config_fee_to_query" "$(dfx --identity bob canister call swap config_fee_to_query 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
-// test "config_fee_to_query" "$(dfx --identity default canister call swap config_fee_to_query 2>&1)" '(record { token_fee_to = null; swap_fee_to = null })'
-// test "❎ config_fee_to_replace" "$(dfx --identity bob canister call swap config_fee_to_replace "(record {token_fee_to=opt record{owner=principal \"$ALICE\"}; swap_fee_to=opt record{owner=principal \"$BOB\"}})" 2>&1)" "Permission 'BusinessConfigFeeTo' is required"
-// test "config_fee_to_replace" "$(dfx --identity default canister call swap config_fee_to_replace "(record {token_fee_to=opt record{owner=principal \"$ALICE\"}; swap_fee_to=opt record{owner=principal \"$BOB\"}})" 2>&1)" '(record { token_fee_to = null; swap_fee_to = null })'
-// test "config_fee_to_query" "$(dfx --identity default canister call swap config_fee_to_query 2>&1)" '( record { token_fee_to = opt record { owner = principal "'"$ALICE"'"; subaccount = null; }; swap_fee_to = opt record { owner = principal "'"$BOB"'"; subaccount = null; }; }, )'
-
-// blue "\n🚩 3.2 business config fee to effect"
-// test "token_balance_of user default" "$(dfx --identity default canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(447_213_595_499_957 : nat)'
-// test "token_balance_of user bob" "$(dfx --identity bob canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// # liquidity changed after set fee_to
-// test "pair_liquidity_remove" "$(dfx --identity default canister call swap pair_liquidity_remove "(record { from=record{owner=principal\"$DEFAULT\"}; swap_pair=record { token = record { principal \"$token_ckETH\"; principal \"$token_ckUSDT\" }; amm=\"swap_v2_0.3%\"; }; liquidity_without_fee=1_000_000:nat; amount_min=record{1:nat;1:nat}; to=record{owner=principal\"$DEFAULT\"}; deadline=null } , null)" 2>&1)" '(variant { Ok = record { amount = record { 2_236_063_620 : nat; 447 : nat } } })'
-// test "token_balance_of user default" "$(dfx --identity default canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(447_213_494_499_957 : nat)'
-// test "token_balance_of user bob" "$(dfx --identity bob canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// # do swap
-// test "pair_swap_exact_tokens_for_tokens" "$(dfx --identity default canister call swap pair_swap_exact_tokens_for_tokens "( record {from=record{owner=principal \"$DEFAULT\"}; amount_in=100_000_000_000:nat; amount_out_min=1:nat; path=vec { record {token=record{principal \"$token_ckETH\"; principal \"$token_ckUSDT\"}; amm=\"swap_v2_0.3%\"} }; to=record{owner=principal \"$DEFAULT\"}; deadline=null} , null)" 2>&1)" '( variant { Ok = record { amounts = vec { 100_000_000_000 : nat; 19_940 : nat } } }, )'
-// test "token_balance_of user default" "$(dfx --identity default canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(447_213_494_499_957 : nat)'
-// test "token_balance_of user bob" "$(dfx --identity bob canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$BOB\"})" 2>&1)" '(0 : nat)'
-// # liquidity changed after swap
-// test "pair_liquidity_remove" "$(dfx --identity default canister call swap pair_liquidity_remove "(record { from=record{owner=principal\"$DEFAULT\"}; swap_pair=record { token = record { principal \"$token_ckETH\"; principal \"$token_ckUSDT\" }; amm=\"swap_v2_0.3%\"; }; liquidity_without_fee=1_000_000:nat; amount_min=record{1:nat;1:nat}; to=record{owner=principal\"$DEFAULT\"}; deadline=null } , null)" 2>&1)" '(variant { Ok = record { amount = record { 2_236_064_344 : nat; 447 : nat } } })'
-// test "token_balance_of user default" "$(dfx --identity default canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$DEFAULT\"})" 2>&1)" '(447_213_393_499_957 : nat)'
-// test "token_balance_of user bob" "$(dfx --identity bob canister call swap token_balance_of "(principal \"vbofh-iir37-5dl7k-cqehz-wje4h-f2j2s-w4oor-zp54z-7edqh-p3nr7-gb4\", record { owner=principal \"$BOB\"})" 2>&1)" '(11_194 : nat)'
-// test "tokens_balance_of user bob    " "$(dfx --identity bob canister call swap tokens_balance_of "(record { owner=principal \"$BOB\";         subaccount=null})" 2>&1)" 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 0 : nat;}' 'record { principal "cngnf-vqaaa-aaaar-qag4q-cai"; 0 : nat;}' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 18_850 : nat;}'
-// test "pair_liquidity_remove" "$(dfx --identity bob canister call swap pair_liquidity_remove "(record { from=record{owner=principal\"$BOB\"}; swap_pair=record { token = record { principal \"$token_ckETH\"; principal \"$token_ckUSDT\" }; amm=\"swap_v2_0.3%\"; }; liquidity_without_fee=11_194:nat; amount_min=record{1:nat;1:nat}; to=record{owner=principal\"$BOB\"}; deadline=null } , null)" 2>&1)" '{ Err = variant { Liquidity = "INSUFFICIENT_LIQUIDITY" } })'
-// test "tokens_balance_of user bob    " "$(dfx --identity bob canister call swap tokens_balance_of "(record { owner=principal \"$BOB\";         subaccount=null})" 2>&1)" 'record { principal "ss2fx-dyaaa-aaaar-qacoq-cai"; 0 : nat;}' 'record { principal "cngnf-vqaaa-aaaar-qag4q-cai"; 0 : nat;}' 'record { principal "ryjl3-tyaaa-aaaaa-aaaba-cai"; 18_850 : nat;}'
-
-// blue "\n🚩 4.1 permission permission_query"
-// test "version" "$(dfx --identity alice canister call swap version 2>&1)" '(1 : nat32)'
-// test "permission_all" "$(dfx --identity alice canister call swap permission_all 2>&1)" 'vec { variant { Forbidden = "PauseQuery" }; variant { Permitted = "PauseReplace" }'
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_query" "$(dfx --identity default canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigCustomToken"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreateOrRemove"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
-// test "permission_update" "$(dfx --identity bob canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "'PermissionUpdate' is required"
-// test "permission_update" "$(dfx --identity default canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PermissionUpdate\";\"PermissionQuery\" } } } })" 2>&1)" "()"
-// test "🙈 permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" "'PermissionQuery' is required"
-// test "permission_query" "$(dfx --identity default canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigCustomToken"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreateOrRemove"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
-// test "permission_find_by_user" "$(dfx --identity default canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionUpdate"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_update" "$(dfx --identity alice canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_query" "$(dfx --identity default canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigCustomToken"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreateOrRemove"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
-
-// blue "\n🚩 4.2 permission permission update"
-// test "permission_query" "$(dfx --identity default canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigCustomToken"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreateOrRemove"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_find_by_user" "$(dfx --identity default canister call swap permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" '( vec { "PauseQuery"; "PauseReplace"; "PermissionQuery"; "PermissionFind"; "PermissionUpdate"; "ScheduleFind"; "ScheduleReplace"; "ScheduleTrigger"; "BusinessConfigFeeTo"; "BusinessConfigCustomToken"; "BusinessConfigMaintaining"; "BusinessTokenBalanceBy"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairCreateOrRemove"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap";}, )'
-// test "permission_find_by_user" "$(dfx --identity default canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "🙈 permission_find_by_user" "$(dfx --identity alice canister call swap permission_find_by_user "(principal \"$DEFAULT\")" 2>&1)" "'PermissionFind' is required"
-// test "🙈 permission_find_by_user" "$(dfx --identity alice canister call swap permission_find_by_user "(principal \"$ALICE\")" 2>&1)" "'PermissionFind' is required"
-
-// blue "\n🚩 4.3 permission roles"
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_update" "$(dfx --identity default canister call swap permission_update "(vec { variant { UpdateRolePermission=record{\"Admin\"; opt vec {\"PauseReplace\"; \"PauseQuery\"} } } })" 2>&1)" "()"
-// test "permission_update" "$(dfx --identity default canister call swap permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; opt vec {\"Admin\"} } } })" 2>&1)" "()"
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseReplace"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-// test "permission_update" "$(dfx --identity default canister call swap permission_update "(vec { variant { UpdateUserRole=record{principal \"$ALICE\"; null } } })" 2>&1)" "()"
-// test "permission_query" "$(dfx --identity alice canister call swap permission_query 2>&1)" '( vec { "PauseQuery"; "PermissionQuery"; "BusinessTokenDeposit"; "BusinessTokenWithdraw"; "BusinessTokenTransfer"; "BusinessTokenPairLiquidityAdd"; "BusinessTokenPairLiquidityRemove"; "BusinessTokenPairSwap"; }, )'
-
-// blue "\n🚩 5.1 pause permission"
-// test "pause_query" "$(dfx --identity default canister call swap pause_query 2>&1)" "(false)"
-// test "pause_query_reason" "$(dfx --identity default canister call swap pause_query_reason 2>&1)" "(null)"
-// test "pause_replace" "$(dfx --identity default canister call swap pause_replace "(opt \"reason\")" 2>&1)" "()"
-// test "pause_query" "$(dfx --identity default canister call swap pause_query 2>&1)" "(true)"
-// test "pause_query_reason" "$(dfx --identity default canister call swap pause_query_reason 2>&1)" "message = \"reason\""
-
-// blue "\n🚩 5.2 pause permission by alice"
-// test "pause_query" "$(dfx --identity alice canister call swap pause_query 2>&1)" "(true)"
-// test "pause_query_reason" "$(dfx --identity alice canister call swap pause_query_reason 2>&1)" "message = \"reason\""
-
-// blue "\n🚩 5.3 pause no permission"
-// test "🙈 pause_replace" "$(dfx --identity alice canister call swap pause_replace "(null)" 2>&1)" "'PauseReplace' is required"
-// test "permission_update" "$(dfx --identity default canister call swap permission_update "(vec { variant { UpdateUserPermission=record{principal \"$ALICE\"; opt vec { \"PauseReplace\";\"PauseQuery\" } } } })" 2>&1)" "()"
-// test "pause_replace" "$(dfx --identity alice canister call swap pause_replace "(null)" 2>&1)" "()"
-// test "🙈 pause_query" "$(dfx --identity alice canister call swap pause_query 2>&1)" "'PauseQuery' is required"
-// test "🙈 pause_query_reason" "$(dfx --identity alice canister call swap pause_query_reason 2>&1)" "'PauseQuery' is required"
-// test "pause_query" "$(dfx --identity default canister call swap pause_query 2>&1)" "(false)"
-// test "pause_query_reason" "$(dfx --identity default canister call swap pause_query_reason 2>&1)" "(null)"
-
-// blue "\n🚩 6 schedule"
-// test "🙈 schedule_find" "$(dfx --identity alice canister call swap schedule_find 2>&1)" "'ScheduleFind' is required"
-// test "schedule_find" "$(dfx --identity default canister call swap schedule_find 2>&1)" "(null)"
-// test "🙈 schedule_replace" "$(dfx --identity alice canister call swap schedule_replace "(opt (1000000000:nat64))" 2>&1)" "'ScheduleReplace' is required"
-// test "schedule_replace" "$(dfx --identity default canister call swap schedule_replace "(opt (1000000000:nat64))" 2>&1)" "()"
-// sleep 3
-// test "schedule_replace" "$(dfx --identity default canister call swap schedule_replace "(null)" 2>&1)" "()"
-// sleep 2
-// test "🙈 schedule_trigger" "$(dfx --identity alice canister call swap schedule_trigger 2>&1)" "'ScheduleTrigger' is required"
-// test "schedule_trigger" "$(dfx --identity default canister call swap schedule_trigger 2>&1)" "()"
 
 // blue "\n🚩 7 test swap data"
 // test "pause_replace" "$(dfx --identity default canister call swap pause_replace "(opt \"reason\")" 2>&1)" "()"
