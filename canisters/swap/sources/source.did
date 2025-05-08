@@ -624,6 +624,7 @@ service : (opt InitArgs) -> {
   config_fee_to_view_query : () -> (FeeToView) query;
   config_maintain_archives_query : () -> (MaintainArchives) query;
   config_maintain_archives_set : (MaintainArchivesConfig) -> ();
+  config_protocol_fee_replace : (blob, opt SwapRatio) -> (opt SwapRatio);
   config_swap_block_chain_query : (BlockChainArgs) -> (SwapBlockResult) query;
   config_swap_block_chain_update : (BlockChainArgs) -> (SwapBlockResult);
   config_token_block_chain_query : (BlockChainArgs) -> (TokenBlockResult) query;

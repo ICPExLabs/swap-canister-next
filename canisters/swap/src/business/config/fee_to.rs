@@ -27,5 +27,6 @@ fn config_fee_to_replace(fee_to: FeeTo) -> FeeTo {
 
 #[ic_cdk::update(guard = "has_business_config_fee_to")]
 fn config_protocol_fee_replace(subaccount: Subaccount, protocol_fee: Option<SwapRatio>) -> Option<SwapRatio> {
+    let protocol_fee = protocol_fee.map(|pf| SwapRatio::new(pf.numerator, pf.denominator));
     with_mut_state(|s| s.business_config_protocol_fee_replace(subaccount, protocol_fee))
 }
