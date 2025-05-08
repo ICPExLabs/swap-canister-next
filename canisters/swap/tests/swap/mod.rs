@@ -1156,7 +1156,15 @@ impl Service<'_> {
         Option<TokenPairSwapTokensResult>,
         Option<TokenChangedResult>,
     )> {
-        self.update_call("pair_swap_with_deposit_and_withdraw", encode_one(arg0).unwrap())
+        let response = self.pocket.pic.update_call(
+            self.pocket.canister_id,
+            self.sender,
+            "pair_swap_with_deposit_and_withdraw",
+            encode_one(arg0).unwrap(),
+        )?;
+        let result = decode_args(response.as_slice()).unwrap();
+        Ok(result)
+        // self.update_call("pair_swap_with_deposit_and_withdraw", encode_one(arg0).unwrap())
     }
     pub fn pair_swap_with_deposit_and_withdraw_async(
         &self,
