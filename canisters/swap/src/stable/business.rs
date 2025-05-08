@@ -26,6 +26,13 @@ pub trait Business:
     fn business_config_fee_to_replace(&mut self, fee_to: FeeTo) -> FeeTo {
         ic_cdk::trap("Not supported operation by this version.")
     }
+    fn business_config_protocol_fee_replace(
+        &mut self,
+        subaccount: Subaccount,
+        protocol_fee: Option<SwapRatio>,
+    ) -> Option<SwapRatio> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 
     // archive canister
     // token
@@ -405,6 +412,14 @@ impl Business for State {
     }
     fn business_config_fee_to_replace(&mut self, fee_to: FeeTo) -> FeeTo {
         self.get_mut().business_config_fee_to_replace(fee_to)
+    }
+    fn business_config_protocol_fee_replace(
+        &mut self,
+        subaccount: Subaccount,
+        protocol_fee: Option<SwapRatio>,
+    ) -> Option<SwapRatio> {
+        self.get_mut()
+            .business_config_protocol_fee_replace(subaccount, protocol_fee)
     }
 
     // archive canister

@@ -72,6 +72,10 @@ impl SwapV2MarketMaker {
         }
     }
 
+    pub fn replace_protocol_fee(&mut self, protocol_fee: Option<SwapRatio>) -> Option<SwapRatio> {
+        std::mem::replace(&mut self.protocol_fee, protocol_fee)
+    }
+
     pub fn price_cumulative_unit(&self) -> Nat {
         let price_cumulative_unit = BigUint::from(2_u8).pow(self.price_cumulative_exponent as u32);
         Nat::from(price_cumulative_unit)

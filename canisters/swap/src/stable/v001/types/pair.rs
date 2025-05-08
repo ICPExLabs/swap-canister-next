@@ -68,6 +68,20 @@ impl TokenPairs {
         self.pairs.get(pa)
     }
 
+    // ============================= config protocol fee =============================
+
+    pub fn replace_protocol_fee(
+        &mut self,
+        subaccount: Subaccount,
+        protocol_fee: Option<SwapRatio>,
+    ) -> Option<SwapRatio> {
+        let pa = self.pairs.keys().find(|pa| pa.get_subaccount() == subaccount)?;
+        ic_canister_kit::common::trap_debug(self.handle_maker(pa, |maker| {
+            let old = maker.replace_protocol_fee(protocol_fee);
+            Result::<_, BusinessError>::Ok(old)
+        }))
+    }
+
     // ============================= create pair pool =============================
 
     pub fn create_token_pair_pool(

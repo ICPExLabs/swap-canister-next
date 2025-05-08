@@ -40,8 +40,8 @@ pub use ::common::types::{
     Amm, AmmText, ArgWithMeta, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, CheckArgs, DoHash,
     DummyCanisterId, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf, MarketMaker,
     MarketMakerView, QueryBlockResult, QueryBlocksResult, RequestArgs, RequestIndex, RequestTrace, SelfCanister,
-    SwapTokenPair, SwapV2MarketMaker, TimestampNanos, TokenAccount, TokenFrozenArg, TokenInfo, TokenPair, TokenPairAmm,
-    TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg, TokenPairPool, TokenPairSwapByLoanArg,
+    SwapRatio, SwapTokenPair, SwapV2MarketMaker, TimestampNanos, TokenAccount, TokenFrozenArg, TokenInfo, TokenPair,
+    TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityRemoveArg, TokenPairPool, TokenPairSwapByLoanArg,
     TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg, TransferFee, check_caller, check_meta,
     display_account,
 };

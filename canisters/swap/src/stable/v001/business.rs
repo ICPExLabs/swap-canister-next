@@ -15,6 +15,13 @@ impl Business for InnerState {
     fn business_config_fee_to_replace(&mut self, fee_to: FeeTo) -> FeeTo {
         self.updated(|s| std::mem::replace(&mut s.business_data.fee_to, fee_to))
     }
+    fn business_config_protocol_fee_replace(
+        &mut self,
+        subaccount: Subaccount,
+        protocol_fee: Option<SwapRatio>,
+    ) -> Option<SwapRatio> {
+        self.token_pairs.replace_protocol_fee(subaccount, protocol_fee)
+    }
 
     // archive canister
     // token

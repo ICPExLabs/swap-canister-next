@@ -89,6 +89,12 @@ impl MarketMaker {
         }
     }
 
+    pub fn replace_protocol_fee(&mut self, protocol_fee: Option<SwapRatio>) -> Option<SwapRatio> {
+        match self {
+            MarketMaker::SwapV2(value) => value.replace_protocol_fee(protocol_fee),
+        }
+    }
+
     #[cfg(feature = "cdk")]
     pub fn dummy_tokens(&self, tokens: &HashMap<CanisterId, Cow<'_, TokenInfo>>, pa: &TokenPairAmm) -> Vec<TokenInfo> {
         match self {
@@ -187,14 +193,7 @@ fn new_swap_v2_market_maker(
     token1: CanisterId,
     lp: PoolLp,
 ) -> SwapV2MarketMaker {
-    SwapV2MarketMaker::new(
-        subaccount,
-        fee_rate,
-        token0,
-        token1,
-        lp,
-        Some(SwapRatio::new(1, 6)), // protocol fee 1/6
-    )
+    SwapV2MarketMaker::new(subaccount, fee_rate, token0, token1, lp, None)
 }
 
 // ========================== view ==========================
