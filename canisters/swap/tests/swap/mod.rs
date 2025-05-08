@@ -470,6 +470,14 @@ pub struct OuterLp {
     pub minimum_liquidity: candid::Nat,
     pub total_supply: candid::Nat,
 }
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct OuterLpView {
+    pub fee: String,
+    pub decimals: u8,
+    pub token_canister_id: String,
+    pub minimum_liquidity: String,
+    pub total_supply: String,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct InnerLp {
@@ -479,6 +487,14 @@ pub struct InnerLp {
     pub minimum_liquidity: candid::Nat,
     pub total_supply: candid::Nat,
 }
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct InnerLpView {
+    pub fee: String,
+    pub decimals: u8,
+    pub dummy_canister_id: String,
+    pub minimum_liquidity: String,
+    pub total_supply: String,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub enum PoolLp {
@@ -487,10 +503,17 @@ pub enum PoolLp {
     #[serde(rename = "inner")]
     Inner(InnerLp),
 }
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub enum PoolLpView {
+    #[serde(rename = "outer")]
+    Outer(OuterLpView),
+    #[serde(rename = "inner")]
+    Inner(InnerLpView),
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct SwapV2MarketMakerView {
-    pub lp: PoolLp,
+    pub lp: PoolLpView,
     pub price_cumulative_exponent: u8,
     pub block_timestamp_last: u64,
     pub reserve0: String,
