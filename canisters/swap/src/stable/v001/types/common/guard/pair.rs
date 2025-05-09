@@ -526,7 +526,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                 self.arg.caller,
                 DepositToken {
                     token,
-                    from,
+                    from: pool_account,
                     amount: fee, // deposit fee
                     to: fee_to,
                 },
