@@ -528,21 +528,30 @@ fn test_swap_business_apis() {
     assert_eq!(default.pair_liquidity_remove(TokenPairLiquidityRemoveArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), liquidity_without_fee: nat(494_427_190_999_915), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityRemoveResult::Ok(TokenPairLiquidityRemoveSuccess { amount: (nat(1_105_571_739_595_014_231), nat(221_114_776_324)) }));
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
+    // mint fee if fee_to set up
     assert_swap_block_pair_v2_burn(archive_swap.sender(default_identity).get_block(21).unwrap().unwrap(), archive_swap::SwapV2BurnToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, from: archive_swap_account(default_identity), to: archive_swap_account(default_identity), token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amount0: nat(1_105_571_739_595_014_231), amount1: nat(221_114_776_324), token: token_ck_eth_token_ck_usdt_dummy_canister_id, amount: nat(494_427_190_999_915), fee: None }); // 👁︎
     assert_swap_block_pair_v2_state(archive_swap.sender(default_identity).get_block(22).unwrap().unwrap(), archive_swap::SwapV2State { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, block_timestamp: 0, supply: nat(400_000_000_000_000), reserve0: nat(894_426_325_833_042_056), reserve1: nat(178_885_611_755), price_cumulative_exponent: 64, price0_cumulative: nat(0), price1_cumulative: nat(0) }); // 👁︎
     assert_eq!(archive_swap.sender(default_identity).get_block(23).unwrap(), None); // 👁︎
+    // mint fee if fee_to set up
     assert_eq!(default.block_swap_get(21).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_eq!(default.block_swap_get(22).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_eq!(default.block_swap_get(23).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    // mint fee if fee_to set up
     assert_token_block_withdraw(archive_token.sender(default_identity).get_block(27).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_token_account(default_identity), amount: nat(494_427_190_999_915), to: archive_token::Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.clone().into()) } }); // 👁︎
+    // deposit burn fee if fee_to set up
     assert_token_block_transfer(archive_token.sender(default_identity).get_block(28).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_canister_id, from: archive_token::Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.clone().into())}, amount: nat(1_105_571_739_595_014_231), to: archive_token_account(default_identity), fee: None }); // 👁︎
     assert_token_block_transfer(archive_token.sender(default_identity).get_block(29).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_usdt_canister_id, from: archive_token::Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.clone().into())}, amount: nat(221_114_776_324), to: archive_token_account(default_identity), fee: None }); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(30).unwrap(), None); // 👁︎
+    // mint fee if fee_to set up
     assert_eq!(default.block_token_get(27).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    // deposit burn fee if fee_to set up
     assert_eq!(default.block_token_get(28).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.block_token_get(29).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
-    assert_eq!(archive_token.sender(default_identity).get_block(30).unwrap(), None); // 👁︎
-    assert_eq!(default.request_trace_get(17).unwrap().unwrap().traces[1].1, format!("*PairLiquidityBurn(Withdraw)*. `token:[{}], from[burned liquidity]:({}.), to[withdrawn 2 tokens]:({}.{}), amount:494_427_190_999_915, fee:None`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), canister_id.to_text(), hex::encode(&token_ck_eth_token_ck_usdt_subaccount))); // 👁︎
+    assert_eq!(default.block_token_get(30).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    // mint fee if fee_to set up
+    // mint fee if fee_to set up
+    assert_eq!(default.request_trace_get(17).unwrap().unwrap().traces[1].1, format!("*PairLiquidityBurn(Withdraw)* `token:[{}], from[burned liquidity]:({}.), to[withdrawn 2 tokens]:({}.{}), amount:494_427_190_999_915, fee:None`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), canister_id.to_text(), hex::encode(&token_ck_eth_token_ck_usdt_subaccount))); // 👁︎
+    // deposit burn fee if fee_to set up
     assert_eq!(default.request_trace_get(17).unwrap().unwrap().traces[2].1, format!("*PairLiquidityBurn* `token:[{}], from:({}.), amount:494_427_190_999_915`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text())); // 👁︎
     assert_eq!(default.request_trace_get(17).unwrap().unwrap().traces[3].1, format!("*TokenTransfer* `token:[{}], from:({}.{}), to:({}.), amount:1_105_571_739_595_014_231, done:1_105_571_739_595_014_231`", token_ck_eth_canister_id.to_text(), canister_id.to_text(), hex::encode(&token_ck_eth_token_ck_usdt_subaccount), default_identity.to_text())); // 👁︎
     assert_eq!(default.request_trace_get(17).unwrap().unwrap().traces[4].1, format!("*TokenTransfer* `token:[{}], from:({}.{}), to:({}.), amount:221_114_776_324, done:221_114_776_324`", token_ck_usdt_canister_id.to_text(), canister_id.to_text(), hex::encode(&token_ck_eth_token_ck_usdt_subaccount), default_identity.to_text())); // 👁︎
@@ -563,9 +572,21 @@ fn test_swap_business_apis() {
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(                  0))]);
     assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: account(default_identity), transfer_amount_without_fee: nat(100_000_000_000_000), to: account(bob_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(100_000_000_000_000)));
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(300_000_000_000_000))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(                  0))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(100_000_000_000_000))]);
+    assert_swap_block_pair_v2_transfer(archive_swap.sender(default_identity).get_block(24).unwrap().unwrap(), archive_swap::SwapV2TransferToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_swap_account(default_identity), to: archive_swap_account(bob_identity), amount: nat(100_000_000_000_000), fee: Some(archive_swap::BurnFee { fee: nat(100_000_000), fee_to: archive_swap_account(alice_identity)})}); // 👁︎
+    assert_eq!(archive_swap.sender(default_identity).get_block(25).unwrap(), None); // 👁︎
+    assert_eq!(default.block_swap_get(24).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
+    assert_eq!(default.block_swap_get(25).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_token_block_transfer(archive_token.sender(default_identity).get_block(32).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_token_account(default_identity), amount: nat(100_000_000_000_000), to: archive_token_account(bob_identity), fee: Some(archive_token::TransferFee { fee: nat(100_000_000), fee_to: archive_token_account(alice_identity) }) }); // 👁︎
+    assert_eq!(archive_token.sender(default_identity).get_block(33).unwrap(), None); // 👁︎
+    assert_eq!(default.block_token_get(32).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    assert_eq!(default.block_token_get(33).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:{{fee:100_000_000, fee_to:({}.)}}`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text(), alice_identity.to_text())); // 👁︎
+    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[1].1, format!("*Transfer(Swap)* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:{{fee:100_000_000, fee_to:({}.)}}`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text(), alice_identity.to_text())); // 👁︎
+    assert_eq!(default.request_trace_get(19).unwrap(), None); // 👁︎
 
     // 🚩 3 test stable data
     assert_eq!(default.pause_replace(Some("reason".to_string())).unwrap(), ());
