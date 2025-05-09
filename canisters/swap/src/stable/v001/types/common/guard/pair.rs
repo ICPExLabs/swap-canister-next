@@ -347,6 +347,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
     pub fn token_liquidity_mint_fee(
         &mut self,
         token: CanisterId,
+        pool_account: Account,
         to: Account,
         amount: Nat,
     ) -> Result<(), BusinessError> {
@@ -367,10 +368,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             self.arg.caller,
             DepositToken {
                 token,
-                from: Account {
-                    owner: self.arg.arg.get_self_canister().id(),
-                    subaccount: None,
-                },
+                from: pool_account,
                 amount: amount.clone(),
                 to,
             },

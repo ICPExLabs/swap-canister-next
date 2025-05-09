@@ -54,6 +54,7 @@ fn inner_add_liquidity(_self: &SwapV2MarketMaker, arg: &TokenPairLiquidityAddArg
 fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
     _self: &mut SwapV2MarketMaker,
     guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, T>,
+    pool_account: &Account,
     _reserve0: &Nat,
     _reserve1: &Nat,
 ) -> Result<bool, BusinessError> {
@@ -89,7 +90,7 @@ fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
                     let liquidity = numerator / denominator;
                     if liquidity > *ZERO {
                         _self.lp.mint_fee(
-                            |token, to, amount| guard.token_liquidity_mint_fee(token, to, amount),
+                            |token, to, amount| guard.token_liquidity_mint_fee(token, *pool_account, to, amount),
                             fee_to,
                             liquidity,
                         )?;
@@ -156,7 +157,7 @@ fn mint(
     let amount1 = balance1.clone() - _reserve1.clone();
 
     // Charge a handling fee to mint LP tokens before the additional liquidity can be calculated
-    let fee_on = mint_fee(_self, guard, &_reserve0, &_reserve1)?;
+    let fee_on = mint_fee(_self, guard, pool_account, &_reserve0, &_reserve1)?;
     // Calculate increased liquidity
     let _total_supply = _self.lp.get_total_supply();
     let liquidity = if _total_supply == *ZERO {
@@ -254,7 +255,7 @@ fn burn(
     let balance1 = guard.token_balance_of(_token1, *pool_account)?;
     let liquidity = arg.liquidity_without_fee.clone();
 
-    let fee_on = mint_fee(_self, guard, &_reserve0, &_reserve1)?;
+    let fee_on = mint_fee(_self, guard, pool_account, &_reserve0, &_reserve1)?;
     let _total_supply = _self.lp.get_total_supply();
     let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
     let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
