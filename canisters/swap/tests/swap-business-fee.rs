@@ -655,31 +655,39 @@ fn deploy_icrc2<'a>(
     icrc2::PocketedCanisterId::new(canister_id, &pic)
 }
 
+fn print_backtrace() {
+    let backtraces = format!("{}", std::backtrace::Backtrace::force_capture());
+    let backtraces = backtraces.split('\n').collect::<Vec<_>>();
+    let position = backtraces.iter().position(|b| b.contains("5: ")).unwrap();
+    eprintln!("{}", backtraces[position + 1]);
+}
+
 fn assert_token_block_deposit(block: archive_token::TokenBlock, deposit: archive_token::DepositToken) {
+    print_backtrace();
     if let archive_token::TokenOperation::Deposit(deposit_token) = block.transaction.operation {
-        assert_eq!(deposit_token, deposit);
-    } else {
-        panic!("Expected DepositToken, got {:?}", block);
+        return assert_eq!(deposit_token, deposit);
     }
+    panic!("Expected DepositToken, got {:?}", block);
 }
 fn assert_token_block_withdraw(block: archive_token::TokenBlock, withdraw: archive_token::DepositToken) {
+    print_backtrace();
     if let archive_token::TokenOperation::Withdraw(withdraw_token) = block.transaction.operation {
-        assert_eq!(withdraw_token, withdraw);
-    } else {
-        panic!("Expected WithdrawToken, got {:?}", block);
+        return assert_eq!(withdraw_token, withdraw);
     }
+    panic!("Expected WithdrawToken, got {:?}", block);
 }
 fn assert_token_block_transfer(block: archive_token::TokenBlock, transfer: archive_token::TransferToken) {
+    print_backtrace();
     if let archive_token::TokenOperation::Transfer(transfer_token) = block.transaction.operation {
-        assert_eq!(transfer_token, transfer);
-    } else {
-        panic!("Expected TransferToken, got {:?}", block);
+        return assert_eq!(transfer_token, transfer);
     }
+    panic!("Expected TransferToken, got {:?}", block);
 }
 
 fn assert_tokens_balance(balances: Vec<(Principal, Nat)>, required: Vec<(Principal, Nat)>) {
     for r in required {
         if !balances.contains(&r) {
+            print_backtrace();
             if let Some((p, b)) = balances.iter().find(|(p, _)| *p == r.0) {
                 panic!(
                     "Expected balance ({}, {}) but got ({}, {b:?})",
@@ -699,6 +707,7 @@ fn assert_tokens_balance(balances: Vec<(Principal, Nat)>, required: Vec<(Princip
 }
 #[allow(irrefutable_let_patterns)]
 fn assert_swap_v2_market_maker(view: &swap::MarketMakerView, required: swap::SwapV2MarketMakerView) {
+    print_backtrace();
     if let swap::MarketMakerView::SwapV2(s) = view {
         assert_eq!(s.subaccount, required.subaccount);
         assert_eq!(s.fee_rate, required.fee_rate);
@@ -719,30 +728,31 @@ fn assert_swap_v2_market_maker(view: &swap::MarketMakerView, required: swap::Swa
 }
 
 fn assert_swap_block_pair_create(block: archive_swap::SwapBlock, create: archive_swap::PairCreate) {
+    print_backtrace();
     if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::Create(c)) = block.transaction.operation {
-        assert_eq!(c, create);
-    } else {
-        panic!("Expected PairCreate, got {:?}", block);
+        return assert_eq!(c, create);
     }
+    panic!("Expected PairCreate, got {:?}", block);
 }
 fn assert_swap_block_pair_swap(block: archive_swap::SwapBlock, swap: archive_swap::PairSwapToken) {
+    print_backtrace();
     if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::Swap(s)) = block.transaction.operation {
-        assert_eq!(s, swap);
-    } else {
-        panic!("Expected PairSwapToken, got {:?}", block);
+        return assert_eq!(s, swap);
     }
+    panic!("Expected PairSwapToken, got {:?}", block);
 }
 fn assert_swap_block_pair_v2_mint(block: archive_swap::SwapBlock, mint: archive_swap::SwapV2MintToken) {
+    print_backtrace();
     if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::SwapV2(
         archive_swap::SwapV2Operation::Mint(m),
     )) = block.transaction.operation
     {
-        assert_eq!(m, mint);
-    } else {
-        panic!("Expected SwapV2MintToken, got {:?}", block);
+        return assert_eq!(m, mint);
     }
+    panic!("Expected SwapV2MintToken, got {:?}", block);
 }
 fn assert_swap_block_pair_v2_state(block: archive_swap::SwapBlock, state: archive_swap::SwapV2State) {
+    print_backtrace();
     if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::SwapV2(
         archive_swap::SwapV2Operation::State(s),
     )) = block.transaction.operation
@@ -760,17 +770,18 @@ fn assert_swap_block_pair_v2_state(block: archive_swap::SwapBlock, state: archiv
     }
 }
 fn assert_swap_block_pair_v2_burn(block: archive_swap::SwapBlock, burn: archive_swap::SwapV2BurnToken) {
+    print_backtrace();
     if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::SwapV2(
         archive_swap::SwapV2Operation::Burn(b),
     )) = block.transaction.operation
     {
-        assert_eq!(b, burn);
-    } else {
-        panic!("Expected SwapV2BurnToken, got {:?}", block);
+        return assert_eq!(b, burn);
     }
+    panic!("Expected SwapV2BurnToken, got {:?}", block);
 }
 
 fn assert_token_block_chain_view(view: &swap::TokenBlockResult, required: swap::BlockChainView) {
+    print_backtrace();
     if let swap::TokenBlockResult::Ok(swap::TokenBlockResponse::BlockChain(s)) = view {
         assert_eq!(s.current_archiving, required.current_archiving);
         // assert_eq!(s.latest_block_hash, required.latest_block_hash);
@@ -782,35 +793,36 @@ fn assert_token_block_chain_view(view: &swap::TokenBlockResult, required: swap::
     }
 }
 fn assert_token_archive_wasm_module(view: swap::TokenBlockResult, required: Vec<u8>) {
+    print_backtrace();
     if let swap::TokenBlockResult::Ok(swap::TokenBlockResponse::WasmModule(s)) = view {
-        assert_eq!(s.unwrap(), serde_bytes::ByteBuf::from(required));
-    } else {
-        panic!("Expected WasmModule, got {view:?}");
+        return assert_eq!(s.unwrap(), serde_bytes::ByteBuf::from(required));
     }
+    panic!("Expected WasmModule, got {view:?}");
 }
 fn assert_token_current_archiving_max_length(view: swap::TokenBlockResult, required: swap::CurrentArchiving) {
+    print_backtrace();
     if let swap::TokenBlockResult::Ok(swap::TokenBlockResponse::CurrentArchivingMaxLength(s)) = view {
-        assert_eq!(s.unwrap(), required);
-    } else {
-        panic!("Expected CurrentArchiving, got {view:?}");
+        return assert_eq!(s.unwrap(), required);
     }
+    panic!("Expected CurrentArchiving, got {view:?}");
 }
 fn assert_token_archive_config_replace(view: swap::TokenBlockResult, required: swap::NextArchiveCanisterConfig) {
+    print_backtrace();
     if let swap::TokenBlockResult::Ok(swap::TokenBlockResponse::NextArchiveCanisterConfig(s)) = view {
-        assert_eq!(s, required);
-    } else {
-        panic!("Expected NextArchiveCanisterConfig, got {view:?}");
+        return assert_eq!(s, required);
     }
+    panic!("Expected NextArchiveCanisterConfig, got {view:?}");
 }
 fn assert_token_get_blocks(view: archive_token::GetTokenBlocksResult, required: usize) {
+    print_backtrace();
     if let archive_token::GetTokenBlocksResult::Ok(s) = view {
-        assert_eq!(s.blocks.len(), required);
-    } else {
-        panic!("Expected GetTokenBlocksResult::Ok, got {view:?}");
+        return assert_eq!(s.blocks.len(), required);
     }
+    panic!("Expected GetTokenBlocksResult::Ok, got {view:?}");
 }
 
 fn assert_swap_block_chain_view(view: &swap::SwapBlockResult, required: swap::BlockChainView) {
+    print_backtrace();
     if let swap::SwapBlockResult::Ok(swap::SwapBlockResponse::BlockChain(s)) = view {
         assert_eq!(s.current_archiving, required.current_archiving);
         // assert_eq!(s.latest_block_hash, required.latest_block_hash);
@@ -822,30 +834,30 @@ fn assert_swap_block_chain_view(view: &swap::SwapBlockResult, required: swap::Bl
     }
 }
 fn assert_swap_archive_wasm_module(view: swap::SwapBlockResult, required: Vec<u8>) {
+    print_backtrace();
     if let swap::SwapBlockResult::Ok(swap::SwapBlockResponse::WasmModule(s)) = view {
-        assert_eq!(s.unwrap(), serde_bytes::ByteBuf::from(required));
-    } else {
-        panic!("Expected WasmModule, got {view:?}");
+        return assert_eq!(s.unwrap(), serde_bytes::ByteBuf::from(required));
     }
+    panic!("Expected WasmModule, got {view:?}");
 }
 fn assert_swap_current_archiving_max_length(view: swap::SwapBlockResult, required: swap::CurrentArchiving) {
+    print_backtrace();
     if let swap::SwapBlockResult::Ok(swap::SwapBlockResponse::CurrentArchivingMaxLength(s)) = view {
-        assert_eq!(s.unwrap(), required);
-    } else {
-        panic!("Expected CurrentArchiving, got {view:?}");
+        return assert_eq!(s.unwrap(), required);
     }
+    panic!("Expected CurrentArchiving, got {view:?}");
 }
 fn assert_swap_archive_config_replace(view: swap::SwapBlockResult, required: swap::NextArchiveCanisterConfig) {
+    print_backtrace();
     if let swap::SwapBlockResult::Ok(swap::SwapBlockResponse::NextArchiveCanisterConfig(s)) = view {
-        assert_eq!(s, required);
-    } else {
-        panic!("Expected NextArchiveCanisterConfig, got {view:?}");
+        return assert_eq!(s, required);
     }
+    panic!("Expected NextArchiveCanisterConfig, got {view:?}");
 }
 fn assert_swap_get_blocks(view: archive_swap::GetSwapBlocksResult, required: usize) {
+    print_backtrace();
     if let archive_swap::GetSwapBlocksResult::Ok(s) = view {
-        assert_eq!(s.blocks.len(), required);
-    } else {
-        panic!("Expected GetSwapBlocksResult::Ok, got {view:?}");
+        return assert_eq!(s.blocks.len(), required);
     }
+    panic!("Expected GetSwapBlocksResult::Ok, got {view:?}");
 }
