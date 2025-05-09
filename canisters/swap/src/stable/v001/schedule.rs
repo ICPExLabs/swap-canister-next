@@ -56,8 +56,12 @@ async fn maintaining_canisters(trace: &mut RequestTrace) -> Result<(), BusinessE
     for (i, &canister_id) in canisters.iter().enumerate() {
         let prefix = format!("# {} *[{}]* ", i + 1, canister_id.to_text());
         let status: ic_cdk::management_canister::CanisterStatusResult =
-            match ic_cdk::call::Call::unbounded_wait(canister_id, "canister_status").await {
-                Ok(status) => status.candid()?,
+            match ic_cdk::management_canister::canister_status(&ic_cdk::management_canister::CanisterStatusArgs {
+                canister_id,
+            })
+            .await
+            {
+                Ok(status) => status,
                 Err(err) => {
                     let err: BusinessError = err.into();
                     let message = format!("{prefix}`query canister status failed: {err}`");
