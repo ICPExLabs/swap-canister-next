@@ -124,7 +124,7 @@ pub async fn inner_token_withdraw(
                         arg: WithdrawToken {
                             token: args.token,
                             from: args.from,
-                            amount,
+                            amount, // include fee
                             to: args.to,
                         },
                         memo: args.memo,
