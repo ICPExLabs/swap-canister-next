@@ -532,7 +532,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
         });
         self.swap_guard.mint_block(self.arg.now, transaction, |_| {
             let trace = format!(
-                "*PairLiquidityBurn(Withdraw)*. `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
+                "*PairLiquidityBurn(Withdraw)* `token:[{}], from[burned liquidity]:({}), to[withdrawn 2 tokens]:({}), amount:{}, fee:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&pool_account),
@@ -544,7 +544,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             self.trace_guard.trace(trace); // * trace
             if let Some(deposit_fee) = deposit_fee {
                 let trace = format!(
-                    "*PairBurnFeeMint(Deposit)*. `token:[{}], to:({}), amount:{}`",
+                    "*PairBurnFeeMint(Deposit)* `token:[{}], to:({}), amount:{}`",
                     deposit_fee.arg.token.to_text(),
                     display_account(&deposit_fee.arg.to),
                     deposit_fee.arg.amount,
