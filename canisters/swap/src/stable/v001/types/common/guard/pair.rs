@@ -386,7 +386,7 @@ impl<T: SelfCanisterArg + TokenPairArg> InnerTokenPairSwapGuard<'_, '_, '_, T> {
             Ok(())
         })?;
         self.trace(format!(
-            "*PairFeeMint*. `token:[{}], to:({}), amount:{amount}`",
+            "*PairFeeMint* `token:[{}], to:({}), amount:{amount}`",
             token.to_text(),
             display_account(&to),
         )); // * trace
