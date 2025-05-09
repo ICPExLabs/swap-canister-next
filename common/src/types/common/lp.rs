@@ -190,9 +190,10 @@ impl InnerLP {
                 )));
             }
         }
+        // withdraw amount + fee?
+        // deposit fee?
         token_liquidity_burn(self.dummy_canister_id.id(), from, amount.clone(), fee.clone())?;
-        let fee = fee.map(|_| self.fee.clone()).unwrap_or_default();
-        let total = amount + fee;
+        let total = amount; // only amount, fee would be minted after burned
         if self.total_supply < total {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }

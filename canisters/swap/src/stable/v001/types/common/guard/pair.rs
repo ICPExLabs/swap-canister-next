@@ -551,8 +551,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                     display_account(&deposit_fee.arg.to),
                     deposit_fee.arg.amount,
                 );
-                self.balances_guard
-                .token_deposit(self.token_guard, deposit_fee.clone())?;
+                self.balances_guard.token_deposit(self.token_guard, deposit_fee.clone())?;
                 self.trace_guard.trace(trace); // * trace
             }
             Ok(())
