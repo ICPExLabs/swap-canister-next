@@ -46,8 +46,13 @@ impl<'a> TokenPairSwapGuard<'a> {
         pa: TokenPairAmm,
         arg: ArgWithMeta<TransferToken>,
     ) -> Result<Nat, BusinessError> {
-        self.balances_guard
-            .token_lp_transfer(&mut self.swap_guard, pa, &mut self.token_guard, arg)
+        self.trace_guard.handle(
+            |trace| {
+                self.balances_guard
+                    .token_lp_transfer(trace, &mut self.swap_guard, pa, &mut self.token_guard, arg)
+            },
+            |data| data.to_string(),
+        )
     }
 
     pub fn add_liquidity(
@@ -537,10 +542,9 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                 display_account(&arg.arg.from),
                 display_account(&pool_account),
                 arg.arg.amount,
-                display_option(&deposit_fee.as_ref().map(|d|d.arg.amount.to_string()))
+                display_option(&deposit_fee.as_ref().map(|d| d.arg.amount.to_string()))
             );
-            self.balances_guard
-                .token_withdraw(self.token_guard, arg)?;
+            self.balances_guard.token_withdraw(self.token_guard, arg)?;
             self.trace_guard.trace(trace); // * trace
             if let Some(deposit_fee) = deposit_fee {
                 let trace = format!(

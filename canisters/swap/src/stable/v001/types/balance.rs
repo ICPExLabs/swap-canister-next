@@ -1,4 +1,4 @@
-use ic_canister_kit::common::trap;
+use ic_canister_kit::common::{option::display_option_by, trap};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -289,6 +289,7 @@ impl TokenBalancesGuard<'_> {
     // transfer lp token
     pub fn token_lp_transfer(
         &mut self,
+        trace: &mut RequestTraceGuard,
         swap_guard: &mut SwapBlockChainGuard,
         pa: TokenPairAmm,
         token_guard: &mut TokenBlockChainGuard,
@@ -308,7 +309,35 @@ impl TokenBalancesGuard<'_> {
             created: arg.created,
         };
         // 2. do transfer and mint block
-        let changed = swap_guard.mint_block(arg.now, transaction, |_| self.token_transfer(token_guard, arg))?;
+        let changed = swap_guard.mint_block(arg.now, transaction, |_| {
+            trace.trace(format!(
+                "*Transfer* `token:[{}], from:({}), to:({}), amount:{} fee:{}`",
+                arg.arg.token.to_text(),
+                display_account(&arg.arg.from),
+                display_account(&arg.arg.to),
+                arg.arg.amount,
+                display_option_by(&arg.arg.fee, |fee| format!(
+                    "{{fee:{}, fee_to:({})}}",
+                    fee.fee,
+                    display_account(&fee.fee_to)
+                ))
+            )); // * trace
+            let changed = self.token_transfer(token_guard, arg.clone())?;
+            Ok(changed)
+        })?;
+        trace.trace(format!(
+            "*Transfer(Swap)* `token:[{}], from:({}), to:({}), amount:{} fee:{}`",
+            arg.arg.token.to_text(),
+            display_account(&arg.arg.from),
+            display_account(&arg.arg.to),
+            arg.arg.amount,
+            display_option_by(&arg.arg.fee, |fee| format!(
+                "{{fee:{}, fee_to:({})}}",
+                fee.fee,
+                display_account(&fee.fee_to)
+            ))
+        )); // * trace
+        trace.trace(format!("Transfer Done: {changed}.",)); // * trace
         Ok(changed)
     }
 }
