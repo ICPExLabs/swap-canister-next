@@ -150,7 +150,7 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
     };
 
     // Asynchronously triggers synchronization tasks
-    crate::business::config::push::inner_push_blocks(true, false);
+    crate::business::config::push::inner_push_blocks(true, token.is_lp_token);
 
     Ok(changed)
 }
