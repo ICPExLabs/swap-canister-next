@@ -66,7 +66,7 @@ impl<'a> TokenGuard<'a> {
         self.trace_guard.handle(
             |trace| {
                 trace.trace(format!(
-                    "*Transfer* `token:[{}], from:({}), to:({}), amount:{} fee:{}`",
+                    "*Transfer* `token:[{}], from:({}), to:({}), amount:{}, fee:{}`",
                     arg.arg.token.to_text(),
                     display_account(&arg.arg.from),
                     display_account(&arg.arg.to),

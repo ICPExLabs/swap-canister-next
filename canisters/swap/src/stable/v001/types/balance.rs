@@ -311,7 +311,7 @@ impl TokenBalancesGuard<'_> {
         // 2. do transfer and mint block
         let changed = swap_guard.mint_block(arg.now, transaction, |_| {
             trace.trace(format!(
-                "*Transfer* `token:[{}], from:({}), to:({}), amount:{} fee:{}`",
+                "*Transfer* `token:[{}], from:({}), to:({}), amount:{}, fee:{}`",
                 arg.arg.token.to_text(),
                 display_account(&arg.arg.from),
                 display_account(&arg.arg.to),
@@ -326,7 +326,7 @@ impl TokenBalancesGuard<'_> {
             Ok(changed)
         })?;
         trace.trace(format!(
-            "*Transfer(Swap)* `token:[{}], from:({}), to:({}), amount:{} fee:{}`",
+            "*Transfer(Swap)* `token:[{}], from:({}), to:({}), amount:{}, fee:{}`",
             arg.arg.token.to_text(),
             display_account(&arg.arg.from),
             display_account(&arg.arg.to),
