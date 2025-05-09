@@ -2,6 +2,7 @@
 use std::str::FromStr;
 
 use candid::{Nat, Principal, encode_one};
+use ic_cdk::management_canister::CanisterSettings;
 use pocket_ic::PocketIc;
 
 mod archive_swap;
@@ -62,12 +63,12 @@ fn test_swap_business_apis() {
     pic.add_cycles(canister_id, 20_000_000_000_000);
     pic.install_canister(canister_id, WASM_MODULE.to_vec(), encode_one(None::<()>).unwrap(), Some(default_identity));
 
-    pic.create_canister_with_id(Some(default_identity), None, archive_token_canister_id).unwrap();
+    pic.create_canister_with_id(Some(default_identity), Some(CanisterSettings { controllers: Some(vec![default_identity, canister_id]), ..CanisterSettings::default() }), archive_token_canister_id).unwrap();
     pic.add_cycles(archive_token_canister_id, INIT_CYCLES);
     pic.install_canister(archive_token_canister_id, ARCHIVE_TOKEN_WASM_MODULE.to_vec(), encode_one(Some(archive_token::InitArgs::V1(archive_token::InitArgV1{ maintainers: Some(vec![default_identity]), block_offset: None, host_canister_id: Some(canister_id), max_memory_size_bytes: None }))).unwrap(), Some(default_identity));
     #[allow(unused)] let archive_token = archive_token::PocketedCanisterId::new(archive_token_canister_id, &pic);
 
-    pic.create_canister_with_id(Some(default_identity), None, archive_swap_canister_id).unwrap();
+    pic.create_canister_with_id(Some(default_identity), Some(CanisterSettings { controllers: Some(vec![default_identity, canister_id]), ..CanisterSettings::default() }), archive_swap_canister_id).unwrap();
     pic.add_cycles(archive_swap_canister_id, INIT_CYCLES);
     pic.install_canister(archive_swap_canister_id, ARCHIVE_SWAP_WASM_MODULE.to_vec(), encode_one(Some(archive_swap::InitArgs::V1(archive_swap::InitArgV1{ maintainers: None, block_offset: None, host_canister_id: Some(canister_id), max_memory_size_bytes: None }))).unwrap(), Some(default_identity));
     #[allow(unused)] let archive_swap = archive_swap::PocketedCanisterId::new(archive_swap_canister_id, &pic);
@@ -203,6 +204,7 @@ fn test_swap_business_apis() {
     assert_eq!(default.block_swap_get(0).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_swap.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "100_000_000".to_string(), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), minimum_liquidity: "100_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_ck_eth_token_ck_usdt_subaccount), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
+    // assert_eq!(default.config_protocol_fee_replace(token_ck_eth_token_ck_usdt_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(0).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -303,6 +305,7 @@ fn test_swap_business_apis() {
     let token_sns_icx_token_ck_usdt_subaccount = hex::decode("113b6933e0e4938b4fe076086939e18df805c3ded6e8fe63d0230c8bf7f03cf4").unwrap();
     assert_eq!(default.pair_swap_exact_tokens_for_tokens(TokenPairSwapExactTokensForTokensArgs { from: account(default_identity), amount_in: nat(100_000_000), amount_out_min: nat(100_000_000_000_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Err(BusinessError::TokenPairAmmNotExist(TokenPairAmm { pair: TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: Amm::SwapV2H1 })));
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_1%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "100_000".to_string(), decimals: 7, dummy_canister_id: token_sns_icx_token_ck_usdt_dummy_canister_id.to_text(), minimum_liquidity: "100_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_sns_icx_token_ck_usdt_subaccount), price1_cumulative_last: "0".to_string(), token0: token_sns_icx_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "1/100".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
+    // assert_eq!(default.config_protocol_fee_replace(token_sns_icx_token_ck_usdt_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(5).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -411,6 +414,7 @@ fn test_swap_business_apis() {
     // ICX -> USDT 10_102_030_607 -> 198_000_000_000
     // USDT -> ETH 200_000_000_000 -> 999_999_999_999_998_882
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_sns_icx_canister_id, token1: token_ck_eth_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "1_000_000_000".to_string(), decimals: 13, dummy_canister_id: token_sns_icx_token_ck_eth_dummy_canister_id.to_text(), minimum_liquidity: "1_000_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_sns_icx_token_ck_eth_subaccount), price1_cumulative_last: "0".to_string(), token0: token_sns_icx_canister_id.to_text(), token1: token_ck_eth_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
+    // assert_eq!(default.config_protocol_fee_replace(token_sns_icx_token_ck_eth_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(12).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -580,6 +584,12 @@ fn test_swap_business_apis() {
     assert_eq!(default.request_trace_index_get().unwrap(), (1, 17));
     assert_eq!(default.request_trace_remove(10).unwrap_err().reject_message.contains("must remove min request index: 1"), true);
 
+    // 🚩 7 test maintain cycles
+    assert_eq!(archive_token.sender(default_identity).wallet_balance().unwrap() < nat(INIT_CYCLES as u64), true);
+    assert_eq!(archive_swap.sender(default_identity).wallet_balance().unwrap() < nat(INIT_CYCLES as u64), true);
+    assert_eq!(default.schedule_trigger().unwrap(), ());
+    assert_eq!(archive_token.sender(default_identity).wallet_balance().unwrap() > nat(INIT_CYCLES as u64), true);
+    assert_eq!(archive_swap.sender(default_identity).wallet_balance().unwrap() > nat(INIT_CYCLES as u64), true);
 }
 
 fn deploy_icrc2<'a>(
