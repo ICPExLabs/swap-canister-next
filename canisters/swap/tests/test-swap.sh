@@ -27,9 +27,9 @@ if [ "$1" = "update" ]; then
 fi
 
 set -e
-cargo test test_swap_business_fee_apis -- --ignored
 cargo test test_swap_common_apis -- --ignored
 cargo test test_swap_business_apis -- --ignored
+cargo test test_swap_business_fee_apis -- --ignored
 
 end_time=$(date +%H:%M:%S)
 end_time_s=$(date +%s)

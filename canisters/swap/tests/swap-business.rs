@@ -188,7 +188,7 @@ fn test_swap_business_apis() {
     std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     assert_token_block_transfer(archive_token.sender(default_identity).get_block(2).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(alice_identity), fee: None }); // 👁︎
     assert_eq!(default.block_token_get(2).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
-    assert_eq!(default.request_trace_get(2).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), alice_identity.to_text())); // 👁︎
+    assert_eq!(default.request_trace_get(2).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, fee:None`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), alice_identity.to_text())); // 👁︎
     assert_eq!(default.token_balance_of(token_ck_eth_canister_id, account(default_identity)).unwrap(), nat(3_000_000_000_000_000_000));
     assert_eq!(alice.token_balance_of(token_ck_eth_canister_id, account(alice_identity)).unwrap(), nat(1_000_000_000_000_000_000));
 
@@ -576,16 +576,16 @@ fn test_swap_business_apis() {
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(300_000_000_000_000))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(                  0))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(100_000_000_000_000))]);
-    assert_swap_block_pair_v2_transfer(archive_swap.sender(default_identity).get_block(24).unwrap().unwrap(), archive_swap::SwapV2TransferToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_swap_account(default_identity), to: archive_swap_account(bob_identity), amount: nat(100_000_000_000_000), fee: Some(archive_swap::BurnFee { fee: nat(100_000_000), fee_to: archive_swap_account(alice_identity)})}); // 👁︎
-    assert_eq!(archive_swap.sender(default_identity).get_block(25).unwrap(), None); // 👁︎
-    assert_eq!(default.block_swap_get(24).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
-    assert_eq!(default.block_swap_get(25).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
-    assert_token_block_transfer(archive_token.sender(default_identity).get_block(32).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_token_account(default_identity), amount: nat(100_000_000_000_000), to: archive_token_account(bob_identity), fee: Some(archive_token::TransferFee { fee: nat(100_000_000), fee_to: archive_token_account(alice_identity) }) }); // 👁︎
-    assert_eq!(archive_token.sender(default_identity).get_block(33).unwrap(), None); // 👁︎
-    assert_eq!(default.block_token_get(32).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
-    assert_eq!(default.block_token_get(33).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
-    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:{{fee:100_000_000, fee_to:({}.)}}`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text(), alice_identity.to_text())); // 👁︎
-    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[1].1, format!("*Transfer(Swap)* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:{{fee:100_000_000, fee_to:({}.)}}`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text(), alice_identity.to_text())); // 👁︎
+    assert_swap_block_pair_v2_transfer(archive_swap.sender(default_identity).get_block(23).unwrap().unwrap(), archive_swap::SwapV2TransferToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_swap_account(default_identity), to: archive_swap_account(bob_identity), amount: nat(100_000_000_000_000), fee: None}); // 👁︎
+    assert_eq!(archive_swap.sender(default_identity).get_block(24).unwrap(), None); // 👁︎
+    assert_eq!(default.block_swap_get(23).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
+    assert_eq!(default.block_swap_get(24).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_token_block_transfer(archive_token.sender(default_identity).get_block(30).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: archive_token_account(default_identity), amount: nat(100_000_000_000_000), to: archive_token_account(bob_identity), fee: None }); // 👁︎
+    assert_eq!(archive_token.sender(default_identity).get_block(31).unwrap(), None); // 👁︎
+    assert_eq!(default.block_token_get(30).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
+    assert_eq!(default.block_token_get(31).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
+    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:None`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text())); // 👁︎
+    assert_eq!(default.request_trace_get(18).unwrap().unwrap().traces[1].1, format!("*Transfer(Swap)* `token:[{}], from:({}.), to:({}.), amount:100_000_000_000_000, fee:None`", token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), default_identity.to_text(), bob_identity.to_text())); // 👁︎
     assert_eq!(default.request_trace_get(19).unwrap(), None); // 👁︎
 
     // 🚩 3 test stable data
@@ -850,6 +850,17 @@ fn assert_swap_block_pair_v2_mint_fee(block: archive_swap::SwapBlock, fee: archi
         return assert_eq!(f, fee);
     }
     panic!("Expected SwapV2MintFeeToken, got {:?}", block);
+}
+#[allow(unused)]
+fn assert_swap_block_pair_v2_transfer(block: archive_swap::SwapBlock, transfer: archive_swap::SwapV2TransferToken) {
+    print_backtrace();
+    if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::SwapV2(
+        archive_swap::SwapV2Operation::Transfer(t),
+    )) = block.transaction.operation
+    {
+        return assert_eq!(t, transfer);
+    }
+    panic!("Expected SwapV2TransferToken, got {:?}", block);
 }
 
 fn assert_token_block_chain_view(view: &swap::TokenBlockResult, required: swap::BlockChainView) {
