@@ -819,6 +819,17 @@ fn assert_swap_block_pair_v2_burn(block: archive_swap::SwapBlock, burn: archive_
     }
     panic!("Expected SwapV2BurnToken, got {:?}", block);
 }
+#[allow(unused)]
+fn assert_swap_block_pair_v2_mint_fee(block: archive_swap::SwapBlock, fee: archive_swap::SwapV2MintFeeToken) {
+    print_backtrace();
+    if let archive_swap::SwapOperation::Pair(archive_swap::PairOperation::SwapV2(
+        archive_swap::SwapV2Operation::MintFee(f),
+    )) = block.transaction.operation
+    {
+        return assert_eq!(f, fee);
+    }
+    panic!("Expected SwapV2MintFeeToken, got {:?}", block);
+}
 
 fn assert_token_block_chain_view(view: &swap::TokenBlockResult, required: swap::BlockChainView) {
     print_backtrace();
