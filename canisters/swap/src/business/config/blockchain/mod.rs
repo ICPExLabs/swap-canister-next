@@ -75,7 +75,7 @@ async fn deploy_canister(
         canister_id.to_text()
     ));
 
-    ic_cdk::println!("new canister id: {:?}", canister_id.to_text());
+    ic_cdk::println!("new canister id: {}", canister_id.to_text());
 
     trace.success(canister_id.to_text());
 

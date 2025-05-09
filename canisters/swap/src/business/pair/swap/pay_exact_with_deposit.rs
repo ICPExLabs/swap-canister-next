@@ -82,7 +82,7 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
     Option<TokenPairSwapTokensResult>,
     Option<TokenChangedResult>,
 ) {
-    ic_cdk::println!("pair_swap_with_deposit_and_withdraw(async:{_async}) #0: {:?}", args);
+    ic_cdk::println!("pair_swap_with_deposit_and_withdraw(async:{_async}) #0: {}", args);
 
     // 1. check args
     let (deposit, swap, token) = match args.check_args() {
@@ -90,7 +90,7 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
         Err(err) => return (Err(err).into(), None, None),
     };
 
-    ic_cdk::println!("pair_swap_with_deposit_and_withdraw(async:{_async}) #1: {:?}", deposit);
+    ic_cdk::println!("pair_swap_with_deposit_and_withdraw(async:{_async}) #1: {}", deposit);
 
     // 2. do deposit
     let deposit_result = super::super::super::token::deposit::inner_token_deposit(deposit, Some(3), false).await;
@@ -99,8 +99,11 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
     }
 
     ic_cdk::println!(
-        "pair_swap_with_deposit_and_withdraw(async:{_async}) #2: {:?} {:?}",
-        deposit_result,
+        "pair_swap_with_deposit_and_withdraw(async:{_async}) #2: {} {}",
+        match &deposit_result {
+            Ok(success) => format!("Ok({success})"),
+            Err(err) => format!("Err({err})"),
+        },
         swap
     );
 
@@ -121,8 +124,19 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
     let withdraw = args.to_withdraw_args(token.canister_id, got - token.fee);
 
     ic_cdk::println!(
-        "pair_swap_with_deposit_and_withdraw(async:{_async}) #3: {:?} {:?}",
-        swap_result,
+        "pair_swap_with_deposit_and_withdraw(async:{_async}) #3: {} {}",
+        match &swap_result {
+            Ok(success) => format!(
+                "Ok([{}])",
+                success
+                    .amounts
+                    .iter()
+                    .map(|a| a.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            Err(err) => format!("Err({err})"),
+        },
         withdraw
     );
 
@@ -130,7 +144,13 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
         ic_cdk::futures::spawn(async move {
             let withdraw_result =
                 super::super::super::token::withdraw::inner_token_withdraw(withdraw, Some(3), false).await;
-            ic_cdk::println!("pair_swap_with_deposit_and_async_withdraw #4: {:?}", withdraw_result);
+            ic_cdk::println!(
+                "pair_swap_with_deposit_and_async_withdraw #4: {}",
+                match &withdraw_result {
+                    Ok(success) => format!("Ok({success})",),
+                    Err(err) => format!("Err({err})"),
+                },
+            );
         });
 
         super::super::super::delay_task(|| {
@@ -144,8 +164,11 @@ async fn inner_pair_swap_with_deposit_and_withdraw(
             super::super::super::token::withdraw::inner_token_withdraw(withdraw, Some(3), false).await;
 
         ic_cdk::println!(
-            "pair_swap_with_deposit_and_withdraw(async:{_async}) #4: {:?}",
-            withdraw_result
+            "pair_swap_with_deposit_and_withdraw(async:{_async}) #4: {}",
+            match &withdraw_result {
+                Ok(success) => format!("Ok({success})",),
+                Err(err) => format!("Err({err})"),
+            },
         );
 
         // Asynchronously triggers synchronization tasks

@@ -1,4 +1,5 @@
 use ::common::types::TimestampNanos;
+use ic_canister_kit::common::option::{display_option, display_option_by};
 
 use super::*;
 
@@ -48,6 +49,22 @@ pub struct TokenDepositArgs {
     pub created: Option<TimestampNanos>,
 }
 
+impl Display for TokenDepositArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TokenDepositArgs {{ token: [{}], from: ({}), deposit_amount_without_fee: {}, to: ({}), fee: {}, memo: {}, created: {} }}",
+            self.token.to_text(),
+            display_account(&self.from),
+            self.deposit_amount_without_fee,
+            display_account(&self.to),
+            display_option(&self.fee),
+            display_option_by(&self.memo, |memo| hex::encode(memo)),
+            display_option_by(&self.created, |created| created.into_inner().to_string()),
+        )
+    }
+}
+
 // withdraw
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct TokenWithdrawArgs {
@@ -59,6 +76,22 @@ pub struct TokenWithdrawArgs {
 
     pub memo: Option<Vec<u8>>,
     pub created: Option<TimestampNanos>,
+}
+
+impl Display for TokenWithdrawArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TokenWithdrawArgs {{ token: [{}], from: ({}), withdraw_amount_without_fee: {}, to: ({}), fee: {}, memo: {}, created: {} }}",
+            self.token.to_text(),
+            display_account(&self.from),
+            self.withdraw_amount_without_fee,
+            display_account(&self.to),
+            display_option(&self.fee),
+            display_option_by(&self.memo, |memo| hex::encode(memo)),
+            display_option_by(&self.created, |created| created.into_inner().to_string()),
+        )
+    }
 }
 
 // inner transfer

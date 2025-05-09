@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
@@ -45,4 +47,10 @@ pub struct SwapTokenPair {
     pub token: (CanisterId, CanisterId),
     /// amm algorithm
     pub amm: AmmText,
+}
+
+impl Display for SwapTokenPair {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}]->[{}]@{}", self.token.0, self.token.1, self.amm.as_ref())
+    }
 }

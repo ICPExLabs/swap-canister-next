@@ -22,3 +22,9 @@ impl CheckArgs for Deadline {
         Ok(())
     }
 }
+
+impl AsRef<u64> for Deadline {
+    fn as_ref(&self) -> &u64 {
+        &self.0
+    }
+}

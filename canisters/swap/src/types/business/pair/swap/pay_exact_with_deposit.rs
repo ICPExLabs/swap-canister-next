@@ -1,3 +1,5 @@
+use ic_canister_kit::common::option::{display_option, display_option_by};
+
 use super::*;
 
 // ========================= swap with deposit =========================
@@ -60,5 +62,24 @@ impl TokenPairSwapWithDepositAndWithdrawArgs {
             memo: None,
             created: None,
         }
+    }
+}
+
+impl Display for TokenPairSwapWithDepositAndWithdrawArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TokenPairSwapWithDepositAndWithdrawArgs {{ from: ({}), deposit_amount_without_fee: {}, deposit_fee: {}, amount_out_min: {}, path: [{}], to: {}, deadline: {}, withdraw_fee: {}, memo: {}, created: {} }}",
+            display_account(&self.from),
+            self.deposit_amount_without_fee,
+            display_option(&self.deposit_fee),
+            self.amount_out_min,
+            self.path.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "),
+            self.to,
+            display_option_by(&self.deadline, |deadline| deadline.as_ref().to_string()),
+            display_option(&self.withdraw_fee),
+            display_option_by(&self.memo, |memo| hex::encode(memo)),
+            display_option_by(&self.created, |created| created.into_inner().to_string()),
+        )
     }
 }
