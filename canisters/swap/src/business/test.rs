@@ -124,6 +124,7 @@ fn test_push_test_tokens() {
     }
 }
 
+#[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
 fn test_deposit_test_tokens(users: Vec<(Principal, u8)>) {
     let tokens = with_state(|s| {
@@ -141,7 +142,7 @@ fn test_deposit_test_tokens(users: Vec<(Principal, u8)>) {
             }
             let canister_id = ::common::utils::hash::hash_sha256(token.as_slice());
             let canister_id = Principal::from_slice(&canister_id[..29]);
-            if tokens.iter().any(|(t, _)| t == &canister_id) {
+            if let Some((_, info)) = tokens.iter().find(|(t, _)| t == &canister_id) {
                 return Some(info);
             }
             None
@@ -193,5 +194,44 @@ fn test_deposit_test_tokens(users: Vec<(Principal, u8)>) {
             })
             .unwrap();
         }
+    }
+}
+
+#[allow(clippy::unwrap_used)]
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+fn test_create_test_pairs(pairs: Vec<TokenPairPool>) {
+    let exist = with_state(|s| {
+        s.business_token_pair_pools_query()
+            .into_iter()
+            .map(|(token, _info)| token)
+            .collect::<Vec<_>>()
+    });
+    let lock = match super::lock_swap_block_chain(0).unwrap() {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(_) => unreachable!(),
+    };
+    let caller = Caller::get();
+    for pair in pairs {
+        let amm = pair.amm.as_ref().try_into().unwrap();
+        let pair = TokenPair::new(pair.token0, pair.token1);
+        let pa = TokenPairAmm { pair, amm };
+        if exist.contains(&pa) {
+            continue;
+        }
+
+        let now = TimestampNanos::now();
+        with_mut_state(|s| {
+            s.business_token_pair_pool_create(
+                &lock,
+                ArgWithMeta {
+                    now,
+                    caller,
+                    arg: pa,
+                    memo: None,
+                    created: None,
+                },
+            )
+        })
+        .unwrap();
     }
 }
