@@ -23,6 +23,18 @@ fn version() -> u32 {
     with_state(|s| s.version())
 }
 
+// query memory
+#[ic_cdk::query]
+fn memory_size_heap() -> Nat {
+    candid::Nat::from(::common::utils::runtime::heap_memory_size_bytes() as u64)
+}
+
+// query memory
+#[ic_cdk::query]
+fn memory_size_stable() -> Nat {
+    candid::Nat::from(ic_cdk::stable::stable_size() * 64 * 1024)
+}
+
 // ================== pause apis ==================
 
 // Query maintenance status
@@ -107,9 +119,7 @@ fn permission_roles_all() -> HashMap<String, HashSet<Permission>> {
             .map(|role| {
                 (
                     role.to_owned(),
-                    s.permission_role_assigned(role)
-                        .cloned()
-                        .unwrap_or_default(),
+                    s.permission_role_assigned(role).cloned().unwrap_or_default(),
                 )
             })
             .collect()
