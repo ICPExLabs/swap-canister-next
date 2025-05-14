@@ -84,3 +84,43 @@ fn test_config_token_current_archiving_replace(archiving: CurrentArchiving) -> O
 fn test_config_swap_current_archiving_replace(archiving: CurrentArchiving) -> Option<CurrentArchiving> {
     with_mut_state(|s| s.business_config_swap_current_archiving_replace(archiving))
 }
+
+// ============================== test many tokens ==============================
+
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+fn test_push_test_tokens() {
+    let tokens = with_state(|s| {
+        s.business_tokens_query()
+            .into_iter()
+            .map(|(token, info)| (token, info.into_owned()))
+            .collect::<Vec<_>>()
+    });
+
+    let tokens = tokens
+        .iter()
+        .filter_map(|(token, info)| {
+            if info.is_lp_token {
+                return None;
+            }
+            let canister_id = ::common::utils::hash::hash_sha256(token.as_slice());
+            let canister_id = Principal::from_slice(&canister_id[..29]);
+            if tokens.iter().any(|(t, _)| t == &canister_id) {
+                return None;
+            }
+            let info = TokenInfo {
+                canister_id,
+                name: format!("{} (Test)", info.name),
+                symbol: format!("{}TEST", info.symbol),
+                decimals: info.decimals,
+                fee: info.fee.clone(),
+                is_lp_token: false,
+            };
+            Some(info)
+        })
+        .collect::<Vec<_>>();
+    for token in tokens {
+        let arg = ArgWithMeta::data(token);
+        with_mut_state(|s| s.business_config_token_custom_put(arg));
+    }
+}
+

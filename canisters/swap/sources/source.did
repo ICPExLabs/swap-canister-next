@@ -729,6 +729,7 @@ service : (opt InitArgs) -> {
   test_config_token_current_archiving_replace : (CurrentArchiving) -> (
       opt CurrentArchiving,
     );
+  test_push_test_tokens : () -> ();
   test_set_controller : (principal) -> ();
   test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance : (principal, opt blob) -> (nat) query;
