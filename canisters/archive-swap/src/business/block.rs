@@ -81,10 +81,10 @@ mod tests {
             transaction: SwapTransaction {
                 operation: SwapOperation::Pair(PairOperation::Create(PairCreate {
                     pa: TokenPairAmm {
-                        pair: TokenPair {
-                            token0: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
-                            token1: Principal::from_text("lvfsa-2aaaa-aaaaq-aaeyq-cai").unwrap(),
-                        },
+                        pair: TokenPair::new(
+                            Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
+                            Principal::from_text("lvfsa-2aaaa-aaaaq-aaeyq-cai").unwrap(),
+                        ),
                         amm: "swap_v2_0.3%".try_into().unwrap(),
                     },
                     creator: user_id,

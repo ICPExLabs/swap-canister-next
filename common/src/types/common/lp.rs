@@ -138,8 +138,8 @@ impl InnerLP {
         use ic_canister_kit::common::trap;
         let TokenPairAmm { pair, amm } = pa;
         let amm: AmmText = (*amm).into();
-        let token0 = trap(tokens.get(&pair.token0).ok_or("can not be"));
-        let token1 = trap(tokens.get(&pair.token1).ok_or("can not be"));
+        let token0 = trap(tokens.get(&pair.get_token0()).ok_or("can not be"));
+        let token1 = trap(tokens.get(&pair.get_token1()).ok_or("can not be"));
         vec![TokenInfo {
             canister_id: self.dummy_canister_id.id(),
             name: format!("{}_{}_LP({})", token0.symbol, token1.symbol, amm.as_ref()),

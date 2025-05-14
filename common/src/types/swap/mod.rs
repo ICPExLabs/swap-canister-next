@@ -29,8 +29,8 @@ pub struct TokenPairPool {
 impl From<TokenPairAmm> for TokenPairPool {
     fn from(value: TokenPairAmm) -> Self {
         Self {
-            token0: value.pair.token0,
-            token1: value.pair.token1,
+            token0: value.pair.get_token0(),
+            token1: value.pair.get_token1(),
             amm: value.amm.into(),
         }
     }

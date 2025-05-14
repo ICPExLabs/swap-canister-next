@@ -18,9 +18,9 @@ use super::{Amm, AmmText};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, CandidType)]
 pub struct TokenPair {
     /// small one
-    pub token0: CanisterId,
+    token0: CanisterId,
     /// bigger one
-    pub token1: CanisterId,
+    token1: CanisterId,
 }
 
 impl TokenPair {
@@ -28,6 +28,16 @@ impl TokenPair {
     pub fn new(token_a: CanisterId, token_b: CanisterId) -> Self {
         let (token0, token1) = sort_tokens(token_a, token_b);
         Self { token0, token1 }
+    }
+    /// token0
+    #[inline]
+    pub fn get_token0(&self) -> CanisterId {
+        self.token0
+    }
+    /// token1
+    #[inline]
+    pub fn get_token1(&self) -> CanisterId {
+        self.token1
     }
 }
 

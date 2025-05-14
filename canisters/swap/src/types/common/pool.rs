@@ -31,8 +31,8 @@ pub fn check_pool(
         .into_iter()
         .flat_map(|account| {
             vec![
-                TokenAccount::new(pa.pair.token0, account), // self pool account of token0
-                TokenAccount::new(pa.pair.token1, account), // self pool account of token1
+                TokenAccount::new(pa.pair.get_token0(), account), // self pool account of token0
+                TokenAccount::new(pa.pair.get_token1(), account), // self pool account of token1
             ]
         })
         .collect();

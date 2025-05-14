@@ -389,13 +389,13 @@ impl Business for InnerState {
         self.updated(|s| {
             let tokens = s.business_tokens_query();
             let token0 = tokens
-                .get(&arg.arg.pair.token0)
-                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token0))?
+                .get(&arg.arg.pair.get_token0())
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.get_token0()))?
                 .clone()
                 .into_owned();
             let token1 = tokens
-                .get(&arg.arg.pair.token1)
-                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.token1))?
+                .get(&arg.arg.pair.get_token1())
+                .ok_or(BusinessError::NotSupportedToken(arg.arg.pair.get_token1()))?
                 .clone()
                 .into_owned();
 

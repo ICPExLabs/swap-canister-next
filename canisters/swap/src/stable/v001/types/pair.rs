@@ -115,8 +115,8 @@ impl TokenPairs {
                     self.pairs.insert(arg.arg, maker.clone()); // do insert token pair pool
                     trace.trace(format!(
                         "*TokenPairCreate* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
-                        arg.arg.pair.token0.to_text(),
-                        arg.arg.pair.token1.to_text(),
+                        arg.arg.pair.get_token0().to_text(),
+                        arg.arg.pair.get_token1().to_text(),
                         arg.arg.amm.into_text().as_ref(),
                         hex::encode(subaccount),
                         dummy_canister_id.id().to_text()
@@ -165,8 +165,8 @@ impl TokenPairs {
                     self.pairs.remove(&arg.arg); // do remove token pair pool
                     trace.trace(format!(
                         "*TokenPairRemove* `token0:[{}], token1:[{}], amm:{}, subaccount:({}), dummyCanisterId:[{}]`",
-                        arg.arg.pair.token0.to_text(),
-                        arg.arg.pair.token1.to_text(),
+                        arg.arg.pair.get_token0().to_text(),
+                        arg.arg.pair.get_token1().to_text(),
                         arg.arg.amm.into_text().as_ref(),
                         hex::encode(subaccount),
                         dummy_canister_id.id().to_text()
