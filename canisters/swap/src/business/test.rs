@@ -124,3 +124,74 @@ fn test_push_test_tokens() {
     }
 }
 
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+fn test_deposit_test_tokens(users: Vec<(Principal, u8)>) {
+    let tokens = with_state(|s| {
+        s.business_tokens_query()
+            .into_iter()
+            .map(|(token, info)| (token, info.into_owned()))
+            .collect::<Vec<_>>()
+    });
+
+    let tokens = tokens
+        .iter()
+        .filter_map(|(token, info)| {
+            if info.is_lp_token {
+                return None;
+            }
+            let canister_id = ::common::utils::hash::hash_sha256(token.as_slice());
+            let canister_id = Principal::from_slice(&canister_id[..29]);
+            if tokens.iter().any(|(t, _)| t == &canister_id) {
+                return Some(info);
+            }
+            None
+        })
+        .collect::<Vec<_>>();
+    let caller = Caller::get();
+    for (user, amount) in users {
+        for token in &tokens {
+            let min = candid::Nat::from(10_u64).0.pow(token.decimals as u32);
+            let amount = min * candid::Nat::from(amount + 1).0;
+
+            let to = Account {
+                owner: user,
+                subaccount: None,
+            };
+            let locks = match super::lock_token_block_chain_and_token_balances(
+                vec![],
+                vec![TokenAccount::new(token.canister_id, to)],
+                0,
+            )
+            .unwrap()
+            {
+                LockResult::Locked(locks) => locks,
+                LockResult::Retry(_retries) => {
+                    unreachable!();
+                }
+            };
+            let now = TimestampNanos::now();
+            with_mut_state(|s| {
+                s.business_token_deposit(
+                    &locks,
+                    ArgWithMeta {
+                        now,
+                        caller,
+                        arg: DepositToken {
+                            token: token.canister_id,
+                            from: Account {
+                                owner: caller.id(),
+                                subaccount: None,
+                            },
+                            amount: candid::Nat::from(amount),
+                            to,
+                        },
+                        memo: None,
+                        created: None,
+                    },
+                    candid::Nat::from(0_u64),
+                )
+            })
+            .unwrap();
+        }
+    }
+}
