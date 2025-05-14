@@ -175,7 +175,7 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
         Some(v) => v,
         None => return Ok(None), // nothing
     };
-    let num = current_archiving.remain().min(length);
+    let num = current_archiving.remain().min(length).min(10_000);
     if num == 0 {
         return Ok(None);
     }
