@@ -16,6 +16,8 @@ pub struct RequestTraces {
     #[serde(skip, default = "init_request_traces")]
     traces: StableBTreeMap<RequestIndex, RequestTrace>,
     next_index: RwLock<RequestIndex>,
+    #[serde(skip, default = "Default::default")]
+    min_index: Option<RequestIndex>,
 }
 
 impl Default for RequestTraces {
@@ -23,6 +25,7 @@ impl Default for RequestTraces {
         Self {
             traces: init_request_traces(),
             next_index: RwLock::new(RequestIndex::default()),
+            min_index: Default::default(),
         }
     }
 }
@@ -41,12 +44,21 @@ impl RequestTraces {
         self.traces.get(index)
     }
     pub fn remove_request_trace(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
+        let min = match self.min_index {
+            Some(min) => min,
+            None => {
+                let min = self.traces.keys().min()?;
+                self.min_index = Some(min);
+                min
+            }
+        };
         // must be min
-        let min = self.traces.keys().min()?;
         if *index != min {
             ic_cdk::trap(format!("must remove min request index: {}", min.as_ref()));
         }
-        self.traces.remove(index)
+        let removed = self.traces.remove(index);
+        self.min_index = Some(min + 1);
+        removed
     }
     pub fn insert_request_trace(&mut self, trace: RequestTrace) {
         let mut guard = trap(self.be_guard(trace.args, None, None, None, None));
