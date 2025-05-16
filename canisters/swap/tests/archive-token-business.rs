@@ -40,11 +40,11 @@ fn test_archive_token_business_apis() {
     // 🚩 1 business
     assert_eq!(alice.get_block_pb(vec![].into()).unwrap_err().reject_message, "Only Maintainers are allowed to query data".to_string());
     assert_eq!(default.get_block_pb(vec![].into()).unwrap(), serde_bytes::ByteBuf::new());
-    assert_eq!(alice.remaining_capacity().unwrap(), 10_737_418_240);
+    assert_eq!(alice.remaining_capacity().unwrap(), 32_212_254_720);
     assert_eq!(alice.append_blocks(vec![vec![0].into()]).unwrap_err().reject_message, "'Only Swap Canister is allowed to append blocks to an Archive Node'".to_string());
     assert_eq!(default.append_blocks(vec![hex::decode("0a220a2000000000000000000000000000000000000000000000000000000000000000001a1b0a190a170a0c0a0a0000000000000002010112001a030a01642200").unwrap().into()]).unwrap(), ());
     assert_eq!(default.get_block_pb(vec![].into()).unwrap(), hex::decode("0a430a410a220a2000000000000000000000000000000000000000000000000000000000000000001a1b0a190a170a0c0a0a0000000000000002010112001a030a01642200").unwrap());
-    assert_eq!(alice.remaining_capacity().unwrap(), 10_737_418_175);
+    assert_eq!(alice.remaining_capacity().unwrap(), 32_212_254_655);
     assert_eq!(default.iter_blocks_pb(hex::decode("1064").unwrap().into()).unwrap(), hex::decode("0a430a410a220a2000000000000000000000000000000000000000000000000000000000000000001a1b0a190a170a0c0a0a0000000000000002010112001a030a01642200").unwrap());
     assert_eq!(default.get_blocks_pb(hex::decode("1064").unwrap().into()).unwrap(), hex::decode("126852657175657374656420626c6f636b73206f757473696465207468652072616e67652073746f72656420696e207468652061726368697665206e6f64652e20526571756573746564205b30202e2e203130305d2e20417661696c61626c65205b30202e2e20315d2e").unwrap());
     assert_eq!(default.get_blocks(GetBlocksArgs { start: 1, length: 100 }).unwrap(), GetTokenBlocksResult::Ok(TokenBlockRange { blocks: vec![] }));
@@ -74,7 +74,7 @@ fn test_archive_token_business_apis() {
 archive_node_block_height_offset 0 1620328630000
 # HELP archive_node_max_memory_size_bytes Maximum amount of memory this canister is allowed to use for blocks.
 # TYPE archive_node_max_memory_size_bytes gauge
-archive_node_max_memory_size_bytes 10737418240 1620328630000
+archive_node_max_memory_size_bytes 32212254720 1620328630000
 # HELP archive_node_blocks Number of blocks stored by this canister.
 # TYPE archive_node_blocks gauge
 archive_node_blocks 1 1620328630000
@@ -106,10 +106,10 @@ archive_node_last_upgrade_time_seconds 0 1620328630000
 
     // 🚩 3 business query
     assert_eq!(alice.query_latest_block_index().unwrap(), Some(0));
-    assert_eq!(alice.query_metrics().unwrap(), CustomMetrics { stable_memory_pages: 257, stable_memory_bytes: 16_842_752, heap_memory_bytes: 1_245_184, last_upgrade_time_seconds: 0, max_memory_size_bytes: 10_737_418_240, blocks: 1, blocks_bytes: 65, block_height_offset: 0 });
+    assert_eq!(alice.query_metrics().unwrap(), CustomMetrics { stable_memory_pages: 257, stable_memory_bytes: 16_842_752, heap_memory_bytes: 1_245_184, last_upgrade_time_seconds: 0, max_memory_size_bytes: 32_212_254_720, blocks: 1, blocks_bytes: 65, block_height_offset: 0 });
 
     // 🚩 4 business set_max_memory_size_bytes
-    assert_eq!(default.query_metrics().unwrap(), CustomMetrics { stable_memory_pages: 257, stable_memory_bytes: 16_842_752, heap_memory_bytes: 1_245_184, last_upgrade_time_seconds: 0, max_memory_size_bytes: 10_737_418_240, blocks: 1, blocks_bytes: 65, block_height_offset: 0 });
+    assert_eq!(default.query_metrics().unwrap(), CustomMetrics { stable_memory_pages: 257, stable_memory_bytes: 16_842_752, heap_memory_bytes: 1_245_184, last_upgrade_time_seconds: 0, max_memory_size_bytes: 32_212_254_720, blocks: 1, blocks_bytes: 65, block_height_offset: 0 });
     assert_eq!(alice.set_max_memory_size_bytes(10).unwrap_err().reject_message, "'Only Swap Canister is allowed to append blocks to an Archive Node'".to_string());
     assert_eq!(default.set_max_memory_size_bytes(10).unwrap_err().reject_message.contains("Cannot set max_memory_size_bytes to 10, because it is lower than total_block_size 65."), true);
     assert_eq!(default.set_max_memory_size_bytes(100).unwrap(), ());

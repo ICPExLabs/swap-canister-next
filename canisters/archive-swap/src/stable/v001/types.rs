@@ -41,7 +41,7 @@ pub use metrics::*;
 pub struct CanisterKit {}
 
 // The default maximum memory
-const DEFAULT_MAX_MEMORY_SIZE: u64 = 10 * 1024 * 1024 * 1024; // 10 GB
+const DEFAULT_MAX_MEMORY_SIZE: u64 = 30 * 1024 * 1024 * 1024; // 30 GB
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {

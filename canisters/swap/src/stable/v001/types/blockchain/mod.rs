@@ -211,7 +211,7 @@ impl Default for NextArchiveCanisterConfig {
         Self {
             maintainers: None,
             max_memory_size_bytes: None,
-            max_length: 1_000_000, // ? Estimated 10 GB
+            max_length: 100_000_000, // ? Estimated 20 GB
         }
     }
 }

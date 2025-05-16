@@ -89,8 +89,8 @@ fn test_swap_business_apis() {
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
 
-    default.test_config_token_current_archiving_replace(CurrentArchiving { canister_id: archive_token_canister_id, length: 0, max_length: 1_000_000, block_height_offset: 0 }).unwrap();
-    default.test_config_swap_current_archiving_replace(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 1_000_000, block_height_offset: 0 }).unwrap();
+    default.test_config_token_current_archiving_replace(CurrentArchiving { canister_id: archive_token_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }).unwrap();
+    default.test_config_swap_current_archiving_replace(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }).unwrap();
 
     // 🚩 0 query balances
     assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(1_000_000_000_000));
@@ -596,7 +596,7 @@ fn test_swap_business_apis() {
     assert_eq!(default.pause_query().unwrap(), false);
 
     // 🚩 4 test archive-token
-    assert_token_block_chain_view(&default.config_token_block_chain_query(BlockChainArgs::BlockChainQuery).unwrap(), BlockChainView { current_archiving: Some(CurrentArchiving { canister_id: archive_token_canister_id, length: 31, max_length: 1_000_000, block_height_offset: 0 }), latest_block_hash: vec![].into(), archive_config: NextArchiveCanisterConfig { maintainers: Some(vec![default_identity]), max_memory_size_bytes: None, max_length: 1_000_000 }, next_block_index: 31, archived: vec![] });
+    assert_token_block_chain_view(&default.config_token_block_chain_query(BlockChainArgs::BlockChainQuery).unwrap(), BlockChainView { current_archiving: Some(CurrentArchiving { canister_id: archive_token_canister_id, length: 31, max_length: 100_000_000, block_height_offset: 0 }), latest_block_hash: vec![].into(), archive_config: NextArchiveCanisterConfig { maintainers: Some(vec![default_identity]), max_memory_size_bytes: None, max_length: 100_000_000 }, next_block_index: 31, archived: vec![] });
     assert_token_archive_wasm_module(default.config_token_block_chain_query(BlockChainArgs::WasmModuleQuery).unwrap(), ARCHIVE_TOKEN_WASM_MODULE.to_vec());
     assert_token_archive_wasm_module(default.config_token_block_chain_update(BlockChainArgs::WasmModuleUpdate(serde_bytes::ByteBuf::from(vec![1, 2, 3]))).unwrap(), ARCHIVE_TOKEN_WASM_MODULE.to_vec());
     assert_token_archive_wasm_module(default.config_token_block_chain_query(BlockChainArgs::WasmModuleQuery).unwrap(), vec![1, 2, 3]);
@@ -614,7 +614,7 @@ fn test_swap_business_apis() {
     assert_token_get_blocks(archive_token.sender(alice_identity).get_blocks(archive_token::GetBlocksArgs{ start: 0, length: 100 }).unwrap(), 31);
 
     // 🚩 5 test archive-swap
-    assert_swap_block_chain_view(&default.config_swap_block_chain_query(BlockChainArgs::BlockChainQuery).unwrap(), BlockChainView { current_archiving: Some(CurrentArchiving { canister_id: archive_swap_canister_id, length: 24, max_length: 1_000_000, block_height_offset: 0 }), latest_block_hash: vec![].into(), archive_config: NextArchiveCanisterConfig { maintainers: None, max_memory_size_bytes: None, max_length: 1_000_000 }, next_block_index: 24, archived: vec![] });
+    assert_swap_block_chain_view(&default.config_swap_block_chain_query(BlockChainArgs::BlockChainQuery).unwrap(), BlockChainView { current_archiving: Some(CurrentArchiving { canister_id: archive_swap_canister_id, length: 24, max_length: 100_000_000, block_height_offset: 0 }), latest_block_hash: vec![].into(), archive_config: NextArchiveCanisterConfig { maintainers: None, max_memory_size_bytes: None, max_length: 100_000_000 }, next_block_index: 24, archived: vec![] });
     assert_swap_archive_wasm_module(default.config_swap_block_chain_query(BlockChainArgs::WasmModuleQuery).unwrap(), ARCHIVE_SWAP_WASM_MODULE.to_vec());
     assert_swap_archive_wasm_module(default.config_swap_block_chain_update(BlockChainArgs::WasmModuleUpdate(serde_bytes::ByteBuf::from(vec![1, 2, 3]))).unwrap(), ARCHIVE_SWAP_WASM_MODULE.to_vec());
     assert_swap_archive_wasm_module(default.config_swap_block_chain_query(BlockChainArgs::WasmModuleQuery).unwrap(), vec![1, 2, 3]);
