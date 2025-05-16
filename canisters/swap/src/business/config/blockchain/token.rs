@@ -175,7 +175,7 @@ pub async fn inner_config_token_blocks_push() -> Result<Option<PushBlocks>, Busi
         Some(v) => v,
         None => return Ok(None), // nothing
     };
-    let num = current_archiving.remain().min(length).min(10_000);
+    let num = current_archiving.remain().min(length).min(MAX_BLOCKS_PER_REQUEST);
     if num == 0 {
         return Ok(None);
     }

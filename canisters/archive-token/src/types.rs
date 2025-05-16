@@ -16,6 +16,7 @@ pub use ::common::proto;
 #[allow(unused)]
 pub use ::common::types::{
     BlockIndex, DoHash, EncodedBlock, GetBlocksArgs, GetBlocksError, GetEncodedBlocksResult, HashOf,
+    MAX_BLOCKS_PER_REQUEST,
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{Message, from_proto_bytes, to_proto_bytes};

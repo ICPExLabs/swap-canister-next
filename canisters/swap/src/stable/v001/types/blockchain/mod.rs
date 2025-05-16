@@ -68,7 +68,7 @@ impl<T> BlockChain<T> {
         F: Fn(&BlockIndex) -> Option<EncodedBlock>,
     {
         let mut blocks = Vec::new();
-        for i in 0..100 {
+        for i in 0..common::types::MAX_BLOCKS_PER_REQUEST {
             let block_height = block_height + i;
             if let Some(canister_id) = self.query(block_height) {
                 blocks.push((block_height, QueryBlockResult::Archive(canister_id)));

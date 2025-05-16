@@ -22,8 +22,8 @@ pub type UpgradeArgV1 = ::common::archive::swap::UpgradeArgV1;
 
 #[allow(unused)]
 pub use crate::types::{
-    BlockIndex, DoHash, EncodedBlock, GetBlocksError, HashOf, IoResult, Message, MetricsEncoder, SwapBlock,
-    from_proto_bytes, trap,
+    BlockIndex, DoHash, EncodedBlock, GetBlocksError, HashOf, IoResult, MAX_BLOCKS_PER_REQUEST, Message,
+    MetricsEncoder, SwapBlock, from_proto_bytes, trap,
 };
 #[allow(unused)]
 pub use ::common::proto;
@@ -42,8 +42,6 @@ pub struct CanisterKit {}
 
 // The default maximum memory
 const DEFAULT_MAX_MEMORY_SIZE: u64 = 10 * 1024 * 1024 * 1024; // 10 GB
-// Maximum number of requested blocks
-pub const MAX_BLOCKS_PER_REQUEST: u64 = 2000;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct BusinessData {

@@ -14,3 +14,6 @@ pub use query::*;
 
 /// Record each transaction id
 pub type BlockIndex = u64;
+
+/// Maximum number of requested blocks
+pub const MAX_BLOCKS_PER_REQUEST: u64 = 2_000;
