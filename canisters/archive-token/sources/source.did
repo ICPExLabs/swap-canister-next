@@ -94,6 +94,9 @@ service : (opt InitArgs) -> {
   get_block : (nat64) -> (opt TokenBlock) query;
   get_block_pb : (blob) -> (blob) query;
   get_blocks : (GetBlocksArgs) -> (GetTokenBlocksResult) query;
+  get_blocks_by : (nat64, nat64) -> (
+      vec record { nat64; opt TokenBlock },
+    ) query;
   get_blocks_pb : (blob) -> (blob) query;
   get_encoded_blocks : (GetBlocksArgs) -> (GetEncodedBlocksResult) query;
   http_request : (CustomHttpRequest) -> (CustomHttpResponse) query;

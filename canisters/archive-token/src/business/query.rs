@@ -20,3 +20,19 @@ fn get_block(block_height: BlockIndex) -> Option<TokenBlock> {
         .and_then(|mut r| r.pop())
         .map(|b| trap(b.try_into()))
 }
+
+#[ic_cdk::query(guard = "has_business_queryable")]
+fn get_blocks_by(block_height: BlockIndex, length: u64) -> Vec<(BlockIndex, Option<TokenBlock>)> {
+    assert!(length <= MAX_BLOCKS_PER_REQUEST, "length too large");
+    with_state(|s| {
+        (block_height..(block_height + length))
+            .map(|block_height| {
+                let block = s.business_blocks_get(block_height, 1);
+                (
+                    block_height,
+                    block.ok().and_then(|mut r| r.pop()).and_then(|b| b.try_into().ok()),
+                )
+            })
+            .collect()
+    })
+}
