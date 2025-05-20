@@ -731,11 +731,6 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
-  test_create_test_pairs : (vec TokenPairPool) -> ();
-  test_deposit_test_tokens : (vec record { principal; nat8 }) -> ();
-  test_push_test_tokens : () -> ();
-  test_set_controller : (principal) -> ();
-  test_withdraw_all_tokens : (vec principal) -> (vec text);
   token_balance : (principal, opt blob) -> (nat) query;
   token_balance_by : (principal, Account) -> (nat) query;
   token_balance_of : (principal, Account) -> (nat) query;
