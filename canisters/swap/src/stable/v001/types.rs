@@ -16,9 +16,11 @@ pub use super::schedule::schedule_task;
 
 // initialization parameters
 #[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArg {
+pub struct InitArgV1 {
     pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
     pub schedule: Option<DurationNanos>,  // init scheduled task or not
+    pub current_archiving_token: Option<CurrentArchiving>,
+    pub current_archiving_swap: Option<CurrentArchiving>,
 }
 
 // Upgrade parameters
@@ -183,7 +185,7 @@ fn init_token_balances() -> StableBTreeMap<TokenAccount, TokenBalance> {
 }
 
 impl InnerState {
-    pub fn do_init(&mut self, arg: InitArg) {
+    pub fn do_init(&mut self, arg: InitArgV1) {
         self.updated(|s| {
             let maintainers = arg.maintainers.clone().unwrap_or_else(|| {
                 vec![ic_canister_kit::identity::caller()] // The default caller is the maintenance person
@@ -192,6 +194,13 @@ impl InnerState {
 
             let _ = s.token_block_chain.init_wasm_module();
             let _ = s.swap_block_chain.init_wasm_module();
+
+            if let Some(token) = arg.current_archiving_token {
+                s.business_config_token_current_archiving_replace(token);
+            }
+            if let Some(swap) = arg.current_archiving_swap {
+                s.business_config_swap_current_archiving_replace(swap);
+            }
         });
     }
 

@@ -27,7 +27,7 @@ use State::*;
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub enum InitArgs {
     V0(Box<v000::types::InitArg>),
-    V1(Box<v001::types::InitArg>),
+    V1(Box<v001::types::InitArgV1>),
     // * 👆👆 UPGRADE WARNING: import the new version
 }
 

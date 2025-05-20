@@ -16,8 +16,8 @@ use types::*;
 
 // initialization
 // ! The first deployment will be executed
-impl Initial<Option<InitArg>> for InnerState {
-    fn init(&mut self, arg: Option<InitArg>) {
+impl Initial<Option<InitArgV1>> for InnerState {
+    fn init(&mut self, arg: Option<InitArgV1>) {
         let arg = arg.unwrap_or_default(); // ! Even if it is None, it must be executed once
 
         // Maintenance personnel initialization
