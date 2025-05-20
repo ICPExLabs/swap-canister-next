@@ -61,7 +61,7 @@ fn test_swap_business_apis() {
 
     pic.create_canister_with_id(Some(default_identity), None, canister_id).unwrap();
     pic.add_cycles(canister_id, 20_000_000_000_000);
-    pic.install_canister(canister_id, WASM_MODULE.to_vec(), encode_one(None::<()>).unwrap(), Some(default_identity));
+    pic.install_canister(canister_id, WASM_MODULE.to_vec(), encode_one(Some(InitArgs::V1(InitArgV1 { maintainers: None, schedule: None, current_archiving_token: Some(CurrentArchiving { canister_id: archive_token_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }), current_archiving_swap: Some(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }) }))).unwrap(), Some(default_identity));
 
     pic.create_canister_with_id(Some(default_identity), Some(CanisterSettings { controllers: Some(vec![default_identity, canister_id]), ..CanisterSettings::default() }), archive_token_canister_id).unwrap();
     pic.add_cycles(archive_token_canister_id, INIT_CYCLES);
@@ -88,9 +88,6 @@ fn test_swap_business_apis() {
     #[allow(unused)] let bob = pocketed_canister_id.sender(bob_identity);
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
-
-    default.test_config_token_current_archiving_replace(CurrentArchiving { canister_id: archive_token_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }).unwrap();
-    default.test_config_swap_current_archiving_replace(CurrentArchiving { canister_id: archive_swap_canister_id, length: 0, max_length: 100_000_000, block_height_offset: 0 }).unwrap();
 
     // 🚩 0 query balances
     assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(1_000_000_000_000));

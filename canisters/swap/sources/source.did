@@ -85,7 +85,13 @@ type DepositToken = record {
 type FeeTo = record { token_fee_to : opt Account; swap_fee_to : opt Account };
 type FeeToView = record { token_fee_to : bool; swap_fee_to : bool };
 type InitArg = record { maintainers : opt vec principal; schedule : opt nat };
-type InitArgs = variant { V0 : InitArg; V1 : InitArg };
+type InitArgV1 = record {
+  maintainers : opt vec principal;
+  current_archiving_swap : opt CurrentArchiving;
+  schedule : opt nat;
+  current_archiving_token : opt CurrentArchiving;
+};
+type InitArgs = variant { V0 : InitArg; V1 : InitArgV1 };
 type InnerLP = record {
   fee : nat;
   decimals : nat8;
@@ -725,12 +731,6 @@ service : (opt InitArgs) -> {
   schedule_find : () -> (opt nat64) query;
   schedule_replace : (opt nat64) -> ();
   schedule_trigger : () -> ();
-  test_config_swap_current_archiving_replace : (CurrentArchiving) -> (
-      opt CurrentArchiving,
-    );
-  test_config_token_current_archiving_replace : (CurrentArchiving) -> (
-      opt CurrentArchiving,
-    );
   test_create_test_pairs : (vec TokenPairPool) -> ();
   test_deposit_test_tokens : (vec record { principal; nat8 }) -> ();
   test_push_test_tokens : () -> ();

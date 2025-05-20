@@ -15,9 +15,17 @@ pub struct InitArg {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct InitArgV1 {
+    pub maintainers: Option<Vec<Principal>>,
+    pub schedule: Option<candid::Nat>,
+    pub current_archiving_token: Option<CurrentArchiving>,
+    pub current_archiving_swap: Option<CurrentArchiving>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub enum InitArgs {
     V0(InitArg),
-    V1(InitArg),
+    V1(InitArgV1),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
@@ -1256,18 +1264,6 @@ impl Service<'_> {
     }
     pub fn schedule_trigger(&self) -> Result<()> {
         self.update_call("schedule_trigger", Encode!(&()).unwrap())
-    }
-    pub fn test_config_swap_current_archiving_replace(
-        &self,
-        arg0: CurrentArchiving,
-    ) -> Result<Option<CurrentArchiving>> {
-        self.update_call("test_config_swap_current_archiving_replace", encode_one(arg0).unwrap())
-    }
-    pub fn test_config_token_current_archiving_replace(
-        &self,
-        arg0: CurrentArchiving,
-    ) -> Result<Option<CurrentArchiving>> {
-        self.update_call("test_config_token_current_archiving_replace", encode_one(arg0).unwrap())
     }
     pub fn test_set_controller(&self, arg0: Principal) -> Result<()> {
         self.update_call("test_set_controller", encode_one(arg0).unwrap())

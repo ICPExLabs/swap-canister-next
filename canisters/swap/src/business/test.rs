@@ -8,6 +8,7 @@ use crate::types::*;
 
 // ============================== withdraw tokens ==============================
 
+// fetch all test tokens
 #[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
@@ -52,6 +53,7 @@ async fn test_withdraw_all_tokens(tokens: Vec<CanisterId>) -> Vec<String> {
     results
 }
 
+// fetch canister
 #[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
 async fn test_set_controller(canister_id: CanisterId) {
@@ -71,18 +73,6 @@ async fn test_set_controller(canister_id: CanisterId) {
     )
     .await
     .unwrap();
-}
-
-// ============================== current archiving ==============================
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn test_config_token_current_archiving_replace(archiving: CurrentArchiving) -> Option<CurrentArchiving> {
-    with_mut_state(|s| s.business_config_token_current_archiving_replace(archiving))
-}
-
-#[ic_cdk::update(guard = "has_business_config_maintaining")]
-fn test_config_swap_current_archiving_replace(archiving: CurrentArchiving) -> Option<CurrentArchiving> {
-    with_mut_state(|s| s.business_config_swap_current_archiving_replace(archiving))
 }
 
 // ============================== test many tokens ==============================
