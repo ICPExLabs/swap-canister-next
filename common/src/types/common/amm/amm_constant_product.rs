@@ -404,6 +404,9 @@ impl SwapV2MarketMaker {
     }
 
     pub fn swap_to(&self, from: &CanisterId, from_amount: f64) -> Option<(CanisterId, f64)> {
+        if self.reserve0 == *ZERO || self.reserve1 == *ZERO {
+            return None;
+        }
         if self.token0 == *from {
             Some((
                 self.token1,
