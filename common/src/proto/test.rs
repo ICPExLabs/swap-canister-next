@@ -15,10 +15,7 @@ fn test_block_height() {
 
 #[test]
 fn test_blocks() {
-    let arg = GetBlocksRequest {
-        start: 0,
-        length: 100,
-    };
+    let arg = GetBlocksRequest { start: 0, length: 100 };
     let bytes = to_proto_bytes(&arg).unwrap();
     assert_eq!(hex::encode(bytes), "1064".to_string());
 }
