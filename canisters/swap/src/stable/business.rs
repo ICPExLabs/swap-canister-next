@@ -313,6 +313,7 @@ pub trait Business:
         pa: &TokenPairAmm,
         from: &Account,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         ic_cdk::trap("Not supported operation by this version.")
     }
@@ -709,9 +710,10 @@ impl Business for State {
         pa: &TokenPairAmm,
         from: &Account,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
         self.get()
-            .business_token_pair_check_liquidity_removable(pa, from, liquidity_without_fee)
+            .business_token_pair_check_liquidity_removable(pa, from, liquidity_without_fee, fee_to)
     }
     fn business_token_pair_liquidity_remove(
         &mut self,

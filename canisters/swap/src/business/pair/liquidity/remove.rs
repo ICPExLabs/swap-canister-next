@@ -59,7 +59,9 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         arg.check_args()?;
 
         // check liquidity balance
-        with_state(|s| s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity_without_fee))?;
+        with_state(|s| {
+            s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity_without_fee, fee_to)
+        })?;
 
         // check deadline
         if let Some(deadline) = &self.deadline {

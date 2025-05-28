@@ -453,14 +453,10 @@ impl Business for InnerState {
         pa: &TokenPairAmm,
         from: &Account,
         liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
     ) -> Result<(), BusinessError> {
-        self.token_pairs.check_liquidity_removable(
-            &self.token_balances,
-            pa,
-            from,
-            liquidity_without_fee,
-            self.business_data.fee_to.token_fee_to,
-        )
+        self.token_pairs
+            .check_liquidity_removable(&self.token_balances, pa, from, liquidity_without_fee, fee_to)
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
