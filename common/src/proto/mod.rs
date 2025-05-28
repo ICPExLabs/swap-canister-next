@@ -12,6 +12,7 @@ pub use token::*;
 
 #[cfg(feature = "archive-swap")]
 #[allow(missing_docs)]
+#[allow(clippy::large_enum_variant)]
 pub mod swap;
 #[cfg(feature = "archive-swap")]
 pub use swap::*;
@@ -23,9 +24,7 @@ pub use prost::bytes::Bytes;
 
 impl From<Vec<u8>> for EncodedBlock {
     fn from(value: Vec<u8>) -> Self {
-        Self {
-            block: value.into(),
-        }
+        Self { block: value.into() }
     }
 }
 
