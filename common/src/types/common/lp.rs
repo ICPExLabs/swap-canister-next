@@ -81,14 +81,14 @@ impl PoolLp {
         &mut self,
         token_liquidity_burn: F,
         from: Account,
-        amount: Nat,
+        amount_without_fee: Nat,
         fee: Option<BurnFee>,
     ) -> Result<(), BusinessError>
     where
         F: FnOnce(CanisterId, Account, Nat, Option<BurnFee>) -> Result<(), BusinessError>,
     {
         match self {
-            PoolLp::InnerLP(inner_lp) => inner_lp.burn(token_liquidity_burn, from, amount, fee),
+            PoolLp::InnerLP(inner_lp) => inner_lp.burn(token_liquidity_burn, from, amount_without_fee, fee),
             PoolLp::OuterLP(_outer_lp) => unimplemented!(),
         }
     }
@@ -176,7 +176,7 @@ impl InnerLP {
         &mut self,
         token_liquidity_burn: F,
         from: Account,
-        amount: Nat,
+        amount_without_fee: Nat,
         fee: Option<BurnFee>,
     ) -> Result<(), BusinessError>
     where
@@ -192,8 +192,13 @@ impl InnerLP {
         }
         // withdraw amount + fee?
         // deposit fee?
-        token_liquidity_burn(self.dummy_canister_id.id(), from, amount.clone(), fee.clone())?;
-        let total = amount; // only amount, fee would be minted after burned
+        token_liquidity_burn(
+            self.dummy_canister_id.id(),
+            from,
+            amount_without_fee.clone(), // will burn amount_without_fee + fee and mint fee to fee_to
+            fee.clone(),
+        )?;
+        let total = amount_without_fee; // only amount, fee would be minted after burned
         if self.total_supply < total {
             return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY".into()));
         }

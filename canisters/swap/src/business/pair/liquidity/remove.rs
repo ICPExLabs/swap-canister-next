@@ -91,8 +91,8 @@ pub(super) async fn inner_pair_liquidity_remove(
 
     // 2. some value
     // let fee_tokens = vec![];
-    let token_account_a = TokenAccount::new(arg.token_a, arg.from);
-    let token_account_b = TokenAccount::new(arg.token_b, arg.from);
+    let token_account_a = TokenAccount::new(arg.token_a, arg.to);
+    let token_account_b = TokenAccount::new(arg.token_b, arg.to);
     required.push(token_account_a);
     required.push(token_account_b);
 
