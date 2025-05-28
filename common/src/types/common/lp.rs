@@ -223,7 +223,7 @@ impl InnerLP {
         }
 
         // check minimum liquidity
-        let remain = self.total_supply.clone() - required;
+        let remain = self.total_supply.clone() - liquidity_without_fee.clone();
         if *ZERO < remain && remain < self.minimum_liquidity {
             return Err(BusinessError::Liquidity("REMAIN_TOTAL_LIQUIDITY_TOO_SMALL".into()));
         }
