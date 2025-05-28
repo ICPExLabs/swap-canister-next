@@ -14,8 +14,6 @@ pub mod token;
 
 pub mod pair;
 
-pub mod test;
-
 #[inline]
 fn check_retries(retries: u8) {
     assert!(retries < 10, "Too many retries");
