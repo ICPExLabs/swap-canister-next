@@ -8,7 +8,6 @@ use crate::types::*;
 
 // ============================== withdraw tokens ==============================
 
-// test
 // fetch all test tokens
 #[allow(clippy::unwrap_used)]
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
