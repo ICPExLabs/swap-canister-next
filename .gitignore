@@ -7,3 +7,5 @@ reinstall.sh
 test-replace.sh
 speed.sh
 check.sh
+print_args.rs
+args.did

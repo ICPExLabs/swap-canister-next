@@ -89,6 +89,9 @@ fn test_swap_business_fee_apis() {
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
 
+    default.config_token_block_chain_update(BlockChainArgs::WasmModuleUpdate(serde_bytes::ByteBuf::from(ARCHIVE_TOKEN_WASM_MODULE.to_vec()))).unwrap();
+    default.config_swap_block_chain_update(BlockChainArgs::WasmModuleUpdate(serde_bytes::ByteBuf::from(ARCHIVE_SWAP_WASM_MODULE.to_vec()))).unwrap();
+
     // 🚩 0 query balances
     assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(1_000_000_000_000));
     assert_eq!(token_sns_icx.sender(alice_identity).icrc1_balance_of(icrc2_account(alice_identity)).unwrap(), nat(0));

@@ -38,6 +38,12 @@ fn test_swap_common_apis() {
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
 
+    default.pause_replace(Some("test".to_string())).unwrap();
+    let arg: Vec<u8> = encode_one(None::<()>).unwrap();
+    assert_eq!(arg, vec![68, 73, 68, 76, 1, 110, 127, 1, 0, 0]);
+    pic.upgrade_canister(canister_id, WASM_MODULE.to_vec(), arg, Some(default_identity)).unwrap();
+    default.pause_replace(None).unwrap();
+
     // 🚩 1.1 permission permission_query
     assert_eq!(alice.version().unwrap(), 1_u32, "version");
     assert_eq!(alice.permission_all().unwrap(), vec![Forbidden("PauseQuery".to_string()), Permitted("PauseReplace".to_string()), Forbidden("PermissionQuery".to_string()), Permitted("PermissionFind".to_string()), Permitted("PermissionUpdate".to_string()), Permitted("ScheduleFind".to_string()), Permitted("ScheduleReplace".to_string()), Permitted("ScheduleTrigger".to_string()), Permitted("BusinessConfigFeeTo".to_string()), Permitted("BusinessConfigCustomToken".to_string()), Permitted("BusinessConfigMaintaining".to_string()), Permitted("BusinessTokenBalanceBy".to_string()), Forbidden("BusinessTokenDeposit".to_string()), Forbidden("BusinessTokenWithdraw".to_string()), Forbidden("BusinessTokenTransfer".to_string()), Permitted("BusinessTokenPairCreateOrRemove".to_string()), Forbidden("BusinessTokenPairLiquidityAdd".to_string()), Forbidden("BusinessTokenPairLiquidityRemove".to_string()), Forbidden("BusinessTokenPairSwap".to_string())]);
