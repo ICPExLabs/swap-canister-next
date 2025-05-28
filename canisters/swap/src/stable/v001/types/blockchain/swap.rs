@@ -14,8 +14,6 @@ use super::super::{
 
 use super::BlockChain;
 
-const WASM_MODULE: &[u8] = include_bytes!("../../../../../../archive-swap/sources/source_opt.wasm");
-
 #[derive(Serialize, Deserialize)]
 pub struct SwapBlockChain {
     #[serde(skip, default = "init_swap_blocks")]
@@ -56,14 +54,6 @@ impl SwapBlockChain {
     }
 
     // swap
-    pub fn init_wasm_module(&mut self) -> Result<(), BusinessError> {
-        if self.wasm_module.get().is_none() {
-            self.wasm_module
-                .set(Some(WASM_MODULE.to_vec()))
-                .map_err(|err| BusinessError::system_error(format!("init wasm module failed: {err:?}")))?;
-        }
-        Ok(())
-    }
     pub fn get_swap_block_chain(&self) -> &BlockChain<SwapBlock> {
         &self.block_chain
     }
