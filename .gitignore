@@ -6,3 +6,4 @@ deploy.sh
 reinstall.sh
 test-replace.sh
 speed.sh
+check.sh

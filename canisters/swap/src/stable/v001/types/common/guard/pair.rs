@@ -413,16 +413,16 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
         let transaction = SwapTransaction {
             operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Mint({
                 let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
-                    (
-                        (self.arg.arg.token_a, self.arg.arg.token_b),
-                        (amount_a.clone(), amount_b.clone()),
-                    )
-                } else {
-                    (
-                        (self.arg.arg.token_b, self.arg.arg.token_a),
-                        (amount_b.clone(), amount_a.clone()),
-                    )
-                };
+                        (
+                            (self.arg.arg.token_a, self.arg.arg.token_b),
+                            (amount_a.clone(), amount_b.clone()),
+                        )
+                    } else {
+                        (
+                            (self.arg.arg.token_b, self.arg.arg.token_a),
+                            (amount_b.clone(), amount_a.clone()),
+                        )
+                    };
                 SwapV2MintToken {
                     pa: self.arg.arg.pa,
                     from: self.arg.arg.from,
@@ -479,23 +479,23 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
         token: CanisterId,
         from: Account,
         pool_account: Account,
-        amount: Nat,
+        amount_without_fee: Nat,
         fee: Option<BurnFee>,
     ) -> Result<(), BusinessError> {
         // burn
         let transaction = SwapTransaction {
             operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Burn({
                 let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
-                    (
-                        (self.arg.arg.token_a, self.arg.arg.token_b),
-                        (amount_a.clone(), amount_b.clone()),
-                    )
-                } else {
-                    (
-                        (self.arg.arg.token_b, self.arg.arg.token_a),
-                        (amount_b.clone(), amount_a.clone()),
-                    )
-                };
+                        (
+                            (self.arg.arg.token_a, self.arg.arg.token_b),
+                            (amount_a.clone(), amount_b.clone()),
+                        )
+                    } else {
+                        (
+                            (self.arg.arg.token_b, self.arg.arg.token_a),
+                            (amount_b.clone(), amount_a.clone()),
+                        )
+                    };
                 SwapV2BurnToken {
                     pa: self.arg.arg.pa,
                     from,
@@ -504,7 +504,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
                     amount0,
                     amount1,
                     token,
-                    amount: amount.clone(),
+                    amount: amount_without_fee.clone(),
                     to: self.arg.arg.to,
                     fee: fee.clone(),
                 }
@@ -519,7 +519,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             WithdrawToken {
                 token,
                 from,
-                amount: amount.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(), // withdraw sum
+                amount: amount_without_fee.clone() + fee.as_ref().map(|f| f.fee.clone()).unwrap_or_default(), // withdraw sum
                 to: pool_account,
             },
         );
@@ -559,7 +559,7 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
             Ok(())
         })?;
         self.trace(format!(
-            "*PairLiquidityBurn* `token:[{}], from:({}), amount:{amount}`",
+            "*PairLiquidityBurn* `token:[{}], from:({}), amount:{amount_without_fee}`",
             token.to_text(),
             display_account(&from),
         )); // * trace

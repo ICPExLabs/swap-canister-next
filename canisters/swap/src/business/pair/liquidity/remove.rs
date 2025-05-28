@@ -59,7 +59,9 @@ impl CheckArgs for TokenPairLiquidityRemoveArgs {
         arg.check_args()?;
 
         // check liquidity balance
-        with_state(|s| s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity_without_fee))?;
+        with_state(|s| {
+            s.business_token_pair_check_liquidity_removable(&pa, &arg.from, &arg.liquidity_without_fee, fee_to)
+        })?;
 
         // check deadline
         if let Some(deadline) = &self.deadline {
@@ -91,8 +93,8 @@ pub(super) async fn inner_pair_liquidity_remove(
 
     // 2. some value
     // let fee_tokens = vec![];
-    let token_account_a = TokenAccount::new(arg.token_a, arg.from);
-    let token_account_b = TokenAccount::new(arg.token_b, arg.from);
+    let token_account_a = TokenAccount::new(arg.token_a, arg.to);
+    let token_account_b = TokenAccount::new(arg.token_b, arg.to);
     required.push(token_account_a);
     required.push(token_account_b);
 

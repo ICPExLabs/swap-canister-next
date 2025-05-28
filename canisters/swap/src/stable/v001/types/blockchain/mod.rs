@@ -103,7 +103,7 @@ impl<T> BlockChain<T> {
         std::mem::replace(&mut self.archive_config, archive_config)
     }
     fn replace_current_archiving(&mut self, archiving: CurrentArchiving) -> Option<CurrentArchiving> {
-        std::mem::replace(&mut self.current_archiving, Some(archiving))
+        self.current_archiving.replace(archiving)
     }
 
     fn archive_current_canister(&mut self) -> Result<(), BusinessError> {

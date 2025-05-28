@@ -253,12 +253,12 @@ fn burn(
     let _token1 = token1;
     let balance0 = guard.token_balance_of(_token0, *pool_account)?;
     let balance1 = guard.token_balance_of(_token1, *pool_account)?;
-    let liquidity = arg.liquidity_without_fee.clone();
+    let liquidity_without_fee = arg.liquidity_without_fee.clone();
 
     let fee_on = mint_fee(_self, guard, pool_account, &_reserve0, &_reserve1)?;
     let _total_supply = _self.lp.get_total_supply();
-    let amount0 = liquidity.clone() * balance0 / _total_supply.clone();
-    let amount1 = liquidity.clone() * balance1 / _total_supply.clone();
+    let amount0 = liquidity_without_fee.clone() * balance0 / _total_supply.clone();
+    let amount1 = liquidity_without_fee.clone() * balance1 / _total_supply.clone();
 
     // ! check amount before change data
     let arg = &guard.arg.arg;
@@ -281,11 +281,19 @@ fn burn(
     let arg_from = guard.arg.arg.from;
     let arg_fee = guard.arg.arg.fee.clone();
     _self.lp.burn(
-        |token, from, amount, fee| {
-            guard.token_liquidity_burn(&amount_a, &amount_b, token, from, *pool_account, amount, fee)
+        |token, from, amount_without_fee, fee| {
+            guard.token_liquidity_burn(
+                &amount_a,
+                &amount_b,
+                token,
+                from,
+                *pool_account,
+                amount_without_fee, // will burn amount_without_fee + fee and mint fee to fee_to
+                fee,
+            )
         },
         arg_from,
-        liquidity.clone(),
+        liquidity_without_fee.clone(),
         arg_fee, // burn fee to use token fee to
     )?;
 

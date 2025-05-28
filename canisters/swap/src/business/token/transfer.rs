@@ -10,7 +10,7 @@ use crate::types::*;
 
 // inner transfer
 impl CheckArgs for TokenTransferArgs {
-    type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo);
+    type Result = (TimestampNanos, SelfCanister, Caller, TokenInfo, Option<Account>);
     fn check_args(&self) -> Result<Self::Result, BusinessError> {
         // ! refuse all action about frozen token
         with_state(|s| s.business_token_alive(&self.token))?;
@@ -42,6 +42,7 @@ impl CheckArgs for TokenTransferArgs {
 
         // check balance
         let (balance, fee_to) = with_state(|s| s.business_token_balance_of_with_fee_to(token.canister_id, self.from));
+        let fee_to = caller.fee_to(fee_to, self.to); // ! check token fee to required or not
         let amount = self.transfer_amount_without_fee.clone() + fee_to.map(|_| token.fee.clone()).unwrap_or_default();
         if balance < amount {
             return Err(BusinessError::insufficient_balance(token.canister_id, balance));
@@ -50,7 +51,7 @@ impl CheckArgs for TokenTransferArgs {
         // check meta
         let now = check_meta(&self.memo, &self.created)?;
 
-        Ok((now, self_canister, caller, token))
+        Ok((now, self_canister, caller, token, fee_to))
     }
 }
 
@@ -62,7 +63,7 @@ async fn token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> TokenCh
 #[inline]
 async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> Result<candid::Nat, BusinessError> {
     // 1. check args
-    let (now, self_canister, caller, token) = args.check_args()?;
+    let (now, self_canister, caller, token, fee_to) = args.check_args()?;
 
     // 2. some value
     let fee_tokens = vec![args.token]; // ! There is a handling fee for this operation
@@ -86,9 +87,6 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
 
         // * 4. do business
         {
-            // ? 0. get transfer fee
-            let fee_to = caller.fee_to(locks.0.fee_to, args.to); // ! check token fee to required or not
-
             // ? 1. transfer
             with_mut_state(|s| {
                 s.business_token_transfer_lp(
@@ -124,9 +122,6 @@ async fn inner_token_transfer(args: TokenTransferArgs, retries: Option<u8>) -> R
 
         // * 4. do business
         {
-            // ? 0. get transfer fee
-            let fee_to = caller.fee_to(locks.0.fee_to, args.to); // ! check token fee to required or not
-
             // ? 1. transfer
             with_mut_state(|s| {
                 s.business_token_transfer(
