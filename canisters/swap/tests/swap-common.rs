@@ -7,7 +7,7 @@ mod swap;
 // 2T cycles
 const INIT_CYCLES: u128 = 20_000_000_000_000;
 
-const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm.gz");
 
 #[ignore]
 #[test]
@@ -38,9 +38,10 @@ fn test_swap_common_apis() {
     #[allow(unused)] let carol = pocketed_canister_id.sender(carol_identity);
     #[allow(unused)] let anonymous = pocketed_canister_id.sender(anonymous_identity);
 
+    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
     default.pause_replace(Some("test".to_string())).unwrap();
     let arg: Vec<u8> = encode_one(None::<()>).unwrap();
-    assert_eq!(arg, vec![68, 73, 68, 76, 1, 110, 127, 1, 0, 0]);
+    assert_eq!(arg, vec![68, 73, 68, 76, 1, 110, 127, 1, 0, 0]); // 4449444c016e7f010000
     pic.upgrade_canister(canister_id, WASM_MODULE.to_vec(), arg, Some(default_identity)).unwrap();
     default.pause_replace(None).unwrap();
 

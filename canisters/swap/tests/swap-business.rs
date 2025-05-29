@@ -13,10 +13,10 @@ mod swap;
 // 2T cycles
 const INIT_CYCLES: u128 = 2_000_000_000_000;
 
-const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm.gz");
 const ICRC2_WASM_MODULE: &[u8] = include_bytes!("../../../ledger/ic-icrc1-ledger.wasm");
-const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm");
-const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm");
+const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm.gz");
+const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm.gz");
 
 #[ignore]
 #[test]

@@ -2,6 +2,7 @@
 target/
 .dfx/
 source_opt.wasm
+source_opt.wasm.gz
 deploy.sh
 reinstall.sh
 test-replace.sh
