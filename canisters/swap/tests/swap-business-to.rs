@@ -12,10 +12,10 @@ mod swap;
 // 2T cycles
 const INIT_CYCLES: u128 = 2_000_000_000_000;
 
-const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm.gz");
 const ICRC2_WASM_MODULE: &[u8] = include_bytes!("../../../ledger/ic-icrc1-ledger.wasm");
-const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm");
-const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm");
+const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm.gz");
+const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm.gz");
 
 #[ignore]
 #[test]
@@ -127,14 +127,14 @@ fn test_swap_business_to_apis() {
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(canister_id)).unwrap(), nat(0));
     assert_tokens_balance(alice.tokens_balance_of(account(alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0))]);
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(alice_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(3)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(4_999_996_000_000_000_000));
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(canister_id)).unwrap(), nat(5_000_000_000_000_000_000));
     assert_tokens_balance(alice.tokens_balance_of(account(alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(5_000_000_000_000_000_000))]);
 
     // 🚩 1.2 business tokens withdraw
     assert_eq!(alice.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(alice_identity), withdraw_amount_without_fee: nat(999_998_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(4)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(5_999_994_000_000_000_000));
     assert_eq!(token_ck_eth.sender(default_identity).icrc1_balance_of(icrc2_account(canister_id)).unwrap(), nat(4_000_000_000_000_000_000));
     assert_tokens_balance(alice.tokens_balance_of(account(alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(4_000_000_000_000_000_000))]);
@@ -144,7 +144,7 @@ fn test_swap_business_to_apis() {
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0))]);
     assert_eq!(alice.token_transfer(TokenTransferArgs { token: token_ck_eth_canister_id, from: account(alice_identity), transfer_amount_without_fee: nat(2_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(2_000_000_000_000_000_000)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000))]);
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0))]);
@@ -155,17 +155,17 @@ fn test_swap_business_to_apis() {
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "100_000_000".to_string(), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), minimum_liquidity: "100_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_ck_eth_token_ck_usdt_subaccount), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
     assert_eq!(token_ck_usdt.sender(default_identity).icrc2_approve(icrc2::ApproveArgs::new(icrc2_account(canister_id), nat(900_000_000_000))).unwrap(), icrc2::Result2::Ok(nat(1)));
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_usdt_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(800_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(2)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(800_000_000_000))]);
     assert_eq!(default.pair_liquidity_add(TokenPairLiquidityAddArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), amount_desired: (nat(2_000_000_000_000_000_000), nat(400_000_000_000)), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityAddResult::Ok(TokenPairLiquidityAddSuccess { liquidity: nat(894_427_190_999_915), amount: (nat(2_000_000_000_000_000_000), nat(400_000_000_000)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(400_000_000_000)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(894_427_190_999_915))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
 
     // 🚩 1.5 transfer liquidity
     assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: account(default_identity), transfer_amount_without_fee: nat(894_427_190_999_915), to: account(alice_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(894_427_190_999_915)));
     assert_tokens_balance(  bob.tokens_balance_of(account(  bob_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(400_000_000_000)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(894_427_190_999_915))]);
     assert_tokens_balance(  bob.tokens_balance_of(account(  bob_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
@@ -173,7 +173,7 @@ fn test_swap_business_to_apis() {
     // 🚩 1.6 remove liquidity
     assert_tokens_balance(alice.tokens_balance_of(Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.clone().into()) }).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(400_000_000_000))]);
     assert_eq!(alice.pair_liquidity_remove(TokenPairLiquidityRemoveArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(alice_identity), to: account(default_identity), liquidity_without_fee: nat(894_427_190_999_915), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityRemoveResult::Ok(TokenPairLiquidityRemoveSuccess { amount: (nat(2_000_000_000_000_000_000), nat(400_000_000_000)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(800_000_000_000)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(2_000_000_000_000_000_000)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);

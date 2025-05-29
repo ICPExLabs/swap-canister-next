@@ -192,6 +192,9 @@ impl InnerState {
             });
             s.token_block_chain.set_archive_maintainers(Some(maintainers));
 
+            let _ = s.token_block_chain.init_wasm_module();
+            let _ = s.swap_block_chain.init_wasm_module();
+
             if let Some(token) = arg.current_archiving_token {
                 s.business_config_token_current_archiving_replace(token);
             }
@@ -203,6 +206,8 @@ impl InnerState {
 
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
         // maybe do something
+        let _ = self.token_block_chain.init_wasm_module();
+        let _ = self.swap_block_chain.init_wasm_module();
 
         self.updated(|_| {});
     }
