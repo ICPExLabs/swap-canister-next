@@ -9,19 +9,22 @@
         "cargo build -p archive-token --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public",
         "ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink",
+        "gzip -kf canisters/archive-token/sources/source_opt.wasm",
         "",
         "cargo test -p archive-swap update_candid -- --ignored --nocapture",
         "cargo build -p archive-swap --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public",
         "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink",
+        "gzip -kf canisters/archive-swap/sources/source_opt.wasm",
         "",
         "cargo test -p swap update_candid -- --ignored --nocapture",
         "cargo build -p swap --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/swap.wasm -o canisters/swap/sources/source_opt.wasm metadata candid:service -f canisters/swap/sources/source.did -v public",
-        "ic-wasm canisters/swap/sources/source_opt.wasm -o canisters/swap/sources/source_opt.wasm shrink"
+        "ic-wasm canisters/swap/sources/source_opt.wasm -o canisters/swap/sources/source_opt.wasm shrink",
+        "gzip -kf canisters/swap/sources/source_opt.wasm"
       ],
       "gzip": true,
-      "wasm": "canisters/swap/sources/source_opt.wasm",
+      "wasm": "canisters/swap/sources/source_opt.wasm.gz",
       "candid": "canisters/swap/sources/source.did"
     },
     "archive_token": {
@@ -30,10 +33,11 @@
         "cargo test -p archive-token update_candid -- --nocapture",
         "cargo build -p archive-token --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public",
-        "ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink"
+        "ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink",
+        "gzip -kf canisters/archive-token/sources/source_opt.wasm"
       ],
       "gzip": true,
-      "wasm": "canisters/archive-token/sources/source_opt.wasm",
+      "wasm": "canisters/archive-token/sources/source_opt.wasm.gz",
       "candid": "canisters/archive-token/sources/source.did"
     },
     "archive_swap": {
@@ -42,10 +46,11 @@
         "cargo test -p archive-swap update_candid -- --nocapture",
         "cargo build -p archive-swap --target wasm32-unknown-unknown --release",
         "ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public",
-        "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink"
+        "ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink",
+        "gzip -kf canisters/archive-swap/sources/source_opt.wasm"
       ],
       "gzip": true,
-      "wasm": "canisters/archive-swap/sources/source_opt.wasm",
+      "wasm": "canisters/archive-swap/sources/source_opt.wasm.gz",
       "candid": "canisters/archive-swap/sources/source.did"
     },
     "token_ICP": {

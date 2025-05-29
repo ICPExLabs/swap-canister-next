@@ -7,7 +7,7 @@ mod archive_token;
 // 2T cycles
 const INIT_CYCLES: u128 = 2_000_000_000_000;
 
-const WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm.gz");
 
 #[ignore]
 #[test]

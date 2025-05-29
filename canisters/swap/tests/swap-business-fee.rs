@@ -13,10 +13,10 @@ mod swap;
 // 2T cycles
 const INIT_CYCLES: u128 = 2_000_000_000_000;
 
-const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm");
+const WASM_MODULE: &[u8] = include_bytes!("../sources/source_opt.wasm.gz");
 const ICRC2_WASM_MODULE: &[u8] = include_bytes!("../../../ledger/ic-icrc1-ledger.wasm");
-const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm");
-const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm");
+const ARCHIVE_TOKEN_WASM_MODULE: &[u8] = include_bytes!("../../archive-token/sources/source_opt.wasm.gz");
+const ARCHIVE_SWAP_WASM_MODULE: &[u8] = include_bytes!("../../archive-swap/sources/source_opt.wasm.gz");
 
 #[ignore]
 #[test]
@@ -149,7 +149,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_token_get(0).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_eth_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(5_000_000_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(4)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_token_block_deposit(archive_token.sender(default_identity).get_block(0).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(5_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(0).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(0).unwrap().unwrap().traces[0].1, format!("*Deposit* `token:[{}], from:({}.), to:({}.), amount:5_000_000_000_000_000_000, height:4`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
@@ -166,7 +166,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_token_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(1).unwrap(), None); // 👁︎
     assert_eq!(default.token_withdraw(TokenWithdrawArgs { token: token_ck_eth_canister_id, from: account(default_identity), withdraw_amount_without_fee: nat(999_998_000_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(5)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_token_block_withdraw(archive_token.sender(default_identity).get_block(1).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(1).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(1).unwrap().unwrap().traces[0].1, format!("*Withdraw* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, height:5`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
@@ -185,7 +185,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_token_get(2).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_token.sender(default_identity).get_block(2).unwrap(), None); // 👁︎
     assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_canister_id, from: account(default_identity), transfer_amount_without_fee: nat(1_000_000_000_000_000_000), to: account(alice_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(1_000_000_000_000_000_000)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_token_block_transfer(archive_token.sender(default_identity).get_block(2).unwrap().unwrap(), archive_token::TransferToken { token: token_ck_eth_canister_id, from: archive_token_account(default_identity), amount: nat(1_000_000_000_000_000_000), to: archive_token_account(alice_identity), fee: None }); // 👁︎
     assert_eq!(default.block_token_get(2).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(2).unwrap().unwrap().traces[0].1, format!("*Transfer* `token:[{}], from:({}.), to:({}.), amount:1_000_000_000_000_000_000, fee:None`", token_ck_eth_canister_id.to_text(), default_identity.to_text(), alice_identity.to_text())); // 👁︎
@@ -208,7 +208,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(archive_swap.sender(default_identity).get_block(0).unwrap(), None); // 👁︎
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "100_000_000".to_string(), decimals: 12, dummy_canister_id: token_ck_eth_token_ck_usdt_dummy_canister_id.to_text(), minimum_liquidity: "100_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_ck_eth_token_ck_usdt_subaccount), price1_cumulative_last: "0".to_string(), token0: token_ck_eth_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
     assert_eq!(default.config_protocol_fee_replace(token_ck_eth_token_ck_usdt_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(0).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_swap_block_pair_create(archive_swap.sender(default_identity).get_block(0).unwrap().unwrap(), archive_swap::PairCreate { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id  }, amm: archive_swap::Amm::SwapV2T3 }, creator: default_identity  }); // 👁︎
@@ -225,7 +225,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.pair_liquidity_add(TokenPairLiquidityAddArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), amount_desired: (nat(2_000_000_000_000_000_000), nat(200_000_000_000)), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityAddResult::Err(BusinessError::InsufficientBalance{ token: token_ck_usdt_canister_id, balance: nat(0) }));
     assert_eq!(token_ck_usdt.sender(default_identity).icrc2_approve(icrc2::ApproveArgs::new(icrc2_account(canister_id), nat(900_000_000_000))).unwrap(), icrc2::Result2::Ok(nat(1)));
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_ck_usdt_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(800_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(2)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_token_block_deposit(archive_token.sender(default_identity).get_block(3).unwrap().unwrap(), archive_token::DepositToken { token: token_ck_usdt_canister_id, from: archive_token_account(default_identity), amount: nat(800_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(3).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(4).unwrap().unwrap().traces[0].1, format!("*Deposit* `token:[{}], from:({}.), to:({}.), amount:800_000_000_000, height:2`", token_ck_usdt_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
@@ -239,7 +239,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(archive_swap.sender(default_identity).get_block(1).unwrap(), None); // 👁︎
     assert_eq!(default.block_swap_get(1).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(default.pair_liquidity_add(TokenPairLiquidityAddArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), amount_desired: (nat(2_000_000_000_000_000_000), nat(400_000_000_000)), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityAddResult::Ok(TokenPairLiquidityAddSuccess { liquidity: nat(894_427_190_999_915), amount: (nat(2_000_000_000_000_000_000), nat(400_000_000_000)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(1).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_eq!(default.block_swap_get(2).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -271,7 +271,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.pair_swap_exact_tokens_for_tokens(TokenPairSwapExactTokensForTokensArgs { from: account(default_identity), amount_in: nat(100_000_000), amount_out_min: nat(100_000_000_000_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Err(BusinessError::TokenPairAmmNotExist(TokenPairAmm { pair: TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: Amm::SwapV2H1 })));
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id, amm: "swap_v2_1%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "100_000".to_string(), decimals: 7, dummy_canister_id: token_sns_icx_token_ck_usdt_dummy_canister_id.to_text(), minimum_liquidity: "100_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_sns_icx_token_ck_usdt_subaccount), price1_cumulative_last: "0".to_string(), token0: token_sns_icx_canister_id.to_text(), token1: token_ck_usdt_canister_id.to_text(), fee_rate: "1/100".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
     assert_eq!(default.config_protocol_fee_replace(token_sns_icx_token_ck_usdt_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(3).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_swap_block_pair_create(archive_swap.sender(default_identity).get_block(3).unwrap().unwrap(), archive_swap::PairCreate { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id  }, amm: archive_swap::Amm::SwapV2H1 }, creator: default_identity  }); // 👁︎
@@ -281,7 +281,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.pair_swap_exact_tokens_for_tokens(TokenPairSwapExactTokensForTokensArgs { from: account(default_identity), amount_in: nat(100_000_000), amount_out_min: nat(100_000_000_000_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Err(BusinessError::InsufficientBalance { token: token_sns_icx_canister_id, balance: nat(0) }));
     assert_eq!(token_sns_icx.sender(default_identity).icrc2_approve(icrc2::ApproveArgs::new(icrc2_account(canister_id), nat(100_000_000_000))).unwrap(), icrc2::Result2::Ok(nat(1)));
     assert_eq!(default.token_deposit(TokenDepositArgs { token: token_sns_icx_canister_id, from: account(default_identity), deposit_amount_without_fee: nat(20_000_000_000), to: account(default_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(2)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     assert_token_block_deposit(archive_token.sender(default_identity).get_block(7).unwrap().unwrap(), archive_token::DepositToken { token: token_sns_icx_canister_id, from: archive_token_account(default_identity), amount: nat(20_000_000_000), to: archive_token_account(default_identity) }); // 👁︎
     assert_eq!(default.block_token_get(7).unwrap(), QueryTokenBlockResult::Archive(archive_token_canister_id)); // 👁︎
     assert_eq!(default.request_trace_get(7).unwrap().unwrap().traces[0].1, format!("*Deposit* `token:[{}], from:({}.), to:({}.), amount:20_000_000_000, height:2`", token_sns_icx_canister_id.to_text(), default_identity.to_text(), default_identity.to_text())); // 👁︎
@@ -290,7 +290,7 @@ fn test_swap_business_fee_apis() {
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_sns_icx_canister_id, nat(20_000_000_000)), (token_ck_usdt_canister_id, nat(4_000_00_000_000)), (token_sns_icx_token_ck_usdt_dummy_canister_id, nat(0))]);
     assert_tokens_balance(default.tokens_balance_of(swap::Account { owner: canister_id, subaccount: Some(token_sns_icx_token_ck_usdt_subaccount.clone().into()) }).unwrap(), vec![(token_sns_icx_canister_id, nat(0)), (token_ck_usdt_canister_id, nat(0)), (token_ck_eth_token_ck_usdt_dummy_canister_id, nat(0))]);
     assert_eq!(default.pair_liquidity_add(TokenPairLiquidityAddArgs { swap_pair: SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }, from: account(default_identity), to: account(default_identity), amount_desired: (nat(10_000_000_000), nat(200_000_000_000)), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityAddResult::Ok(TokenPairLiquidityAddSuccess { liquidity: nat(44_721_359_549), amount: (nat(10_000_000_000), nat(200_000_000_000)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(4).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_eq!(default.block_swap_get(5).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -320,7 +320,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_token_get(11).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(default.block_swap_get(6).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(default.pair_swap_exact_tokens_for_tokens(TokenPairSwapExactTokensForTokensArgs { from: account(default_identity), amount_in: nat(100_000_000), amount_out_min: nat(1_000_000_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Ok(TokenPairSwapTokensSuccess { amounts: vec![nat(100_000_000), nat(1_960_590_157)] }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_swap_block_pair_swap(archive_swap.sender(default_identity).get_block(6).unwrap().unwrap(), archive_swap::PairSwapToken { token_a: token_sns_icx_canister_id, token_b: token_ck_usdt_canister_id, amm: archive_swap::Amm::SwapV2H1, from: archive_swap_account(default_identity), to: archive_swap_account(default_identity), amount_a: nat(100_000_000), amount_b: nat(1_960_590_157) }); // 👁︎
     assert_swap_block_pair_v2_state(archive_swap.sender(default_identity).get_block(7).unwrap().unwrap(), archive_swap::SwapV2State { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2H1 }, block_timestamp: 0, supply: nat(44_721_359_549), reserve0: nat(10_100_000_000), reserve1: nat(198_039_409_843), price_cumulative_exponent: 64, price0_cumulative: nat(0), price1_cumulative: nat(0) }); // 👁︎
@@ -349,7 +349,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_token_get(16).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(default.block_swap_get(10).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(default.pair_swap_tokens_for_exact_tokens(TokenPairSwapTokensForExactTokensArgs { from: account(default_identity), amount_out: nat(39_409_843), amount_in_max: nat(2_030_607), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Ok(TokenPairSwapTokensSuccess { amounts: vec![nat(2_030_607), nat(39_409_843)] }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_swap_block_pair_swap(archive_swap.sender(default_identity).get_block(8).unwrap().unwrap(), archive_swap::PairSwapToken { token_a: token_sns_icx_canister_id, token_b: token_ck_usdt_canister_id, amm: archive_swap::Amm::SwapV2H1, from: archive_swap_account(default_identity), to: archive_swap_account(default_identity), amount_a: nat(2_030_607), amount_b: nat(39_409_843) }); // 👁︎
     assert_swap_block_pair_v2_state(archive_swap.sender(default_identity).get_block(9).unwrap().unwrap(), archive_swap::SwapV2State { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2H1 }, block_timestamp: 0, supply: nat(44_721_359_549), reserve0: nat(10_102_030_607), reserve1: nat(198_000_000_000), price_cumulative_exponent: 64, price0_cumulative: nat(0), price1_cumulative: nat(0) }); // 👁︎
@@ -380,7 +380,7 @@ fn test_swap_business_fee_apis() {
     // USDT -> ETH 400_000_000_000 -> 2_000_000_000_000_000_000
     assert_eq!(default.pair_create(TokenPairCreateOrRemoveArgs { pool: TokenPairPool { token0: token_sns_icx_canister_id, token1: token_ck_eth_canister_id, amm: "swap_v2_0.3%".to_string() }, memo: None, created: None }).unwrap(), TokenPairCreateOrRemoveResult::Ok(MarketMakerView::SwapV2(SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "1_000_000_000".to_string(), decimals: 13, dummy_canister_id: token_sns_icx_token_ck_eth_dummy_canister_id.to_text(), minimum_liquidity: "1_000_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_sns_icx_token_ck_eth_subaccount), price1_cumulative_last: "0".to_string(), token0: token_sns_icx_canister_id.to_text(), token1: token_ck_eth_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: None, price0_cumulative_last: "0".to_string() })));
     assert_eq!(default.config_protocol_fee_replace(token_sns_icx_token_ck_eth_subaccount.clone().into(), Some(SwapRatio { numerator: 1, denominator: 6 })).unwrap(), None);
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(10).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_swap_block_pair_create(archive_swap.sender(default_identity).get_block(10).unwrap().unwrap(), archive_swap::PairCreate { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_eth_canister_id  }, amm: archive_swap::Amm::SwapV2T3 }, creator: default_identity  }); // 👁︎
@@ -389,7 +389,7 @@ fn test_swap_business_fee_apis() {
     assert_swap_v2_market_maker(&alice.pair_query(TokenPairPool { token0: token_sns_icx_canister_id, token1: token_ck_eth_canister_id, amm: "swap_v2_0.3%".to_string() }).unwrap().unwrap(), SwapV2MarketMakerView { lp: PoolLpView::Inner(InnerLpView { fee: "1_000_000_000".to_string(), decimals: 13, dummy_canister_id: token_sns_icx_token_ck_eth_dummy_canister_id.to_text(), minimum_liquidity: "1_000_000_000_000".to_string(), total_supply: "0".to_string() }), price_cumulative_exponent: 64, block_timestamp_last: 0, reserve0: "0".to_string(), reserve1: "0".to_string(), subaccount: hex::encode(&token_sns_icx_token_ck_eth_subaccount), price1_cumulative_last: "0".to_string(), token0: token_sns_icx_canister_id.to_text(), token1: token_ck_eth_canister_id.to_text(), fee_rate: "3/1000".to_string(), k_last: "0".to_string(), protocol_fee: Some("1/6".to_string()), price0_cumulative_last: "0".to_string() });
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_sns_icx_canister_id, nat(9_897_969_393)), (token_ck_eth_canister_id, nat(1_000_000_000_000_000_000)), (token_sns_icx_token_ck_eth_dummy_canister_id, nat(0))]);
     assert_eq!(default.pair_liquidity_add(TokenPairLiquidityAddArgs { swap_pair: SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_eth_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), amount_desired: (nat(2_000_000_000), nat(100_000_000_000_000_000)), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityAddResult::Ok(TokenPairLiquidityAddSuccess { liquidity: nat(14_142_135_623_730), amount: (nat(2_000_000_000), nat(100_000_000_000_000_000)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_eq!(default.block_swap_get(11).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
     assert_eq!(default.block_swap_get(12).unwrap(), QuerySwapBlockResult::Archive(archive_swap_canister_id)); // 👁︎
@@ -427,7 +427,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_swap_get(15).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_swap.sender(default_identity).get_block(13).unwrap(), None); // 👁︎
     assert_eq!(default.pair_swap_by_loan(TokenPairSwapByLoanArgs { from: account(default_identity), loan: nat(20_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }, SwapTokenPair { token: (token_ck_usdt_canister_id, token_ck_eth_canister_id), amm: "swap_v2_0.3%".to_string() }, SwapTokenPair { token: (token_ck_eth_canister_id, token_sns_icx_canister_id), amm: "swap_v2_0.3%".to_string() }, ], to: account(bob_identity), deadline: None, created: None, memo: None }, None).unwrap(), TokenPairSwapTokensResult::Ok(TokenPairSwapTokensSuccess { amounts: vec![nat(20_000), nat(388_079), nat(1_934_571_943_713), nat(38_574)] }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_swap_block_pair_swap(archive_swap.sender(default_identity).get_block(13).unwrap().unwrap(), archive_swap::PairSwapToken { token_a: token_sns_icx_canister_id, token_b: token_ck_usdt_canister_id, amm: archive_swap::Amm::SwapV2H1, from: archive_swap_account(canister_id), to: archive_swap::Account { owner: canister_id, subaccount: Some(token_ck_eth_token_ck_usdt_subaccount.clone().into()) }, amount_a: nat(20_000), amount_b: nat(388_079) }); // 👁︎
     assert_swap_block_pair_v2_state(archive_swap.sender(default_identity).get_block(14).unwrap().unwrap(), archive_swap::SwapV2State { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2H1 }, block_timestamp: 0, supply: nat(44_721_359_549), reserve0: nat(10_102_050_607), reserve1: nat(197_999_611_921), price_cumulative_exponent: 64, price0_cumulative: nat(0), price1_cumulative: nat(0) }); // 👁︎
@@ -481,7 +481,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(token_sns_icx.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(979_999_800_000));
     assert_eq!(token_ck_usdt.sender(default_identity).icrc1_balance_of(icrc2_account(default_identity)).unwrap(), nat(99_199_999_980_000));
     assert_eq!(default.pair_swap_with_deposit_and_withdraw(TokenPairSwapWithDepositAndWithdrawArgs { from: account(default_identity), deposit_amount_without_fee: nat(200_000_000), amount_out_min: nat(20_000_000), path: vec![SwapTokenPair { token: (token_sns_icx_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_1%".to_string() }], to: account(default_identity), created: None, memo: None, deadline: None, withdraw_fee: None, deposit_fee: None }).unwrap(), (TokenChangedResult::Ok(nat(3)), Some(TokenPairSwapTokensResult::Ok(TokenPairSwapTokensSuccess { amounts: vec![nat(200_000_000), nat(3_806_187_431)] })), Some(TokenChangedResult::Ok(nat(3))))); // 👁︎
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_swap_block_pair_swap(archive_swap.sender(default_identity).get_block(19).unwrap().unwrap(), archive_swap::PairSwapToken { token_a: token_sns_icx_canister_id, token_b: token_ck_usdt_canister_id, amm: archive_swap::Amm::SwapV2H1, from: archive_swap_account(default_identity), to: archive_swap_account(default_identity), amount_a: nat(200_000_000), amount_b: nat(3_806_187_431) }); // 👁︎
     assert_swap_block_pair_v2_state(archive_swap.sender(default_identity).get_block(20).unwrap().unwrap(), archive_swap::SwapV2State { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_sns_icx_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2H1 }, block_timestamp: 0, supply: nat(44_721_359_549), reserve0: nat(10_302_050_607), reserve1: nat(194_193_424_490), price_cumulative_exponent: 64, price0_cumulative: nat(0), price1_cumulative: nat(0) }); // 👁︎
@@ -526,7 +526,7 @@ fn test_swap_business_fee_apis() {
     assert_eq!(default.block_swap_get(21).unwrap_err().reject_message.contains("invalid block height"), true); // 👁︎
     assert_eq!(archive_swap.sender(default_identity).get_block(21).unwrap(), None); // 👁︎
     assert_eq!(default.pair_liquidity_remove(TokenPairLiquidityRemoveArgs { swap_pair: SwapTokenPair { token: (token_ck_eth_canister_id, token_ck_usdt_canister_id), amm: "swap_v2_0.3%".to_string() }, from: account(default_identity), to: account(default_identity), liquidity_without_fee: nat(494_427_190_999_915), amount_min: (nat(1), nat(1)), deadline:None, created: None, memo: None}, None).unwrap(), TokenPairLiquidityRemoveResult::Ok(TokenPairLiquidityRemoveSuccess { amount: (nat(1_105_571_739_326_859_431), nat(221_114_776_271)) }));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_swap_block_pair_v2_mint_fee(archive_swap.sender(default_identity).get_block(21).unwrap().unwrap(), archive_swap::SwapV2MintFeeToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, to: archive_swap_account(bob_identity), token: token_ck_eth_token_ck_usdt_dummy_canister_id, amount: nat(216_942) }); // 👁︎
     assert_swap_block_pair_v2_burn(archive_swap.sender(default_identity).get_block(22).unwrap().unwrap(), archive_swap::SwapV2BurnToken { pa: archive_swap::TokenPairAmm { pair: archive_swap::TokenPair { token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id }, amm: archive_swap::Amm::SwapV2T3 }, from: archive_swap_account(default_identity), to: archive_swap_account(default_identity), token0: token_ck_eth_canister_id, token1: token_ck_usdt_canister_id, amount0: nat(1_105_571_739_326_859_431), amount1: nat(221_114_776_271), token: token_ck_eth_token_ck_usdt_dummy_canister_id, amount: nat(494_427_190_999_915), fee: Some(archive_swap::BurnFee { fee: nat(100_000_000), fee_to: archive_swap_account(alice_identity) }) }); // 👁︎
@@ -571,7 +571,7 @@ fn test_swap_business_fee_apis() {
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(        100_000_000))]);
     assert_tokens_balance(    bob.tokens_balance_of(account(    bob_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(            216_942))]);
     assert_eq!(default.token_transfer(TokenTransferArgs { token: token_ck_eth_token_ck_usdt_dummy_canister_id, from: account(default_identity), transfer_amount_without_fee: nat(100_000_000_000_000), to: account(bob_identity), fee: None, created: None, memo: None }, None).unwrap(), TokenChangedResult::Ok(nat(100_000_100_000_000)));
-    std::thread::sleep(std::time::Duration::from_secs(2)); // 🕰︎
+    pic.tick(); // 🕰︎
     archive_swap.sender(canister_id).append_blocks(vec![]).unwrap(); // ! BUG
     assert_tokens_balance(default.tokens_balance_of(account(default_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(299_999_800_000_000))]);
     assert_tokens_balance(  alice.tokens_balance_of(account(  alice_identity)).unwrap(), vec![(token_ck_eth_token_ck_usdt_dummy_canister_id, nat(        200_000_000))]);
@@ -623,7 +623,7 @@ fn test_swap_business_fee_apis() {
     assert_swap_archive_config_replace(default.config_swap_block_chain_update(BlockChainArgs::NextArchiveCanisterConfigUpdate(NextArchiveCanisterConfig{ maintainers: Some(vec![bob_identity]), max_memory_size_bytes: Some(2_000_000), max_length: 10000 })).unwrap(), NextArchiveCanisterConfig { maintainers: None, max_memory_size_bytes: None, max_length: 1_000 });
     assert_swap_block_chain_view(&default.config_swap_block_chain_query(BlockChainArgs::BlockChainQuery).unwrap(), BlockChainView { current_archiving: Some(CurrentArchiving { canister_id: archive_swap_canister_id, length: 25, max_length: 1_000, block_height_offset: 0 }), latest_block_hash: vec![].into(), archive_config: NextArchiveCanisterConfig { maintainers: Some(vec![bob_identity]), max_memory_size_bytes: Some(2_000_000), max_length: 10_000 }, next_block_index: 25, archived: vec![] });
     assert_eq!(default.config_swap_block_chain_update(BlockChainArgs::ArchivedCanisterMaintainersUpdate{ canister_id: archive_swap_canister_id, maintainers: Some(vec![alice_identity]) }).unwrap(), swap::SwapBlockResult::Ok(swap::SwapBlockResponse::ArchivedCanisterMaintainers));
-    assert_eq!(default.config_swap_block_chain_update(BlockChainArgs::ArchivedCanisterMaxMemorySizeBytesUpdate{ canister_id: archive_swap_canister_id, max_memory_size_bytes: 300 }).unwrap(), swap::SwapBlockResult::Err(BusinessError::CallCanisterError(format!("call rejected: 5 - IC0503: Error from Canister {}: Canister called `ic0.trap` with message: 'Cannot set max_memory_size_bytes to 300, because it is lower than total_block_size 4097.'.\nConsider gracefully handling failures from this canister or altering the canister to handle exceptions. See documentation: https://internetcomputer.org/docs/current/references/execution-errors#trapped-explicitly", archive_swap_canister_id.to_text()))));
+    assert_eq!(default.config_swap_block_chain_update(BlockChainArgs::ArchivedCanisterMaxMemorySizeBytesUpdate{ canister_id: archive_swap_canister_id, max_memory_size_bytes: 300 }).unwrap(), swap::SwapBlockResult::Err(BusinessError::CallCanisterError(format!("call rejected: 5 - IC0503: Error from Canister {}: Canister called `ic0.trap` with message: 'Cannot set max_memory_size_bytes to 300, because it is lower than total_block_size 4099.'.\nConsider gracefully handling failures from this canister or altering the canister to handle exceptions. See documentation: https://internetcomputer.org/docs/current/references/execution-errors#trapped-explicitly", archive_swap_canister_id.to_text()))));
     assert_eq!(default.config_swap_block_chain_update(BlockChainArgs::ArchivedCanisterMaxMemorySizeBytesUpdate{ canister_id: archive_swap_canister_id, max_memory_size_bytes: 3_000_000 }).unwrap(), swap::SwapBlockResult::Ok(swap::SwapBlockResponse::ArchivedCanisterMaxMemorySizeBytes));
 
     // 🚩 5.1 test archive-swap
