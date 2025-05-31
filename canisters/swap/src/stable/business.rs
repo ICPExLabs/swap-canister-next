@@ -397,6 +397,12 @@ pub trait Business:
     fn business_request_trace_insert(&mut self, trace: RequestTrace) {
         ic_cdk::trap("Not supported operation by this version.")
     }
+
+    // ======================== fix ========================
+
+    fn business_fix_bg_pool(&mut self, self_canister: SelfCanister) -> Result<(), BusinessError> {
+        ic_cdk::trap("Not supported operation by this version.")
+    }
 }
 
 // Business
@@ -796,5 +802,11 @@ impl Business for State {
     }
     fn business_request_trace_insert(&mut self, trace: RequestTrace) {
         self.get_mut().business_request_trace_insert(trace)
+    }
+
+    // ======================== fix ========================
+
+    fn business_fix_bg_pool(&mut self, self_canister: SelfCanister) -> Result<(), BusinessError> {
+        self.get_mut().business_fix_bg_pool(self_canister)
     }
 }

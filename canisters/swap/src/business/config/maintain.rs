@@ -19,3 +19,11 @@ fn config_maintain_archives_query() -> MaintainArchives {
 fn config_maintain_archives_set(config: MaintainArchivesConfig) {
     with_mut_state(|s| s.business_config_maintain_archives_set(config))
 }
+
+// ============================== fix ==============================
+
+#[ic_cdk::update(guard = "has_business_config_maintaining")]
+fn config_maintain_pools() -> Result<(), BusinessError> {
+    let (self_canister, _) = check_caller(&ic_canister_kit::identity::caller())?;
+    with_mut_state(|s| s.business_fix_bg_pool(self_canister))
+}

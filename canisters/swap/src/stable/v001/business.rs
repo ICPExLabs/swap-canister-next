@@ -576,4 +576,23 @@ impl Business for InnerState {
     fn business_request_trace_insert(&mut self, trace: RequestTrace) {
         self.updated(|s| s.request_traces.insert_request_trace(trace))
     }
+
+    // ======================== fix ========================
+
+    fn business_fix_bg_pool(&mut self, self_canister: SelfCanister) -> Result<(), BusinessError> {
+        // 1. restore pool total supply
+        self.token_pairs.fix_bg_pool()?;
+        // 2. restore fee_to balance of lp
+        let fee_to = self
+            .business_data
+            .fee_to
+            .token_fee_to
+            .ok_or_else(|| BusinessError::SystemError("can not find fee_to".to_string()))?;
+        self.token_balances.fix_fee_to_bg_balance(fee_to)?;
+        // 3. restore pool balance of icp
+        let (icp_balance, bg_balance) = self.token_balances.fix_bg_pool_balance(self_canister)?;
+        // 4. restore pool's reserve
+        self.token_pairs.fix_bg_pool_reserve(icp_balance, bg_balance)?;
+        Ok(())
+    }
 }

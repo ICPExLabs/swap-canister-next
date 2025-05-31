@@ -120,6 +120,46 @@ impl TokenBalances {
             lock,
         }
     }
+
+    // ======================== fix ========================
+    pub fn fix_fee_to_bg_balance(&mut self, fee_to: Account) -> Result<(), BusinessError> {
+        let ta = TokenAccount::new(
+            candid::Principal::from_text("l7rwb-odqru-vj3u7-n5jvs-fxscz-6hd2c-a4fvt-2cj2r-yqnab-e5jfg-prq")
+                .map_err(|_| BusinessError::SystemError("can not be".to_string()))?,
+            fee_to,
+        );
+        self.balances
+            .insert(ta, TokenBalance(Nat::from(31_622_770_277_112_u64))); // ! now value is 70_277_112, wrong
+        Ok(())
+    }
+    pub fn fix_bg_pool_balance(&mut self, self_canister: SelfCanister) -> Result<(Nat, Nat), BusinessError> {
+        let subaccount = "708d2a9dd3edea6b22de42cf8e3d081c2d67a12751c41a0093a9299f18ec0e06";
+        let subaccount_bytes =
+            hex::decode(subaccount).map_err(|_| BusinessError::SystemError("can not be hex".to_string()))?;
+        let mut subaccount = [0; 32];
+        subaccount.copy_from_slice(&subaccount_bytes);
+        let ta = TokenAccount::new(
+            candid::Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai")
+                .map_err(|_| BusinessError::SystemError("can not be".to_string()))?,
+            Account {
+                owner: self_canister.id(),
+                subaccount: Some(subaccount),
+            },
+        );
+        let balance = self.balances.get(&ta).unwrap_or_default();
+        let new_balance = TokenBalance(balance.0 + 10_012_825_024_u64); // wrong removed 
+        self.balances.insert(ta, new_balance.clone()); // ! now value is 231012253, wrong
+
+        let bg_ta = TokenAccount::new(
+            candid::Principal::from_text("c6zxb-naaaa-aaaah-are2q-cai")
+                .map_err(|_| BusinessError::SystemError("can not be".to_string()))?,
+            Account {
+                owner: self_canister.id(),
+                subaccount: Some(subaccount),
+            },
+        );
+        Ok((new_balance.0, self.balances.get(&bg_ta).unwrap_or_default().0))
+    }
 }
 
 // ============================ lock ============================
