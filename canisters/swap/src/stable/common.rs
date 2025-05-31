@@ -76,7 +76,7 @@ fn post_upgrade(args: Option<UpgradeArgs>) {
 fn pre_upgrade() {
     STATE.with(|state| {
         use ic_canister_kit::common::trap;
-        trap(state.borrow().pause_must_be_paused()); // ! Must be in maintenance state before upgrading
+        // trap(state.borrow().pause_must_be_paused()); // ! Must be in maintenance state before upgrading
         state.borrow_mut().schedule_stop(); // * Stop timing tasks
 
         let version = state.borrow().version();
