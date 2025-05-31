@@ -208,6 +208,21 @@ impl TokenBalancesGuard<'_> {
             return Err(BusinessError::insufficient_balance(token, from_balance));
         }
 
+        let token_account = TokenAccount::new(token, from);
+        if !self.lock.locked.contains(&token_account) {
+            return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
+        }
+        let token_account = TokenAccount::new(token, to);
+        if !self.lock.locked.contains(&token_account) {
+            return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
+        }
+        if let Some(TransferFee { fee_to, .. }) = &fee {
+            let token_account = TokenAccount::new(token, *fee_to);
+            if !self.lock.locked.contains(&token_account) {
+                return Err(BusinessError::TokenAccountsUnlocked(vec![token_account]));
+            }
+        }
+
         // do transfer
         self.do_token_withdraw(token, from, amount_without_fee.clone())?; // withdraw
         self.do_token_deposit(token, to, amount_without_fee.clone())?; // deposit
