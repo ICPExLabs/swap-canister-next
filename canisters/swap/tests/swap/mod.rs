@@ -1081,7 +1081,7 @@ impl Service<'_> {
         self.update_call("config_token_block_chain_update", encode_one(arg0).unwrap())
     }
     pub fn config_token_custom_put(&self, arg0: TokenInfo) -> Result<()> {
-        self.query_call("config_token_custom_put", encode_one(arg0).unwrap())
+        self.update_call("config_token_custom_put", encode_one(arg0).unwrap())
     }
     pub fn config_token_custom_query(&self) -> Result<Vec<TokenInfo>> {
         self.query_call("config_token_custom_query", Encode!(&()).unwrap())
@@ -1309,5 +1309,9 @@ impl Service<'_> {
     }
     pub fn updated(&self) -> Result<u64> {
         self.query_call("updated", Encode!(&()).unwrap())
+    }
+
+    pub fn config_maintain_pools(&self) -> Result<String> {
+        self.update_call("config_maintain_pools", Encode!(&()).unwrap())
     }
 }

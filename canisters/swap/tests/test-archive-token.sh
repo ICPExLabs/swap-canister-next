@@ -12,6 +12,7 @@ if [ "$1" = "update" ]; then
     cargo build -p archive-token --target wasm32-unknown-unknown --release
     ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public
     ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink
+    gzip -kf canisters/archive-token/sources/source_opt.wasm
 fi
 
 set -e
