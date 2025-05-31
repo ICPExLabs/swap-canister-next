@@ -10,3 +10,6 @@ speed.sh
 check.sh
 print_args.rs
 args.did
+source_opt_1*.wasm
+source_opt_1*.wasm.gz
+swap-business-bg.rs

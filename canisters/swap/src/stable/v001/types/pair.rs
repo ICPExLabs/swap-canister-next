@@ -496,4 +496,86 @@ impl TokenPairs {
 
         Ok(TokenPairSwapTokensSuccess { amounts })
     }
+
+    // ======================== fix ========================
+
+    pub fn fix_bg_pool(&mut self) -> Result<(), BusinessError> {
+        let (pa, mut maker) = self
+            .pairs
+            .iter()
+            .find(|(_pa, maker)| {
+                maker.dummy_canisters().iter().any(|token| {
+                    token.to_text().as_str() == "l7rwb-odqru-vj3u7-n5jvs-fxscz-6hd2c-a4fvt-2cj2r-yqnab-e5jfg-prq"
+                })
+            })
+            .ok_or_else(|| {
+                BusinessError::SystemError(
+                    "can not find dummy pool by l7rwb-odqru-vj3u7-n5jvs-fxscz-6hd2c-a4fvt-2cj2r-yqnab-e5jfg-prq"
+                        .to_string(),
+                )
+            })?;
+        //             amm:"swap_v2_0.05%"
+        // token0:"ryjl3-tyaaa-aaaaa-aaaba-cai"
+        // token1:"c6zxb-naaaa-aaaah-are2q-cai"
+        if pa.pair.get_token0().to_text() != "ryjl3-tyaaa-aaaaa-aaaba-cai"
+            || pa.pair.get_token1().to_text() != "c6zxb-naaaa-aaaah-are2q-cai"
+            || pa.amm.into_text().as_ref() != "swap_v2_0.05%"
+        {
+            return Err(BusinessError::SystemError(format!(
+                "got wrong pair: {}",
+                serde_json::to_string(&pa).unwrap_or_default()
+            )));
+        }
+
+        // 1. restore total supply
+        #[allow(irrefutable_let_patterns)]
+        if let MarketMaker::SwapV2(maker) = &mut maker {
+            if let ::common::types::PoolLp::InnerLP(lp) = &mut maker.lp {
+                lp.total_supply = Nat::from(31_622_770_277_112_u64); // ! now value is 70_277_112, wrong
+            }
+        }
+
+        self.pairs.insert(pa, maker);
+
+        Ok(())
+    }
+    pub fn fix_bg_pool_reserve(&mut self, icp_balance: Nat, bg_balance: Nat) -> Result<(), BusinessError> {
+        let (pa, mut maker) = self
+            .pairs
+            .iter()
+            .find(|(_pa, maker)| {
+                maker.dummy_canisters().iter().any(|token| {
+                    token.to_text().as_str() == "l7rwb-odqru-vj3u7-n5jvs-fxscz-6hd2c-a4fvt-2cj2r-yqnab-e5jfg-prq"
+                })
+            })
+            .ok_or_else(|| {
+                BusinessError::SystemError(
+                    "can not find dummy pool by l7rwb-odqru-vj3u7-n5jvs-fxscz-6hd2c-a4fvt-2cj2r-yqnab-e5jfg-prq"
+                        .to_string(),
+                )
+            })?;
+        // amm:"swap_v2_0.05%"
+        // token0:"ryjl3-tyaaa-aaaaa-aaaba-cai"
+        // token1:"c6zxb-naaaa-aaaah-are2q-cai"
+        if pa.pair.get_token0().to_text() != "ryjl3-tyaaa-aaaaa-aaaba-cai"
+            || pa.pair.get_token1().to_text() != "c6zxb-naaaa-aaaah-are2q-cai"
+            || pa.amm.into_text().as_ref() != "swap_v2_0.05%"
+        {
+            return Err(BusinessError::SystemError(format!(
+                "got wrong pair: {}",
+                serde_json::to_string(&pa).unwrap_or_default()
+            )));
+        }
+
+        // 1. restore total supply
+        #[allow(irrefutable_let_patterns)]
+        if let MarketMaker::SwapV2(maker) = &mut maker {
+            maker.reserve0 = icp_balance;
+            maker.reserve1 = bg_balance;
+        }
+
+        self.pairs.insert(pa, maker);
+
+        Ok(())
+    }
 }
