@@ -48,6 +48,7 @@ fn init_tokens() -> HashMap<CanisterId, TokenInfo> {
         TokenInfo::new("jcmow-hyaaa-aaaaq-aadlq-cai", "WaterNeuron",          "WTN",      8,                 1_000_000, false), // fee 0.01 WTN
         TokenInfo::new("jg2ra-syaaa-aaaaq-aaewa-cai", "Cecil The Lion DAO",   "CECIL",    8,                 1_000_000, false), // fee 0.01 CECIL
         TokenInfo::new("k45jy-aiaaa-aaaaq-aadcq-cai", "Motoko",               "MOTOKO",   8,                10_000_000, false), // fee 0.1 MOTOKO
+        TokenInfo::new("kknbx-zyaaa-aaaaq-aae4a-cai", "TACO DAO Token",       "TACO",     8,                    10_000, false), // fee 0.0001 TACO
         TokenInfo::new("lkwrt-vyaaa-aaaaq-aadhq-cai", "ORIGYN",               "OGY",      8,                   200_000, false), // fee 0.002 OGY
         TokenInfo::new("lrtnw-paaaa-aaaaq-aadfa-cai", "Swampies",             "SWAMP",    8,                    10_000, false), // fee 0.0001 SWAMP
         TokenInfo::new("lvfsa-2aaaa-aaaaq-aaeyq-cai", "ICPEx",                "ICX",      8,                   100_000, false), // fee 0.001 ICX
