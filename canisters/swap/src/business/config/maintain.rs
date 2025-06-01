@@ -20,7 +20,7 @@ fn config_maintain_archives_set(config: MaintainArchivesConfig) {
     with_mut_state(|s| s.business_config_maintain_archives_set(config))
 }
 
-// ============================== fix ==============================
+// ============================== maintain ==============================
 
 #[ic_cdk::update(guard = "has_business_config_maintaining")]
 fn config_maintain_pools() -> String {
@@ -28,8 +28,8 @@ fn config_maintain_pools() -> String {
         Ok(v) => v,
         Err(e) => return e.to_string(),
     };
-    match with_mut_state(|s| s.business_fix_bg_pool(self_canister)) {
-        Ok(_) => "success".to_string(),
+    match with_mut_state(|s| s.business_maintain_pools(self_canister)) {
+        Ok(_) => "nothing".to_string(),
         Err(e) => e.to_string(),
     }
 }
