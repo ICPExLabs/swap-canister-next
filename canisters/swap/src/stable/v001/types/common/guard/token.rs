@@ -28,6 +28,7 @@ impl<'a> TokenGuard<'a> {
 
     pub fn dump(self) {
         self.balances_guard.dump();
+        self.token_guard.dump();
     }
 
     pub fn token_deposit(&mut self, arg: ArgWithMeta<DepositToken>, height: Nat) -> Result<Nat, BusinessError> {

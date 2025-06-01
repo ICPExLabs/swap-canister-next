@@ -178,76 +178,85 @@ impl Drop for TokenBalancesLock {
 
 // ============================ guard ============================
 
-pub struct TokenBalancesGuard<'a> {
-    stable_balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>,
-    lock: &'a TokenBalancesLock,
-
-    stack_balances: HashMap<TokenAccount, TokenBalance>,
-}
-
-impl Drop for TokenBalancesGuard<'_> {
-    fn drop(&mut self) {
-        // must drop by manual
+pub use guard::TokenBalancesGuard;
+mod guard {
+    use super::*;
+    pub struct TokenBalancesGuard<'a> {
+        stable_balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>,
+        lock: &'a TokenBalancesLock,
+        // stack data
+        stack_balances: HashMap<TokenAccount, TokenBalance>,
     }
-}
-
-impl<'a> TokenBalancesGuard<'a> {
-    fn new(stable_balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>, lock: &'a TokenBalancesLock) -> Self {
-        let memory_balances = lock
-            .locked
-            .iter()
-            .map(|token_account| {
-                (
-                    token_account.clone(),
-                    stable_balances.get(token_account).unwrap_or_default(),
-                )
-            })
-            .collect();
-        Self {
-            stable_balances,
-            lock,
-            stack_balances: memory_balances,
+    impl Drop for TokenBalancesGuard<'_> {
+        fn drop(&mut self) {
+            // must drop by manual
         }
     }
 
-    pub fn dump(self) {
-        for (token_account, balance) in self.stack_balances.iter() {
-            if balance.0 == 0_u64 {
-                self.stable_balances.remove(token_account);
-            } else {
-                self.stable_balances.insert(token_account.clone(), balance.clone());
+    impl<'a> TokenBalancesGuard<'a> {
+        pub(super) fn new(
+            stable_balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>,
+            lock: &'a TokenBalancesLock,
+        ) -> Self {
+            let memory_balances = lock
+                .locked
+                .iter()
+                .map(|token_account| {
+                    (
+                        token_account.clone(),
+                        stable_balances.get(token_account).unwrap_or_default(),
+                    )
+                })
+                .collect();
+            Self {
+                stable_balances,
+                lock,
+                stack_balances: memory_balances,
             }
         }
-    }
 
-    fn get_balance(&self, token_account: &TokenAccount) -> Result<&TokenBalance, BusinessError> {
-        if !self.lock.locked.contains(token_account) {
-            return Err(BusinessError::unlocked_token_account(token_account.clone()));
+        pub(super) fn get_balance(&self, token_account: &TokenAccount) -> Result<&TokenBalance, BusinessError> {
+            if !self.lock.locked.contains(token_account) {
+                return Err(BusinessError::unlocked_token_account(token_account.clone()));
+            }
+            self.stack_balances
+                .get(token_account)
+                .ok_or_else(|| BusinessError::unlocked_token_account(token_account.clone()))
         }
-        self.stack_balances
-            .get(token_account)
-            .ok_or_else(|| BusinessError::unlocked_token_account(token_account.clone()))
-    }
-    fn get_balance_mut(&mut self, token_account: &TokenAccount) -> Result<&mut TokenBalance, BusinessError> {
-        if !self.lock.locked.contains(token_account) {
-            return Err(BusinessError::unlocked_token_account(token_account.clone()));
+        pub(super) fn get_balance_mut(
+            &mut self,
+            token_account: &TokenAccount,
+        ) -> Result<&mut TokenBalance, BusinessError> {
+            if !self.lock.locked.contains(token_account) {
+                return Err(BusinessError::unlocked_token_account(token_account.clone()));
+            }
+            self.stack_balances
+                .get_mut(token_account)
+                .ok_or_else(|| BusinessError::unlocked_token_account(token_account.clone()))
         }
-        self.stack_balances
-            .get_mut(token_account)
-            .ok_or_else(|| BusinessError::unlocked_token_account(token_account.clone()))
+
+        pub fn get_locked_balances(&self) -> Vec<TokenAccount> {
+            self.lock.required.clone()
+        }
+
+        pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
+            let token_account = TokenAccount::new(token, account);
+            self.get_balance(&token_account).map(|b| b.0.clone())
+        }
+
+        pub fn dump(self) {
+            for (token_account, balance) in self.stack_balances.iter() {
+                if balance.0 == 0_u64 {
+                    self.stable_balances.remove(token_account);
+                } else {
+                    self.stable_balances.insert(token_account.clone(), balance.clone());
+                }
+            }
+        }
     }
 }
 
 impl TokenBalancesGuard<'_> {
-    pub fn get_locked_balances(&self) -> Vec<TokenAccount> {
-        self.lock.required.clone()
-    }
-
-    pub fn token_balance_of(&self, token: CanisterId, account: Account) -> Result<candid::Nat, BusinessError> {
-        let token_account = TokenAccount::new(token, account);
-        self.get_balance(&token_account).map(|b| b.0.clone())
-    }
-
     // deposit token
     fn do_token_deposit(&mut self, token: CanisterId, account: Account, amount: Nat) -> Result<(), BusinessError> {
         let token_account = TokenAccount::new(token, account);
