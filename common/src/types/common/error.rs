@@ -88,6 +88,9 @@ pub enum BusinessError {
     /// The account involved in the user's operation is locked and the operation cannot be performed.
     #[error("token accounts are locked. ({})", display_token_accounts(.0))]
     TokenAccountsLocked(Vec<TokenAccount>),
+    /// The account involved in the user's operation is locked and the operation cannot be performed.
+    #[error("token pairs are locked. ({})", display_token_pairs(.0))]
+    TokenPairsLocked(Vec<TokenPairAmm>),
     /// The Token Blockchain involved in the user's operation is locked and the operation cannot be performed.
     #[error("token block chain is locked.")]
     TokenBlockChainLocked,
@@ -97,6 +100,9 @@ pub enum BusinessError {
     /// The account involved in the user's operation is not locked and the operation cannot be performed.
     #[error("token accounts are not locked, can not unlock. ({})", display_token_accounts(.0))]
     TokenAccountsUnlocked(Vec<TokenAccount>),
+    /// The account involved in the user's operation is not locked and the operation cannot be performed.
+    #[error("token pairs are not locked, can not unlock. ({})", display_token_pairs(.0))]
+    TokenPairsUnlocked(Vec<TokenPairAmm>),
 
     // ================= swap =================
     /// Invalid Amm algorithm
@@ -133,6 +139,13 @@ fn display_token_accounts(accounts: &[TokenAccount]) -> String {
     format!(
         "[{}]",
         accounts.iter().map(|ta| ta.to_string()).collect::<Vec<_>>().join(",")
+    )
+}
+
+fn display_token_pairs(pas: &[TokenPairAmm]) -> String {
+    format!(
+        "[{}]",
+        pas.iter().map(|pa| pa.to_string()).collect::<Vec<_>>().join(",")
     )
 }
 
@@ -178,5 +191,13 @@ impl BusinessError {
     /// Fee error
     pub fn invalid_transfer_fee(token: CanisterId, fee: Nat) -> Self {
         Self::InvalidTransferFee { token, fee }
+    }
+    /// required locked token account
+    pub fn unlocked_token_account(token_account: TokenAccount) -> Self {
+        Self::TokenAccountsUnlocked(vec![token_account])
+    }
+    /// required locked token pair amm
+    pub fn unlocked_token_pair(pa: TokenPairAmm) -> Self {
+        Self::TokenPairsUnlocked(vec![pa])
     }
 }

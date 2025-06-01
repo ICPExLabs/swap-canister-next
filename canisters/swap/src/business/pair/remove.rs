@@ -30,7 +30,7 @@ fn check_pair_remove_args(
     // check exist and removable
     match with_state(|s| s.business_token_pair_pool_get(&pa)) {
         Some(maker) if !maker.removable() => return Err(BusinessError::TokenPairAmmStillAlive(pa)),
-        None => return Err(BusinessError::TokenPairAmmNotExist(pa)),
+        None => return Err(pa.not_exist()),
         _ => {}
     }
 
@@ -50,11 +50,12 @@ async fn inner_pair_remove(args: TokenPairCreateOrRemoveArgs) -> Result<MarketMa
     let (now, caller, pa) = check_pair_remove_args(&args)?;
 
     // 2. some value
+    let required = vec![pa];
 
     let maker = {
         // 3. lock
-        let lock = match super::super::lock_swap_block_chain(0)? {
-            LockResult::Locked(lock) => lock,
+        let locks = match super::super::lock_swap_block_chain_and_token_pairs(required, 0)? {
+            LockResult::Locked(locks) => locks,
             LockResult::Retry(_) => return Err(BusinessError::SwapBlockChainLocked),
         };
 
@@ -62,7 +63,7 @@ async fn inner_pair_remove(args: TokenPairCreateOrRemoveArgs) -> Result<MarketMa
         {
             with_mut_state(|s| {
                 s.business_token_pair_pool_remove(
-                    &lock,
+                    &locks,
                     ArgWithMeta {
                         now,
                         caller,

@@ -78,6 +78,24 @@ fn lock_swap_block_chain(retries: u8) -> Result<LockResult<SwapBlockChainLock>, 
 
 #[allow(unused)]
 #[inline(always)]
+fn lock_token_pairs(required: Vec<TokenPairAmm>, retries: u8) -> Result<LockResult<TokenPairsLock>, BusinessError> {
+    check_retries(retries);
+    ic_cdk::println!("lock_token_pairs: {retries}");
+
+    match with_mut_state(|s| s.business_token_pair_lock(required)) {
+        Ok(lock) => Ok(LockResult::Locked(lock)),
+        Err(locked) => {
+            if 0 < retries {
+                Ok(LockResult::Retry(retries - 1))
+            } else {
+                Err(BusinessError::TokenPairsLocked(locked))
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+#[inline(always)]
 fn lock_token_block_chain_and_token_balances(
     fee_tokens: Vec<CanisterId>,
     mut required: Vec<TokenAccount>,
@@ -107,6 +125,31 @@ fn lock_token_block_chain_and_token_balances(
     };
 
     Ok(LockResult::Locked((token_lock, balances_lock)))
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_swap_block_chain_and_token_pairs(
+    mut required: Vec<TokenPairAmm>,
+    retries: u8,
+) -> Result<LockResult<(SwapBlockChainLock, TokenPairsLock)>, BusinessError> {
+    check_retries(retries);
+    ic_cdk::println!("lock_swap_block_chain_and_token_pairs: {retries}");
+
+    let swap_lock = match lock_swap_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
+    };
+
+    let pairs_lock = match lock_token_pairs(required, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(swap_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    Ok(LockResult::Locked((swap_lock, pairs_lock)))
 }
 
 #[allow(unused)]
@@ -154,6 +197,64 @@ fn lock_token_block_chain_and_swap_block_chain_and_token_balances(
     };
 
     Ok(LockResult::Locked((token_lock, swap_lock, balances_lock)))
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn lock_token_block_chain_and_swap_block_chain_and_token_balances_and_token_pairs(
+    fee_tokens: Vec<CanisterId>,
+    mut required_token_balances: Vec<TokenAccount>,
+    required_token_pairs: Vec<TokenPairAmm>,
+    retries: u8,
+) -> Result<LockResult<AllLocks>, BusinessError> {
+    ic_cdk::println!("lock_token_block_chain_and_swap_block_chain_and_token_balances_and_token_pairs: {retries}");
+
+    let token_lock = match lock_token_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => return Ok(LockResult::Retry(retries)),
+    };
+
+    let swap_lock = match lock_swap_block_chain(retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(token_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    // add token fee token account
+    if let Some(fee_to) = token_lock.fee_to {
+        for &token in &fee_tokens {
+            required_token_balances.push(TokenAccount { token, account: fee_to });
+        }
+    }
+    // add swap fee token account
+    if let Some(fee_to) = swap_lock.fee_to {
+        for &token in &fee_tokens {
+            required_token_balances.push(TokenAccount { token, account: fee_to });
+        }
+    }
+
+    let balances_lock = match lock_token_balances(required_token_balances, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(token_lock); // ! must drop before retry
+            drop(swap_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    let pairs_lock = match lock_token_pairs(required_token_pairs, retries)? {
+        LockResult::Locked(lock) => lock,
+        LockResult::Retry(retries) => {
+            drop(token_lock); // ! must drop before retry
+            drop(swap_lock); // ! must drop before retry
+            drop(balances_lock); // ! must drop before retry
+            return Ok(LockResult::Retry(retries));
+        }
+    };
+
+    Ok(LockResult::Locked((token_lock, swap_lock, balances_lock, pairs_lock)))
 }
 
 fn delay_task(func: impl FnOnce() + 'static) {

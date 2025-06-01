@@ -7,7 +7,7 @@ use ic_canister_kit::types::{Bound, Storable};
 use serde::{Deserialize, Serialize};
 
 #[allow(unused)]
-use crate::types::{TimestampNanos, TokenAccount};
+use crate::types::{TimestampNanos, TokenAccount, TokenPairAmm};
 
 use super::{BusinessLocks, RequestArgs, RequestIndex};
 
@@ -58,13 +58,14 @@ impl RequestTrace {
         token: Option<bool>,
         swap: Option<bool>,
         balances: Option<Vec<TokenAccount>>,
+        pairs: Option<Vec<TokenPairAmm>>,
         trace: Option<String>,
     ) -> Self {
         let mut request_trace = Self {
             index,
             created: TimestampNanos::now(),
             args,
-            locks: BusinessLocks::new(token, swap, balances),
+            locks: BusinessLocks::new(token, swap, balances, pairs),
             traces: vec![],
             done: None,
         };

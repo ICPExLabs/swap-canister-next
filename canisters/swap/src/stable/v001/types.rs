@@ -36,14 +36,14 @@ pub use crate::types::business::*;
 pub use crate::types::common::*;
 #[allow(unused)]
 pub use crate::types::{
-    Account, Amm, AmmText, ArgWithMeta, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock, DepositToken, DoHash,
-    DummyCanisterId, EncodedBlock, HashOf, MarketMaker, MarketMakerView, Nat, PairCreate, PairOperation, PairRemove,
-    PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult, RequestArgs, RequestIndex,
-    RequestTrace, SelfCanister, SwapBlock, SwapOperation, SwapRatio, SwapTransaction, SwapV2BurnToken,
-    SwapV2MarketMaker, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2State, SwapV2TransferToken,
-    TimestampNanos, TokenAccount, TokenBlock, TokenFrozenArg, TokenInfo, TokenOperation, TokenPair, TokenPairAmm,
-    TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg, TokenPairPool,
-    TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg,
+    Account, AllLocks, Amm, AmmText, ArgWithMeta, BlockIndex, BurnFee, BusinessError, Caller, CandidBlock,
+    DepositToken, DoHash, DummyCanisterId, EncodedBlock, HashOf, MarketMaker, MarketMakerView, Nat, PairCreate,
+    PairOperation, PairRemove, PairSwapToken, QueryBlockResult, QuerySwapBlockResult, QueryTokenBlockResult,
+    RequestArgs, RequestIndex, RequestTrace, SelfCanister, SwapBlock, SwapOperation, SwapRatio, SwapTransaction,
+    SwapV2BurnToken, SwapV2MarketMaker, SwapV2MintFeeToken, SwapV2MintToken, SwapV2Operation, SwapV2State,
+    SwapV2TransferToken, TimestampNanos, TokenAccount, TokenBlock, TokenFrozenArg, TokenInfo, TokenOperation,
+    TokenPair, TokenPairAmm, TokenPairLiquidityAddArg, TokenPairLiquidityAddSuccessView, TokenPairLiquidityRemoveArg,
+    TokenPairPool, TokenPairSwapByLoanArg, TokenPairSwapExactTokensForTokensArg, TokenPairSwapTokensForExactTokensArg,
     TokenTransaction, TransferFee, TransferToken, UserId, WithdrawToken, display_account, proto,
 };
 
@@ -234,16 +234,16 @@ impl InnerState {
         let balances_guard = self.token_balances.be_guard(&locks.1);
         let trace_guard =
             self.request_traces
-                .be_guard(arg.into(), Some(&token_guard), None, Some(&balances_guard), trace)?;
+                .be_guard(arg.into(), Some(&token_guard), None, Some(&balances_guard), None, trace)?;
         Ok(TokenGuard::new(trace_guard, balances_guard, token_guard))
     }
 
-    pub fn get_pair_swap_guard<'a, T>(
+    pub fn get_lp_token_guard<'a, T>(
         &'a mut self,
         locks: &'a (TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
         arg: T,
         trace: Option<String>,
-    ) -> Result<TokenPairSwapGuard<'a>, BusinessError>
+    ) -> Result<LpTokenTransferGuard<'a>, BusinessError>
     where
         T: Into<RequestArgs>,
     {
@@ -255,6 +255,36 @@ impl InnerState {
             Some(&token_guard),
             Some(&swap_guard),
             Some(&balances_guard),
+            None,
+            trace,
+        )?;
+        Ok(LpTokenTransferGuard::new(
+            trace_guard,
+            balances_guard,
+            token_guard,
+            swap_guard,
+        ))
+    }
+
+    pub fn get_pair_swap_guard<'a, T>(
+        &'a mut self,
+        locks: &'a AllLocks,
+        arg: T,
+        trace: Option<String>,
+    ) -> Result<TokenPairSwapGuard<'a>, BusinessError>
+    where
+        T: Into<RequestArgs>,
+    {
+        let token_guard = self.token_block_chain.be_guard(&locks.0);
+        let swap_guard = self.swap_block_chain.be_guard(&locks.1);
+        let balances_guard = self.token_balances.be_guard(&locks.2);
+        let pairs_guard = self.token_pairs.be_guard(&locks.3);
+        let trace_guard = self.request_traces.be_guard(
+            arg.into(),
+            Some(&token_guard),
+            Some(&swap_guard),
+            Some(&balances_guard),
+            Some(&pairs_guard),
             trace,
         )?;
         Ok(TokenPairSwapGuard::new(
@@ -262,7 +292,7 @@ impl InnerState {
             balances_guard,
             token_guard,
             swap_guard,
-            &mut self.token_pairs,
+            pairs_guard,
         ))
     }
 }

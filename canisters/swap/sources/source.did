@@ -50,6 +50,7 @@ type BusinessError = variant {
   InsufficientBalance : record { token : principal; balance : nat };
   TokenPairAmmExist : TokenPairAmm;
   RequestTraceLocked : text;
+  TokenPairsLocked : vec TokenPairAmm;
   InvalidCreated : record { created : nat64; system : nat64 };
   InvalidAmm : text;
   InvalidTransferFee : record { fee : nat; token : principal };
@@ -60,6 +61,7 @@ type BusinessError = variant {
   FrozenToken : principal;
   NotOwner : principal;
   BadTransferFee : record { expected_fee : nat };
+  TokenPairsUnlocked : vec TokenPairAmm;
   SwapBlockChainError : text;
   CallCanisterError : text;
   Liquidity : text;
@@ -68,6 +70,7 @@ type BusinessError = variant {
 type BusinessLocks = record {
   token : opt bool;
   swap : opt bool;
+  pairs : opt vec TokenPairAmm;
   balances : opt vec TokenAccount;
 };
 type CurrentArchiving = record {
