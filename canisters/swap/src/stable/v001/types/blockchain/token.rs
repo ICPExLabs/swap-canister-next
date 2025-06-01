@@ -248,7 +248,7 @@ mod guard {
         pub(super) fn get_latest_block_hash(&self) -> HashOf<TokenBlock> {
             self.blocks
                 .last()
-                .map(|(_, _, hash)| hash.clone())
+                .map(|(_, _, hash)| *hash)
                 .unwrap_or_else(|| self.stable_token_block_chain.block_chain.latest_block_hash)
         }
 
@@ -266,7 +266,7 @@ mod guard {
                 self.stable_token_block_chain
                     .cached
                     .insert(*block_height, encoded_block.clone());
-                self.stable_token_block_chain.block_chain.next_block(block_hash.clone());
+                self.stable_token_block_chain.block_chain.next_block(*block_hash);
             }
         }
     }

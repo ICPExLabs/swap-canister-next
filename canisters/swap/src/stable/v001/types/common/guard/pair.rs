@@ -40,6 +40,12 @@ impl<'a> TokenPairSwapGuard<'a> {
         }
     }
 
+    pub fn dump(self) {
+        self.balances_guard.dump();
+        self.token_guard.dump();
+        self.swap_guard.dump();
+    }
+
     // transfer lp token
     pub fn token_lp_transfer(
         &mut self,
@@ -412,7 +418,8 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg> {
         // mint
         let transaction = SwapTransaction {
             operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Mint({
-                let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
+                let ((token0, token1), (amount0, amount1)) =
+                    if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
                         (
                             (self.arg.arg.token_a, self.arg.arg.token_b),
                             (amount_a.clone(), amount_b.clone()),
@@ -485,7 +492,8 @@ impl InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg> {
         // burn
         let transaction = SwapTransaction {
             operation: SwapOperation::Pair(PairOperation::SwapV2(SwapV2Operation::Burn({
-                let ((token0, token1), (amount0, amount1)) = if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
+                let ((token0, token1), (amount0, amount1)) =
+                    if self.arg.arg.pa.pair.get_token0() == self.arg.arg.token_a {
                         (
                             (self.arg.arg.token_a, self.arg.arg.token_b),
                             (amount_a.clone(), amount_b.clone()),

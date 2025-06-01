@@ -413,6 +413,7 @@ impl Business for InnerState {
             let maker =
                 s.token_pairs
                     .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, &token0, &token1)?;
+            swap_guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })
