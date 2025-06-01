@@ -100,7 +100,7 @@ impl TokenBalances {
             }
             // if not true, terminator
             let tips = format!(
-                "Unlock token account (\"{}|{}.{}\") that is not locked.",
+                "Unlock token account: [{}]({}.{}) that is not locked.",
                 token_account.token.to_text(),
                 token_account.account.owner.to_text(),
                 token_account.account.subaccount.map(hex::encode).unwrap_or_default()
@@ -198,20 +198,20 @@ mod guard {
             stable_balances: &'a mut StableBTreeMap<TokenAccount, TokenBalance>,
             lock: &'a TokenBalancesLock,
         ) -> Self {
-            let memory_balances = lock
+            let stack_balances = lock
                 .locked
                 .iter()
                 .map(|token_account| {
                     (
                         token_account.clone(),
-                        stable_balances.get(token_account).unwrap_or_default(),
+                        stable_balances.get(token_account).unwrap_or_default(), // ! insert default
                     )
                 })
                 .collect();
             Self {
                 stable_balances,
                 lock,
-                stack_balances: memory_balances,
+                stack_balances,
             }
         }
 

@@ -123,16 +123,18 @@ pub async fn inner_pair_swap_exact_tokens_for_tokens(
 
     let success = {
         // 3. lock
-        let locks = match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances(
-            fee_tokens,
-            required,
-            retries.unwrap_or_default(),
-        )? {
-            LockResult::Locked(locks) => locks,
-            LockResult::Retry(retries) => {
-                return retry_pair_swap_exact_tokens_for_tokens(self_canister.id(), args, retries).await;
-            }
-        };
+        let locks =
+            match super::super::super::lock_token_block_chain_and_swap_block_chain_and_token_balances_and_token_pairs(
+                fee_tokens,
+                required,
+                arg.pas.clone(),
+                retries.unwrap_or_default(),
+            )? {
+                LockResult::Locked(locks) => locks,
+                LockResult::Retry(retries) => {
+                    return retry_pair_swap_exact_tokens_for_tokens(self_canister.id(), args, retries).await;
+                }
+            };
 
         // * 4. do business
         {

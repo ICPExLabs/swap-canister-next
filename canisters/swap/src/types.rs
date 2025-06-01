@@ -50,3 +50,10 @@ pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};
 
 #[allow(unused)]
 pub use ic_canister_kit::common::trap;
+
+pub type AllLocks = (
+    TokenBlockChainLock,
+    SwapBlockChainLock,
+    TokenBalancesLock,
+    TokenPairsLock,
+);

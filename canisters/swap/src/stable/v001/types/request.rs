@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     RequestArgs, RequestIndex, RequestTrace, SwapBlockChainGuard, TokenBalancesGuard, TokenBlockChainGuard,
-    init_request_traces,
+    TokenPairsGuard, init_request_traces,
 };
 
 // ============================ request traces ============================
@@ -61,7 +61,7 @@ impl RequestTraces {
         removed
     }
     pub fn insert_request_trace(&mut self, trace: RequestTrace) {
-        let mut guard = trap(self.be_guard(trace.args, None, None, None, None));
+        let mut guard = trap(self.be_guard(trace.args, None, None, None, None, None));
         guard.do_trace(|t| {
             t.traces = trace.traces;
             t.done = trace.done;
@@ -69,7 +69,7 @@ impl RequestTraces {
     }
 
     pub fn be_guard_by(&mut self, args: RequestArgs) -> Result<RequestTraceGuard<'_>, BusinessError> {
-        self.be_guard(args, None, None, None, None)
+        self.be_guard(args, None, None, None, None, None)
     }
 
     pub fn be_guard<'a>(
@@ -78,6 +78,7 @@ impl RequestTraces {
         token: Option<&TokenBlockChainGuard<'_>>,
         swap: Option<&SwapBlockChainGuard<'_>>,
         balances: Option<&TokenBalancesGuard<'_>>,
+        pairs: Option<&TokenPairsGuard<'_>>,
         trace: Option<String>,
     ) -> Result<RequestTraceGuard<'a>, BusinessError> {
         let mut next_index = self
@@ -91,6 +92,7 @@ impl RequestTraces {
             token.map(|_| true),
             swap.map(|_| true),
             balances.map(|a| a.get_locked_balances()),
+            pairs.map(|a| a.get_locked_pairs()),
             trace,
         );
         self.traces.insert(index, trace); // insert
