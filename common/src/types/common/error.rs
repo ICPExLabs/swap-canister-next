@@ -179,4 +179,8 @@ impl BusinessError {
     pub fn invalid_transfer_fee(token: CanisterId, fee: Nat) -> Self {
         Self::InvalidTransferFee { token, fee }
     }
+    /// required locked token account
+    pub fn unlocked_token_account(token_account: TokenAccount) -> Self {
+        Self::TokenAccountsUnlocked(vec![token_account])
+    }
 }

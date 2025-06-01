@@ -320,6 +320,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let height = guard.token_deposit(arg, height)?; // do deposit
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(height)
         })
@@ -333,6 +334,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let height = guard.token_withdraw(arg, height)?; // do withdraw
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(height)
         })
@@ -345,6 +347,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let changed = guard.token_transfer(arg)?; // do transfer
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(changed)
         })
