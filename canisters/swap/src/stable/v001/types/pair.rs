@@ -19,6 +19,7 @@ use super::{
 pub struct TokenPairs {
     #[serde(skip, default = "init_token_pairs")]
     pairs: StableBTreeMap<TokenPairAmm, MarketMaker>,
+    #[serde(default = "Default::default")]
     locks: RwLock<HashMap<TokenPairAmm, bool>>,
 }
 
