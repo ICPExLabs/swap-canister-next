@@ -8,9 +8,9 @@ use icrc_ledger_types::icrc1::account::{Account, Subaccount};
 use serde::{Deserialize, Serialize};
 
 /// Automated Market Maker
-mod amm_constant_product;
+mod cpmm;
 #[allow(unused)]
-pub use amm_constant_product::*;
+pub use cpmm::*;
 
 #[allow(unused)]
 use crate::types::{Amm, CanisterId, TokenPairAmm};

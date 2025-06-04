@@ -6,9 +6,9 @@ use super::{
 };
 
 /// Automated Market Maker
-mod amm_constant_product;
+mod cpmm;
 #[allow(unused)]
-pub use amm_constant_product::*;
+pub use cpmm::*;
 
 /// Proactive Market Maker
 /// https://docs.dodoex.io/zh/product/pmm-algorithm/details-about-pmm
@@ -22,7 +22,7 @@ pub fn add_liquidity(
     guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityAddArg>,
 ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
     match _self {
-        MarketMaker::SwapV2(value) => amm_constant_product::add_liquidity(value, guard),
+        MarketMaker::SwapV2(value) => cpmm::add_liquidity(value, guard),
     }
 }
 
@@ -31,7 +31,7 @@ pub fn remove_liquidity(
     guard: &mut InnerTokenPairSwapGuard<'_, '_, '_, TokenPairLiquidityRemoveArg>,
 ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
     match _self {
-        MarketMaker::SwapV2(value) => amm_constant_product::remove_liquidity(value, guard),
+        MarketMaker::SwapV2(value) => cpmm::remove_liquidity(value, guard),
     }
 }
 
@@ -48,7 +48,7 @@ pub fn swap<T: TokenPairArg>(
     to: Account,
 ) -> Result<(), BusinessError> {
     match _self {
-        MarketMaker::SwapV2(value) => amm_constant_product::swap(
+        MarketMaker::SwapV2(value) => cpmm::swap(
             value,
             guard,
             transaction,
