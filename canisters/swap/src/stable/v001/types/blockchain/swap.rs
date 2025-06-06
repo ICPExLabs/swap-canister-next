@@ -179,10 +179,7 @@ impl SwapBlockChain {
     }
 
     pub fn be_guard<'a>(&'a mut self, lock: &'a SwapBlockChainLock) -> SwapBlockChainGuard<'a> {
-        SwapBlockChainGuard {
-            swap_block_chain: self,
-            lock,
-        }
+        SwapBlockChainGuard::new(self, lock)
     }
 
     pub fn get_latest_hash(&self) -> &[u8] {
@@ -212,16 +209,70 @@ impl Drop for SwapBlockChainLock {
 
 // ============================ guard ============================
 
-pub struct SwapBlockChainGuard<'a> {
-    swap_block_chain: &'a mut SwapBlockChain,
-    lock: &'a SwapBlockChainLock,
+pub use guard::SwapBlockChainGuard;
+mod guard {
+    use super::*;
+    pub struct SwapBlockChainGuard<'a> {
+        stable_swap_block_chain: &'a mut SwapBlockChain,
+        lock: &'a SwapBlockChainLock,
+        // stack data
+        blocks: Vec<(BlockIndex, EncodedBlock, HashOf<SwapBlock>)>,
+    }
+    impl Drop for SwapBlockChainGuard<'_> {
+        fn drop(&mut self) {
+            // must drop by manual
+        }
+    }
+
+    impl<'a> SwapBlockChainGuard<'a> {
+        pub(super) fn new(stable_swap_block_chain: &'a mut SwapBlockChain, lock: &'a SwapBlockChainLock) -> Self {
+            Self {
+                stable_swap_block_chain,
+                lock,
+                blocks: Default::default(),
+            }
+        }
+
+        pub(super) fn get_next_block_index(&self) -> BlockIndex {
+            self.blocks
+                .last()
+                .map(|(height, _, _)| height + 1)
+                .unwrap_or_else(|| self.stable_swap_block_chain.block_chain.next_block_index)
+        }
+
+        pub(super) fn contains_next_block_index(&self, next_block_index: BlockIndex) -> bool {
+            self.blocks.iter().any(|(height, _, _)| *height == next_block_index)
+                || self.stable_swap_block_chain.cached.contains_key(&next_block_index)
+        }
+
+        pub(super) fn get_latest_block_hash(&self) -> HashOf<SwapBlock> {
+            self.blocks
+                .last()
+                .map(|(_, _, hash)| *hash)
+                .unwrap_or_else(|| self.stable_swap_block_chain.block_chain.latest_block_hash)
+        }
+
+        pub(super) fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<SwapBlock>) {
+            let block_height = self.get_next_block_index();
+            self.blocks.push((block_height, encoded_block, block_hash));
+        }
+
+        pub fn get_fee_to(&self) -> Option<Account> {
+            self.lock.fee_to
+        }
+
+        pub fn dump(self) {
+            for (block_height, encoded_block, block_hash) in self.blocks.iter() {
+                self.stable_swap_block_chain
+                    .cached
+                    .insert(*block_height, encoded_block.clone());
+                self.stable_swap_block_chain.block_chain.next_block(*block_hash);
+            }
+        }
+    }
 }
 
 impl SwapBlockChainGuard<'_> {
-    pub fn get_fee_to(&self) -> Option<Account> {
-        self.lock.fee_to
-    }
-
     fn get_next_swap_block(
         &self,
         now: TimestampNanos,
@@ -230,17 +281,13 @@ impl SwapBlockChainGuard<'_> {
         use ::common::utils::pb::to_proto_bytes;
         use ::common::{archive::swap::SwapBlock, proto, types::DoHash};
 
-        if self
-            .swap_block_chain
-            .cached
-            .contains_key(&self.swap_block_chain.block_chain.next_block_index)
-        {
+        if self.contains_next_block_index(self.get_next_block_index()) {
             return Err(BusinessError::SwapBlockChainError(
                 "The next block index is already in the cache.".to_string(),
             ));
         }
 
-        let parent_hash = self.swap_block_chain.block_chain.latest_block_hash;
+        let parent_hash = self.get_latest_block_hash();
         let block = SwapBlock(CandidBlock {
             parent_hash,
             timestamp: now,
@@ -253,12 +300,6 @@ impl SwapBlockChainGuard<'_> {
         let encoded_block = to_proto_bytes(&block).map_err(BusinessError::SwapBlockChainError)?;
         let encoded_block = EncodedBlock(encoded_block);
         Ok((encoded_block, hash))
-    }
-
-    fn push_block(&mut self, encoded_block: EncodedBlock, block_hash: HashOf<SwapBlock>) {
-        let block_height = self.swap_block_chain.block_chain.next_block_index;
-        self.swap_block_chain.cached.insert(block_height, encoded_block);
-        self.swap_block_chain.block_chain.next_block(block_hash);
     }
 
     pub fn mint_block<T, F>(

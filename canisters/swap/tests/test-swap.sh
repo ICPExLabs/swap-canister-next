@@ -14,27 +14,29 @@ if [ "$1" = "update" ]; then
     cargo build -p archive-token --target wasm32-unknown-unknown --release
     ic-wasm target/wasm32-unknown-unknown/release/archive_token.wasm -o canisters/archive-token/sources/source_opt.wasm metadata candid:service -f canisters/archive-token/sources/source.did -v public
     ic-wasm canisters/archive-token/sources/source_opt.wasm -o canisters/archive-token/sources/source_opt.wasm shrink
-    gzip -kf canisters/archive-token/sources/source_opt.wasm
+    gzip -kfn canisters/archive-token/sources/source_opt.wasm
 
     cargo test -p archive-swap update_candid -- --ignored --nocapture
     cargo build -p archive-swap --target wasm32-unknown-unknown --release
     ic-wasm target/wasm32-unknown-unknown/release/archive_swap.wasm -o canisters/archive-swap/sources/source_opt.wasm metadata candid:service -f canisters/archive-swap/sources/source.did -v public
     ic-wasm canisters/archive-swap/sources/source_opt.wasm -o canisters/archive-swap/sources/source_opt.wasm shrink
-    gzip -kf canisters/archive-swap/sources/source_opt.wasm
+    gzip -kfn canisters/archive-swap/sources/source_opt.wasm
 
     cargo test -p swap update_candid -- --ignored --nocapture
     cargo build -p swap --target wasm32-unknown-unknown --release
     ic-wasm target/wasm32-unknown-unknown/release/swap.wasm -o canisters/swap/sources/source_opt.wasm metadata candid:service -f canisters/swap/sources/source.did -v public
     ic-wasm canisters/swap/sources/source_opt.wasm -o canisters/swap/sources/source_opt.wasm shrink
-    gzip -kf canisters/swap/sources/source_opt.wasm
+    gzip -kfn canisters/swap/sources/source_opt.wasm
 fi
 
 set -e
 cargo test test_swap_common_apis -- --ignored
+cargo test test_swap_upgrade -- --ignored
 cargo test test_swap_business_apis -- --ignored
 cargo test test_swap_business_fee_apis -- --ignored
 cargo test test_swap_business_to_apis -- --ignored
 cargo test test_swap_business_to_fee_apis -- --ignored
+# cargo test test_swap_business_bg_apis -- --ignored
 
 end_time=$(date +%H:%M:%S)
 end_time_s=$(date +%s)

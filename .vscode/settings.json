@@ -12,6 +12,7 @@
         "cdylib",
         "clippy",
         "codegen",
+        "cpmm",
         "dylib",
         "icrc",
         "icrc1",

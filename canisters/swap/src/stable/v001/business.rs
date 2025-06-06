@@ -17,10 +17,16 @@ impl Business for InnerState {
     }
     fn business_config_protocol_fee_replace(
         &mut self,
-        subaccount: Subaccount,
+        lock: &TokenPairsLock,
+        pa: &TokenPairAmm,
         protocol_fee: Option<SwapRatio>,
     ) -> Option<SwapRatio> {
-        self.token_pairs.replace_protocol_fee(subaccount, protocol_fee)
+        self.updated(|s| {
+            let mut guard = s.token_pairs.be_guard(lock);
+            let protocol_fee = guard.replace_protocol_fee(pa, protocol_fee);
+            guard.dump(); // * save stable data
+            protocol_fee
+        })
     }
 
     // archive canister
@@ -261,6 +267,14 @@ impl Business for InnerState {
         self.updated(|s| s.token_balances.unlock(locked))
     }
 
+    // token pairs
+    fn business_token_pair_lock(&mut self, required: Vec<TokenPairAmm>) -> Result<TokenPairsLock, Vec<TokenPairAmm>> {
+        self.updated(|s| s.token_pairs.lock(required))
+    }
+    fn business_token_pair_unlock(&mut self, locked: &HashSet<TokenPairAmm>) {
+        self.updated(|s| s.token_pairs.unlock(locked))
+    }
+
     // ======================== token block chain ========================
 
     // ======================== query ========================
@@ -320,6 +334,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let height = guard.token_deposit(arg, height)?; // do deposit
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(height)
         })
@@ -333,6 +348,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let height = guard.token_withdraw(arg, height)?; // do withdraw
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(height)
         })
@@ -345,6 +361,7 @@ impl Business for InnerState {
         self.updated(|s| {
             let mut guard = s.get_token_guard(locks, arg.clone(), None)?;
             let changed = guard.token_transfer(arg)?; // do transfer
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(changed)
         })
@@ -362,8 +379,9 @@ impl Business for InnerState {
             .map(|(pa, _)| pa)
             .ok_or(BusinessError::SystemError("must be lp token".to_string()))?;
         self.updated(|s| {
-            let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
+            let mut guard = s.get_lp_token_guard(locks, arg.clone(), None)?;
             let changed = guard.token_lp_transfer(pa, arg)?; // do transfer
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(changed)
         })
@@ -406,31 +424,35 @@ impl Business for InnerState {
                 Some(&swap_guard),
                 None,
                 None,
+                None,
             )?;
             let maker =
                 s.token_pairs
                     .create_token_pair_pool(&mut swap_guard, &mut trace_guard, arg, &token0, &token1)?;
+            swap_guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })
     }
     fn business_token_pair_pool_remove(
         &mut self,
-        lock: &SwapBlockChainLock,
+        locks: &(SwapBlockChainLock, TokenPairsLock),
         arg: ArgWithMeta<TokenPairAmm>,
     ) -> Result<MarketMaker, BusinessError> {
         self.updated(|s| {
-            let mut swap_guard = s.swap_block_chain.be_guard(lock);
+            let mut swap_guard = s.swap_block_chain.be_guard(&locks.0);
+            let mut pairs_guard = s.token_pairs.be_guard(&locks.1);
             let mut trace_guard = s.request_traces.be_guard(
                 arg.clone().into_pair_remove_request_args(),
                 None,
                 Some(&swap_guard),
                 None,
                 None,
+                None,
             )?;
-            let maker = s
-                .token_pairs
-                .remove_token_pair_pool(&mut swap_guard, &mut trace_guard, arg)?;
+            let maker = pairs_guard.remove_token_pair_pool(&mut swap_guard, &mut trace_guard, arg)?;
+            pairs_guard.dump(); // * save stable data
+            swap_guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(maker)
         })
@@ -438,12 +460,13 @@ impl Business for InnerState {
     // liquidity
     fn business_token_pair_liquidity_add(
         &mut self,
-        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        locks: &AllLocks,
         arg: ArgWithMeta<TokenPairLiquidityAddArg>,
     ) -> Result<TokenPairLiquidityAddSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
             let success = guard.add_liquidity(arg)?;
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(success)
         })
@@ -460,12 +483,13 @@ impl Business for InnerState {
     }
     fn business_token_pair_liquidity_remove(
         &mut self,
-        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        locks: &AllLocks,
         arg: ArgWithMeta<TokenPairLiquidityRemoveArg>,
     ) -> Result<TokenPairLiquidityRemoveSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
             let success = guard.remove_liquidity(arg)?;
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(success)
         })
@@ -498,36 +522,39 @@ impl Business for InnerState {
     }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
-        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        locks: &AllLocks,
         arg: ArgWithMeta<TokenPairSwapExactTokensForTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
             let success = guard.swap_exact_tokens_for_tokens(arg)?;
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(success)
         })
     }
     fn business_token_pair_swap_tokens_for_exact_tokens(
         &mut self,
-        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        locks: &AllLocks,
         arg: ArgWithMeta<TokenPairSwapTokensForExactTokensArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
             let success = guard.swap_tokens_for_exact_tokens(arg)?;
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(success)
         })
     }
     fn business_token_pair_swap_by_loan(
         &mut self,
-        locks: &(TokenBlockChainLock, SwapBlockChainLock, TokenBalancesLock),
+        locks: &AllLocks,
         arg: ArgWithMeta<TokenPairSwapByLoanArg>,
     ) -> Result<TokenPairSwapTokensSuccess, BusinessError> {
         self.updated(|s| {
             let mut guard = s.get_pair_swap_guard(locks, arg.clone(), None)?;
             let success = guard.swap_by_loan(arg)?;
+            guard.dump(); // * save stable data
             s.business_certified_data_refresh(); // set certified data
             Ok(success)
         })
@@ -577,22 +604,9 @@ impl Business for InnerState {
         self.updated(|s| s.request_traces.insert_request_trace(trace))
     }
 
-    // ======================== fix ========================
+    // ======================== maintain ========================
 
-    fn business_fix_bg_pool(&mut self, self_canister: SelfCanister) -> Result<(), BusinessError> {
-        // 1. restore pool total supply
-        self.token_pairs.fix_bg_pool()?;
-        // 2. restore fee_to balance of lp
-        let fee_to = self
-            .business_data
-            .fee_to
-            .token_fee_to
-            .ok_or_else(|| BusinessError::SystemError("can not find fee_to".to_string()))?;
-        self.token_balances.fix_fee_to_bg_balance(fee_to)?;
-        // 3. restore pool balance of icp
-        let (icp_balance, bg_balance) = self.token_balances.fix_bg_pool_balance(self_canister)?;
-        // 4. restore pool's reserve
-        self.token_pairs.fix_bg_pool_reserve(icp_balance, bg_balance)?;
+    fn business_maintain_pools(&mut self, _self_canister: SelfCanister) -> Result<(), BusinessError> {
         Ok(())
     }
 }
