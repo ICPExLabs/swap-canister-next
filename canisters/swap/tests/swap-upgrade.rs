@@ -12,6 +12,7 @@ const WASM_MODULE_1_0_1: &[u8] = include_bytes!("../sources/source_opt_1_0_1.was
 const WASM_MODULE_1_0_4: &[u8] = include_bytes!("../sources/source_opt_1_0_4.wasm.gz");
 const WASM_MODULE_1_0_5: &[u8] = include_bytes!("../sources/source_opt_1_0_5.wasm.gz");
 const WASM_MODULE_1_0_6: &[u8] = include_bytes!("../sources/source_opt_1_0_6.wasm.gz");
+const WASM_MODULE_1_0_7: &[u8] = include_bytes!("../sources/source_opt_1_0_7.wasm.gz");
 const WASM_MODULE_NEXT: &[u8] = include_bytes!("../sources/source_opt.wasm.gz");
 
 #[ignore]
@@ -57,6 +58,14 @@ fn test_swap_upgrade() {
     let arg: Vec<u8> = encode_one(None::<()>).unwrap();
     assert_eq!(arg, vec![68, 73, 68, 76, 1, 110, 127, 1, 0, 0]); // 4449444c016e7f010000
     pic.upgrade_canister(canister_id, WASM_MODULE_1_0_6.to_vec(), arg, Some(default_identity)).unwrap();
+    default.pause_replace(None).unwrap();
+
+    // ! v1.0.7
+    for _ in 0..6 { pic.tick(); } // 🕰︎
+    default.pause_replace(Some("test".to_string())).unwrap();
+    let arg: Vec<u8> = encode_one(None::<()>).unwrap();
+    assert_eq!(arg, vec![68, 73, 68, 76, 1, 110, 127, 1, 0, 0]); // 4449444c016e7f010000
+    pic.upgrade_canister(canister_id, WASM_MODULE_1_0_7.to_vec(), arg, Some(default_identity)).unwrap();
     default.pause_replace(None).unwrap();
 
     // ! next
