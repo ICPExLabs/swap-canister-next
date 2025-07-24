@@ -27,7 +27,7 @@ pub fn check_permission(
             }
             return Ok(());
         }
-        Err(format!("Permission '{}' is required", permission))
+        Err(format!("Permission '{permission}' is required"))
     })
 }
 

@@ -23,9 +23,7 @@ fn inner_http_request(state: &State, req: CustomHttpRequest) -> CustomHttpRespon
     let mut split_url = req.url.split('?');
 
     let path = split_url.next().unwrap_or("/");
-    let path = percent_decode_str(path)
-        .decode_utf8()
-        .unwrap_or(Cow::Borrowed(path));
+    let path = percent_decode_str(path).decode_utf8().unwrap_or(Cow::Borrowed(path));
 
     // ic_cdk::println!("============== path: {} -> {}", req.url, path);
     // for (key, value) in request_headers.iter() {
@@ -38,8 +36,7 @@ fn inner_http_request(state: &State, req: CustomHttpRequest) -> CustomHttpRespon
     let streaming_strategy: Option<StreamingStrategy> = None;
 
     if path == "/metrics" {
-        let mut writer =
-            ic_metrics_encoder::MetricsEncoder::new(vec![], ic_cdk::api::time() as i64 / 1_000_000);
+        let mut writer = ic_metrics_encoder::MetricsEncoder::new(vec![], ic_cdk::api::time() as i64 / 1_000_000);
         match state.business_metrics(&mut writer) {
             Ok(_) => {
                 headers.insert("Content-Type", Cow::Borrowed("text/plain"));
@@ -47,7 +44,7 @@ fn inner_http_request(state: &State, req: CustomHttpRequest) -> CustomHttpRespon
             }
             Err(err) => {
                 code = 500;
-                body = format!("Failed to encode metrics: {}", err).into_bytes();
+                body = format!("Failed to encode metrics: {err}").into_bytes();
             }
         }
     } else {
