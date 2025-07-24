@@ -165,11 +165,7 @@ impl Business for InnerState {
         self.tokens.get_preset_tokens()
     }
     fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
-        self.tokens
-            .get_custom_tokens()
-            .iter()
-            .map(|(_, info)| info.clone())
-            .collect()
+        self.tokens.get_custom_tokens().values().cloned().collect()
     }
     fn business_config_token_custom_put(&mut self, arg: ArgWithMeta<TokenInfo>) {
         let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));

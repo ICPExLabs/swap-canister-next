@@ -66,6 +66,20 @@ async fn inner_pair_liquidity_remove_and_withdraw(
         Err(err) => return (Err(err).into(), None),
     };
 
+    // check again
+    if let Some((token, balance)) = if remove.amount.0 <= token_a.fee {
+        Some((token_a.canister_id, remove.amount.0.clone()))
+    } else if remove.amount.1 <= token_b.fee {
+        Some((token_b.canister_id, remove.amount.1.clone()))
+    } else {
+        None
+    } {
+        let remove: Result<TokenPairLiquidityRemoveSuccess, BusinessError> = Ok(remove);
+        let err: Result<Vec<Result<candid::Nat, BusinessError>>, BusinessError> =
+            Err(BusinessError::InsufficientBalance { token, balance });
+        return (remove.into(), Some(err.into()));
+    }
+
     // 2. do withdraw
     let withdraw_args_a = TokenWithdrawArgs {
         token: token_a.canister_id,

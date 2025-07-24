@@ -15,11 +15,19 @@ pub struct InitArg {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct CurrentArchiving {
+    pub canister_id: Principal,
+    pub length: u64,
+    pub max_length: u64,
+    pub block_height_offset: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct InitArgV1 {
     pub maintainers: Option<Vec<Principal>>,
+    pub current_archiving_swap: Option<CurrentArchiving>,
     pub schedule: Option<candid::Nat>,
     pub current_archiving_token: Option<CurrentArchiving>,
-    pub current_archiving_swap: Option<CurrentArchiving>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
@@ -276,6 +284,12 @@ pub struct MaintainArchivesConfig {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct SwapRatio {
+    pub numerator: u32,
+    pub denominator: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct NextArchiveCanisterConfig {
     pub maintainers: Option<Vec<Principal>>,
     pub max_memory_size_bytes: Option<u64>,
@@ -300,14 +314,6 @@ pub enum BlockChainArgs {
     },
     WasmModuleUpdate(serde_bytes::ByteBuf),
     BlockChainQuery,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
-pub struct CurrentArchiving {
-    pub canister_id: Principal,
-    pub length: u64,
-    pub max_length: u64,
-    pub block_height_offset: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
@@ -391,6 +397,7 @@ pub enum BusinessError {
     InsufficientBalance { token: Principal, balance: candid::Nat },
     TokenPairAmmExist(TokenPairAmm),
     RequestTraceLocked(String),
+    TokenPairsLocked(Vec<TokenPairAmm>),
     InvalidCreated { created: u64, system: u64 },
     InvalidAmm(String),
     InvalidTransferFee { fee: candid::Nat, token: Principal },
@@ -401,6 +408,7 @@ pub enum BusinessError {
     FrozenToken(Principal),
     NotOwner(Principal),
     BadTransferFee { expected_fee: candid::Nat },
+    TokenPairsUnlocked(Vec<TokenPairAmm>),
     SwapBlockChainError(String),
     CallCanisterError(String),
     Liquidity(String),
@@ -471,14 +479,6 @@ pub struct TokenPairCreateOrRemoveArgs {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
-pub struct OuterLp {
-    pub fee: candid::Nat,
-    pub decimals: u8,
-    pub token_canister_id: Principal,
-    pub minimum_liquidity: candid::Nat,
-    pub total_supply: candid::Nat,
-}
-#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct OuterLpView {
     pub fee: String,
     pub decimals: u8,
@@ -488,14 +488,6 @@ pub struct OuterLpView {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
-pub struct InnerLp {
-    pub fee: candid::Nat,
-    pub decimals: u8,
-    pub dummy_canister_id: Principal,
-    pub minimum_liquidity: candid::Nat,
-    pub total_supply: candid::Nat,
-}
-#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct InnerLpView {
     pub fee: String,
     pub decimals: u8,
@@ -504,13 +496,6 @@ pub struct InnerLpView {
     pub total_supply: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
-pub enum PoolLp {
-    #[serde(rename = "outer")]
-    Outer(OuterLp),
-    #[serde(rename = "inner")]
-    Inner(InnerLp),
-}
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub enum PoolLpView {
     #[serde(rename = "outer")]
@@ -674,9 +659,29 @@ pub struct TokenPairSwapWithDepositAndWithdrawArgs {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
-pub struct SwapRatio {
-    pub numerator: u32,
-    pub denominator: u32,
+pub struct OuterLp {
+    pub fee: candid::Nat,
+    pub decimals: u8,
+    pub token_canister_id: Principal,
+    pub minimum_liquidity: candid::Nat,
+    pub total_supply: candid::Nat,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub struct InnerLp {
+    pub fee: candid::Nat,
+    pub decimals: u8,
+    pub dummy_canister_id: Principal,
+    pub minimum_liquidity: candid::Nat,
+    pub total_supply: candid::Nat,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
+pub enum PoolLp {
+    #[serde(rename = "outer")]
+    Outer(OuterLp),
+    #[serde(rename = "inner")]
+    Inner(InnerLp),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, CandidType, Deserialize)]
@@ -934,6 +939,7 @@ pub struct RequestTraceDone {
 pub struct BusinessLocks {
     pub token: Option<bool>,
     pub swap: Option<bool>,
+    pub pairs: Option<Vec<TokenPairAmm>>,
     pub balances: Option<Vec<TokenAccount>>,
 }
 
@@ -1122,7 +1128,15 @@ impl Service<'_> {
         &self,
         arg0: TokenPairLiquidityRemoveArgs,
     ) -> Result<(TokenPairLiquidityRemoveResult, Option<ManyTokenChangedResult>)> {
-        self.update_call("pair_liquidity_remove_and_withdraw", encode_one(arg0).unwrap())
+        let response = self.pocket.pic.update_call(
+            self.pocket.canister_id,
+            self.sender,
+            "pair_liquidity_remove_and_withdraw",
+            encode_one(arg0).unwrap(),
+        )?;
+        let result = decode_args(response.as_slice()).unwrap();
+        Ok(result)
+        // self.update_call("pair_liquidity_remove_and_withdraw", encode_one(arg0).unwrap())
     }
     pub fn pair_liquidity_remove_and_withdraw_async(
         &self,
