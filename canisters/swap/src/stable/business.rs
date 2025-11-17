@@ -43,10 +43,7 @@ pub trait Business:
     fn business_config_token_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_token_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_token_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_token_current_archiving_max_length_replace(
@@ -87,10 +84,7 @@ pub trait Business:
     fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
-    fn business_config_swap_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_swap_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         ic_cdk::trap("Not supported operation by this version.")
     }
     fn business_config_swap_current_archiving_max_length_replace(
@@ -447,10 +441,7 @@ impl Business for State {
     fn business_config_token_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
         self.get().business_config_token_archive_wasm_module_query()
     }
-    fn business_config_token_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_token_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         self.get_mut()
             .business_config_token_archive_wasm_module_replace(wasm_module)
     }
@@ -495,10 +486,7 @@ impl Business for State {
     fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
         self.get().business_config_swap_archive_wasm_module_query()
     }
-    fn business_config_swap_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_swap_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         self.get_mut()
             .business_config_swap_archive_wasm_module_replace(wasm_module)
     }

@@ -14,8 +14,12 @@ pub struct RequestIndex(u64);
 
 #[cfg(feature = "cdk")]
 impl Storable for RequestIndex {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         self.0.to_bytes()
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        self.0.into_bytes()
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

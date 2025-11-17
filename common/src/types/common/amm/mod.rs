@@ -35,9 +35,14 @@ pub enum MarketMaker {
 
 #[cfg(feature = "cdk")]
 impl Storable for MarketMaker {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         use ic_canister_kit::common::trap;
         Cow::Owned(trap(ic_canister_kit::functions::stable::to_bytes(self)))
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        use ic_canister_kit::common::trap;
+        trap(ic_canister_kit::functions::stable::to_bytes(&self))
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

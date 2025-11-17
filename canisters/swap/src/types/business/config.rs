@@ -10,6 +10,7 @@ use crate::types::{BlockChainView, CurrentArchiving, NextArchiveCanisterConfig};
 
 // ========================== replace wasm module ==========================
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct ReplaceArchiveWasmModuleResult(Result<Option<Vec<u8>>, BusinessError>);
 
@@ -27,6 +28,7 @@ pub struct PushBlocks {
     pub length: u64,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, CandidType)]
 pub struct PushBlocksResult(Result<Option<PushBlocks>, BusinessError>);
 

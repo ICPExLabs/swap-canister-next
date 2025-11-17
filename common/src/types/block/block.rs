@@ -34,8 +34,12 @@ impl From<Vec<u8>> for EncodedBlock {
 
 #[cfg(feature = "cdk")]
 impl Storable for EncodedBlock {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Borrowed(&self.0)
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        self.0
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

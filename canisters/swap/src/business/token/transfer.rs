@@ -34,10 +34,10 @@ impl CheckArgs for TokenTransferArgs {
         assert!(self.from.owner != self.to.owner, "to account can not be from account");
 
         // check fee
-        if let Some(fee) = &self.fee {
-            if *fee != token.fee {
-                return Err(BusinessError::invalid_transfer_fee(token.canister_id, token.fee));
-            }
+        if let Some(fee) = &self.fee
+            && *fee != token.fee
+        {
+            return Err(BusinessError::invalid_transfer_fee(token.canister_id, token.fee));
         }
 
         // check balance

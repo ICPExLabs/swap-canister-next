@@ -16,10 +16,14 @@ use super::super::super::with_mut_state;
 pub struct TokenBalance(Nat);
 
 impl Storable for TokenBalance {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         use ic_canister_kit::common::trap;
         let bytes = candid::encode_one(self.0.clone());
         Cow::Owned(trap(bytes))
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        self.to_bytes().to_vec()
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

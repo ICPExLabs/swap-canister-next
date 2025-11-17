@@ -46,7 +46,7 @@ impl TokenAccount {
 
 #[cfg(feature = "cdk")]
 impl Storable for TokenAccount {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         let mut bytes = vec![];
 
         // push canister_id // 1 + Principal::MAX_LENGTH_IN_BYTES
@@ -65,6 +65,10 @@ impl Storable for TokenAccount {
         }
 
         Cow::Owned(bytes)
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        self.to_bytes().to_vec()
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

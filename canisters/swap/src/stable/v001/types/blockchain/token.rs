@@ -56,13 +56,10 @@ impl TokenBlockChain {
     }
 
     // token
-    pub fn init_wasm_module(&mut self) -> Result<(), BusinessError> {
+    pub fn init_wasm_module(&mut self) {
         if self.wasm_module.get().is_none() {
-            self.wasm_module
-                .set(Some(WASM_MODULE.to_vec()))
-                .map_err(|err| BusinessError::system_error(format!("init wasm module failed: {err:?}")))?;
+            self.wasm_module.set(Some(WASM_MODULE.to_vec()));
         }
-        Ok(())
     }
     pub fn get_token_block_chain(&self) -> &BlockChain<TokenBlock> {
         &self.block_chain
@@ -70,12 +67,8 @@ impl TokenBlockChain {
     pub fn query_wasm_module(&self) -> &Option<Vec<u8>> {
         self.wasm_module.get()
     }
-    pub fn replace_wasm_module(&mut self, wasm_module: Vec<u8>) -> Result<Option<Vec<u8>>, BusinessError> {
-        let old = self.wasm_module.get().clone();
-        self.wasm_module
-            .set(Some(wasm_module))
-            .map_err(|err| BusinessError::system_error(format!("replace wasm module failed: {err:?}")))?;
-        Ok(old)
+    pub fn replace_wasm_module(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
+        self.wasm_module.set(Some(wasm_module))
     }
     pub fn set_token_current_archiving_max_length(&mut self, max_length: u64) -> Option<CurrentArchiving> {
         self.block_chain.set_current_archiving_max_length(max_length)

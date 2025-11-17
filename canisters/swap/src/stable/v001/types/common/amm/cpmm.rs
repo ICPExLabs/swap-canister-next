@@ -66,35 +66,35 @@ fn mint_fee<T: SelfCanisterArg + TokenPairArg>(
         if _k_last != *ZERO {
             let root_k = Nat::from((_reserve0.to_owned() * _reserve1.to_owned()).0.sqrt());
             let root_k_last = Nat::from(_k_last.0.sqrt());
-            if root_k > root_k_last {
-                if let (Some(fee_to), Some(protocol_fee)) = (fee_to, &_self.protocol_fee) {
-                    // https://learnblockchain.cn/article/8893
+            if root_k > root_k_last
+                && let (Some(fee_to), Some(protocol_fee)) = (fee_to, &_self.protocol_fee)
+            {
+                // https://learnblockchain.cn/article/8893
 
-                    //        L2 - L1
-                    // --------------------- * S1
-                    //  (1/r - 1) * L2 + L1
+                //        L2 - L1
+                // --------------------- * S1
+                //  (1/r - 1) * L2 + L1
 
-                    //        L2 - L1
-                    // --------------------- * S1
-                    //  (d/n - 1) * L2 + L1
+                //        L2 - L1
+                // --------------------- * S1
+                //  (d/n - 1) * L2 + L1
 
-                    //         L2 - L1
-                    // ----------------------- * S1 * n
-                    //  (d - n) * L2 + n * L1
+                //         L2 - L1
+                // ----------------------- * S1 * n
+                //  (d - n) * L2 + n * L1
 
-                    let n = Nat::from(protocol_fee.numerator);
-                    let d = Nat::from(protocol_fee.denominator);
-                    let total_supply = _self.lp.get_total_supply();
-                    let numerator = (root_k.clone() - root_k_last.clone()) * total_supply * n.clone();
-                    let denominator = (d - n.clone()) * root_k + n * root_k_last;
-                    let liquidity = numerator / denominator;
-                    if liquidity > *ZERO {
-                        _self.lp.mint_fee(
-                            |token, to, amount| guard.token_liquidity_mint_fee(token, *pool_account, to, amount),
-                            fee_to,
-                            liquidity,
-                        )?;
-                    }
+                let n = Nat::from(protocol_fee.numerator);
+                let d = Nat::from(protocol_fee.denominator);
+                let total_supply = _self.lp.get_total_supply();
+                let numerator = (root_k.clone() - root_k_last.clone()) * total_supply * n.clone();
+                let denominator = (d - n.clone()) * root_k + n * root_k_last;
+                let liquidity = numerator / denominator;
+                if liquidity > *ZERO {
+                    _self.lp.mint_fee(
+                        |token, to, amount| guard.token_liquidity_mint_fee(token, *pool_account, to, amount),
+                        fee_to,
+                        liquidity,
+                    )?;
                 }
             }
         }

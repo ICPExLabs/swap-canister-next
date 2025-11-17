@@ -182,13 +182,13 @@ impl InnerLP {
     where
         F: FnOnce(CanisterId, Account, Nat, Option<BurnFee>) -> Result<(), BusinessError>,
     {
-        if let Some(fee) = &fee {
-            if fee.fee != self.fee {
-                return Err(BusinessError::Liquidity(format!(
-                    "burn fee is not matched: {} != {}",
-                    fee.fee, self.fee
-                )));
-            }
+        if let Some(fee) = &fee
+            && fee.fee != self.fee
+        {
+            return Err(BusinessError::Liquidity(format!(
+                "burn fee is not matched: {} != {}",
+                fee.fee, self.fee
+            )));
         }
         // withdraw amount + fee?
         // deposit fee?
@@ -269,14 +269,14 @@ impl PoolLp {
 
 fn get_decimals(decimals0: u8, decimals1: u8) -> u8 {
     let decimals = decimals0 + decimals1;
-    decimals / 2 + if decimals % 2 == 0 { 0 } else { 1 }
+    decimals / 2 + if decimals.is_multiple_of(2) { 0 } else { 1 }
 }
 
 fn get_fee(fee1: &Nat, fee2: &Nat) -> Nat {
     let fee1 = fee1.0.to_str_radix(10).len() - 1;
     let fee2 = fee2.0.to_str_radix(10).len() - 1;
     let size = fee1 + fee2;
-    let size = size / 2 + if size % 2 == 0 { 0 } else { 1 };
+    let size = size / 2 + if size.is_multiple_of(2) { 0 } else { 1 };
     Nat::from(10_u64.pow(size as u32))
 }
 
