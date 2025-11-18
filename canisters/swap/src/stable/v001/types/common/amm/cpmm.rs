@@ -7,7 +7,10 @@
 ///   - Uniswap V3 introduces "concentrated liquidity", allowing LPs to set price ranges and improve capital efficiency.
 use ::common::{
     types::SwapV2MarketMaker,
-    utils::math::{ZERO, zero},
+    utils::{
+        math::{ZERO, zero},
+        require::require,
+    },
 };
 
 use super::*;
@@ -31,21 +34,21 @@ fn inner_add_liquidity(_self: &SwapV2MarketMaker, arg: &TokenPairLiquidityAddArg
     } else {
         let amount_b_optimal = SwapV2MarketMaker::quote(&arg.amount_a_desired, &reserve_a, &reserve_b); // Calculate the number of b with a
         if amount_b_optimal <= arg.amount_b_desired {
-            if amount_b_optimal < arg.amount_b_min {
-                // Too few b required in a quantity of a, less than the minimum b
-                return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
-            }
+            // Too few b required in a quantity of a, less than the minimum b
+            require(amount_b_optimal >= arg.amount_b_min, "SwapV2: INSUFFICIENT_B_AMOUNT");
             Ok((arg.amount_a_desired.clone(), amount_b_optimal))
         } else {
             // Too much b is required in a quantity of a, greater than the maximum b
 
             // Switch to another token calculation
             let amount_a_optimal = SwapV2MarketMaker::quote(&arg.amount_b_desired, &reserve_b, &reserve_a); // Calculate the number of a with b
-            if amount_a_optimal > arg.amount_a_desired || amount_a_optimal < arg.amount_a_min {
-                // Too much a is required in b quantity, greater than the maximum a
-                // Too little a is needed in b quantity, less than the minimum a
-                return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
-            }
+            // Too much a is required in b quantity, greater than the maximum a
+            require(
+                amount_a_optimal <= arg.amount_a_desired,
+                "SwapV2: INSUFFICIENT_A_AMOUNT*",
+            );
+            // Too little a is needed in b quantity, less than the minimum a
+            require(amount_a_optimal >= arg.amount_a_min, "SwapV2: INSUFFICIENT_A_AMOUNT");
             Ok((amount_a_optimal, arg.amount_b_desired.clone()))
         }
     }
@@ -262,20 +265,17 @@ fn burn(
 
     // ! check amount before change data
     let arg = &guard.arg.arg;
-    if amount0 == *ZERO || amount1 == *ZERO {
-        return Err(BusinessError::Liquidity("INSUFFICIENT_LIQUIDITY_BURNED".into()));
-    }
+    require(
+        amount0 > *ZERO && amount1 > *ZERO,
+        "SwapV2: INSUFFICIENT_LIQUIDITY_BURNED",
+    );
     let (amount_a, amount_b) = if arg.token_a == token0 {
         (amount0.clone(), amount1.clone())
     } else {
         (amount1.clone(), amount0.clone())
     };
-    if amount_a < arg.amount_a_min {
-        return Err(BusinessError::Liquidity("INSUFFICIENT_A_AMOUNT".into()));
-    }
-    if amount_b < arg.amount_b_min {
-        return Err(BusinessError::Liquidity("INSUFFICIENT_B_AMOUNT".into()));
-    }
+    require(amount_a >= arg.amount_a_min, "SwapV2: INSUFFICIENT_A_AMOUNT");
+    require(amount_b >= arg.amount_b_min, "SwapV2: INSUFFICIENT_B_AMOUNT");
 
     // do burn，Destroy LP tokens for users
     let arg_from = guard.arg.arg.from;
@@ -379,23 +379,23 @@ fn inner_swap<T: TokenPairArg>(
     };
 
     // The output of both tokens cannot be 0
-    if amount0_out == *ZERO && amount1_out == *ZERO {
-        return Err(BusinessError::Swap("INSUFFICIENT_OUTPUT_AMOUNT".into()));
-    }
+    require(
+        amount0_out > *ZERO || amount1_out > *ZERO,
+        "SwapV2: INSUFFICIENT_OUTPUT_AMOUNT",
+    );
 
     // The output of each token cannot be greater than the pool holder
     let (_reserve0, _reserve1) = (_self.reserve0.clone(), _self.reserve1.clone());
-    if _reserve0 < amount0_out || _reserve1 < amount1_out {
-        return Err(BusinessError::Swap("INSUFFICIENT_LIQUIDITY".into()));
-    }
+    require(
+        amount0_out < _reserve0 && amount1_out < _reserve1,
+        "SwapV2: INSUFFICIENT_LIQUIDITY",
+    );
 
     // do transfer out and fetch balance
     let (balance0, balance1) = {
         let _token0 = _self.token0;
         let _token1 = _self.token1;
-        if to.owner == _token0 || to.owner == _token1 {
-            return Err(BusinessError::Swap("INVALID_TO".into())); // The output token target address cannot be the token itself
-        }
+        require(to.owner != _token0 && to.owner != _token1, "SwapV2: INVALID_TO"); // The output token target address cannot be the token itself
         if amount0_out > *ZERO {
             guard.token_transfer(TransferToken {
                 token: _token0,
@@ -434,9 +434,10 @@ fn inner_swap<T: TokenPairArg>(
         (amount0_in, amount1_in)
     };
     // The inputs of both tokens cannot be 0
-    if amount0_in == *ZERO && amount1_in == *ZERO {
-        return Err(BusinessError::Swap("INSUFFICIENT_INPUT_AMOUNT".into()));
-    }
+    require(
+        amount0_in > *ZERO || amount1_in > *ZERO,
+        "SwapV2: INSUFFICIENT_INPUT_AMOUNT",
+    );
 
     // check after changed
     {
@@ -444,31 +445,10 @@ fn inner_swap<T: TokenPairArg>(
         let d = _self.fee_rate.denominator;
         let balance0_adjusted = balance0.clone() * d - amount0_in * n;
         let balance1_adjusted = balance1.clone() * d - amount1_in * n;
-        if balance0_adjusted * balance1_adjusted < _reserve0.clone() * _reserve1.clone() * d * d {
-            // return back
-            let _token0 = _self.token0;
-            let _token1 = _self.token1;
-            if amount0_out > *ZERO {
-                guard.token_transfer(TransferToken {
-                    token: _token0,
-                    from: to,
-                    amount: amount0_out.clone(),
-                    to: pool_account,
-                    fee: None,
-                })?; // * transfer and trace
-            }
-            if amount1_out > *ZERO {
-                guard.token_transfer(TransferToken {
-                    token: _token1,
-                    from: to,
-                    amount: amount1_out.clone(),
-                    to: pool_account,
-                    fee: None,
-                })?; // * transfer and trace
-            }
-
-            return Err(BusinessError::Swap("K".into()));
-        }
+        require(
+            balance0_adjusted * balance1_adjusted >= _reserve0.clone() * _reserve1.clone() * d * d,
+            "SwapV2: K",
+        );
     }
     Ok(InnerSwapResult {
         balance: (balance0, balance1),

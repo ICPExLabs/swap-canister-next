@@ -52,9 +52,10 @@ impl CheckArgs for TokenPairSwapByLoanArgs {
         check_path(&arg.path)?;
 
         // ! Check whether the token is consistent
-        if self.path[0].token.0 != self.path[self.path.len() - 1].token.1 {
-            return Err(BusinessError::Swap("INVALID_PATH".into()));
-        }
+        require(
+            self.path[0].token.0 == self.path[self.path.len() - 1].token.1,
+            "INVALID_PATH",
+        );
 
         // check deadline
         if let Some(deadline) = &self.deadline {

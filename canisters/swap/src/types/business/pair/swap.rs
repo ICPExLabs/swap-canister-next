@@ -52,6 +52,7 @@ pub fn check_path(path: &[SwapTokenPair]) -> Result<(), BusinessError> {
     if path.is_empty() {
         return Err(BusinessError::Swap("INVALID_PATH".into()));
     }
+    // require(!path.is_empty(), "INVALID_PATH");
     if 1 < path.len() {
         // Check whether tokens are connected in a loop
         let mut i = 1;
@@ -66,6 +67,7 @@ pub fn check_path(path: &[SwapTokenPair]) -> Result<(), BusinessError> {
             if path0.token.1 != path1.token.0 {
                 return Err(BusinessError::Swap("INVALID_PATH".into()));
             }
+            // require(path0.token.1 != path1.token.0, "INVALID_PATH");
 
             i += 1;
         }

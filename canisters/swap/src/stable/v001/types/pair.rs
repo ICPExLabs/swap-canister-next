@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use ::common::utils::math::zero;
-use ::common::{types::SwapTokenPair, utils::principal::sort_tokens};
+use ::common::{
+    types::SwapTokenPair,
+    utils::{principal::sort_tokens, require::require},
+};
 
 use super::*;
 
@@ -230,12 +233,10 @@ impl TokenPairs {
         }
 
         // Determine whether the output quantity meets the requirements
-        if amounts[amounts.len() - 1] < *amount_out_min {
-            return Err(BusinessError::Swap(format!(
-                "INSUFFICIENT_OUTPUT_AMOUNT: {}",
-                amounts[amounts.len() - 1]
-            )));
-        }
+        require(
+            amounts[amounts.len() - 1] >= *amount_out_min,
+            format!("INSUFFICIENT_OUTPUT_AMOUNT: {}", amounts[amounts.len() - 1]),
+        );
 
         Ok((amounts, pool_accounts))
     }
@@ -290,9 +291,10 @@ impl TokenPairs {
         pool_accounts.reverse();
 
         // Determine whether the input quantity meets the requirements
-        if *amount_in_max < amounts[0] {
-            return Err(BusinessError::Swap(format!("EXCESSIVE_INPUT_AMOUNT: {}", amounts[0])));
-        }
+        require(
+            amounts[0] <= *amount_in_max,
+            format!("EXCESSIVE_INPUT_AMOUNT: {}", amounts[0]),
+        );
 
         Ok((amounts, pool_accounts))
     }
