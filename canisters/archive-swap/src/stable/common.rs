@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use ic_canister_kit::types::*;
 
 use super::{InitArgs, UpgradeArgs};
-use super::{State, State::*};
+use super::{State, State::*, business::immutable::GetImmutable, business::mutable::GetMutable};
 
 impl Default for State {
     fn default() -> Self {

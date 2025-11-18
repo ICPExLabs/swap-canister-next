@@ -7,7 +7,7 @@ use ::common::{types::SwapTokenPair, utils::principal::sort_tokens};
 
 use super::*;
 
-use super::super::super::with_mut_state;
+use super::super::super::{business::mutable::GetMutable, with_mut_state};
 
 use super::{
     BusinessError, InnerTokenPairSwapGuard, MarketMaker, PairRemove, PairSwapToken, SelfCanister, TokenBalances,

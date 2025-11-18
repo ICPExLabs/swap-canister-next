@@ -8,7 +8,7 @@ use std::{
 
 use super::*;
 
-use super::super::super::with_mut_state;
+use super::super::super::{business::mutable::GetMutable, with_mut_state};
 
 // ============================ balance ============================
 

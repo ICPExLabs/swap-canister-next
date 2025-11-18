@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 use crate::types::with_mut_state;
 
 use super::super::{
-    Account, BlockIndex, Business, BusinessError, CandidBlock, CanisterId, CurrentArchiving, EncodedBlock, HashOf,
-    NextArchiveCanisterConfig, QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos, init_swap_blocks,
-    init_swap_wasm_module,
+    Account, BlockIndex, BusinessError, CandidBlock, CanisterId, CurrentArchiving, EncodedBlock, HashOf,
+    MutableBusiness, NextArchiveCanisterConfig, QueryBlockResult, SwapBlock, SwapTransaction, TimestampNanos,
+    init_swap_blocks, init_swap_wasm_module,
 };
 
 use super::BlockChain;

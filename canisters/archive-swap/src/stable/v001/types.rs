@@ -14,11 +14,12 @@ pub use super::business::*;
 #[allow(unused)]
 pub use super::permission::*;
 
-// Initialization parameters
-pub type InitArgV1 = ::common::archive::swap::InitArgV1;
-
-// Upgrade parameters
-pub type UpgradeArgV1 = ::common::archive::swap::UpgradeArgV1;
+mod _init;
+pub use _init::*;
+mod _upgrade;
+pub use _upgrade::*;
+mod _canister_kit;
+pub use _canister_kit::*;
 
 #[allow(unused)]
 pub use crate::types::{
@@ -35,10 +36,6 @@ mod metrics;
 pub use blocks::*;
 #[allow(unused)]
 pub use metrics::*;
-
-// Data structures required by the framework
-#[derive(Serialize, Deserialize, Default)]
-pub struct CanisterKit {}
 
 // The default maximum memory
 const DEFAULT_MAX_MEMORY_SIZE: u64 = 30 * 1024 * 1024 * 1024; // 30 GB
@@ -79,7 +76,7 @@ pub struct InnerState {
 
 impl Default for InnerState {
     fn default() -> Self {
-        ic_cdk::println!("InnerState::default()");
+        ic_cdk::println!("v001.InnerState::default()");
         Self {
             canister_kit: Default::default(),
 
