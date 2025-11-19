@@ -154,12 +154,69 @@ service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   append_blocks : (vec blob) -> ();
   get_block : (nat64) -> (opt SwapBlock) query;
+  // arg: GetBlockRequest
+  // ret: GetBlockResponse
   get_block_pb : (blob) -> (blob) query;
+  // This Rust function `get_blocks` queries swap blocks based on the provided arguments with a guard
+  // condition `has_business_queryable`.
+  // 
+  // Arguments:
+  // 
+  // * `args`: The `args` parameter in the `get_blocks` function likely represents the arguments needed
+  // to retrieve blocks for swapping. These arguments could include information such as block height,
+  // block timestamp, or any other parameters necessary to query and retrieve the desired blocks for
+  // swapping.
+  // 
+  // Returns:
+  // 
+  // The function `get_blocks` is returning a `GetSwapBlocksResult` value.
   get_blocks : (GetBlocksArgs) -> (GetSwapBlocksResult) query;
   get_blocks_by : (nat64, nat64) -> (vec record { nat64; opt SwapBlock }) query;
+  // This Rust function retrieves blocks based on a given height range and returns the response in a
+  // protobuf format.
+  // 
+  // Arguments:
+  // 
+  // * `arg`: The `arg` parameter in the `get_blocks_pb` function represents the input argument for
+  // retrieving blocks. It is of type `Vec<u8>`, which is a vector of unsigned bytes. The function
+  // decodes this argument into a `GetBlocksRequest` struct. note: start means block height.
+  // 
+  // Returns:
+  // 
+  // The function `get_blocks_pb` returns a serialized `GetBlocksResponse` message in the form of a byte
+  // vector (`Vec<u8>`). The response contains either a list of blocks or an error message, depending on
+  // the outcome of the `business_blocks_query` function call.
   get_blocks_pb : (blob) -> (blob) query;
+  // The function `get_encoded_blocks` retrieves encoded blocks based on the provided arguments.
+  // 
+  // Arguments:
+  // 
+  // * `args`: The `args` parameter in the `get_encoded_blocks` function likely represents the arguments
+  // needed to retrieve encoded blocks. These arguments could include information such as block height,
+  // timestamps, or any other parameters required to fetch the encoded blocks from the underlying data
+  // source. The specific structure and content of the `Get
+  // 
+  // Returns:
+  // 
+  // The function `get_encoded_blocks` is returning a `GetEncodedBlocksResult` which is the result of
+  // calling the `inner_get_encoded_blocks` function with the provided arguments `args`.
   get_encoded_blocks : (GetBlocksArgs) -> (GetEncodedBlocksResult) query;
   http_request : (CustomHttpRequest) -> (CustomHttpResponse) query;
+  // The `iter_blocks_pb` function in Rust processes a request to iterate through blocks stored in a
+  // container based on specified parameters.
+  // 
+  // Arguments:
+  // 
+  // * `arg`: The `arg` parameter for the `iter_blocks_pb` function is of type `Vec<u8>`, which
+  // represents a vector of bytes. This parameter is used to pass the request data in the form of a
+  // serialized protobuf message of type `IterBlocksRequest`. note: start means the index at this canister.
+  // 
+  // Returns:
+  // 
+  // The function `iter_blocks_pb` returns a `Vec<u8>` which contains the response data encoded in the
+  // protocol buffer format. The response data is generated based on the input argument `arg` of type
+  // `Vec<u8>` which is decoded into an `IterBlocksRequest` struct. The function processes this request,
+  // retrieves blocks from the state, constructs an `IterBlocksResponse` struct with the
   iter_blocks_pb : (blob) -> (blob) query;
   query_latest_block_index : () -> (opt nat64) query;
   query_metrics : () -> (CustomMetrics) query;

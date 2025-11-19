@@ -10,17 +10,12 @@ pub use super::business::*;
 #[allow(unused)]
 pub use super::permission::*;
 
-// Initialization parameters
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArg {}
-
-// Upgrade parameters
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArg {}
-
-// Data structures required by the framework
-#[derive(Serialize, Deserialize, Default)]
-pub struct CanisterKit {}
+mod _init;
+pub use _init::*;
+mod _upgrade;
+pub use _upgrade::*;
+mod _canister_kit;
+pub use _canister_kit::*;
 
 // Put together those that can be serialized and those that cannot be serialized
 // The following annotations are used for serialization
@@ -34,7 +29,7 @@ pub struct InnerState {
 
 impl Default for InnerState {
     fn default() -> Self {
-        ic_cdk::println!("InnerState::default()");
+        ic_cdk::println!("v000.InnerState::default()");
         Self {
             canister_kit: Default::default(),
         }

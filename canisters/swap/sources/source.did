@@ -641,7 +641,9 @@ type TransferToken = record {
 };
 service : (opt InitArgs) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
+  // The parameters of the block stored in this canister are the corresponding height
   block_swap_get : (nat64) -> (QuerySwapBlockResult) query;
+  // The parameters of the block stored in this canister are the corresponding height
   block_token_get : (nat64) -> (QueryTokenBlockResult) query;
   config_fee_to_query : () -> (FeeTo) query;
   config_fee_to_replace : (FeeTo) -> (FeeTo);

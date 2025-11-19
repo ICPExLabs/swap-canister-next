@@ -12,6 +12,223 @@ impl Business for InnerState {
     fn business_config_fee_to_query(&self) -> FeeTo {
         self.business_data.fee_to
     }
+
+    // archive canister
+    // token
+    fn business_config_token_block_chain_query(&self) -> &BlockChain<TokenBlock> {
+        self.token_block_chain.get_token_block_chain()
+    }
+    fn business_config_token_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        self.token_block_chain.query_wasm_module()
+    }
+    fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
+        self.token_block_chain.get_parent_hash(block_height)
+    }
+    fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.token_block_chain.get_cached_block_index()
+    }
+
+    // swap
+    fn business_config_swap_block_chain_query(&self) -> &BlockChain<SwapBlock> {
+        self.swap_block_chain.get_swap_block_chain()
+    }
+    fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
+        self.swap_block_chain.query_wasm_module()
+    }
+    fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
+        self.swap_block_chain.get_parent_hash(block_height)
+    }
+    fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
+        self.swap_block_chain.get_cached_block_index()
+    }
+
+    // maintain archives
+    fn business_config_maintain_archives_query(&self) -> &MaintainArchives {
+        &self.business_data.maintain_archives
+    }
+    fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
+        let tokens = self.token_block_chain.get_maintain_canisters();
+        let swaps = self.swap_block_chain.get_maintain_canisters();
+        let mut canisters = Vec::with_capacity(tokens.len() + swaps.len());
+        canisters.extend_from_slice(&tokens);
+        canisters.extend_from_slice(&swaps);
+        canisters
+    }
+
+    // token frozen
+    fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
+        self.tokens.get_frozen_tokens()
+    }
+
+    // token custom
+    fn business_config_token_preset_query(&self) -> &HashMap<CanisterId, TokenInfo> {
+        self.tokens.get_preset_tokens()
+    }
+    fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
+        self.tokens.get_custom_tokens().values().cloned().collect()
+    }
+
+    // set_certified_data
+
+    // ======================== locks ========================
+
+    // token block chain
+
+    // swap block chain
+
+    // token balance
+
+    // token pairs
+
+    // ======================== token block chain ========================
+
+    // ======================== query ========================
+
+    // tokens query
+    fn business_token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
+        self.tokens.token_alive(canister_id)
+    }
+    fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.tokens.get_all_tokens()
+    }
+    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
+        self.token_pairs.query_dummy_tokens(&self.business_tokens_query())
+    }
+    fn business_all_tokens_with_dummy_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
+        self.business_tokens_query()
+            .into_iter()
+            .chain(
+                self.business_dummy_tokens_query()
+                    .into_iter()
+                    .map(|(token, info)| (token, Cow::Owned(info))),
+            )
+            .collect()
+    }
+    fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
+        self.business_tokens_query()
+            .remove(token)
+            .map(|t| t.into_owned())
+            .or_else(|| self.business_dummy_tokens_query().remove(token))
+    }
+    fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
+        self.token_pairs
+            .query_dummy_token_info(&self.business_tokens_query(), pa)
+    }
+    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
+        ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
+    }
+    fn business_token_balance_of_with_fee_to(
+        &self,
+        token: CanisterId,
+        account: Account,
+    ) -> (candid::Nat, Option<Account>) {
+        (
+            ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account)),
+            self.business_data.fee_to.token_fee_to,
+        )
+    }
+
+    // ======================== update ========================
+
+    // ======================== swap block chain ========================
+
+    // ======================== token pair swap ========================
+
+    // query
+    fn business_token_pair_pools_query(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
+        self.token_pairs.query_all_token_pair_pools()
+    }
+    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
+        self.token_pairs.get_token_pair_pool(pa)
+    }
+    // create and remove
+
+    // liquidity
+    fn business_token_pair_check_liquidity_removable(
+        &self,
+        pa: &TokenPairAmm,
+        from: &Account,
+        liquidity_without_fee: &Nat,
+        fee_to: Option<Account>,
+    ) -> Result<(), BusinessError> {
+        self.token_pairs
+            .check_liquidity_removable(&self.token_balances, pa, from, liquidity_without_fee, fee_to)
+    }
+
+    // pair swap
+    fn business_token_pair_swap_fixed_in_checking(
+        &self,
+        arg: &TokenPairSwapExactTokensForTokensArg,
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
+        self.token_pairs.get_amounts_out(
+            &arg.self_canister,
+            &arg.amount_in,
+            &arg.amount_out_min,
+            &arg.path,
+            &arg.pas,
+        ) // ? check again
+    }
+    fn business_token_pair_swap_fixed_out_checking(
+        &self,
+        arg: &TokenPairSwapTokensForExactTokensArg,
+    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
+        self.token_pairs.get_amounts_in(
+            &arg.self_canister,
+            &arg.amount_out,
+            &arg.amount_in_max,
+            &arg.path,
+            &arg.pas,
+        ) // ? check again
+    }
+
+    // ======================== blocks query ========================
+
+    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.token_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
+    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
+        if self.swap_block_chain.queryable(caller) {
+            return Ok(());
+        }
+        Err("Only Maintainers are allowed to query data".into())
+    }
+
+    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.token_block_chain.query(block_height)
+    }
+    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
+        self.swap_block_chain.query(block_height)
+    }
+
+    fn business_token_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.token_block_chain.query_blocks(block_height)
+    }
+    fn business_swap_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
+        self.swap_block_chain.query_blocks(block_height)
+    }
+
+    // ======================== request ========================
+
+    fn business_request_index_get(&self) -> (RequestIndex, u64) {
+        self.request_traces.get_request_index()
+    }
+    fn business_request_trace_get(&self, index: &RequestIndex) -> Option<RequestTrace> {
+        self.request_traces.get_request_trace(index)
+    }
+
+    // ======================== maintain ========================
+}
+
+#[allow(clippy::panic)] // ? allow rollback
+#[allow(clippy::unwrap_used)] // ? allow rollback
+#[allow(clippy::expect_used)] // ? allow rollback
+impl MutableBusiness for InnerState {
+    // ======================== config ========================
+
+    // fee to
     fn business_config_fee_to_replace(&mut self, fee_to: FeeTo) -> FeeTo {
         self.updated(|s| std::mem::replace(&mut s.business_data.fee_to, fee_to))
     }
@@ -31,16 +248,7 @@ impl Business for InnerState {
 
     // archive canister
     // token
-    fn business_config_token_block_chain_query(&self) -> &BlockChain<TokenBlock> {
-        self.token_block_chain.get_token_block_chain()
-    }
-    fn business_config_token_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
-        self.token_block_chain.query_wasm_module()
-    }
-    fn business_config_token_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_token_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         self.updated(|s| s.token_block_chain.replace_wasm_module(wasm_module))
     }
     fn business_config_token_current_archiving_max_length_replace(
@@ -64,27 +272,12 @@ impl Business for InnerState {
     fn business_config_token_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         self.updated(|s| s.token_block_chain.archive_current_canister())
     }
-    fn business_config_token_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<TokenBlock>> {
-        self.token_block_chain.get_parent_hash(block_height)
-    }
-    fn business_config_token_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
-        self.token_block_chain.get_cached_block_index()
-    }
     fn business_config_token_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         self.updated(|s| s.token_block_chain.archived_block(block_height))
     }
 
     // swap
-    fn business_config_swap_block_chain_query(&self) -> &BlockChain<SwapBlock> {
-        self.swap_block_chain.get_swap_block_chain()
-    }
-    fn business_config_swap_archive_wasm_module_query(&self) -> &Option<Vec<u8>> {
-        self.swap_block_chain.query_wasm_module()
-    }
-    fn business_config_swap_archive_wasm_module_replace(
-        &mut self,
-        wasm_module: Vec<u8>,
-    ) -> Result<Option<Vec<u8>>, BusinessError> {
+    fn business_config_swap_archive_wasm_module_replace(&mut self, wasm_module: Vec<u8>) -> Option<Vec<u8>> {
         self.updated(|s| s.swap_block_chain.replace_wasm_module(wasm_module))
     }
     fn business_config_swap_current_archiving_max_length_replace(
@@ -108,42 +301,22 @@ impl Business for InnerState {
     fn business_config_swap_archive_current_canister(&mut self) -> Result<(), BusinessError> {
         self.updated(|s| s.swap_block_chain.archive_current_canister())
     }
-    fn business_config_swap_parent_hash_get(&self, block_height: BlockIndex) -> Option<HashOf<SwapBlock>> {
-        self.swap_block_chain.get_parent_hash(block_height)
-    }
-    fn business_config_swap_cached_block_get(&self) -> Option<(BlockIndex, u64)> {
-        self.swap_block_chain.get_cached_block_index()
-    }
     fn business_config_swap_block_archived(&mut self, block_height: BlockIndex) -> Result<(), BusinessError> {
         self.updated(|s| s.swap_block_chain.archived_block(block_height))
     }
 
     // maintain archives
-    fn business_config_maintain_archives_query(&self) -> &MaintainArchives {
-        &self.business_data.maintain_archives
-    }
     fn business_config_maintain_archives_set(&mut self, config: MaintainArchivesConfig) {
         self.updated(|s| s.business_data.maintain_archives.update_config(config));
     }
     fn business_config_maintain_trigger(&mut self, now: TimestampNanos) -> bool {
         self.updated(|s| s.business_data.maintain_archives.is_trigger(now))
     }
-    fn business_config_maintain_canisters(&self) -> Vec<CanisterId> {
-        let tokens = self.token_block_chain.get_maintain_canisters();
-        let swaps = self.swap_block_chain.get_maintain_canisters();
-        let mut canisters = Vec::with_capacity(tokens.len() + swaps.len());
-        canisters.extend_from_slice(&tokens);
-        canisters.extend_from_slice(&swaps);
-        canisters
-    }
     fn business_config_maintain_archives_cycles_recharged(&mut self, canister_id: CanisterId, cycles: u128) {
         self.updated(|s| s.business_data.maintain_archives.cycles_recharged(canister_id, cycles))
     }
 
     // token frozen
-    fn business_config_token_frozen_query(&self) -> &HashSet<CanisterId> {
-        self.tokens.get_frozen_tokens()
-    }
     fn business_config_token_frozen(&mut self, arg: ArgWithMeta<TokenFrozenArg>) {
         let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
         let _ = trace.handle(
@@ -161,12 +334,6 @@ impl Business for InnerState {
     }
 
     // token custom
-    fn business_config_token_preset_query(&self) -> &HashMap<CanisterId, TokenInfo> {
-        self.tokens.get_preset_tokens()
-    }
-    fn business_config_token_custom_query(&self) -> Vec<TokenInfo> {
-        self.tokens.get_custom_tokens().values().cloned().collect()
-    }
     fn business_config_token_custom_put(&mut self, arg: ArgWithMeta<TokenInfo>) {
         let mut trace = ic_canister_kit::common::trap(self.request_traces.be_guard_by(arg.clone().into()));
         let _ = trace.handle(
@@ -212,7 +379,7 @@ impl Business for InnerState {
     }
 
     // set_certified_data
-    fn business_certified_data_refresh(&self) {
+    fn business_certified_data_refresh(&mut self) {
         let token_hash = self.token_block_chain.get_latest_hash();
         let swap_hash = self.swap_block_chain.get_latest_hash();
         let mut data = Vec::with_capacity(token_hash.len() + swap_hash.len());
@@ -276,48 +443,6 @@ impl Business for InnerState {
     // ======================== query ========================
 
     // tokens query
-    fn business_token_alive(&self, canister_id: &CanisterId) -> Result<(), BusinessError> {
-        self.tokens.token_alive(canister_id)
-    }
-    fn business_tokens_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-        self.tokens.get_all_tokens()
-    }
-    fn business_dummy_tokens_query(&self) -> HashMap<CanisterId, TokenInfo> {
-        self.token_pairs.query_dummy_tokens(&self.business_tokens_query())
-    }
-    fn business_all_tokens_with_dummy_query(&self) -> HashMap<CanisterId, Cow<'_, TokenInfo>> {
-        self.business_tokens_query()
-            .into_iter()
-            .chain(
-                self.business_dummy_tokens_query()
-                    .into_iter()
-                    .map(|(token, info)| (token, Cow::Owned(info))),
-            )
-            .collect()
-    }
-    fn business_token_query(&self, token: &CanisterId) -> Option<TokenInfo> {
-        self.business_tokens_query()
-            .remove(token)
-            .map(|t| t.into_owned())
-            .or_else(|| self.business_dummy_tokens_query().remove(token))
-    }
-    fn business_token_query_by_pa(&self, pa: &TokenPairAmm) -> Option<TokenInfo> {
-        self.token_pairs
-            .query_dummy_token_info(&self.business_tokens_query(), pa)
-    }
-    fn business_token_balance_of(&self, token: CanisterId, account: Account) -> candid::Nat {
-        ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account))
-    }
-    fn business_token_balance_of_with_fee_to(
-        &self,
-        token: CanisterId,
-        account: Account,
-    ) -> (candid::Nat, Option<Account>) {
-        (
-            ic_canister_kit::common::trap_debug(self.token_balances.token_balance_of(token, account)),
-            self.business_data.fee_to.token_fee_to,
-        )
-    }
 
     // ======================== update ========================
 
@@ -388,12 +513,7 @@ impl Business for InnerState {
     // ======================== token pair swap ========================
 
     // query
-    fn business_token_pair_pools_query(&self) -> Vec<(TokenPairAmm, MarketMaker)> {
-        self.token_pairs.query_all_token_pair_pools()
-    }
-    fn business_token_pair_pool_get(&self, pa: &TokenPairAmm) -> Option<MarketMaker> {
-        self.token_pairs.get_token_pair_pool(pa)
-    }
+
     // create and remove
     fn business_token_pair_pool_create(
         &mut self,
@@ -467,16 +587,6 @@ impl Business for InnerState {
             Ok(success)
         })
     }
-    fn business_token_pair_check_liquidity_removable(
-        &self,
-        pa: &TokenPairAmm,
-        from: &Account,
-        liquidity_without_fee: &Nat,
-        fee_to: Option<Account>,
-    ) -> Result<(), BusinessError> {
-        self.token_pairs
-            .check_liquidity_removable(&self.token_balances, pa, from, liquidity_without_fee, fee_to)
-    }
     fn business_token_pair_liquidity_remove(
         &mut self,
         locks: &AllLocks,
@@ -492,30 +602,6 @@ impl Business for InnerState {
     }
 
     // pair swap
-    fn business_token_pair_swap_fixed_in_checking(
-        &self,
-        arg: &TokenPairSwapExactTokensForTokensArg,
-    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
-        self.token_pairs.get_amounts_out(
-            &arg.self_canister,
-            &arg.amount_in,
-            &arg.amount_out_min,
-            &arg.path,
-            &arg.pas,
-        ) // ? check again
-    }
-    fn business_token_pair_swap_fixed_out_checking(
-        &self,
-        arg: &TokenPairSwapTokensForExactTokensArg,
-    ) -> Result<(Vec<Nat>, Vec<Account>), BusinessError> {
-        self.token_pairs.get_amounts_in(
-            &arg.self_canister,
-            &arg.amount_out,
-            &arg.amount_in_max,
-            &arg.path,
-            &arg.pas,
-        ) // ? check again
-    }
     fn business_token_pair_swap_exact_tokens_for_tokens(
         &mut self,
         locks: &AllLocks,
@@ -558,41 +644,8 @@ impl Business for InnerState {
 
     // ======================== blocks query ========================
 
-    fn business_token_queryable(&self, caller: &UserId) -> Result<(), String> {
-        if self.token_block_chain.queryable(caller) {
-            return Ok(());
-        }
-        Err("Only Maintainers are allowed to query data".into())
-    }
-    fn business_swap_queryable(&self, caller: &UserId) -> Result<(), String> {
-        if self.swap_block_chain.queryable(caller) {
-            return Ok(());
-        }
-        Err("Only Maintainers are allowed to query data".into())
-    }
-
-    fn business_token_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-        self.token_block_chain.query(block_height)
-    }
-    fn business_swap_block_get(&self, block_height: BlockIndex) -> QueryBlockResult<EncodedBlock> {
-        self.swap_block_chain.query(block_height)
-    }
-
-    fn business_token_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
-        self.token_block_chain.query_blocks(block_height)
-    }
-    fn business_swap_blocks_get(&self, block_height: BlockIndex) -> Vec<(BlockIndex, QueryBlockResult<EncodedBlock>)> {
-        self.swap_block_chain.query_blocks(block_height)
-    }
-
     // ======================== request ========================
 
-    fn business_request_index_get(&self) -> (RequestIndex, u64) {
-        self.request_traces.get_request_index()
-    }
-    fn business_request_trace_get(&self, index: &RequestIndex) -> Option<RequestTrace> {
-        self.request_traces.get_request_trace(index)
-    }
     fn business_request_trace_remove(&mut self, index: &RequestIndex) -> Option<RequestTrace> {
         self.updated(|s| s.request_traces.remove_request_trace(index))
     }

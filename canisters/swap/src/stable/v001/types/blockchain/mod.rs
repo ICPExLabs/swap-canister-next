@@ -52,10 +52,10 @@ impl<T> BlockChain<T> {
                 return Some(canister_id);
             }
         }
-        if let Some(current_archiving) = &self.current_archiving {
-            if let Some(canister_id) = current_archiving.query(block_height) {
-                return Some(canister_id);
-            }
+        if let Some(current_archiving) = &self.current_archiving
+            && let Some(canister_id) = current_archiving.query(block_height)
+        {
+            return Some(canister_id);
         }
         None
     }

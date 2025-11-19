@@ -107,14 +107,17 @@ impl StateUpgrade<Option<UpgradeArgs>> for State {
 
 // ================== get ==================
 
-impl State {
-    pub fn get(&self) -> &dyn Business {
+impl business::immutable::GetImmutable for State {
+    fn get(&self) -> &dyn Business {
         match self {
             V0(s) => s.as_ref(), // * Get immutable state
             V1(s) => s.as_ref(), // * Get immutable state
         }
     }
-    pub fn get_mut(&mut self) -> &mut dyn Business {
+}
+
+impl business::mutable::GetMutable for State {
+    fn get_mut(&mut self) -> &mut dyn MutableBusiness {
         match self {
             V0(s) => s.as_mut(), // * Get mutable state
             V1(s) => s.as_mut(), // * Get mutable state

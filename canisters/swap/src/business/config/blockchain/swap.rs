@@ -39,7 +39,7 @@ async fn inner_config_swap_block_chain_update(args: BlockChainArgs) -> Result<Sw
     let response = match args {
         BlockChainArgs::WasmModuleUpdate(wasm_module) => BlockChainResponse::WasmModule(with_mut_state(|s| {
             s.business_config_swap_archive_wasm_module_replace(wasm_module)
-        })?),
+        })),
         BlockChainArgs::CurrentArchivingMaxLengthUpdate(max_length) => {
             BlockChainResponse::CurrentArchivingMaxLength(with_mut_state(|s| {
                 s.business_config_swap_current_archiving_max_length_replace(max_length)
@@ -88,12 +88,12 @@ pub async fn inner_config_swap_blocks_push() -> Result<Option<PushBlocks>, Busin
 
     // 2. Check if the canister is full
     let mut view: BlockChainView<SwapBlock> = with_state(|s| s.business_config_swap_block_chain_query().into());
-    if let Some(current_archiving) = view.current_archiving {
-        if current_archiving.is_full() {
-            return Err(BusinessError::system_error(
-                "swap block chain current archive canister is full",
-            ));
-        }
+    if let Some(current_archiving) = view.current_archiving
+        && current_archiving.is_full()
+    {
+        return Err(BusinessError::system_error(
+            "swap block chain current archive canister is full",
+        ));
     }
 
     // 3. If it does not exist or is full, a new canister needs to be created

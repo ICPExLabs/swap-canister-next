@@ -47,6 +47,8 @@ pub use ::common::types::{
 };
 #[allow(unused)]
 pub use ::common::utils::pb::{from_proto_bytes, to_proto_bytes};
+#[allow(unused)]
+pub use ::common::utils::require::require;
 
 #[allow(unused)]
 pub use ic_canister_kit::common::trap;

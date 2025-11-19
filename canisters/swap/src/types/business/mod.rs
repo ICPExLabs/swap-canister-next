@@ -15,6 +15,7 @@ mod pair;
 #[allow(unused)]
 pub use pair::*;
 
+#[allow(unused)]
 #[derive(Debug, Deserialize, CandidType)]
 pub struct BusinessResult(Result<(), BusinessError>);
 

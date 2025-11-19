@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use ic_canister_kit::types::*;
 
 use super::{InitArgs, ParsePermission, ParsePermissionError, UpgradeArgs, schedule_task};
-use super::{State, State::*};
+use super::{State, State::*, business::immutable::GetImmutable, business::mutable::GetMutable};
 
 impl Default for State {
     fn default() -> Self {

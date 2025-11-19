@@ -1,3 +1,6 @@
+/// require
+pub mod require;
+
 /// pb
 pub mod pb;
 

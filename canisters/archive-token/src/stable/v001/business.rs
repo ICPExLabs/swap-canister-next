@@ -143,6 +143,31 @@ impl Business for InnerState {
         Ok(())
     }
 
+    fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
+        let length = self.blocks.blocks_len();
+        if length == 0 {
+            return None;
+        }
+        Some(self.business_data.block_height_offset() + length - 1)
+    }
+    fn business_metrics_query(&self) -> CustomMetrics {
+        CustomMetrics {
+            block_height_offset: self.business_data.block_height_offset(),
+            max_memory_size_bytes: self.business_data.max_memory_size_bytes,
+            blocks: self.blocks.blocks_len(),
+            blocks_bytes: self.blocks.total_block_size(),
+            stable_memory_pages: ic_cdk::stable::stable_size(),
+            stable_memory_bytes: (ic_cdk::stable::stable_size() * 64 * 1024),
+            heap_memory_bytes: common::utils::runtime::heap_memory_size_bytes() as u64,
+            last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns / 1_000_000_000_u64,
+        }
+    }
+}
+
+#[allow(clippy::panic)] // ? allow rollback
+#[allow(clippy::unwrap_used)] // ? allow rollback
+#[allow(clippy::expect_used)] // ? allow rollback
+impl MutableBusiness for InnerState {
     fn business_blocks_append(&mut self, blocks: Vec<EncodedBlock>) {
         self.business_remaining_capacity(); // would be failed if exceed max memory size
         ic_cdk::println!(
@@ -183,25 +208,5 @@ impl Business for InnerState {
     }
     fn business_config_max_memory_size_bytes_set(&mut self, max_memory_size_bytes: u64) {
         self.update_max_memory_size_bytes(max_memory_size_bytes)
-    }
-
-    fn business_latest_block_index_query(&self) -> Option<BlockIndex> {
-        let length = self.blocks.blocks_len();
-        if length == 0 {
-            return None;
-        }
-        Some(self.business_data.block_height_offset() + length - 1)
-    }
-    fn business_metrics_query(&self) -> CustomMetrics {
-        CustomMetrics {
-            block_height_offset: self.business_data.block_height_offset(),
-            max_memory_size_bytes: self.business_data.max_memory_size_bytes,
-            blocks: self.blocks.blocks_len(),
-            blocks_bytes: self.blocks.total_block_size(),
-            stable_memory_pages: ic_cdk::stable::stable_size(),
-            stable_memory_bytes: (ic_cdk::stable::stable_size() * 64 * 1024),
-            heap_memory_bytes: common::utils::runtime::heap_memory_size_bytes() as u64,
-            last_upgrade_time_seconds: self.business_data.last_upgrade_timestamp_ns / 1_000_000_000_u64,
-        }
     }
 }

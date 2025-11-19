@@ -1,9 +1,8 @@
+pub use ic_canister_kit::types::*;
 use serde::{Deserialize, Serialize};
 
-pub use ic_canister_kit::types::*;
-
 #[allow(unused)]
-pub use super::super::{Business, ParsePermission, ScheduleTask};
+pub use super::super::{Business, MutableBusiness, ParsePermission, ScheduleTask};
 
 #[allow(unused)]
 pub use super::super::business::*;
@@ -14,21 +13,12 @@ pub use super::permission::*;
 #[allow(unused)]
 pub use super::schedule::schedule_task;
 
-// initialization parameters
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType, Default)]
-pub struct InitArgV1 {
-    pub maintainers: Option<Vec<UserId>>, // init maintainers or deployer
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-    pub current_archiving_token: Option<CurrentArchiving>,
-    pub current_archiving_swap: Option<CurrentArchiving>,
-}
-
-// Upgrade parameters
-#[derive(Debug, Clone, Serialize, Deserialize, candid::CandidType)]
-pub struct UpgradeArg {
-    pub maintainers: Option<Vec<UserId>>, // add new maintainers of not
-    pub schedule: Option<DurationNanos>,  // init scheduled task or not
-}
+mod _init;
+pub use _init::*;
+mod _upgrade;
+pub use _upgrade::*;
+mod _canister_kit;
+pub use _canister_kit::*;
 
 #[allow(unused)]
 pub use crate::types::business::*;
@@ -74,14 +64,6 @@ pub use request::*;
 #[allow(unused)]
 pub use token::*;
 
-// Data structures required by the framework
-#[derive(Serialize, Deserialize, Default)]
-pub struct CanisterKit {
-    pub pause: Pause,             // Record maintenance status //  ? Heap memory Serialization
-    pub permissions: Permissions, // Record your own permissions //  ? Heap memory Serialization
-    pub schedule: Schedule,       // Record timing tasks //  ? Heap memory Serialization
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct BusinessData {
     pub updated: TimestampNanos,             // Record the last update time of the canister
@@ -122,7 +104,7 @@ pub struct InnerState {
 
 impl Default for InnerState {
     fn default() -> Self {
-        ic_cdk::println!("InnerState::default()");
+        ic_cdk::println!("v001.InnerState::default()");
         Self {
             canister_kit: Default::default(),
 
@@ -192,8 +174,8 @@ impl InnerState {
             });
             s.token_block_chain.set_archive_maintainers(Some(maintainers));
 
-            let _ = s.token_block_chain.init_wasm_module();
-            let _ = s.swap_block_chain.init_wasm_module();
+            s.token_block_chain.init_wasm_module();
+            s.swap_block_chain.init_wasm_module();
 
             if let Some(token) = arg.current_archiving_token {
                 s.business_config_token_current_archiving_replace(token);
@@ -206,8 +188,8 @@ impl InnerState {
 
     pub fn do_upgrade(&mut self, _arg: UpgradeArg) {
         // maybe do something
-        let _ = self.token_block_chain.init_wasm_module();
-        let _ = self.swap_block_chain.init_wasm_module();
+        self.token_block_chain.init_wasm_module();
+        self.swap_block_chain.init_wasm_module();
 
         self.updated(|_| {});
     }
