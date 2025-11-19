@@ -67,7 +67,7 @@ pub fn check_path(path: &[SwapTokenPair]) -> Result<(), BusinessError> {
             if path0.token.1 != path1.token.0 {
                 return Err(BusinessError::Swap("INVALID_PATH".into()));
             }
-            // require(path0.token.1 != path1.token.0, "INVALID_PATH");
+            // require(path0.token.1 == path1.token.0, "INVALID_PATH");
 
             i += 1;
         }
